@@ -161,6 +161,58 @@ struct LearnTests {
     }
 }
 
+// MARK: - Flashcard deck (Tinder-style spaced repetition)
+
+struct FlashcardTests {
+    private var sample: [Vocab] { VocabStore.lesson(3).entries }
+
+    @Test func knowRetiresCardAndCountsMastered() {
+        let deck = FlashDeck(vocab: sample)
+        let start = deck.remaining
+        deck.know()
+        #expect(deck.remaining == start - 1)
+        #expect(deck.mastered == 1)
+    }
+
+    @Test func dontKnowSendsCardToTheBack() {
+        let deck = FlashDeck(vocab: sample)
+        let start = deck.remaining
+        let first = deck.current
+        deck.dontKnow()
+        #expect(deck.remaining == start)          // still in the deck
+        #expect(deck.mastered == 0)
+        #expect(deck.current?.id != first?.id)    // a different card is now on top
+    }
+
+    @Test func swipingRightThroughAllFinishesTheDeck() {
+        let deck = FlashDeck(vocab: sample)
+        while !deck.isDone { deck.know() }
+        #expect(deck.mastered == deck.total)
+        #expect(deck.current == nil)
+    }
+
+    @Test func unknownCardsResurfaceUntilKnown() {
+        let deck = FlashDeck(vocab: sample)
+        // Say "don't know" to everything once, then master it — deck must still drain.
+        var guardCount = 0
+        while !deck.isDone && guardCount < 10_000 {
+            guardCount += 1
+            if deck.mastered < deck.total / 2 { deck.know() } else { deck.dontKnow(); deck.know() }
+        }
+        #expect(deck.isDone)
+        #expect(deck.mastered == deck.total)
+    }
+
+    @Test func restartRefillsAndResets() {
+        let deck = FlashDeck(vocab: sample)
+        while !deck.isDone { deck.know() }
+        deck.restart()
+        #expect(deck.remaining == deck.total)
+        #expect(deck.mastered == 0)
+        #expect(deck.current != nil)
+    }
+}
+
 // MARK: - Quiz models
 
 struct QuizTests {
@@ -181,6 +233,23 @@ struct QuizTests {
         #expect(model.from != model.to)
         model.cycleTo()
         #expect(model.from != model.to)
+    }
+
+    @Test func listeningVariantUsesAudioPromptAndWordOptions() {
+        // "Listening" is Quiz with an audio prompt; options are the written word (kana).
+        let model = QuizModel(vocab: VocabStore.lesson(3).entries, from: .audio)
+        #expect(model.from == .audio)
+        #expect(model.to == .kana)
+        // Cycling the answer side must never land on audio (audio can't be an option).
+        for _ in 0..<10 { model.cycleTo(); #expect(model.to != .audio) }
+    }
+
+    @Test func promptCanCycleToAudioButBackAgain() {
+        let model = QuizModel(vocab: VocabStore.lesson(1).entries)
+        var sawAudio = false
+        for _ in 0..<VForm.allCases.count { model.cycleFrom(); if model.from == .audio { sawAudio = true } }
+        #expect(sawAudio)                 // audio is reachable as a prompt
+        #expect(model.from != model.to)   // and never collides with the answer side
     }
 
     @Test func kanaQuizHasFourDistinctOptionsIncludingAnswer() {

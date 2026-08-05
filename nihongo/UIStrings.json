@@ -42,7 +42,16 @@
     "Vocabulary language": "Vocabulary language",
     "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "The language Japanese words are translated into (vocabulary lists, quizzes, and search).",
     "Ordered": "Ordered",
-    "Random": "Random"
+    "Random": "Random",
+    "Flashcards": "Flashcards",
+    "Swipe right if you know it": "Swipe right if you know it",
+    "Play all": "Play all",
+    "Show meaning": "Show meaning",
+    "All done!": "All done!",
+    "You reviewed %@ words": "You reviewed %@ words",
+    "Restart": "Restart",
+    "Got it": "Got it",
+    "Again": "Again"
   },
   "zh": {
     "Kana": "假名",
@@ -87,7 +96,16 @@
     "Vocabulary language": "词汇语言",
     "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "日语单词翻译所用的语言（词汇表、测验和搜索）。",
     "Ordered": "顺序",
-    "Random": "随机"
+    "Random": "随机",
+    "Flashcards": "闪卡",
+    "Swipe right if you know it": "认识就向右滑",
+    "Play all": "全部播放",
+    "Show meaning": "显示释义",
+    "All done!": "全部完成！",
+    "You reviewed %@ words": "你复习了 %@ 个单词",
+    "Restart": "重新开始",
+    "Got it": "认识",
+    "Again": "再来"
   },
   "zh-Hant": {
     "Kana": "假名",
@@ -132,7 +150,16 @@
     "Vocabulary language": "詞彙語言",
     "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "日語單字翻譯所用的語言（詞彙表、測驗與搜尋）。",
     "Ordered": "順序",
-    "Random": "隨機"
+    "Random": "隨機",
+    "Flashcards": "閃卡",
+    "Swipe right if you know it": "認識就向右滑",
+    "Play all": "全部播放",
+    "Show meaning": "顯示釋義",
+    "All done!": "全部完成！",
+    "You reviewed %@ words": "你複習了 %@ 個單字",
+    "Restart": "重新開始",
+    "Got it": "認識",
+    "Again": "再來"
   },
   "vi": {
     "Kana": "Kana",
@@ -177,7 +204,16 @@
     "Vocabulary language": "Ngôn ngữ từ vựng",
     "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "Ngôn ngữ dịch từ tiếng Nhật (danh sách từ, kiểm tra và tìm kiếm).",
     "Ordered": "Theo thứ tự",
-    "Random": "Ngẫu nhiên"
+    "Random": "Ngẫu nhiên",
+    "Flashcards": "Thẻ ghi nhớ",
+    "Swipe right if you know it": "Vuốt phải nếu bạn biết",
+    "Play all": "Phát tất cả",
+    "Show meaning": "Hiện nghĩa",
+    "All done!": "Hoàn thành!",
+    "You reviewed %@ words": "Bạn đã ôn %@ từ",
+    "Restart": "Bắt đầu lại",
+    "Got it": "Đã biết",
+    "Again": "Ôn lại"
   },
   "de": {
     "Kana": "Kana",
@@ -222,7 +258,16 @@
     "Vocabulary language": "Vokabelsprache",
     "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "Die Sprache, in die japanische Wörter übersetzt werden (Vokabellisten, Quiz und Suche).",
     "Ordered": "Der Reihe nach",
-    "Random": "Zufällig"
+    "Random": "Zufällig",
+    "Flashcards": "Karteikarten",
+    "Swipe right if you know it": "Nach rechts wischen, wenn du es kannst",
+    "Play all": "Alle abspielen",
+    "Show meaning": "Bedeutung zeigen",
+    "All done!": "Fertig!",
+    "You reviewed %@ words": "Du hast %@ Wörter wiederholt",
+    "Restart": "Neu starten",
+    "Got it": "Gewusst",
+    "Again": "Nochmal"
   },
   "th": {
     "Kana": "คานะ",
@@ -267,7 +312,16 @@
     "Vocabulary language": "ภาษาคำศัพท์",
     "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "ภาษาที่ใช้แปลคำภาษาญี่ปุ่น (รายการคำศัพท์ แบบทดสอบ และการค้นหา)",
     "Ordered": "ตามลำดับ",
-    "Random": "สุ่ม"
+    "Random": "สุ่ม",
+    "Flashcards": "บัตรคำ",
+    "Swipe right if you know it": "ปัดขวาถ้ารู้",
+    "Play all": "เล่นทั้งหมด",
+    "Show meaning": "แสดงความหมาย",
+    "All done!": "เสร็จทั้งหมด!",
+    "You reviewed %@ words": "คุณทบทวน %@ คำ",
+    "Restart": "เริ่มใหม่",
+    "Got it": "รู้แล้ว",
+    "Again": "อีกครั้ง"
   },
   "my": {
     "Kana": "ကာနာ",
@@ -312,6 +366,15 @@
     "Vocabulary language": "ဝေါဟာရဘာသာစကား",
     "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "ဂျပန်စကားလုံးများကို ဘာသာပြန်သည့် ဘာသာစကား (ဝေါဟာရစာရင်း၊ ဉာဏ်စမ်းနှင့် ရှာဖွေမှု)။",
     "Ordered": "အစဉ်လိုက်",
-    "Random": "ကျပန်း"
+    "Random": "ကျပန်း",
+    "Flashcards": "ကတ်ပြားများ",
+    "Swipe right if you know it": "သိရင် ညာဘက်ပွတ်ဆွဲပါ",
+    "Play all": "အားလုံးဖွင့်ရန်",
+    "Show meaning": "အဓိပ္ပာယ်ပြရန်",
+    "All done!": "အားလုံးပြီးပါပြီ!",
+    "You reviewed %@ words": "စကားလုံး %@ လုံး ပြန်လေ့လာပြီးပါပြီ",
+    "Restart": "ပြန်စရန်",
+    "Got it": "သိပြီ",
+    "Again": "ထပ်ကြည့်"
   }
 }

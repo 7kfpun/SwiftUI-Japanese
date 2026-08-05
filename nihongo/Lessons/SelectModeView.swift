@@ -5,25 +5,25 @@ struct SelectModeView: View {
 
     var body: some View {
         List {
-            Section {
-                NavigationLink { VocabListView(lesson: lesson) } label: {
-                    ModeRow(icon: "list.bullet", title: L.t("Vocab List"),
-                            subtitle: L.t("Browse & hear all words"))
-                }
-                NavigationLink { LearnView(lesson: lesson) } label: {
-                    ModeRow(icon: "square.grid.2x2", title: L.t("Learn"),
-                            subtitle: L.t("Rebuild the reading from tiles"))
-                }
-                NavigationLink { QuizView(lesson: lesson) } label: {
-                    ModeRow(icon: "checkmark.circle", title: L.t("Quiz"),
-                            subtitle: L.t("Multiple choice, any form"))
-                }
+            NavigationLink { VocabListView(lesson: lesson) } label: {
+                ModeRow(icon: "list.bullet", title: L.t("Vocab List"),
+                        subtitle: L.t("Browse & hear all words"))
             }
-            Section(L.t("Needs audio (coming soon)")) {
+            NavigationLink { FlashcardView(lesson: lesson) } label: {
+                ModeRow(icon: "rectangle.on.rectangle.angled", title: L.t("Flashcards"),
+                        subtitle: L.t("Swipe right if you know it"))
+            }
+            NavigationLink { LearnView(lesson: lesson) } label: {
+                ModeRow(icon: "square.grid.2x2", title: L.t("Learn"),
+                        subtitle: L.t("Rebuild the reading from tiles"))
+            }
+            NavigationLink { QuizView(lesson: lesson) } label: {
+                ModeRow(icon: "checkmark.circle", title: L.t("Quiz"),
+                        subtitle: L.t("Multiple choice, any form"))
+            }
+            NavigationLink { QuizView(lesson: lesson, from: .audio) } label: {
                 ModeRow(icon: "speaker.wave.2", title: L.t("Listening"),
-                        subtitle: L.t("Hear it, pick the word")).foregroundStyle(.secondary)
-                ModeRow(icon: "play.circle", title: L.t("Read All"),
-                        subtitle: L.t("Auto-play the whole lesson")).foregroundStyle(.secondary)
+                        subtitle: L.t("Hear it, pick the word"))
             }
         }
         .navigationTitle(L.t("Lesson %@", "\(lesson.number)"))

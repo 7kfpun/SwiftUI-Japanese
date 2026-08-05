@@ -53,8 +53,12 @@ final class LearnModel {
 
 struct LearnView: View {
     @State private var model: LearnModel
-    @State private var options = CardOptions()
     @State private var drag: CGFloat = 0
+    // Read the visibility flags directly so the current card updates the instant a toggle flips.
+    @AppStorage("isKanjiShown")       private var showKanji = true
+    @AppStorage("isKanaShown")        private var showKana = true
+    @AppStorage("isRomajiShown")      private var showRomaji = true
+    @AppStorage("isTranslationShown") private var showTranslation = true
     @AppStorage("isOrdered") private var ordered = true
     @AppStorage("isSoundOn") private var soundOn = true
     @Environment(\.pronouncer) private var pronouncer
@@ -123,13 +127,16 @@ struct LearnView: View {
             }
             .frame(height: 46)
 
-            if options.showKanji && model.current.displaysKanji {
+            if showKana {
+                Text(model.target).font(.title3.weight(.medium))   // the reading (hint / reveal)
+            }
+            if showKanji && model.current.displaysKanji {
                 Text(model.current.kanji).font(.title3)
             }
-            if options.showRomaji {
+            if showRomaji {
                 Text(model.current.romaji).foregroundStyle(.secondary)
             }
-            if options.showTranslation {
+            if showTranslation {
                 Text(model.current.translation).foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
