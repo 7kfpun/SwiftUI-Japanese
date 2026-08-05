@@ -6,10 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		AADA49F100000000000000B0 /* minna in Resources */ = {isa = PBXBuildFile; fileRef = AADA49F100000000000000A0 /* minna */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXContainerItemProxy section */
 		AADA497530235791006010F5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -31,7 +27,6 @@
 		AADA49653023578E006010F5 /* nihongo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = nihongo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AADA497430235791006010F5 /* nihongoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = nihongoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AADA497E30235791006010F5 /* nihongoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = nihongoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		AADA49F100000000000000A0 /* minna */ = {isa = PBXFileReference; lastKnownFileType = folder; path = minna; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -80,7 +75,6 @@
 		AADA495C3023578E006010F5 = {
 			isa = PBXGroup;
 			children = (
-				AADA49F100000000000000A0 /* minna */,
 				AADA49673023578E006010F5 /* nihongo */,
 				AADA497730235791006010F5 /* nihongoTests */,
 				AADA498130235791006010F5 /* nihongoUITests */,
@@ -218,7 +212,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AADA49F100000000000000B0 /* minna in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

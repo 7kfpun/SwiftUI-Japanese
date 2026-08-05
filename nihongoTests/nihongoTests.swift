@@ -8,6 +8,7 @@
 import Testing
 import Foundation
 import SwiftData
+import AVFoundation
 @testable import nihongo
 
 // MARK: - Bundled data integrity
@@ -49,8 +50,15 @@ struct DataTests {
 
     @Test func sampleAudioClipIsBundled() {
         let watashi = VocabStore.lesson(1).entries.first { $0.romaji == "watashi" }
-        #expect(watashi?.audio == "audio/kyoko/1/watashi.m4a")
+        #expect(watashi?.audio == "1-watashi")
         #expect(VocabStore.audioURL(for: watashi!) != nil)
+    }
+
+    @Test func bundledClipDecodesAtRuntime() throws {
+        let watashi = try #require(VocabStore.lesson(1).entries.first { $0.romaji == "watashi" })
+        let url = try #require(VocabStore.audioURL(for: watashi))
+        let player = try AVAudioPlayer(contentsOf: url)   // throws if not decodable
+        #expect(player.duration > 0)
     }
 
     @Test func translationsSwitchWithLanguage() {

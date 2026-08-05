@@ -1,52 +1,58 @@
 import Foundation
 
-/// Reads the `minna` submodule directly from the app bundle (added as a folder
-/// reference at `minna/`) and exposes lessons + a flat search index, resolved into
-/// any of the bundled translation languages. No build-time codegen — the raw
-/// `vocab/{n}.json` + `{lang}/{n}.json` files are the single source of truth.
+/// Loads the bundled `MinnaData.json` (compiled from the `minna` submodule by
+/// `scripts/build-minna-data.py`) plus flat `<lesson>-<slug>.m4a` audio clips.
+/// Generated files live in the app's Resources so the synchronized group copies them
+/// incrementally (fast rebuilds), unlike a whole-submodule folder reference.
 enum VocabStore {
     /// Default translation language; all ship in the bundle.
     static let defaultLanguage = "en"
-    static let availableLanguages = ["en", "zh", "zh-Hant", "vi", "de", "th", "my"]
-    static let lessonRange = 1...50
 
-    private struct VocabFile: Codable { let data: [VocabEntry] }
-
-    /// Decode a JSON resource from a subdirectory of the bundled `minna/` folder.
-    private static func decode<T: Decodable>(_ subdirectory: String, _ name: String) -> T? {
-        guard let url = Bundle.main.url(forResource: name, withExtension: "json",
-                                        subdirectory: subdirectory),
-              let raw = try? Data(contentsOf: url) else { return nil }
-        return try? JSONDecoder().decode(T.self, from: raw)
+    private struct LessonDTO: Codable { let number: Int; let entries: [VocabEntry] }
+    private struct MinnaData: Codable {
+        let languages: [String]
+        let lessons: [LessonDTO]
+        let translations: [String: [String: [String: String]]]  // lang -> lessonNo -> romaji -> text
     }
 
+    private static let data: MinnaData = {
+        guard let url = Bundle.main.url(forResource: "MinnaData", withExtension: "json"),
+              let raw = try? Data(contentsOf: url),
+              let decoded = try? JSONDecoder().decode(MinnaData.self, from: raw)
+        else { fatalError("MinnaData.json missing — run scripts/build-minna-data.py") }
+        return decoded
+    }()
+
+    static var availableLanguages: [String] { data.languages }
+
     private static func build(_ language: String) -> [Lesson] {
-        lessonRange.map { n in
-            let file: VocabFile = decode("minna/vocab", "\(n)") ?? VocabFile(data: [])
-            let tr: [String: String] = decode("minna/\(language)", "\(n)") ?? [:]
-            let items = file.data.map { e in
-                Vocab(lesson: n,
+        let tr = data.translations[language] ?? [:]
+        return data.lessons.map { dto in
+            let byRomaji = tr[String(dto.number)] ?? [:]
+            let items = dto.entries.map { e in
+                Vocab(lesson: dto.number,
                       kanji: e.kanji, kana: e.kana, romaji: e.romaji,
                       dictionary: e.dictionary, useKana: e.useKana ?? false,
-                      translation: tr[e.romaji] ?? "",
-                      audio: e.audio?["kyoko"])
+                      translation: byRomaji[e.romaji] ?? "",
+                      audio: e.audio)
             }
-            return Lesson(number: n, entries: items)
+            return Lesson(number: dto.number, entries: items)
         }
     }
 
-    /// Every language's lessons, built once. `static let` init is thread-safe and
-    /// runs exactly once, so reads are lock-free and race-free (Swift Testing runs
-    /// test cases in parallel — a mutable cache here would data-race and crash).
-    private static let catalog: [String: [Lesson]] = {
-        var dict: [String: [Lesson]] = [:]
-        for lang in availableLanguages { dict[lang] = build(lang) }
-        return dict
-    }()
+    // Per-language cache, built lazily (only the language actually shown — not all 7)
+    // so launch doesn't decode 7×2089 entries. Guarded by a lock because Swift
+    // Testing runs cases in parallel; an unlocked mutable static would data-race.
+    private static let lock = NSLock()
+    private nonisolated(unsafe) static var cache: [String: [Lesson]] = [:]
 
-    /// All 50 lessons with translations resolved for `language`.
+    /// All 50 lessons with translations resolved for `language` (built once, on demand).
     static func lessons(_ language: String = defaultLanguage) -> [Lesson] {
-        catalog[language] ?? catalog[defaultLanguage] ?? []
+        lock.lock(); defer { lock.unlock() }
+        if let cached = cache[language] { return cached }
+        let built = build(language)
+        cache[language] = built
+        return built
     }
 
     static func allVocab(_ language: String = defaultLanguage) -> [Vocab] {
@@ -57,15 +63,10 @@ enum VocabStore {
         lessons(language)[n - 1]
     }
 
-    /// Resolve a vocab's Kyoko clip in the bundle from its relative path,
-    /// e.g. "audio/kyoko/1/watashi.m4a" → minna/audio/kyoko/1 + "watashi".
+    /// Resolve a vocab's Kyoko clip in the bundle by its flat basename, e.g. "1-watashi".
     static func audioURL(for vocab: Vocab) -> URL? {
-        guard let rel = vocab.audio else { return nil }
-        let path = rel as NSString
-        let dir = "minna/" + path.deletingLastPathComponent
-        let file = (path.lastPathComponent as NSString).deletingPathExtension
-        let ext = path.pathExtension.isEmpty ? "m4a" : path.pathExtension
-        return Bundle.main.url(forResource: file, withExtension: ext, subdirectory: dir)
+        guard let name = vocab.audio else { return nil }
+        return Bundle.main.url(forResource: name, withExtension: "m4a")
     }
 
     /// Localized display name for a language code, e.g. "zh-Hant" → "Chinese, Traditional".

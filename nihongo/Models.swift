@@ -7,7 +7,7 @@ struct VocabEntry: Codable, Hashable {
     let romaji: String
     let dictionary: String?
     let useKana: Bool?
-    let audio: [String: String]?   // voice -> relative path, e.g. ["kyoko": "audio/kyoko/1/watashi.m4a"]
+    let audio: String?             // bundled clip basename (no extension), e.g. "1-watashi"
 }
 
 /// A vocabulary item enriched with its lesson number and resolved translation.
@@ -20,7 +20,7 @@ struct Vocab: Identifiable, Hashable {
     let dictionary: String?
     let useKana: Bool
     let translation: String
-    let audio: String?          // kyoko clip path relative to the minna bundle, or nil
+    let audio: String?          // bundled clip basename (no extension), or nil
 
     /// romaji is only unique *within* a lesson, so id must include the lesson.
     var id: String { "\(lesson)/\(romaji)" }

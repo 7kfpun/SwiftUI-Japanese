@@ -54,8 +54,12 @@ final class LearnModel {
 struct LearnView: View {
     @State private var model: LearnModel
     @State private var options = CardOptions()
+    @State private var drag: CGFloat = 0
     @AppStorage("isOrdered") private var ordered = true
+    @AppStorage("isSoundOn") private var soundOn = true
     @Environment(\.pronouncer) private var pronouncer
+
+    private let swipeThreshold: CGFloat = 80
 
     init(lesson: Lesson) {
         _model = State(initialValue: LearnModel(vocab: lesson.entries))
@@ -64,6 +68,13 @@ struct LearnView: View {
     var body: some View {
         VStack(spacing: 16) {
             CardOptionsBar()
+
+            Picker("", selection: $ordered) {
+                Text(L.t("Ordered")).tag(true)
+                Text(L.t("Random")).tag(false)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
 
             card
 
@@ -80,6 +91,25 @@ struct LearnView: View {
         .background(Theme.canvas)
         .navigationTitle("\(model.index + 1) / \(model.vocab.count)")
         .navigationBarTitleDisplayMode(.inline)
+        // Auto-play the word on each page when sound is on (mirrors RN assessment.js).
+        .onAppear { autoPlay() }
+        .onChange(of: model.index) { autoPlay() }
+    }
+
+    private func autoPlay() {
+        if soundOn { pronouncer.speak(model.current) }
+    }
+
+    /// Swipe the card to move: left/right = next/prev (ordered) or shuffle (random).
+    private func handleSwipe(_ width: CGFloat) {
+        guard abs(width) > swipeThreshold else { withAnimation(.spring) { drag = 0 }; return }
+        let dir: CGFloat = width < 0 ? -1 : 1
+        withAnimation(.easeOut(duration: 0.18)) { drag = dir * 500 }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+            if ordered { width < 0 ? model.next() : model.prev() } else { model.random() }
+            drag = -dir * 500                       // new card enters from the opposite side
+            withAnimation(.spring) { drag = 0 }
+        }
     }
 
     private var card: some View {
@@ -107,8 +137,25 @@ struct LearnView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.vertical, 24)
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(alignment: .bottom) {
+            if ordered {
+                HStack(spacing: 10) {
+                    Image(systemName: "chevron.compact.left")
+                    Text(L.t("Swipe"))
+                    Image(systemName: "chevron.compact.right")
+                }
+                .font(.caption).foregroundStyle(.tertiary).padding(.bottom, 8)
+            }
+        }
         .contentShape(Rectangle())
+        .offset(x: drag)
+        .rotationEffect(.degrees(Double(drag / 30)))
         .onTapGesture { pronouncer.speak(model.current) }
+        .gesture(
+            DragGesture()
+                .onChanged { drag = $0.translation.width }
+                .onEnded { handleSwipe($0.translation.width) }
+        )
     }
 
     private var tileGrid: some View {
@@ -135,21 +182,11 @@ struct LearnView: View {
                 Button(L.t("Clear")) { model.clearAnswer() }.buttonStyle(.bordered)
             }
             Spacer()
-            if ordered {
-                Button { model.prev() } label: { Image(systemName: "chevron.left") }
-                Button { model.next() } label: { Image(systemName: "chevron.right") }
-                    .buttonStyle(.borderedProminent)
-            } else {
-                Button { model.random() } label: {
-                    Label("Random", systemImage: "shuffle")
-                }.buttonStyle(.borderedProminent)
-            }
-        }
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button { ordered.toggle() } label: {
-                    Image(systemName: ordered ? "arrow.right.to.line" : "shuffle")
+            if !ordered {
+                Button { handleSwipe(-200) } label: {
+                    Label(L.t("Random"), systemImage: "shuffle")
                 }
+                .buttonStyle(.borderedProminent)
             }
         }
     }

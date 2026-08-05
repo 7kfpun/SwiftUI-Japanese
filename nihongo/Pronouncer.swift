@@ -42,6 +42,8 @@ final class AudioPronouncer: Pronouncer {
         if let url = VocabStore.audioURL(for: vocab),
            let p = try? AVAudioPlayer(contentsOf: url) {
             player = p
+            p.volume = 1
+            p.prepareToPlay()
             p.play()
         } else {
             speakLive(vocab.kana)
@@ -57,7 +59,9 @@ final class AudioPronouncer: Pronouncer {
 
     private func speakLive(_ text: String) {
         let u = AVSpeechUtterance(string: cleanWord(text))
+        // Prefer an installed Japanese voice; falls back to the language default.
         u.voice = AVSpeechSynthesisVoice(language: "ja-JP")
+            ?? AVSpeechSynthesisVoice.speechVoices().first { $0.language.hasPrefix("ja") }
         u.rate = 0.4
         synth.speak(u)
     }

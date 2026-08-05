@@ -40,7 +40,9 @@
     "The language used for the app's own text (tabs, buttons, labels).": "The language used for the app's own text (tabs, buttons, labels).",
     "Meanings": "Meanings",
     "Vocabulary language": "Vocabulary language",
-    "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "The language Japanese words are translated into (vocabulary lists, quizzes, and search)."
+    "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "The language Japanese words are translated into (vocabulary lists, quizzes, and search).",
+    "Ordered": "Ordered",
+    "Random": "Random"
   },
   "zh": {
     "Kana": "假名",
@@ -83,7 +85,9 @@
     "The language used for the app's own text (tabs, buttons, labels).": "应用自身文本（标签页、按钮、标签）所用的语言。",
     "Meanings": "释义",
     "Vocabulary language": "词汇语言",
-    "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "日语单词翻译所用的语言（词汇表、测验和搜索）。"
+    "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "日语单词翻译所用的语言（词汇表、测验和搜索）。",
+    "Ordered": "顺序",
+    "Random": "随机"
   },
   "zh-Hant": {
     "Kana": "假名",
@@ -126,7 +130,9 @@
     "The language used for the app's own text (tabs, buttons, labels).": "應用程式本身文字（分頁、按鈕、標籤）所用的語言。",
     "Meanings": "釋義",
     "Vocabulary language": "詞彙語言",
-    "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "日語單字翻譯所用的語言（詞彙表、測驗與搜尋）。"
+    "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "日語單字翻譯所用的語言（詞彙表、測驗與搜尋）。",
+    "Ordered": "順序",
+    "Random": "隨機"
   },
   "vi": {
     "Kana": "Kana",
@@ -169,7 +175,9 @@
     "The language used for the app's own text (tabs, buttons, labels).": "Ngôn ngữ cho văn bản của ứng dụng (tab, nút, nhãn).",
     "Meanings": "Nghĩa",
     "Vocabulary language": "Ngôn ngữ từ vựng",
-    "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "Ngôn ngữ dịch từ tiếng Nhật (danh sách từ, kiểm tra và tìm kiếm)."
+    "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "Ngôn ngữ dịch từ tiếng Nhật (danh sách từ, kiểm tra và tìm kiếm).",
+    "Ordered": "Theo thứ tự",
+    "Random": "Ngẫu nhiên"
   },
   "de": {
     "Kana": "Kana",
@@ -212,7 +220,9 @@
     "The language used for the app's own text (tabs, buttons, labels).": "Die Sprache für die Texte der App (Tabs, Schaltflächen, Beschriftungen).",
     "Meanings": "Bedeutungen",
     "Vocabulary language": "Vokabelsprache",
-    "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "Die Sprache, in die japanische Wörter übersetzt werden (Vokabellisten, Quiz und Suche)."
+    "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "Die Sprache, in die japanische Wörter übersetzt werden (Vokabellisten, Quiz und Suche).",
+    "Ordered": "Der Reihe nach",
+    "Random": "Zufällig"
   },
   "th": {
     "Kana": "คานะ",
@@ -255,7 +265,9 @@
     "The language used for the app's own text (tabs, buttons, labels).": "ภาษาที่ใช้กับข้อความของแอป (แท็บ ปุ่ม ป้าย)",
     "Meanings": "ความหมาย",
     "Vocabulary language": "ภาษาคำศัพท์",
-    "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "ภาษาที่ใช้แปลคำภาษาญี่ปุ่น (รายการคำศัพท์ แบบทดสอบ และการค้นหา)"
+    "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "ภาษาที่ใช้แปลคำภาษาญี่ปุ่น (รายการคำศัพท์ แบบทดสอบ และการค้นหา)",
+    "Ordered": "ตามลำดับ",
+    "Random": "สุ่ม"
   },
   "my": {
     "Kana": "ကာနာ",
@@ -298,6 +310,8 @@
     "The language used for the app's own text (tabs, buttons, labels).": "အက်ပ်၏ စာသား (တက်ဘ်၊ ခလုတ်၊ အညွှန်း) အတွက် သုံးသောဘာသာစကား။",
     "Meanings": "အဓိပ္ပာယ်များ",
     "Vocabulary language": "ဝေါဟာရဘာသာစကား",
-    "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "ဂျပန်စကားလုံးများကို ဘာသာပြန်သည့် ဘာသာစကား (ဝေါဟာရစာရင်း၊ ဉာဏ်စမ်းနှင့် ရှာဖွေမှု)။"
+    "The language Japanese words are translated into (vocabulary lists, quizzes, and search).": "ဂျပန်စကားလုံးများကို ဘာသာပြန်သည့် ဘာသာစကား (ဝေါဟာရစာရင်း၊ ဉာဏ်စမ်းနှင့် ရှာဖွေမှု)။",
+    "Ordered": "အစဉ်လိုက်",
+    "Random": "ကျပန်း"
   }
 }

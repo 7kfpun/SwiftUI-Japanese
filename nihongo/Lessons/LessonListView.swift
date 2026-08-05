@@ -50,25 +50,31 @@ struct VocabRow: View {
     @Environment(\.pronouncer) private var pronouncer
 
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(vocab.kana).font(.headline)
-                if vocab.displaysKanji {
-                    Text(vocab.kanji).font(.subheadline).foregroundStyle(.secondary)
+        Button {
+            pronouncer.speak(vocab)
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(vocab.kana).font(.headline)
+                    if vocab.displaysKanji {
+                        Text(vocab.kanji).font(.subheadline).foregroundStyle(.secondary)
+                    }
                 }
-            }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(vocab.translation)
-                    .font(.subheadline)
-                    .multilineTextAlignment(.trailing)
-                if showLesson {
-                    Text("L\(vocab.lesson)").font(.caption2).foregroundStyle(.tertiary)
+                Spacer()
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(vocab.translation)
+                        .font(.subheadline)
+                        .multilineTextAlignment(.trailing)
+                    if showLesson {
+                        Text("L\(vocab.lesson)").font(.caption2).foregroundStyle(.tertiary)
+                    }
                 }
+                Image(systemName: "speaker.wave.2")
+                    .font(.caption).foregroundStyle(Theme.accent)
             }
+            .contentShape(Rectangle())
         }
-        .contentShape(Rectangle())
-        .onTapGesture { pronouncer.speak(vocab) }
+        .buttonStyle(.plain)
     }
 }
 
