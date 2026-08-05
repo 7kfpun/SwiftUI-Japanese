@@ -10,6 +10,7 @@ import SwiftData
 
 @main
 struct nihongoApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     private let pronouncer = AudioPronouncer()
 
     var sharedModelContainer: ModelContainer = {

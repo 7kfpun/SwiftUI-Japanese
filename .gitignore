@@ -4,6 +4,11 @@
 nihongo/Resources/MinnaData.json
 nihongo/Resources/audio/
 
+# Secrets — real Firebase + AdMob values. Never commit; see config/*.example.plist
+# and copy the real files into nihongo/ (bundled by the synchronized group).
+nihongo/GoogleService-Info.plist
+nihongo/Secrets.plist
+
 # Xcode build artifacts & per-user state
 build/
 DerivedData/

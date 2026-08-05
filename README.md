@@ -74,6 +74,14 @@ Two independent language pickers in the app's **Settings** tab:
 - **App language** — the interface (7 languages).
 - **Vocabulary language** — what Japanese words are translated into.
 
+## Ads & analytics (optional)
+
+AdMob banners + Firebase Analytics/Crashlytics are integrated behind
+`#if canImport(...)` guards, so the app builds and runs **without** them. To turn
+them on (add the Swift Packages, drop in the git-ignored real keys), see
+[`config/README.md`](config/README.md). No real keys are committed — a fresh clone
+uses Google test ad IDs and skips Firebase.
+
 ## Architecture / analysis
 
 Design notes and the reverse-engineered spec of the original RN app live in
