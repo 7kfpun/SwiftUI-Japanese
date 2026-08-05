@@ -10,10 +10,10 @@ import SwiftData
 
 @main
 struct nihongoApp: App {
+    private let pronouncer = AudioPronouncer()
+
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
+        let schema = Schema([KanaResult.self])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         do {
@@ -25,7 +25,9 @@ struct nihongoApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
+                .tint(Theme.accent)
+                .environment(\.pronouncer, pronouncer)
         }
         .modelContainer(sharedModelContainer)
     }

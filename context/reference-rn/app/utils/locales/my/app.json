@@ -1,0 +1,127 @@
+{
+    "about": {
+        "notification": {
+            "description": "နေ့စဉ်လေ့လာရန်သင့်အားသတိပေး",
+            "title": "လေ့လာမှုသတိပေးချက် (နေ့စဉ်)"
+        },
+        "premium": {
+            "button-description": "ကျွန်တော်တို့ရဲ့အရှိဆုံးသီးသန့် features တွေသော့ဖွင့်",
+            "title": "ပရီမီယံ get",
+            "month": "လ",
+            "months": "လများ",
+            "year": "ခုနှစ်",
+            "years": "နှစ်ပေါင်း",
+            "note": "ငွေတောင်းခံထပ်တလဲလဲ, အချိန်မရွေး cancel ။",
+            "note-description": "\"Continue\" ကိုနှိပ်ခြင်းအားဖြင့်, သင့်ငွေပေးချေမှုကိုသင်၏ iTunes ကိုအကောင့်တရားစွဲဆိုလိမ့်မည်, သင်သည် iTumes စတိုးဆိုင်ကိုအနည်းဆုံး 24 နာရီရှိဆက်တင်ထဲမှာပယ်ဖျက်သည့်အချိန်အထိသင့်စာရင်းသွင်းမှာအလိုအလျှောက်ကြိုတင်အဆုံးတူညီတဲ့စျေးနှုန်းမှာအတူတူပင်အထုပ်အရှည်အဘို့အပြည့်ကြလိမ့်မည် လက်ရှိကာလ၏။ \"Continue\" ကိုနှိပ်ခြင်းအားဖြင့်, သင်သည်ငါတို့သီးသန့်လုံခြုံရေးပေါ်လစီများနှင့်စည်းကမ်းချက်များကိုသဘောတူသည်။",
+            "continue": "ဆက်လက်",
+            "lifetime": "တစ်သက်တာ",
+            "lifetime-description": "တစ်ကြိမ်ငွေပေးချေမှု"
+        },
+        "title": "အကွောငျး",
+        "notification-label": "လေ့လာမှုသတိပေးချက် (နေ့စဉ်)",
+        "restore": "သင့်ရဲ့ in-app ဝယ်ယူမှု Restore",
+        "purchase-title": "သငျသညျယခုကျွန်တော်တို့ရဲ့ပရီမီယံအသုံးပြုသူတွေဟာ",
+        "purchase-description": "ဂျပန်သင်ယူခံစားကြည့်ပါ",
+        "restore-failed-title": "သင်တို့ရှေ့မှကျွန်တော်တို့ရဲ့ပရီမီယံဝယ်ယူဖူးဘူး",
+        "version": "ဗားရှင်း",
+        "adfree": {
+            "title": "ကြော်ငြာများကို ဖယ်",
+            "description": "- အားလုံးပေါ့ပ်အပ်နှင့်နဖူးစည်းစာတမ်းကြော်ငြာကို Remove"
+        },
+        "premium-banner": {
+            "adfree": "ကြော်ငြာများကို ဖယ်",
+            "adfree-description": "ပိုပြီးကြော်ငြာနဖူးစည်းစာတမ်းတွေနဲ့ topup ကြော်ငြာတွေအဘယ်သူမျှမ",
+            "listening": "နားထောင်ခြင်း: သင်ခန်းစာ 3 - 50",
+            "listening-description": "အသံထွက်ကိုနားထောင်နှင့်မှန်ကန်သောအဖြေကိုရွေးချယ်ပါ, အဖြေကိုရာတွင်ခန်းဂျီး, ရိုမာဂျိသို့မဟုတ်သင့်ဘာသာစကားနဲ့ပြသနိုင်ပါတယ်",
+            "quiz": "ပဟေဠိ: သင်ခန်းစာ 3 - 50",
+            "quiz-description": "တဟိရဂဏ, ခတခဏ, ရာတွင်ခန်းဂျီးသို့မဟုတ်ရိုမာဂျိဘာသာပြန်ဆို၌သင်တို့၏လျော့ပြေစမ်းသပ်ရန်နှင့်အခြား",
+            "read-all": "အားလုံးဖတ်ရန်: သင်ခန်းစာ 3 - 50",
+            "read-all-description": "သင်ခန်းစာ၌ရှိသောစကားလုံးအသံထွက်နှင့်၎င်း၏အဓိပ္ပာယ်ကိုအားဖြင့်နောက်တော်သို့လိုက်",
+            "read-all-description-android": "(၏ TTS purchasing ရှေ့၌သင်တို့စက်ပစ္စည်းပေါ်ရှိအလုပ်လုပ်တယ်သေချာအောင်ပါ) သင်ခန်းစာသည်စကားလုံးအသံထွက်နှင့်၎င်း၏အဓိပ္ပာယ်ကိုအားဖြင့်နောက်တော်သို့လိုက်",
+            "bookmark": "Unlimited bookmark",
+            "bookmark-description": "သင့်ကိုယ်ပိုင်ဝေါဟာရများစာရင်းကိုဖူး"
+        },
+        "account": {
+            "not-yet-login": "မပေးရသေးရဲ့ login",
+            "login-or-signup": "login သို့မဟုတ်ဆိုင်းအပ်"
+        }
+    },
+    "bookmark": {
+        "description": "သင့်ကိုယ်ပိုင်ဝေါဟာရများစာရင်းကိုဖူး",
+        "title": "bookmark",
+        "star": "ကြယ်",
+        "stars": "ကြယ်များ",
+        "remove": "Remove",
+        "too-many": "ထက် ပို. ရှိသည်ဖို့ကျွန်တော်တို့ရဲ့ပရီမီယံအသုံးပြုသူ Be {{number}} စာရင်းထဲတွင်ဝေါဟာရများ"
+    },
+    "today": {
+        "title": "ယနေ့တွင်",
+        "shuffle": "ရောသမမွှေ",
+        "out-of-connection": "အင္တာနက္လိုင္းမမိျခင္း"
+    },
+    "kana": {
+        "title": "Kana",
+        "seion": "Seion",
+        "dakuon": "Dakuon",
+        "youon": "Youon",
+        "hiragana": "ဟိရဂဏ",
+        "katakana": "ခတခဏ",
+        "romaji": "ရိုမာဂျိ",
+        "quiz": "စစ်ဆေးမေးမြန်းခြင်း"
+    },
+    "lessons": {
+        "title": "သင်ခန်းစာများ",
+        "beginning-one": "အစပြုသူ I",
+        "beginning-two": "အစပြုသူ II",
+        "advanced-one": "ကြိုတင်မဲ I",
+        "advanced-two": "ကြိုတင်မဲ II"
+    },
+    "read-all": {
+        "premium-required-title": "ပရီမီယံအသုံးပြုသူများအတွက်သာရရှိနိုင်",
+        "premium-required-description": "ပိုပြီးပျော်မွေ့ဖို့ကျွန်တော်တို့ရဲ့ပရီမီယံအသုံးပြုသူဖြစ်လာ"
+    },
+    "search": {
+        "title": "ရှာဖှေ",
+        "cancel": "ပျက်စေ",
+        "description": "သင်တို့ရှိသမျှသည်သင်ခန်းစာတွေကိုဖြတ်ပြီးမဆိုစကားလုံးရှာတွေ့နိုင်ပါသည်။",
+        "any-text": "မည်သည့်စာသားကို"
+    },
+    "vocab-list": {
+        "vocab": "စကားစု",
+        "learn": "သင်ကြား",
+        "quiz": "စစ်ဆေးမေးမြန်းခြင်း",
+        "read-all": "အားလုံးဖတ်ပါ",
+        "listening": "နားထောင်နေသည်"
+    },
+    "feedback": {
+        "title": "တုံ့ပြန်ချက်",
+        "follow-us-on-facebook": "Facebook ပေါ်မှာကျွန်တော်တို့ကိုလိုက်နာပါ",
+        "url": "https:\/\/airtable.com\/shr7xvYAyInUbJNif?prefill_Platform={platform}& prefill_Version ={version}",
+        "issueUrl": "https:\/\/airtable.com\/shrYPMku3tmLPiPLp?prefill_Platform={platform}& prefill_Lesson ={lesson}& prefill_Kana ={kana}& prefill_Kanji ={kanji}& prefill_Romaji ={romaji}& prefill_Translation ={translation}& prefill_Version ={version}",
+        "feedback": "တုံ့ပြန်ချက်",
+        "help-translation": "ငါတို့နဲ့လာပူးပေါင်းပါ?",
+        "help-translation-description": "သငျသညျ Mainichi Nihongo သင်၏ဘာသာစကားသို့ပြန်ဆိုရပါမည်အကောင်းဆုံးဘယ်လိုသိသောကြောင့်ကျနော်တို့အသိုင်းအဝုိင်းမှတက်ဘာသာပြန်ဖြစ်စဉ်ကိုဖွင့်လှစ်ခဲ့ပါတယ်။ သငျသညျ, ဘာသာပြန်ချက်, မဲပေး, သင်၏သူချင်းဘာသာပြန်များနှင့်အတူဆွေးနွေးမှုအတွက်ကြိုက်နှစ်သက်သလောက်ပါဝင်ပါ။",
+        "tts-instruction": "အသံမ?",
+        "tts-instruction-description": "သင် \"စာသားမိန့်ခွန်းဖို့\" အင်္ဂါရပ်ကို enable နှင့်တစ်ဦးဂျပန်ဘာသာစကားအထုပ်ကို install ရှိသည်ဟုသေချာပါစေ။ ကျနော်တို့မိန့်ခွန်းအင်ဂျင်မှ Google စာသားကိုသုံးပြီးအကြံပြုပါသည်။",
+        "tts-instruction-url": "https:\/\/airtable.com\/shreKSVDYm5OhWbFP?prefill_Manufacturer={manufacturer}& prefill_Model ={model}& prefill_DeviceName ={name}& prefill_Type ={type}& prefill_Version ={version}& prefill_Brand ={brand}"
+    },
+    "common": {
+        "kana": "Kana",
+        "kanji": "ရာတွင်ခန်းဂျီး",
+        "romaji": "ရိုမာဂျိ",
+        "translation": "ဘာသာပြန်ချက်",
+        "previous": "လွန်ခဲ့သော",
+        "next": "နောက်တစ်ခု",
+        "random": "အမှတ်မဲ့ဖြစ်သော",
+        "lesson-no": "သင်ခန်းစာ {{lesson_no}}",
+        "tts-required": "Google Text-to-Speech လိုအပ်ပါသည်",
+        "coming-soon": "မကြာမှီလာမည်",
+        "coming-soon-description": "ကျွန်တော်ပိုပိုပြီး features တွေသက်ရောက်စေမည်ညှိနေဖို့ ကျေးဇူးပြု."
+    },
+    "rating": {
+        "title": "ကျွန်တော်တို့ရဲ့ APP ကိုခံစားကြည့်ပါ?",
+        "title-description": "သငျသညျဒီ APP ကိုကြိုက်နှစ်သက်ပါလျှင်ကျွန်တော်တက်အားပေးစရာကျွန်တော်တို့ကို 5 ကြယ်ပွပေးပါ။",
+        "feedback-description": "ကျွန်တော်တို့ရဲ့ APP ကိုကြိုက်နှစ်သက်သည်မဟုတ်လော ကျွန်တော်တို့ကိုအချို့သော feedbacks ပေးပါ။ ကျနော်တို့ကျိန်းသေတိုးတက်အောင်စောင့်ရှောက်မည်။",
+        "feedback-url": "https:\/\/airtable.com\/shr7xvYAyInUbJNif?prefill_Platform={platform}"
+    }
+}

@@ -1,0 +1,3 @@
+[submodule "minna"]
+	path = minna
+	url = git@github.com:7kfpun/minna.git

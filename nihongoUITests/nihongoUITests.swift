@@ -10,34 +10,63 @@ import XCTest
 final class nihongoUITests: XCTestCase {
 
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
-    }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testKanaBrowserAndQuizFlow() throws {
         let app = XCUIApplication()
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // XCUIAutomation Documentation
-        // https://developer.apple.com/documentation/xcuiautomation
+        // Kana browser grid loaded (the あ tile).
+        XCTAssertTrue(app.staticTexts["あ"].waitForExistence(timeout: 5))
+
+        // Switch kana set via the segmented control.
+        let dakuon = app.segmentedControls.buttons["濁音"]
+        if dakuon.waitForExistence(timeout: 2) { dakuon.tap() }
+
+        // Enter the quiz; the Next button is the anchor of the quiz screen.
+        XCTAssertTrue(app.buttons["Quiz"].waitForExistence(timeout: 5))
+        app.buttons["Quiz"].tap()
+        XCTAssertTrue(app.buttons["Next"].waitForExistence(timeout: 5))
     }
 
     @MainActor
-    func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
-        }
+    func testLessonsToLearnFlow() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        app.buttons["Lessons"].tap()
+        XCTAssertTrue(app.staticTexts["Lesson 1"].waitForExistence(timeout: 5))
+
+        app.staticTexts["Lesson 1"].tap()
+        XCTAssertTrue(app.staticTexts["Learn"].waitForExistence(timeout: 5))
+
+        app.staticTexts["Learn"].tap()
+        // Learn screen shows the field-visibility toggle bar (漢 button) + a lesson counter title.
+        XCTAssertTrue(app.buttons["漢"].waitForExistence(timeout: 5))
+        attach(app, "learn")
+    }
+
+    /// Save a screenshot as a kept attachment (exported via xcresulttool).
+    @MainActor private func attach(_ app: XCUIApplication, _ name: String) {
+        let a = XCTAttachment(screenshot: app.screenshot())
+        a.name = name
+        a.lifetime = .keepAlways
+        add(a)
+    }
+
+    @MainActor
+    func testSearchFindsVocab() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        app.buttons["Lessons"].tap()
+        let search = app.searchFields.firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap()
+        search.typeText("watashi")
+        // A result row should appear (translation "I").
+        XCTAssertTrue(app.staticTexts["わたし"].waitForExistence(timeout: 5))
     }
 }

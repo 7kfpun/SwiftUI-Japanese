@@ -1,0 +1,75 @@
+import SwiftUI
+import AVFoundation
+
+/// Word-pronunciation seam. Audio is deferred (v1), so the default implementation
+/// does nothing. Every "tap to hear" path calls this, so audio can be added later
+/// (planned: macOS `say -v Kyoko` pre-generated clips, or live `AVSpeechSynthesizer`)
+/// without touching any view.
+protocol Pronouncer {
+    func speak(_ vocab: Vocab)
+    func speak(kana: String)
+    func stop()
+}
+
+/// No-op — used in previews/tests where audio isn't wanted.
+struct SilentPronouncer: Pronouncer {
+    func speak(_ vocab: Vocab) {}
+    func speak(kana: String) {}
+    func stop() {}
+}
+
+/// Plays the bundled Kyoko clip for a vocab word; falls back to live
+/// `AVSpeechSynthesizer` (ja-JP) for the 2 clip-less words and for bare kana tiles.
+final class AudioPronouncer: Pronouncer {
+    private let synth = AVSpeechSynthesizer()
+    private var player: AVAudioPlayer?
+    private var sessionActivated = false
+
+    /// Configure the audio session once, lazily, right before the first sound.
+    /// `.mixWithOthers` keeps the user's background music playing (and lets the word
+    /// be heard even with the silent switch on) instead of taking over audio at launch.
+    private func activateSession() {
+        guard !sessionActivated else { return }
+        let session = AVAudioSession.sharedInstance()
+        try? session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+        try? session.setActive(true)
+        sessionActivated = true
+    }
+
+    func speak(_ vocab: Vocab) {
+        stop()
+        activateSession()
+        if let url = VocabStore.audioURL(for: vocab),
+           let p = try? AVAudioPlayer(contentsOf: url) {
+            player = p
+            p.play()
+        } else {
+            speakLive(vocab.kana)
+        }
+    }
+
+    func speak(kana: String) { stop(); activateSession(); speakLive(kana) }
+
+    func stop() {
+        player?.stop(); player = nil
+        if synth.isSpeaking { synth.stopSpeaking(at: .immediate) }
+    }
+
+    private func speakLive(_ text: String) {
+        let u = AVSpeechUtterance(string: cleanWord(text))
+        u.voice = AVSpeechSynthesisVoice(language: "ja-JP")
+        u.rate = 0.4
+        synth.speak(u)
+    }
+}
+
+private struct PronouncerKey: EnvironmentKey {
+    static let defaultValue: Pronouncer = SilentPronouncer()
+}
+
+extension EnvironmentValues {
+    var pronouncer: Pronouncer {
+        get { self[PronouncerKey.self] }
+        set { self[PronouncerKey.self] = newValue }
+    }
+}
