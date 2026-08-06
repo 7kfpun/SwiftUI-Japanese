@@ -1,4 +1,5 @@
 import StoreKit
+import UIKit
 
 /// Premium product IDs — must match App Store Connect **and** the original RN app, so
 /// existing lifetime buyers / subscribers restore automatically (a non-consumable stays
@@ -91,6 +92,16 @@ final class Store {
         try? await AppStore.sync()
         await refreshEntitlement()
         Track.event("restore", ["premium": isPremium])
+    }
+
+    /// Apple's native manage-subscriptions sheet — where users switch tier (3m↔6m↔12m
+    /// within the same group) or cancel. Refreshes entitlement on return.
+    func manageSubscriptions() async {
+        guard let scene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first(where: { $0.activationState == .foregroundActive }) else { return }
+        try? await AppStore.showManageSubscriptions(in: scene)
+        await refreshEntitlement()
     }
 
     /// Short tier label from a product ID (…premium.3m → "3m", lifetime → "lifetime").

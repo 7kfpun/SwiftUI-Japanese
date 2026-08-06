@@ -19,9 +19,8 @@ enum L {
     /// First-launch default: the device language if we ship it, else English.
     static let deviceDefault: String = {
         let lang = Locale.current.language
-        if lang.languageCode?.identifier == "zh" {
-            return lang.script?.identifier == "Hant" ? "zh-Hant" : "zh"
-        }
+        // Any Chinese device language defaults to Traditional (users can switch to zh).
+        if lang.languageCode?.identifier == "zh" { return "zh-Hant" }
         let code = lang.languageCode?.identifier ?? "en"
         return availableLanguages.contains(code) ? code : "en"
     }()

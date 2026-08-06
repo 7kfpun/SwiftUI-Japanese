@@ -34,9 +34,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 }
 
 /// Thin analytics seam — logs only when the Firebase SDKs are linked and configured.
-/// Every event name carries the app-variant prefix. Firebase names must be
-/// `[A-Za-z][A-Za-z0-9_]{0,39}` (no hyphens, no leading digit), so the requested
-/// "2026-nihongo-" is encoded as the valid `nihongo_2026_`.
+/// Every event name is prefixed with `nihongo_2026_`.
 enum Track {
     static let prefix = "nihongo_2026_"
 

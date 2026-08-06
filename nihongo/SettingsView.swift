@@ -18,6 +18,12 @@ struct SettingsView: View {
                     if store.isPremium {
                         Label(L.t("Premium active"), systemImage: "checkmark.seal.fill")
                             .foregroundStyle(Theme.accent)
+                        if store.tier != "lifetime" {
+                            Button(L.t("Manage subscription")) {
+                                Track.event("manage_subscription")
+                                Task { await store.manageSubscriptions() }
+                            }
+                        }
                     } else {
                         Button(L.t("Unlock all lessons")) { showPaywall = true }
                         Button(L.t("Restore Purchases")) { Task { await store.restore() } }
