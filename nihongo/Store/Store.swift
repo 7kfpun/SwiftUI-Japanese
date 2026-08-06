@@ -13,11 +13,21 @@ enum PremiumProduct {
     static let all = subscriptions + [lifetime]
 }
 
-/// Free/premium gating. Lessons 1…`freeLessonLimit` are free; the rest need premium.
+/// Free/premium gating. Lessons 1…`freeLessonLimit` are fully free. On the rest, the
+/// practice modes (Flashcards/Learn/Quiz/Listening) give `freeTrialCards` cards before
+/// the paywall; Vocab List stays free everywhere.
 enum Gating {
     static let freeLessonLimit = 5
+    static let freeTrialCards = 5
+
+    /// True when a lesson's practice modes are premium-gated (i.e. trial-limited).
     static func isLocked(lesson number: Int, isPremium: Bool) -> Bool {
         !isPremium && number > freeLessonLimit
+    }
+
+    /// The free card/question limit for a lesson, or nil when unlimited (free lesson or premium).
+    static func trialLimit(lesson number: Int, isPremium: Bool) -> Int? {
+        isLocked(lesson: number, isPremium: isPremium) ? freeTrialCards : nil
     }
 }
 

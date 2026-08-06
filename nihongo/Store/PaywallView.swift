@@ -11,12 +11,14 @@ struct PaywallView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    Image(systemName: "lock.open.fill")
+                    Image(systemName: "crown.fill")
                         .font(.system(size: 44)).foregroundStyle(Theme.accent)
-                    Text(L.t("Unlock all lessons")).font(.title2.bold())
+                    Text(L.t("Unlock all lessons")).font(.title.bold())
                     Text(L.t("Free through lesson 5 — unlock the rest and remove ads."))
                         .font(.subheadline).foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
+
+                    features
 
                     if store.products.isEmpty {
                         ProgressView().padding(.top, 8)
@@ -46,6 +48,27 @@ struct PaywallView: View {
                 }
             }
             .onChange(of: store.isPremium) { if store.isPremium { dismiss() } }
+        }
+    }
+
+    private var features: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            feature("All 50 lessons unlocked")
+            feature("No ads, ever")
+            feature("Unlimited flashcards, quizzes & listening")
+            feature("Native audio for every word")
+            feature("Study offline, anywhere")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 4)
+    }
+
+    private func feature(_ key: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(Theme.correct)
+            Text(L.t(key)).font(.subheadline)
+            Spacer(minLength: 0)
         }
     }
 

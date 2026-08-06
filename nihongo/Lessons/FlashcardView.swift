@@ -4,6 +4,8 @@ import SwiftUI
 struct FlashcardView: View {
     let lesson: Lesson
     @Environment(\.pronouncer) private var pronouncer
+    @Environment(Store.self) private var store
+    @State private var showPaywall = false
 
     var body: some View {
         FlashcardScreen(
@@ -11,9 +13,12 @@ struct FlashcardView: View {
             id: { $0.id },
             revealLabel: L.t("Show meaning"),
             summary: { L.t("You reviewed %@ words", "\($0)") },
+            trialLimit: Gating.trialLimit(lesson: lesson.number, isPremium: store.isPremium),
+            onReachLimit: { showPaywall = true },
             speak: { pronouncer.speak($0) },
             face: { vocab, revealed in VocabFace(vocab: vocab, revealed: revealed) }
         )
+        .sheet(isPresented: $showPaywall) { PaywallView() }
     }
 }
 

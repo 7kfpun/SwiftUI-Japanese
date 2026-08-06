@@ -317,6 +317,13 @@ struct GatingTests {
 
     @Test func freeLimitIsFive() {
         #expect(Gating.freeLessonLimit == 5)
+        #expect(Gating.freeTrialCards == 5)
+    }
+
+    @Test func trialLimitAppliesOnlyToLockedLessons() {
+        #expect(Gating.trialLimit(lesson: 3, isPremium: false) == nil)                  // free lesson
+        #expect(Gating.trialLimit(lesson: 6, isPremium: false) == Gating.freeTrialCards) // locked → trial
+        #expect(Gating.trialLimit(lesson: 6, isPremium: true) == nil)                    // premium → unlimited
     }
 }
 

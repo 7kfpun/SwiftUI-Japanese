@@ -6,6 +6,9 @@ struct SettingsView: View {
     @Environment(Store.self) private var store
     @State private var showPaywall = false
 
+    /// Airtable feedback form (from the RN app), prefilled with the platform.
+    private static let feedbackURL = URL(string: "https://airtable.com/shr7xvYAyInUbJNif?prefill_Platform=iOS")!
+
     var body: some View {
         NavigationStack {
             Form {
@@ -43,6 +46,16 @@ struct SettingsView: View {
                     Text(L.t("Meanings"))
                 } footer: {
                     Text(L.t("The language Japanese words are translated into (vocabulary lists, quizzes, and search)."))
+                }
+
+                Section {
+                    Link(destination: Self.feedbackURL) {
+                        Label(L.t("Send feedback"), systemImage: "envelope")
+                    }
+                } header: {
+                    Text(L.t("Feedback"))
+                } footer: {
+                    Text(L.t("Something wrong or missing? Feel free to reach out."))
                 }
             }
             .navigationTitle(L.t("Settings"))

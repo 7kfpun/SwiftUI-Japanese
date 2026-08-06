@@ -54,6 +54,8 @@ final class LearnModel {
 struct LearnView: View {
     @State private var model: LearnModel
     @State private var drag: CGFloat = 0
+    @State private var viewed = 1          // cards seen so far (first card is showing)
+    @State private var showPaywall = false
     // Read the visibility flags directly so the current card updates the instant a toggle flips.
     @AppStorage("isKanjiShown")       private var showKanji = true
     @AppStorage("isKanaShown")        private var showKana = true
@@ -62,11 +64,20 @@ struct LearnView: View {
     @AppStorage("isOrdered") private var ordered = true
     @AppStorage("isSoundOn") private var soundOn = true
     @Environment(\.pronouncer) private var pronouncer
+    @Environment(Store.self) private var store
 
     private let swipeThreshold: CGFloat = 80
+    private let lessonNumber: Int
 
     init(lesson: Lesson) {
+        lessonNumber = lesson.number
         _model = State(initialValue: LearnModel(vocab: lesson.entries))
+    }
+
+    /// Locked lessons let you page through `freeTrialCards` cards before the paywall.
+    private var reachedLimit: Bool {
+        Gating.trialLimit(lesson: lessonNumber, isPremium: store.isPremium)
+            .map { viewed >= $0 } ?? false
     }
 
     var body: some View {
@@ -98,6 +109,7 @@ struct LearnView: View {
         // Auto-play the word on each page when sound is on (mirrors RN assessment.js).
         .onAppear { autoPlay() }
         .onChange(of: model.index) { autoPlay() }
+        .sheet(isPresented: $showPaywall) { PaywallView() }
     }
 
     private func autoPlay() {
@@ -107,10 +119,16 @@ struct LearnView: View {
     /// Swipe the card to move: left/right = next/prev (ordered) or shuffle (random).
     private func handleSwipe(_ width: CGFloat) {
         guard abs(width) > swipeThreshold else { withAnimation(.spring) { drag = 0 }; return }
+        if reachedLimit {                           // out of free cards on a locked lesson
+            withAnimation(.spring) { drag = 0 }
+            showPaywall = true
+            return
+        }
         let dir: CGFloat = width < 0 ? -1 : 1
         withAnimation(.easeOut(duration: 0.18)) { drag = dir * 500 }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
             if ordered { width < 0 ? model.next() : model.prev() } else { model.random() }
+            viewed += 1
             drag = -dir * 500                       // new card enters from the opposite side
             withAnimation(.spring) { drag = 0 }
         }
@@ -184,16 +202,25 @@ struct LearnView: View {
     }
 
     @ViewBuilder private var controls: some View {
-        HStack {
-            if model.state == .wrong {
-                Button(L.t("Clear")) { model.clearAnswer() }.buttonStyle(.bordered)
+        if reachedLimit {
+            Button { showPaywall = true } label: {
+                Label(L.t("Unlock to continue"), systemImage: "lock.open.fill")
+                    .frame(maxWidth: .infinity)
             }
-            Spacer()
-            if !ordered {
-                Button { handleSwipe(-200) } label: {
-                    Label(L.t("Random"), systemImage: "shuffle")
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+        } else {
+            HStack {
+                if model.state == .wrong {
+                    Button(L.t("Clear")) { model.clearAnswer() }.buttonStyle(.bordered)
                 }
-                .buttonStyle(.borderedProminent)
+                Spacer()
+                if !ordered {
+                    Button { handleSwipe(-200) } label: {
+                        Label(L.t("Random"), systemImage: "shuffle")
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
             }
         }
     }

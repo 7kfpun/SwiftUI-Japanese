@@ -60,7 +60,16 @@
     "Restore Purchases": "Restore Purchases",
     "Premium active": "Premium active",
     "Lifetime": "Lifetime",
-    "%@ months": "%@ months"
+    "%@ months": "%@ months",
+    "Unlock to continue": "Unlock to continue",
+    "All 50 lessons unlocked": "All 50 lessons unlocked",
+    "No ads, ever": "No ads, ever",
+    "Unlimited flashcards, quizzes & listening": "Unlimited flashcards, quizzes & listening",
+    "Native audio for every word": "Native audio for every word",
+    "Study offline, anywhere": "Study offline, anywhere",
+    "Feedback": "Feedback",
+    "Send feedback": "Send feedback",
+    "Something wrong or missing? Feel free to reach out.": "Something wrong or missing? Feel free to reach out."
   },
   "zh": {
     "Kana": "假名",
@@ -123,7 +132,16 @@
     "Restore Purchases": "恢复购买",
     "Premium active": "高级版已启用",
     "Lifetime": "永久",
-    "%@ months": "%@ 个月"
+    "%@ months": "%@ 个月",
+    "Unlock to continue": "解锁以继续",
+    "All 50 lessons unlocked": "全部 50 课解锁",
+    "No ads, ever": "永久无广告",
+    "Unlimited flashcards, quizzes & listening": "无限闪卡、测验和听力",
+    "Native audio for every word": "每个单词都有原声",
+    "Study offline, anywhere": "随时随地离线学习",
+    "Feedback": "反馈",
+    "Send feedback": "发送反馈",
+    "Something wrong or missing? Feel free to reach out.": "有问题或遗漏？欢迎随时联系我们。"
   },
   "zh-Hant": {
     "Kana": "假名",
@@ -186,7 +204,16 @@
     "Restore Purchases": "還原購買",
     "Premium active": "進階版已啟用",
     "Lifetime": "永久",
-    "%@ months": "%@ 個月"
+    "%@ months": "%@ 個月",
+    "Unlock to continue": "解鎖以繼續",
+    "All 50 lessons unlocked": "全部 50 課解鎖",
+    "No ads, ever": "永久無廣告",
+    "Unlimited flashcards, quizzes & listening": "無限閃卡、測驗與聽力",
+    "Native audio for every word": "每個單字都有原聲",
+    "Study offline, anywhere": "隨時隨地離線學習",
+    "Feedback": "意見回饋",
+    "Send feedback": "傳送回饋",
+    "Something wrong or missing? Feel free to reach out.": "有問題或遺漏？歡迎隨時聯絡我們。"
   },
   "vi": {
     "Kana": "Kana",
@@ -249,7 +276,16 @@
     "Restore Purchases": "Khôi phục mua hàng",
     "Premium active": "Đã kích hoạt cao cấp",
     "Lifetime": "Trọn đời",
-    "%@ months": "%@ tháng"
+    "%@ months": "%@ tháng",
+    "Unlock to continue": "Mở khoá để tiếp tục",
+    "All 50 lessons unlocked": "Mở khoá toàn bộ 50 bài học",
+    "No ads, ever": "Không quảng cáo, mãi mãi",
+    "Unlimited flashcards, quizzes & listening": "Thẻ ghi nhớ, kiểm tra & nghe không giới hạn",
+    "Native audio for every word": "Âm thanh gốc cho mọi từ",
+    "Study offline, anywhere": "Học ngoại tuyến, mọi nơi",
+    "Feedback": "Phản hồi",
+    "Send feedback": "Gửi phản hồi",
+    "Something wrong or missing? Feel free to reach out.": "Có lỗi hoặc thiếu sót? Hãy liên hệ với chúng tôi."
   },
   "de": {
     "Kana": "Kana",
@@ -312,7 +348,16 @@
     "Restore Purchases": "Käufe wiederherstellen",
     "Premium active": "Premium aktiv",
     "Lifetime": "Lebenslang",
-    "%@ months": "%@ Monate"
+    "%@ months": "%@ Monate",
+    "Unlock to continue": "Zum Fortfahren freischalten",
+    "All 50 lessons unlocked": "Alle 50 Lektionen freigeschaltet",
+    "No ads, ever": "Keine Werbung, nie",
+    "Unlimited flashcards, quizzes & listening": "Unbegrenzt Karteikarten, Quizze & Hören",
+    "Native audio for every word": "Muttersprachliche Audios für jedes Wort",
+    "Study offline, anywhere": "Lerne offline, überall",
+    "Feedback": "Feedback",
+    "Send feedback": "Feedback senden",
+    "Something wrong or missing? Feel free to reach out.": "Etwas falsch oder fehlt? Melde dich gerne."
   },
   "th": {
     "Kana": "คานะ",
@@ -375,7 +420,16 @@
     "Restore Purchases": "กู้คืนการซื้อ",
     "Premium active": "เปิดใช้พรีเมียมแล้ว",
     "Lifetime": "ตลอดชีพ",
-    "%@ months": "%@ เดือน"
+    "%@ months": "%@ เดือน",
+    "Unlock to continue": "ปลดล็อกเพื่อไปต่อ",
+    "All 50 lessons unlocked": "ปลดล็อกครบ 50 บทเรียน",
+    "No ads, ever": "ไม่มีโฆษณา ตลอดไป",
+    "Unlimited flashcards, quizzes & listening": "บัตรคำ แบบทดสอบ และการฟัง ไม่จำกัด",
+    "Native audio for every word": "เสียงเจ้าของภาษาสำหรับทุกคำ",
+    "Study offline, anywhere": "เรียนออฟไลน์ได้ทุกที่",
+    "Feedback": "ข้อเสนอแนะ",
+    "Send feedback": "ส่งข้อเสนอแนะ",
+    "Something wrong or missing? Feel free to reach out.": "มีปัญหาหรือขาดอะไรไหม? ติดต่อเราได้เลย"
   },
   "my": {
     "Kana": "ကာနာ",
@@ -438,6 +492,15 @@
     "Restore Purchases": "ဝယ်ယူမှုများ ပြန်ယူရန်",
     "Premium active": "ပရီမီယံ အသုံးပြုနေသည်",
     "Lifetime": "တစ်သက်တာ",
-    "%@ months": "%@ လ"
+    "%@ months": "%@ လ",
+    "Unlock to continue": "ဆက်လုပ်ရန် ဖွင့်ပါ",
+    "All 50 lessons unlocked": "သင်ခန်းစာ ၅၀ လုံး ဖွင့်ပြီး",
+    "No ads, ever": "ကြော်ငြာ လုံးဝမရှိ",
+    "Unlimited flashcards, quizzes & listening": "ကတ်ပြား၊ ဉာဏ်စမ်းနှင့် နားထောင်ခြင်း အကန့်အသတ်မဲ့",
+    "Native audio for every word": "စကားလုံးတိုင်းအတွက် မူရင်းအသံ",
+    "Study offline, anywhere": "အင်တာနက်မလို ဘယ်နေရာမဆို လေ့လာပါ",
+    "Feedback": "အကြံပြုချက်",
+    "Send feedback": "အကြံပြုချက် ပို့ရန်",
+    "Something wrong or missing? Feel free to reach out.": "ပြဿနာ သို့မဟုတ် လိုအပ်ချက်ရှိပါသလား။ လွတ်လပ်စွာ ဆက်သွယ်ပါ။"
   }
 }

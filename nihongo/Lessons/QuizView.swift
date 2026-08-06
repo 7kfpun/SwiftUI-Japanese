@@ -79,11 +79,14 @@ final class QuizModel {
 
 struct QuizView: View {
     @State private var model: QuizModel
+    @State private var showPaywall = false
     @Environment(\.pronouncer) private var pronouncer
     @Environment(Store.self) private var store
+    private let lessonNumber: Int
 
     /// `from: .audio` opens the "Listening" variant — prompt is the clip, pick the word.
     init(lesson: Lesson, from: VForm = .kana) {
+        lessonNumber = lesson.number
         let pool: [Vocab]
         if from == .audio {
             let audible = lesson.entries.filter { $0.audio != nil }
@@ -92,6 +95,12 @@ struct QuizView: View {
             pool = lesson.entries
         }
         _model = State(initialValue: QuizModel(vocab: pool, from: from))
+    }
+
+    /// Locked lessons give `freeTrialCards` questions before the paywall.
+    private var reachedLimit: Bool {
+        Gating.trialLimit(lesson: lessonNumber, isPremium: store.isPremium)
+            .map { model.total >= $0 } ?? false
     }
 
     var body: some View {
@@ -109,13 +118,22 @@ struct QuizView: View {
             OptionGrid(count: model.options.count) { i in
                 QuizOptionButton(text: model.to.value(model.options[i]),
                                  border: optionBorder(i),
-                                 disabled: model.picked != nil) { model.choose(i) }
+                                 disabled: model.picked != nil || reachedLimit) { model.choose(i) }
             }
 
-            Button { model.next() } label: { Text(L.t("Next")).frame(maxWidth: .infinity) }
+            if reachedLimit {
+                Button { showPaywall = true } label: {
+                    Label(L.t("Unlock to continue"), systemImage: "lock.open.fill")
+                        .frame(maxWidth: .infinity)
+                }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-                .disabled(model.picked == nil)
+            } else {
+                Button { model.next() } label: { Text(L.t("Next")).frame(maxWidth: .infinity) }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .disabled(model.picked == nil)
+            }
         }
         .padding()
         .background(Theme.canvas)
@@ -124,6 +142,8 @@ struct QuizView: View {
         .onAppear { autoPlayIfAudio(); if !store.isPremium { Ads.preloadInterstitial() } }
         .onChange(of: model.answer.id) { autoPlayIfAudio() }
         .onChange(of: model.from) { autoPlayIfAudio() }
+        .onChange(of: model.total) { if reachedLimit { showPaywall = true } }
+        .sheet(isPresented: $showPaywall) { PaywallView() }
         // A popup ad on the way out of the quiz — non-premium only, throttled.
         .onDisappear { if !store.isPremium && model.total > 0 { Ads.showInterstitialIfReady() } }
     }
