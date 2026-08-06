@@ -40,14 +40,24 @@ enum AdConfig {
     /// The banner unit ID for a slot — production when configured, else the test unit.
     /// Slots added after the Secrets.plist was written fall back to another production
     /// unit first, so a missing key never ships test ads in a production build.
+    /// DEBUG always uses Google's test units: dev clicks on real ads violate AdMob
+    /// policy, and test units always fill (brand-new real units can no-fill for days).
     static func banner(_ slot: AdSlot) -> String {
+        #if DEBUG
+        return testBanner
+        #else
         if let id = productionBanners[slot.rawValue] { return id }
         if slot == .today, let id = productionBanners[AdSlot.vocabList.rawValue] { return id }
         return testBanner
+        #endif
     }
 
     /// The interstitial unit ID (RN's `assessment-popup`) — production or test.
     static var interstitial: String {
-        secrets["interstitial"] as? String ?? testInterstitial
+        #if DEBUG
+        return testInterstitial
+        #else
+        return secrets["interstitial"] as? String ?? testInterstitial
+        #endif
     }
 }

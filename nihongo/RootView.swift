@@ -6,23 +6,29 @@ struct RootView: View {
 
     var body: some View {
         TabView {
-            TodayView()
-                .safeAreaInset(edge: .bottom) { BannerAd(slot: .today) }
+            banner(TodayView(), .today)
                 .tabItem { Label(L.t("Today"), systemImage: "sun.max") }
 
-            KanaBrowserView()
-                .safeAreaInset(edge: .bottom) { BannerAd(slot: .kana) }
+            banner(KanaBrowserView(), .kana)
                 .tabItem { Label(L.t("Kana"), systemImage: "character.book.closed") }
 
-            LessonListView()
-                .safeAreaInset(edge: .bottom) { BannerAd(slot: .lessons) }
+            banner(LessonListView(), .lessons)
                 .tabItem { Label(L.t("Lessons"), systemImage: "list.bullet") }
 
-            SettingsView()
-                .safeAreaInset(edge: .bottom) { BannerAd(slot: .about) }
+            banner(SettingsView(), .about)
                 .tabItem { Label(L.t("Settings"), systemImage: "gearshape") }
         }
         .id(appLanguage)   // rebuild the whole tree when the app language changes
+    }
+
+    /// Reserve the banner's space structurally (VStack), not via safeAreaInset —
+    /// screens pushed inside a NavigationStack ignore an outer safe-area inset and
+    /// would render underneath the ad (e.g. the Quiz's Next button).
+    private func banner(_ content: some View, _ slot: AdSlot) -> some View {
+        VStack(spacing: 0) {
+            content
+            BannerAd(slot: slot)
+        }
     }
 }
 

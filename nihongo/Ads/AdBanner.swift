@@ -26,8 +26,15 @@ struct BannerAd: View {
 
     @ViewBuilder private var adBody: some View {
         #if canImport(GoogleMobileAds)
+        // The SDK refuses to load into a zero-sized view ("Invalid ad width or height"),
+        // so the BannerView always keeps its full ad size internally; the outer frame +
+        // clip decide how much the layout shows — 0 until an ad actually arrives.
+        let size = AdBannerRepresentable.preferredSize
         AdBannerRepresentable(unitID: AdConfig.banner(slot), adHeight: $adHeight)
-            .frame(height: adHeight)
+            .frame(width: size.width, height: size.height)
+            .frame(maxWidth: .infinity)
+            .frame(height: adHeight, alignment: .top)
+            .clipped()
         #elseif DEBUG
         // SDK not added yet: show where the banner will sit (DEBUG only).
         Text("Ad banner · \(slot.rawValue) · add GoogleMobileAds package")
@@ -52,9 +59,23 @@ private struct AdBannerRepresentable: UIViewRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator(adHeight: $adHeight) }
 
+    /// The adaptive ad size for the current window (clamped so it's always valid),
+    /// falling back to the classic 320×50 if the adaptive lookup degenerates.
+    static var adSize: AdSize {
+        let window = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }
+        let width = max(320, window?.bounds.width ?? 375)
+        let adaptive = currentOrientationAnchoredAdaptiveBanner(width: width)
+        return adaptive.size.height > 0 ? adaptive : AdSizeBanner
+    }
+
+    /// The size the SwiftUI layout should give the (possibly hidden) banner view.
+    static var preferredSize: CGSize { adSize.size }
+
     func makeUIView(context: Context) -> BannerView {
-        let width = UIScreen.main.bounds.width
-        let banner = BannerView(adSize: currentOrientationAnchoredAdaptiveBanner(width: width))
+        let banner = BannerView(adSize: Self.adSize)
         banner.adUnitID = unitID
         banner.rootViewController = Coordinator.rootViewController
         banner.delegate = context.coordinator
@@ -73,6 +94,9 @@ private struct AdBannerRepresentable: UIViewRepresentable {
         }
 
         func bannerView(_ bannerView: BannerView, didFailToReceiveAdWithError error: Error) {
+            // Collapse to 0pt, but never silently: no-fill on new units looks like "ads broken".
+            print("Ad banner failed (\(bannerView.adUnitID ?? "?")): \(error.localizedDescription)")
+            Track.event("ad_failed", ["error": error.localizedDescription])
             withAnimation { adHeight = 0 }
         }
 
