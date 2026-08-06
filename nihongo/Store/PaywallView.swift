@@ -47,6 +47,7 @@ struct PaywallView: View {
                     Button(L.t("Cancel")) { dismiss() }
                 }
             }
+            .onAppear { Track.event("paywall_shown") }
             .onChange(of: store.isPremium) { if store.isPremium { dismiss() } }
         }
     }

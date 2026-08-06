@@ -14,11 +14,16 @@ struct FlashcardView: View {
             revealLabel: L.t("Show meaning"),
             summary: { L.t("You reviewed %@ words", "\($0)") },
             trialLimit: Gating.trialLimit(lesson: lesson.number, isPremium: store.isPremium),
-            onReachLimit: { showPaywall = true },
+            onReachLimit: {
+                showPaywall = true
+                Track.event("trial_limit", ["mode": "flashcards", "lesson": lesson.number])
+            },
+            trackName: "flashcard",
             speak: { pronouncer.speak($0) },
             face: { vocab, revealed in VocabFace(vocab: vocab, revealed: revealed) }
         )
         .sheet(isPresented: $showPaywall) { PaywallView() }
+        .onAppear { Track.screen("flashcards", ["lesson": lesson.number]) }
     }
 }
 

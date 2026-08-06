@@ -39,6 +39,7 @@ enum Gating {
 final class Store {
     private(set) var products: [Product] = []
     private(set) var isPremium = false
+    private(set) var tier = "none"          // lifetime / 3m / 6m / 12m / none
     private(set) var purchasingID: String?
 
     init() {
@@ -61,23 +62,27 @@ final class Store {
     /// the owned lifetime unlock (`currentEntitlements` only yields non-expired ones).
     func refreshEntitlement() async {
         var premium = false
+        var tier = "none"
         for await result in Transaction.currentEntitlements {
-            if case .verified(let t) = result,
-               PremiumProduct.all.contains(t.productID),
-               t.revocationDate == nil {
-                premium = true
-            }
+            guard case .verified(let t) = result, t.revocationDate == nil,
+                  PremiumProduct.all.contains(t.productID) else { continue }
+            premium = true
+            tier = Self.tierLabel(t.productID)
         }
         isPremium = premium
+        self.tier = tier
+        Track.setPremium(premium, tier: tier)
     }
 
     func purchase(_ product: Product) async {
         purchasingID = product.id
         defer { purchasingID = nil }
+        Track.event("purchase_start", ["tier": Self.tierLabel(product.id)])
         guard let result = try? await product.purchase() else { return }
         if case .success(.verified(let t)) = result {
             await t.finish()
             await refreshEntitlement()
+            Track.event("purchase_success", ["tier": Self.tierLabel(product.id)])
         }
     }
 
@@ -85,5 +90,11 @@ final class Store {
     func restore() async {
         try? await AppStore.sync()
         await refreshEntitlement()
+        Track.event("restore", ["premium": isPremium])
+    }
+
+    /// Short tier label from a product ID (…premium.3m → "3m", lifetime → "lifetime").
+    private static func tierLabel(_ id: String) -> String {
+        id == PremiumProduct.lifetime ? "lifetime" : (id.components(separatedBy: ".").last ?? id)
     }
 }

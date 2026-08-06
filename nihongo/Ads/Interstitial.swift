@@ -47,6 +47,7 @@ final class Interstitial {
             return
         }
         ad.present(from: root)
+        Track.event("interstitial_shown")
         lastShown = Date()
         self.ad = nil
         Task { await preload() }

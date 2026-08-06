@@ -34,27 +34,44 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 }
 
 /// Thin analytics seam — logs only when the Firebase SDKs are linked and configured.
+/// Every event name carries the app-variant prefix. Firebase names must be
+/// `[A-Za-z][A-Za-z0-9_]{0,39}` (no hyphens, no leading digit), so the requested
+/// "2026-nihongo-" is encoded as the valid `nihongo_2026_`.
 enum Track {
-    static func screen(_ name: String) {
+    static let prefix = "nihongo_2026_"
+
+    /// Log a custom event (prefixed). No-op until Firebase is linked + configured.
+    static func event(_ name: String, _ params: [String: Any]? = nil) {
         #if canImport(FirebaseAnalytics)
         if FirebaseApp.app() != nil {
-            Analytics.logEvent(AnalyticsEventScreenView,
-                               parameters: [AnalyticsParameterScreenName: name])
+            Analytics.logEvent(prefix + name, parameters: params)
         }
         #endif
     }
 
-    /// A bundled clip was missing so playback fell back to TTS. Logged to Firebase
-    /// (Analytics event + Crashlytics breadcrumb) to surface coverage gaps.
+    /// A screen was shown.
+    static func screen(_ name: String, _ params: [String: Any] = [:]) {
+        event("screen", params.merging(["name": name]) { a, _ in a })
+    }
+
+    /// Segment users by entitlement: `user_type` = premium/free, `premium_tier` =
+    /// lifetime / 3m / 6m / 12m / none. User properties attach to every event.
+    static func setPremium(_ isPremium: Bool, tier: String) {
+        #if canImport(FirebaseAnalytics)
+        if FirebaseApp.app() != nil {
+            Analytics.setUserProperty(isPremium ? "premium" : "free", forName: "user_type")
+            Analytics.setUserProperty(tier, forName: "premium_tier")
+        }
+        #endif
+    }
+
+    /// A bundled clip was missing so playback fell back to TTS — Analytics event +
+    /// Crashlytics breadcrumb, to surface coverage gaps.
     static func audioMissing(_ item: String) {
         print("audio is missing: \(item)")
         #if canImport(FirebaseCrashlytics)
         Crashlytics.crashlytics().log("audio is missing: \(item)")
         #endif
-        #if canImport(FirebaseAnalytics)
-        if FirebaseApp.app() != nil {
-            Analytics.logEvent("audio_missing", parameters: ["item": item])
-        }
-        #endif
+        event("audio_missing", ["item": item])
     }
 }

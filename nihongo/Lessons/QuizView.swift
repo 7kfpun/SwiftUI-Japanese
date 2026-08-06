@@ -83,10 +83,12 @@ struct QuizView: View {
     @Environment(\.pronouncer) private var pronouncer
     @Environment(Store.self) private var store
     private let lessonNumber: Int
+    private let screenName: String
 
     /// `from: .audio` opens the "Listening" variant — prompt is the clip, pick the word.
     init(lesson: Lesson, from: VForm = .kana) {
         lessonNumber = lesson.number
+        screenName = from == .audio ? "listening" : "quiz"
         let pool: [Vocab]
         if from == .audio {
             let audible = lesson.entries.filter { $0.audio != nil }
@@ -118,7 +120,10 @@ struct QuizView: View {
             OptionGrid(count: model.options.count) { i in
                 QuizOptionButton(text: model.to.value(model.options[i]),
                                  border: optionBorder(i),
-                                 disabled: model.picked != nil || reachedLimit) { model.choose(i) }
+                                 disabled: model.picked != nil || reachedLimit) {
+                    model.choose(i)
+                    Track.event("\(screenName)_answer", ["correct": model.isCorrectOption(i)])
+                }
             }
 
             if reachedLimit {
@@ -139,10 +144,19 @@ struct QuizView: View {
         .background(Theme.canvas)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .principal) { ScoreBadge(correct: model.correct, total: model.total) } }
-        .onAppear { autoPlayIfAudio(); if !store.isPremium { Ads.preloadInterstitial() } }
+        .onAppear {
+            autoPlayIfAudio()
+            Track.screen(screenName, ["lesson": lessonNumber])
+            if !store.isPremium { Ads.preloadInterstitial() }
+        }
         .onChange(of: model.answer.id) { autoPlayIfAudio() }
         .onChange(of: model.from) { autoPlayIfAudio() }
-        .onChange(of: model.total) { if reachedLimit { showPaywall = true } }
+        .onChange(of: model.total) {
+            if reachedLimit {
+                showPaywall = true
+                Track.event("trial_limit", ["mode": screenName, "lesson": lessonNumber])
+            }
+        }
         .sheet(isPresented: $showPaywall) { PaywallView() }
         // A popup ad on the way out of the quiz — non-premium only, throttled.
         .onDisappear { if !store.isPremium && model.total > 0 { Ads.showInterstitialIfReady() } }

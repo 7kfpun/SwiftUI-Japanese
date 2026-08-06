@@ -51,7 +51,7 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Button { showFeedback = true } label: {
+                    Button { showFeedback = true; Track.event("open_feedback") } label: {
                         Label(L.t("Send feedback"), systemImage: "envelope")
                     }
                 } header: {
@@ -61,6 +61,9 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle(L.t("Settings"))
+            .onAppear { Track.screen("settings") }
+            .onChange(of: appLanguage) { Track.event("set_app_language", ["code": appLanguage]) }
+            .onChange(of: vocabLanguage) { Track.event("set_vocab_language", ["code": vocabLanguage]) }
             .sheet(isPresented: $showPaywall) { PaywallView() }
             .sheet(isPresented: $showFeedback) {
                 SafariView(url: Self.feedbackURL).ignoresSafeArea()

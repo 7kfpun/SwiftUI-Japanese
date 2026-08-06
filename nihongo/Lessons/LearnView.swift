@@ -107,8 +107,12 @@ struct LearnView: View {
         .navigationTitle("\(model.index + 1) / \(model.vocab.count)")
         .navigationBarTitleDisplayMode(.inline)
         // Auto-play the word on each page when sound is on (mirrors RN assessment.js).
-        .onAppear { autoPlay() }
+        .onAppear { autoPlay(); Track.screen("learn", ["lesson": lessonNumber]) }
         .onChange(of: model.index) { autoPlay() }
+        .onChange(of: model.state) {
+            if model.state == .correct { Track.event("learn_answer", ["correct": true]) }
+            else if model.state == .wrong { Track.event("learn_answer", ["correct": false]) }
+        }
         .sheet(isPresented: $showPaywall) { PaywallView() }
     }
 
@@ -122,6 +126,7 @@ struct LearnView: View {
         if reachedLimit {                           // out of free cards on a locked lesson
             withAnimation(.spring) { drag = 0 }
             showPaywall = true
+            Track.event("trial_limit", ["mode": "learn", "lesson": lessonNumber])
             return
         }
         let dir: CGFloat = width < 0 ? -1 : 1

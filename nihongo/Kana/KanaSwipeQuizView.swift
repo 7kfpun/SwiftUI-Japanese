@@ -70,6 +70,7 @@ struct KanaSwipeQuizView: View {
         .background(Theme.canvas)
         .overlay { if let lastCorrect { resultBadge(lastCorrect) } }
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear { Track.screen("kana_quiz_swipe") }
         .toolbar { ToolbarItem(placement: .principal) { ScoreBadge(correct: model.correct, total: model.total) } }
     }
 
@@ -115,6 +116,7 @@ struct KanaSwipeQuizView: View {
     private func decide(_ side: Int) {
         guard model.picked == nil, model.options.count > side else { return }
         model.choose(side, context: context)
+        Track.event("kana_quiz_answer", ["correct": model.isCorrectOption(side)])
         withAnimation(.spring(duration: 0.2)) { lastCorrect = model.isCorrectOption(side) }
         withAnimation(.easeOut(duration: 0.25)) { drag.width = side == 1 ? 700 : -700 }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

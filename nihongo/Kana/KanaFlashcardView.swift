@@ -12,9 +12,11 @@ struct KanaFlashcardView: View {
             id: { $0.romaji },
             revealLabel: L.t("Reveal"),
             summary: { L.t("You reviewed %@ kana", "\($0)") },
+            trackName: "kana_flashcard",
             speak: { pronouncer.speak(kana: $0) },
             face: { kana, revealed in KanaFace(kana: kana, revealed: revealed) }
         )
+        .onAppear { Track.screen("kana_flashcard") }
     }
 }
 

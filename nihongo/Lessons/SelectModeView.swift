@@ -28,6 +28,7 @@ struct SelectModeView: View {
         }
         .navigationTitle(L.t("Lesson %@", "\(lesson.number)"))
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear { Track.screen("select_mode", ["lesson": lesson.number]) }
     }
 }
 

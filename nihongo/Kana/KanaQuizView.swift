@@ -112,7 +112,10 @@ struct KanaQuizView: View {
             OptionGrid(count: model.options.count) { i in
                 QuizOptionButton(text: model.to.value(model.options[i]),
                                  border: optionBorder(i),
-                                 disabled: model.picked != nil) { model.choose(i, context: context) }
+                                 disabled: model.picked != nil) {
+                    model.choose(i, context: context)
+                    Track.event("kana_quiz_answer", ["correct": model.isCorrectOption(i)])
+                }
             }
 
             Button(action: { model.next() }) {
@@ -125,6 +128,7 @@ struct KanaQuizView: View {
         .padding()
         .background(Theme.canvas)
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear { Track.screen("kana_quiz_classic") }
         .toolbar { ToolbarItem(placement: .principal) { ScoreBadge(correct: model.correct, total: model.total) } }
     }
 

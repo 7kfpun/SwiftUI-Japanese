@@ -45,6 +45,7 @@ struct KanaBrowserView: View {
             .background(Theme.canvas)
             .navigationTitle(L.t("Kana"))
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear { Track.screen("kana") }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button(role: .destructive) { confirmClear = true } label: {
@@ -53,7 +54,7 @@ struct KanaBrowserView: View {
                     .disabled(results.isEmpty)
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    Button(L.t("Quiz")) { showQuiz = true }
+                    Button(L.t("Quiz")) { showQuiz = true; Track.event("kana_quiz_open") }
                 }
             }
             .confirmationDialog(L.t("Clear all learned kana?"),
@@ -72,6 +73,7 @@ struct KanaBrowserView: View {
     private func clearAll() {
         try? context.delete(model: KanaResult.self)
         try? context.save()
+        Track.event("kana_clear")
     }
 }
 
@@ -94,7 +96,10 @@ private struct KanaGrid: View {
                         } else {
                             KanaTileView(cell: cell, lastCorrect: byRomaji[cell.romaji])
                                 .contentShape(Rectangle())
-                                .onTapGesture { pronouncer.speak(kana: cell) }
+                                .onTapGesture {
+                                    pronouncer.speak(kana: cell)
+                                    Track.event("play_kana", ["romaji": cell.romaji])
+                                }
                         }
                     }
                 }

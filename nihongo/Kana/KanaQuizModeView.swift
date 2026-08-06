@@ -23,6 +23,7 @@ struct KanaQuizModeView: View {
         }
         .navigationTitle(L.t("Choose mode"))
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear { Track.screen("kana_quiz_mode") }
     }
 }
 

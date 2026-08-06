@@ -91,9 +91,13 @@ struct VocabListView: View {
         }
         .navigationTitle(L.t("Lesson %@", "\(lesson.number)"))
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear { Track.screen("vocab_list", ["lesson": lesson.number]) }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button { player.toggle(lesson.entries) } label: {
+                Button {
+                    player.toggle(lesson.entries)
+                    if player.isPlaying { Track.event("read_all", ["lesson": lesson.number]) }
+                } label: {
                     Label(L.t("Play all"),
                           systemImage: player.isPlaying ? "stop.fill" : "play.fill")
                 }
