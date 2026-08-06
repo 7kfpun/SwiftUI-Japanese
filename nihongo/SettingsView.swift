@@ -1,10 +1,12 @@
 import SwiftUI
+import SafariServices
 
 struct SettingsView: View {
     @AppStorage("appLanguage") private var appLanguage = L.deviceDefault
     @AppStorage("translationLanguage") private var vocabLanguage = VocabStore.defaultLanguage
     @Environment(Store.self) private var store
     @State private var showPaywall = false
+    @State private var showFeedback = false
 
     /// Airtable feedback form (from the RN app), prefilled with the platform.
     private static let feedbackURL = URL(string: "https://airtable.com/shr7xvYAyInUbJNif?prefill_Platform=iOS")!
@@ -49,7 +51,7 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Link(destination: Self.feedbackURL) {
+                    Button { showFeedback = true } label: {
                         Label(L.t("Send feedback"), systemImage: "envelope")
                     }
                 } header: {
@@ -60,8 +62,20 @@ struct SettingsView: View {
             }
             .navigationTitle(L.t("Settings"))
             .sheet(isPresented: $showPaywall) { PaywallView() }
+            .sheet(isPresented: $showFeedback) {
+                SafariView(url: Self.feedbackURL).ignoresSafeArea()
+            }
         }
     }
+}
+
+/// Opens a URL in an in-app Safari sheet (no bounce to the external browser).
+struct SafariView: UIViewControllerRepresentable {
+    let url: URL
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        SFSafariViewController(url: url)
+    }
+    func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
 }
 
 #Preview { SettingsView().environment(Store()) }
