@@ -13,10 +13,12 @@
 -->
 <plist version="1.0">
 <dict>
+	<key>CFBundleDisplayName</key>
+	<string>Japanese Daily 每日日本語</string>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-8610011634603119~3848593989</string>
 	<key>NSUserTrackingUsageDescription</key>
-	<string>Your data is used to show you more relevant ads.</string>
+	<string>Your data helps us see which features matter most and decide what to build next, and to show more relevant ads.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>SKAdNetworkItems</key>

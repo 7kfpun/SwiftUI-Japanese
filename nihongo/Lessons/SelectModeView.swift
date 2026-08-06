@@ -2,26 +2,30 @@ import SwiftUI
 
 struct SelectModeView: View {
     let lesson: Lesson
+    @AppStorage("translationLanguage") private var language = VocabStore.defaultLanguage
+
+    // Re-resolve so entering a mode uses the current Meanings language.
+    private var current: Lesson { VocabStore.lesson(lesson.number, language) }
 
     var body: some View {
         List {
-            NavigationLink { VocabListView(lesson: lesson) } label: {
+            NavigationLink { VocabListView(lesson: current) } label: {
                 ModeRow(icon: "list.bullet", title: L.t("Vocab List"),
                         subtitle: L.t("Browse & hear all words"))
             }
-            NavigationLink { FlashcardView(lesson: lesson) } label: {
+            NavigationLink { FlashcardView(lesson: current) } label: {
                 ModeRow(icon: "rectangle.on.rectangle.angled", title: L.t("Flashcards"),
                         subtitle: L.t("Swipe right if you know it"))
             }
-            NavigationLink { LearnView(lesson: lesson) } label: {
+            NavigationLink { LearnView(lesson: current) } label: {
                 ModeRow(icon: "square.grid.2x2", title: L.t("Learn"),
                         subtitle: L.t("Rebuild the reading from tiles"))
             }
-            NavigationLink { QuizView(lesson: lesson) } label: {
+            NavigationLink { QuizView(lesson: current) } label: {
                 ModeRow(icon: "checkmark.circle", title: L.t("Quiz"),
                         subtitle: L.t("Multiple choice, any form"))
             }
-            NavigationLink { QuizView(lesson: lesson, from: .audio) } label: {
+            NavigationLink { QuizView(lesson: current, from: .audio) } label: {
                 ModeRow(icon: "speaker.wave.2", title: L.t("Listening"),
                         subtitle: L.t("Hear it, pick the word"))
             }

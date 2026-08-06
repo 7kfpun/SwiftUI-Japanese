@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		AADAA70D3023ACC5006010F5 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = AADAA70C3023ACC5006010F5 /* GoogleMobileAds */; };
+		AAF4B1BD30245931001F7D2E /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = AAF4B1BC30245931001F7D2E /* FirebaseAnalytics */; };
+		AAF4B1BF30245931001F7D2E /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = AAF4B1BE30245931001F7D2E /* FirebaseCrashlytics */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,6 +58,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AAF4B1BF30245931001F7D2E /* FirebaseCrashlytics in Frameworks */,
+				AAF4B1BD30245931001F7D2E /* FirebaseAnalytics in Frameworks */,
 				AADAA70D3023ACC5006010F5 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -118,6 +122,8 @@
 			name = nihongo;
 			packageProductDependencies = (
 				AADAA70C3023ACC5006010F5 /* GoogleMobileAds */,
+				AAF4B1BC30245931001F7D2E /* FirebaseAnalytics */,
+				AAF4B1BE30245931001F7D2E /* FirebaseCrashlytics */,
 			);
 			productName = nihongo;
 			productReference = AADA49653023578E006010F5 /* nihongo.app */;
@@ -203,6 +209,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				AADAA70B3023ACC5006010F5 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				AAF4B1BB30245931001F7D2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AADA49663023578E006010F5 /* Products */;
@@ -601,6 +608,14 @@
 				minimumVersion = 13.7.0;
 			};
 		};
+		AAF4B1BB30245931001F7D2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.17.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -608,6 +623,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AADAA70B3023ACC5006010F5 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
 			productName = GoogleMobileAds;
+		};
+		AAF4B1BC30245931001F7D2E /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AAF4B1BB30245931001F7D2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		AAF4B1BE30245931001F7D2E /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AAF4B1BB30245931001F7D2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

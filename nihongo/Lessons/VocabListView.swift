@@ -75,17 +75,21 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
 
 struct VocabListView: View {
     let lesson: Lesson
+    @AppStorage("translationLanguage") private var language = VocabStore.defaultLanguage
     @State private var player = LessonPlayer()
+
+    // Re-resolve by lesson number so meanings update immediately when the language changes.
+    private var entries: [Vocab] { VocabStore.lesson(lesson.number, language).entries }
 
     var body: some View {
         ScrollViewReader { proxy in
-            List(Array(lesson.entries.enumerated()), id: \.element.id) { i, v in
+            List(Array(entries.enumerated()), id: \.element.id) { i, v in
                 VocabRow(vocab: v)
                     .listRowBackground(player.currentIndex == i ? Theme.accent.opacity(0.12) : nil)
             }
             .onChange(of: player.currentIndex) { _, new in
                 if let new {
-                    withAnimation { proxy.scrollTo(lesson.entries[new].id, anchor: .center) }
+                    withAnimation { proxy.scrollTo(entries[new].id, anchor: .center) }
                 }
             }
         }
@@ -95,7 +99,7 @@ struct VocabListView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    player.toggle(lesson.entries)
+                    player.toggle(entries)
                     if player.isPlaying { Track.event("read_all", ["lesson": lesson.number]) }
                 } label: {
                     Label(L.t("Play all"),
