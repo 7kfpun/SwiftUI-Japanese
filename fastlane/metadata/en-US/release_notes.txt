@@ -1,0 +1,9 @@
+Version 3.0 is a complete native rebuild — faster, cleaner, and fully offline.
+
+• Redesigned Kana and Lessons throughout
+• Five ways to study each lesson: Vocab List, Flashcards, Learn, Quiz, and Listening
+• Natural audio for every word and every kana
+• Many interface and translation languages
+• Lessons 1–5 free; Premium unlocks all 50 lessons and removes ads
+
+We're actively developing — tell us what to build next in Settings → Feedback.

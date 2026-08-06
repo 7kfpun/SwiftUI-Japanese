@@ -9,6 +9,16 @@ nihongo/Resources/audio/
 nihongo/GoogleService-Info.plist
 nihongo/Secrets.plist
 
+# App Store Connect API keys — never commit (kept in ~/.appstoreconnect/private_keys/)
+*.p8
+
+# Fastlane: credentials (.env) and generated artifacts. Metadata under fastlane/metadata/ IS committed.
+.env
+fastlane/.env
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/test_output/
+
 # Xcode build artifacts & per-user state
 build/
 DerivedData/

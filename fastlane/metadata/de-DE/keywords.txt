@@ -1,0 +1,1 @@
+japanisch,kana,hiragana,katakana,vokabeln,jlpt,karteikarten,quiz,hören,lernen,romaji
