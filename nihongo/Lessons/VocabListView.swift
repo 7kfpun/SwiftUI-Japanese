@@ -48,6 +48,7 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
         if let url = VocabStore.audioURL(for: v), let p = try? AVAudioPlayer(contentsOf: url) {
             player = p; p.delegate = self; p.volume = 1; p.prepareToPlay(); p.play()
         } else {
+            Track.audioMissing(v.id)
             let u = AVSpeechUtterance(string: cleanWord(v.kana))
             u.voice = AVSpeechSynthesisVoice(language: "ja-JP")
                 ?? AVSpeechSynthesisVoice.speechVoices().first { $0.language.hasPrefix("ja") }

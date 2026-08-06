@@ -17,17 +17,21 @@ enum AdSlot: String {
 /// units live in a git-ignored `nihongo/Secrets.plist` (see `config/Secrets.example.plist`);
 /// when present, `banner(_:)` returns the production ID for that slot.
 enum AdConfig {
-    /// Google's official sample banner unit — always safe to ship.
+    /// Google's official sample units — always safe to ship.
     static let testBanner = "ca-app-pub-3940256099942544/2934735716"
+    static let testInterstitial = "ca-app-pub-3940256099942544/4411468910"
 
-    /// `banners` dictionary from the git-ignored Secrets.plist, if any.
-    private static let productionBanners: [String: String] = {
+    /// The whole git-ignored Secrets.plist, if present.
+    private static let secrets: [String: Any] = {
         guard let url = Bundle.main.url(forResource: "Secrets", withExtension: "plist"),
-              let dict = NSDictionary(contentsOf: url),
-              let banners = dict["banners"] as? [String: String]
+              let dict = NSDictionary(contentsOf: url) as? [String: Any]
         else { return [:] }
-        return banners
+        return dict
     }()
+
+    private static var productionBanners: [String: String] {
+        secrets["banners"] as? [String: String] ?? [:]
+    }
 
     /// True when real production ad IDs are configured (Secrets.plist present).
     static var isProduction: Bool { !productionBanners.isEmpty }
@@ -35,5 +39,10 @@ enum AdConfig {
     /// The banner unit ID for a slot — production when configured, else the test unit.
     static func banner(_ slot: AdSlot) -> String {
         productionBanners[slot.rawValue] ?? testBanner
+    }
+
+    /// The interstitial unit ID (RN's `assessment-popup`) — production or test.
+    static var interstitial: String {
+        secrets["interstitial"] as? String ?? testInterstitial
     }
 }

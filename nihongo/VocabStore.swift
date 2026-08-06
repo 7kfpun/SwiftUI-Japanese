@@ -69,6 +69,12 @@ enum VocabStore {
         return Bundle.main.url(forResource: name, withExtension: "m4a")
     }
 
+    /// Resolve a kana's pre-generated Kyoko clip, e.g. "ka" → "kana-ka.m4a".
+    static func kanaAudioURL(_ romaji: String) -> URL? {
+        guard !romaji.isEmpty else { return nil }
+        return Bundle.main.url(forResource: "kana-\(romaji)", withExtension: "m4a")
+    }
+
     /// Localized display name for a language code, e.g. "zh-Hant" → "Chinese, Traditional".
     static func displayName(_ code: String) -> String {
         Locale.current.localizedString(forIdentifier: code) ?? code

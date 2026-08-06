@@ -54,6 +54,13 @@ struct DataTests {
         #expect(VocabStore.audioURL(for: watashi!) != nil)
     }
 
+    @Test func kanaClipIsBundledAndDecodes() throws {
+        let url = try #require(VocabStore.kanaAudioURL("ka"), "expected kana-ka.m4a in bundle")
+        let player = try AVAudioPlayer(contentsOf: url)
+        #expect(player.duration > 0)
+        #expect(VocabStore.kanaAudioURL("") == nil)
+    }
+
     @Test func bundledClipDecodesAtRuntime() throws {
         let watashi = try #require(VocabStore.lesson(1).entries.first { $0.romaji == "watashi" })
         let url = try #require(VocabStore.audioURL(for: watashi))
@@ -167,7 +174,7 @@ struct FlashcardTests {
     private var sample: [Vocab] { VocabStore.lesson(3).entries }
 
     @Test func knowRetiresCardAndCountsMastered() {
-        let deck = FlashDeck(vocab: sample)
+        let deck = FlashDeck(sample)
         let start = deck.remaining
         deck.know()
         #expect(deck.remaining == start - 1)
@@ -175,7 +182,7 @@ struct FlashcardTests {
     }
 
     @Test func dontKnowSendsCardToTheBack() {
-        let deck = FlashDeck(vocab: sample)
+        let deck = FlashDeck(sample)
         let start = deck.remaining
         let first = deck.current
         deck.dontKnow()
@@ -185,14 +192,14 @@ struct FlashcardTests {
     }
 
     @Test func swipingRightThroughAllFinishesTheDeck() {
-        let deck = FlashDeck(vocab: sample)
+        let deck = FlashDeck(sample)
         while !deck.isDone { deck.know() }
         #expect(deck.mastered == deck.total)
         #expect(deck.current == nil)
     }
 
     @Test func unknownCardsResurfaceUntilKnown() {
-        let deck = FlashDeck(vocab: sample)
+        let deck = FlashDeck(sample)
         // Say "don't know" to everything once, then master it — deck must still drain.
         var guardCount = 0
         while !deck.isDone && guardCount < 10_000 {
@@ -203,8 +210,19 @@ struct FlashcardTests {
         #expect(deck.mastered == deck.total)
     }
 
+    @Test func genericDeckAlsoDrivesKana() {
+        // The same FlashDeck powers the Kana flashcards (generic over element type).
+        let kana = KanaData.seion.flatMap { $0 }.filter { !$0.isEmpty }
+        let deck = FlashDeck(kana)
+        #expect(deck.total == kana.count)
+        deck.dontKnow()
+        #expect(deck.remaining == kana.count)   // revisit keeps it in the deck
+        while !deck.isDone { deck.know() }
+        #expect(deck.mastered == deck.total)
+    }
+
     @Test func restartRefillsAndResets() {
-        let deck = FlashDeck(vocab: sample)
+        let deck = FlashDeck(sample)
         while !deck.isDone { deck.know() }
         deck.restart()
         #expect(deck.remaining == deck.total)
@@ -273,6 +291,32 @@ struct QuizTests {
             #expect(model.options.contains { $0.romaji == model.answer.romaji })
             #expect(model.options[0].romaji != model.options[1].romaji)
         }
+    }
+}
+
+// MARK: - Premium gating
+
+struct GatingTests {
+    @Test func lessonsOneThroughFiveAreFree() {
+        for n in 1...Gating.freeLessonLimit {
+            #expect(!Gating.isLocked(lesson: n, isPremium: false))
+        }
+    }
+
+    @Test func lessonsAfterFiveAreLockedWithoutPremium() {
+        for n in (Gating.freeLessonLimit + 1)...50 {
+            #expect(Gating.isLocked(lesson: n, isPremium: false))
+        }
+    }
+
+    @Test func premiumUnlocksEveryLesson() {
+        for n in 1...50 {
+            #expect(!Gating.isLocked(lesson: n, isPremium: true))
+        }
+    }
+
+    @Test func freeLimitIsFive() {
+        #expect(Gating.freeLessonLimit == 5)
     }
 }
 

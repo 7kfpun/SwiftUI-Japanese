@@ -107,7 +107,7 @@ struct KanaQuizView: View {
                 .frame(maxHeight: .infinity)
                 .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
                 .contentShape(Rectangle())
-                .onTapGesture { pronouncer.speak(kana: model.answer.hiragana) }
+                .onTapGesture { pronouncer.speak(kana: model.answer) }
 
             OptionGrid(count: model.options.count) { i in
                 QuizOptionButton(text: model.to.value(model.options[i]),

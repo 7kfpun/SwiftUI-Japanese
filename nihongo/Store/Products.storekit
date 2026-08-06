@@ -1,0 +1,99 @@
+{
+  "identifier" : "3B8C9D2E",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "38.99",
+      "familyShareable" : false,
+      "internalID" : "1001",
+      "localizations" : [
+        {
+          "description" : "Unlock all lessons forever, ad-free.",
+          "displayName" : "Lifetime",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.kfpun.nihongo.premium.lifetime",
+      "referenceName" : "Premium Lifetime",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21351",
+      "localizations" : [],
+      "name" : "premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "5.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "1002",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Premium, billed every 3 months.",
+              "displayName" : "3 Months",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.kfpun.nihongo.premium.3m",
+          "recurringSubscriptionPeriod" : "P3M",
+          "referenceName" : "Premium 3 Months",
+          "subscriptionGroupID" : "21351",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "9.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "1003",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Premium, billed every 6 months.",
+              "displayName" : "6 Months",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.kfpun.nihongo.premium.6m",
+          "recurringSubscriptionPeriod" : "P6M",
+          "referenceName" : "Premium 6 Months",
+          "subscriptionGroupID" : "21351",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "16.99",
+          "familyShareable" : false,
+          "groupNumber" : 3,
+          "internalID" : "1004",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Premium, billed every 12 months.",
+              "displayName" : "12 Months",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.kfpun.nihongo.premium.12m",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Premium 12 Months",
+          "subscriptionGroupID" : "21351",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

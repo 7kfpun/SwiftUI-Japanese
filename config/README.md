@@ -18,7 +18,7 @@ Firebase is skipped. Once the packages are added, ads (test IDs) and Firebase
 
 1. **Add the Swift Packages** in Xcode → *File ▸ Add Package Dependencies…*
    - `https://github.com/firebase/firebase-ios-sdk` → add **FirebaseAnalytics** and **FirebaseCrashlytics**
-   - `https://github.com/googleads/swift-package-manager-google-mobile-ads` → add **GoogleMobileAds** (SDK **≥ 12.0**, which uses the de-prefixed API names this code calls: `MobileAds`, `BannerView`, `Request`)
+   - `https://github.com/googleads/swift-package-manager-google-mobile-ads` → add **GoogleMobileAds** (SDK **≥ 12**, verified with **13.7**; uses the de-prefixed API names this code calls: `MobileAds`, `BannerView`, `Request`, `currentOrientationAnchoredAdaptiveBanner`)
 
 2. **Drop in the real config files** (both git-ignored):
    - Firebase console → download `GoogleService-Info.plist` → copy to `nihongo/GoogleService-Info.plist`
@@ -39,6 +39,25 @@ Firebase is skipped. Once the packages are added, ads (test IDs) and Firebase
    $(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)
    ```
    and set **Debug Information Format = DWARF with dSYM File** for Release.
+
+## In-app purchase (premium)
+
+Lessons 1–5 are free; 6–50 need premium, which also removes ads. Built on
+**StoreKit 2** — no SDK, no server, no shared secret (transactions verify on-device).
+Product IDs match the RN app so existing lifetime/subscription buyers **restore**
+automatically. No secrets, nothing git-ignored.
+
+One-time setup:
+1. Target → *Signing & Capabilities* → **+ In-App Purchase**.
+2. To test in the **simulator**: scheme → *Run ▸ Options ▸ StoreKit Configuration* →
+   select `nihongo/Store/Products.storekit`.
+3. For production: create the subscription group `premium` (`…premium.3m/6m/12m`) and the
+   non-consumable `…premium.lifetime` in App Store Connect (see `PremiumProduct` in
+   `nihongo/Store/Store.swift`).
+
+Code: `nihongo/Store/Store.swift` (entitlement + gating), `PaywallView.swift`,
+`Products.storekit`. Gating is `Gating.isLocked(lesson:isPremium:)`; ads hide via
+`BannerAd` reading `Store.isPremium`.
 
 ## Where it lives in code
 

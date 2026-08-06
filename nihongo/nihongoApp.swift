@@ -11,6 +11,7 @@ import SwiftData
 @main
 struct nihongoApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @State private var store = Store()
     private let pronouncer = AudioPronouncer()
 
     var sharedModelContainer: ModelContainer = {
@@ -29,6 +30,7 @@ struct nihongoApp: App {
             RootView()
                 .tint(Theme.accent)
                 .environment(\.pronouncer, pronouncer)
+                .environment(store)
         }
         .modelContainer(sharedModelContainer)
     }

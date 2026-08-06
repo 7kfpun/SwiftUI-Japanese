@@ -15,6 +15,10 @@ struct KanaQuizModeView: View {
                     ModeCard(icon: "rectangle.portrait.and.arrow.right", title: L.t("Swipe"),
                              subtitle: L.t("Swipe left / right between 2 options"))
                 }
+                NavigationLink { KanaFlashcardView(table: table) } label: {
+                    ModeCard(icon: "rectangle.on.rectangle.angled", title: L.t("Flashcards"),
+                             subtitle: L.t("Swipe right if you know it"))
+                }
             }
         }
         .navigationTitle(L.t("Choose mode"))

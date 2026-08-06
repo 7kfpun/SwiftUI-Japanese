@@ -80,6 +80,7 @@ final class QuizModel {
 struct QuizView: View {
     @State private var model: QuizModel
     @Environment(\.pronouncer) private var pronouncer
+    @Environment(Store.self) private var store
 
     /// `from: .audio` opens the "Listening" variant — prompt is the clip, pick the word.
     init(lesson: Lesson, from: VForm = .kana) {
@@ -120,9 +121,11 @@ struct QuizView: View {
         .background(Theme.canvas)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .principal) { ScoreBadge(correct: model.correct, total: model.total) } }
-        .onAppear { autoPlayIfAudio() }
+        .onAppear { autoPlayIfAudio(); if !store.isPremium { Ads.preloadInterstitial() } }
         .onChange(of: model.answer.id) { autoPlayIfAudio() }
         .onChange(of: model.from) { autoPlayIfAudio() }
+        // A popup ad on the way out of the quiz — non-premium only, throttled.
+        .onDisappear { if !store.isPremium && model.total > 0 { Ads.showInterstitialIfReady() } }
     }
 
     /// The prompt: a big speaker for the audio form, otherwise the word text.

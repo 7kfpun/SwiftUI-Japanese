@@ -5,6 +5,9 @@ import FirebaseCore
 #if canImport(FirebaseAnalytics)
 import FirebaseAnalytics
 #endif
+#if canImport(FirebaseCrashlytics)
+import FirebaseCrashlytics
+#endif
 #if canImport(GoogleMobileAds)
 import GoogleMobileAds
 #endif
@@ -30,13 +33,27 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     }
 }
 
-/// Thin analytics seam — logs only when FirebaseAnalytics is linked and configured.
+/// Thin analytics seam — logs only when the Firebase SDKs are linked and configured.
 enum Track {
     static func screen(_ name: String) {
         #if canImport(FirebaseAnalytics)
         if FirebaseApp.app() != nil {
             Analytics.logEvent(AnalyticsEventScreenView,
                                parameters: [AnalyticsParameterScreenName: name])
+        }
+        #endif
+    }
+
+    /// A bundled clip was missing so playback fell back to TTS. Logged to Firebase
+    /// (Analytics event + Crashlytics breadcrumb) to surface coverage gaps.
+    static func audioMissing(_ item: String) {
+        print("audio is missing: \(item)")
+        #if canImport(FirebaseCrashlytics)
+        Crashlytics.crashlytics().log("audio is missing: \(item)")
+        #endif
+        #if canImport(FirebaseAnalytics)
+        if FirebaseApp.app() != nil {
+            Analytics.logEvent("audio_missing", parameters: ["item": item])
         }
         #endif
     }

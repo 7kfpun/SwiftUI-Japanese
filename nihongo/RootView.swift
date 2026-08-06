@@ -25,5 +25,6 @@ struct RootView: View {
 #Preview {
     RootView()
         .tint(Theme.accent)
+        .environment(Store())
         .modelContainer(for: KanaResult.self, inMemory: true)
 }

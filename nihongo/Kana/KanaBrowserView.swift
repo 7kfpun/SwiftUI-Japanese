@@ -94,7 +94,7 @@ private struct KanaGrid: View {
                         } else {
                             KanaTileView(cell: cell, lastCorrect: byRomaji[cell.romaji])
                                 .contentShape(Rectangle())
-                                .onTapGesture { pronouncer.speak(kana: cell.hiragana) }
+                                .onTapGesture { pronouncer.speak(kana: cell) }
                         }
                     }
                 }

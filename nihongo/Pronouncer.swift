@@ -7,14 +7,14 @@ import AVFoundation
 /// without touching any view.
 protocol Pronouncer {
     func speak(_ vocab: Vocab)
-    func speak(kana: String)
+    func speak(kana: K)
     func stop()
 }
 
 /// No-op — used in previews/tests where audio isn't wanted.
 struct SilentPronouncer: Pronouncer {
     func speak(_ vocab: Vocab) {}
-    func speak(kana: String) {}
+    func speak(kana: K) {}
     func stop() {}
 }
 
@@ -46,11 +46,26 @@ final class AudioPronouncer: Pronouncer {
             p.prepareToPlay()
             p.play()
         } else {
+            Track.audioMissing(vocab.id)
             speakLive(vocab.kana)
         }
     }
 
-    func speak(kana: String) { stop(); activateSession(); speakLive(kana) }
+    func speak(kana: K) {
+        stop()
+        activateSession()
+        // Prefer the bundled kana clip (reliable, incl. simulator); TTS backup.
+        if let url = VocabStore.kanaAudioURL(kana.romaji),
+           let p = try? AVAudioPlayer(contentsOf: url) {
+            player = p
+            p.volume = 1
+            p.prepareToPlay()
+            p.play()
+        } else {
+            Track.audioMissing("kana-\(kana.romaji)")
+            speakLive(kana.hiragana)
+        }
+    }
 
     func stop() {
         player?.stop(); player = nil

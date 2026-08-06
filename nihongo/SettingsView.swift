@@ -3,10 +3,24 @@ import SwiftUI
 struct SettingsView: View {
     @AppStorage("appLanguage") private var appLanguage = L.deviceDefault
     @AppStorage("translationLanguage") private var vocabLanguage = VocabStore.defaultLanguage
+    @Environment(Store.self) private var store
+    @State private var showPaywall = false
 
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    if store.isPremium {
+                        Label(L.t("Premium active"), systemImage: "checkmark.seal.fill")
+                            .foregroundStyle(Theme.accent)
+                    } else {
+                        Button(L.t("Unlock all lessons")) { showPaywall = true }
+                        Button(L.t("Restore Purchases")) { Task { await store.restore() } }
+                    }
+                } header: {
+                    Text(L.t("Premium"))
+                }
+
                 Section {
                     Picker(L.t("App language"), selection: $appLanguage) {
                         ForEach(L.availableLanguages, id: \.self) { code in
@@ -32,8 +46,9 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle(L.t("Settings"))
+            .sheet(isPresented: $showPaywall) { PaywallView() }
         }
     }
 }
 
-#Preview { SettingsView() }
+#Preview { SettingsView().environment(Store()) }

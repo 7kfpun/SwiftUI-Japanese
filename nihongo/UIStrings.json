@@ -51,7 +51,16 @@
     "You reviewed %@ words": "You reviewed %@ words",
     "Restart": "Restart",
     "Got it": "Got it",
-    "Again": "Again"
+    "Again": "Again",
+    "Reveal": "Reveal",
+    "You reviewed %@ kana": "You reviewed %@ kana",
+    "Premium": "Premium",
+    "Unlock all lessons": "Unlock all lessons",
+    "Free through lesson 5 — unlock the rest and remove ads.": "Free through lesson 5 — unlock the rest and remove ads.",
+    "Restore Purchases": "Restore Purchases",
+    "Premium active": "Premium active",
+    "Lifetime": "Lifetime",
+    "%@ months": "%@ months"
   },
   "zh": {
     "Kana": "假名",
@@ -105,7 +114,16 @@
     "You reviewed %@ words": "你复习了 %@ 个单词",
     "Restart": "重新开始",
     "Got it": "认识",
-    "Again": "再来"
+    "Again": "再来",
+    "Reveal": "显示",
+    "You reviewed %@ kana": "你复习了 %@ 个假名",
+    "Premium": "高级版",
+    "Unlock all lessons": "解锁所有课程",
+    "Free through lesson 5 — unlock the rest and remove ads.": "第 1–5 课免费——解锁其余课程并移除广告。",
+    "Restore Purchases": "恢复购买",
+    "Premium active": "高级版已启用",
+    "Lifetime": "永久",
+    "%@ months": "%@ 个月"
   },
   "zh-Hant": {
     "Kana": "假名",
@@ -159,7 +177,16 @@
     "You reviewed %@ words": "你複習了 %@ 個單字",
     "Restart": "重新開始",
     "Got it": "認識",
-    "Again": "再來"
+    "Again": "再來",
+    "Reveal": "顯示",
+    "You reviewed %@ kana": "你複習了 %@ 個假名",
+    "Premium": "進階版",
+    "Unlock all lessons": "解鎖所有課程",
+    "Free through lesson 5 — unlock the rest and remove ads.": "第 1–5 課免費——解鎖其餘課程並移除廣告。",
+    "Restore Purchases": "還原購買",
+    "Premium active": "進階版已啟用",
+    "Lifetime": "永久",
+    "%@ months": "%@ 個月"
   },
   "vi": {
     "Kana": "Kana",
@@ -213,7 +240,16 @@
     "You reviewed %@ words": "Bạn đã ôn %@ từ",
     "Restart": "Bắt đầu lại",
     "Got it": "Đã biết",
-    "Again": "Ôn lại"
+    "Again": "Ôn lại",
+    "Reveal": "Hiện",
+    "You reviewed %@ kana": "Bạn đã ôn %@ kana",
+    "Premium": "Cao cấp",
+    "Unlock all lessons": "Mở khoá tất cả bài học",
+    "Free through lesson 5 — unlock the rest and remove ads.": "Miễn phí đến bài 5 — mở khoá phần còn lại và gỡ quảng cáo.",
+    "Restore Purchases": "Khôi phục mua hàng",
+    "Premium active": "Đã kích hoạt cao cấp",
+    "Lifetime": "Trọn đời",
+    "%@ months": "%@ tháng"
   },
   "de": {
     "Kana": "Kana",
@@ -267,7 +303,16 @@
     "You reviewed %@ words": "Du hast %@ Wörter wiederholt",
     "Restart": "Neu starten",
     "Got it": "Gewusst",
-    "Again": "Nochmal"
+    "Again": "Nochmal",
+    "Reveal": "Aufdecken",
+    "You reviewed %@ kana": "Du hast %@ Kana wiederholt",
+    "Premium": "Premium",
+    "Unlock all lessons": "Alle Lektionen freischalten",
+    "Free through lesson 5 — unlock the rest and remove ads.": "Bis Lektion 5 gratis – schalte den Rest frei und entferne Werbung.",
+    "Restore Purchases": "Käufe wiederherstellen",
+    "Premium active": "Premium aktiv",
+    "Lifetime": "Lebenslang",
+    "%@ months": "%@ Monate"
   },
   "th": {
     "Kana": "คานะ",
@@ -321,7 +366,16 @@
     "You reviewed %@ words": "คุณทบทวน %@ คำ",
     "Restart": "เริ่มใหม่",
     "Got it": "รู้แล้ว",
-    "Again": "อีกครั้ง"
+    "Again": "อีกครั้ง",
+    "Reveal": "แสดง",
+    "You reviewed %@ kana": "คุณทบทวน %@ คานะ",
+    "Premium": "พรีเมียม",
+    "Unlock all lessons": "ปลดล็อกทุกบทเรียน",
+    "Free through lesson 5 — unlock the rest and remove ads.": "บทที่ 1–5 ฟรี — ปลดล็อกที่เหลือและลบโฆษณา",
+    "Restore Purchases": "กู้คืนการซื้อ",
+    "Premium active": "เปิดใช้พรีเมียมแล้ว",
+    "Lifetime": "ตลอดชีพ",
+    "%@ months": "%@ เดือน"
   },
   "my": {
     "Kana": "ကာနာ",
@@ -375,6 +429,15 @@
     "You reviewed %@ words": "စကားလုံး %@ လုံး ပြန်လေ့လာပြီးပါပြီ",
     "Restart": "ပြန်စရန်",
     "Got it": "သိပြီ",
-    "Again": "ထပ်ကြည့်"
+    "Again": "ထပ်ကြည့်",
+    "Reveal": "ပြရန်",
+    "You reviewed %@ kana": "ကာနာ %@ လုံး ပြန်လေ့လာပြီးပါပြီ",
+    "Premium": "ပရီမီယံ",
+    "Unlock all lessons": "သင်ခန်းစာအားလုံး ဖွင့်ရန်",
+    "Free through lesson 5 — unlock the rest and remove ads.": "သင်ခန်းစာ ၁–၅ အခမဲ့ — ကျန်အရာများ ဖွင့်ပြီး ကြော်ငြာ ဖယ်ရှားပါ။",
+    "Restore Purchases": "ဝယ်ယူမှုများ ပြန်ယူရန်",
+    "Premium active": "ပရီမီယံ အသုံးပြုနေသည်",
+    "Lifetime": "တစ်သက်တာ",
+    "%@ months": "%@ လ"
   }
 }
