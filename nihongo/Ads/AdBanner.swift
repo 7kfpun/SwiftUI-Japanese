@@ -17,8 +17,8 @@ struct BannerAd: View {
     #endif
 
     var body: some View {
-        if store.isAdFree {
-            EmptyView()   // premium or legacy adfree removes ads
+        if store.isPremium {
+            EmptyView()   // premium removes ads
         } else {
             adBody
         }

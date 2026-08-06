@@ -121,11 +121,11 @@ struct QuizView: View {
         .background(Theme.canvas)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .principal) { ScoreBadge(correct: model.correct, total: model.total) } }
-        .onAppear { autoPlayIfAudio(); if !store.isAdFree { Ads.preloadInterstitial() } }
+        .onAppear { autoPlayIfAudio(); if !store.isPremium { Ads.preloadInterstitial() } }
         .onChange(of: model.answer.id) { autoPlayIfAudio() }
         .onChange(of: model.from) { autoPlayIfAudio() }
-        // A popup ad on the way out of the quiz — only if ads are on, and throttled.
-        .onDisappear { if !store.isAdFree && model.total > 0 { Ads.showInterstitialIfReady() } }
+        // A popup ad on the way out of the quiz — non-premium only, throttled.
+        .onDisappear { if !store.isPremium && model.total > 0 { Ads.showInterstitialIfReady() } }
     }
 
     /// The prompt: a big speaker for the audio form, otherwise the word text.
