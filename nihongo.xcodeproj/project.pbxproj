@@ -529,6 +529,7 @@
 				DEVELOPMENT_TEAM = CC4C8V8BXN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = nihongo.entitlements;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -563,6 +564,7 @@
 				DEVELOPMENT_TEAM = CC4C8V8BXN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = nihongo.entitlements;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -680,6 +682,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = CC4C8V8BXN;
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = TodayWidgetExtension.entitlements;
 				INFOPLIST_FILE = TodayWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TodayWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -710,6 +713,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = CC4C8V8BXN;
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = TodayWidgetExtension.entitlements;
 				INFOPLIST_FILE = TodayWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TodayWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";

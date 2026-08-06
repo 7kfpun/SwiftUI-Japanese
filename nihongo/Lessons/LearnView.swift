@@ -106,8 +106,9 @@ struct LearnView: View {
         .navigationTitle("\(model.index + 1) / \(model.vocab.count)")
         .navigationBarTitleDisplayMode(.inline)
         // Auto-play the word on each page when sound is on (mirrors RN assessment.js).
+        // Paging speaks explicitly in turnPage — onChange(of: index) would silently skip
+        // when random() happens to land on the same card.
         .onAppear { autoPlay(); Track.screen("learn", ["lesson": lessonNumber]) }
-        .onChange(of: model.index) { autoPlay() }
         .onChange(of: model.state) {
             if model.state == .correct { Track.event("learn_answer", ["correct": true]) }
             else if model.state == .wrong { Track.event("learn_answer", ["correct": false]) }
@@ -123,6 +124,7 @@ struct LearnView: View {
     private func turnPage(_ dir: Int) {
         if ordered { dir > 0 ? model.next() : model.prev() } else { model.random() }
         viewed += 1
+        autoPlay()   // explicit: every completed page-turn speaks the new word
     }
 
     private var card: some View {

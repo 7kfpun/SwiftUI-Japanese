@@ -46,7 +46,6 @@ struct TodayView: View {
             .toolbar { ToolbarItem(placement: .topBarTrailing) { lessonMenu } }
             .sheet(isPresented: $showPaywall) { PaywallView() }
             .onAppear { clampIfLocked(); loadPicks(); autoPlay(); Track.screen("today", ["lesson": lessonNumber]) }
-            .onChange(of: index) { autoPlay() }
             .onChange(of: lessonNumber) {
                 loadPicks(reshuffle: true); autoPlay()
                 Track.event("today_lesson", ["lesson": lessonNumber])
@@ -111,6 +110,7 @@ struct TodayView: View {
         .cardPager(canPage: { picks.count > 1 }) { dir in
             let count = picks.count
             index = dir > 0 ? (index + 1) % count : (index - 1 + count) % count
+            autoPlay()   // explicit: every completed page-turn speaks the new word
         }
     }
 
