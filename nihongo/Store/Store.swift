@@ -10,7 +10,17 @@ enum PremiumProduct {
         "com.kfpun.nihongo.premium.6m",
         "com.kfpun.nihongo.premium.12m",
     ]
-    static let all = subscriptions + [lifetime]
+    /// Grants lesson access **and** removes ads.
+    static let premium = subscriptions + [lifetime]
+
+    /// Legacy RN product: removes ads only (no lesson unlock). Restore-only — not sold here.
+    static let adFree = "com.kfpun.nihongo.adfree"
+
+    /// Everything scanned for entitlement.
+    static let entitlements = premium + [adFree]
+
+    /// What the paywall offers to buy.
+    static let purchasable = premium
 }
 
 /// Free/premium gating. Lessons 1…`freeLessonLimit` are free; the rest need premium.
@@ -28,7 +38,8 @@ enum Gating {
 @MainActor
 final class Store {
     private(set) var products: [Product] = []
-    private(set) var isPremium = false
+    private(set) var isPremium = false   // unlocks lessons 6–50 (and removes ads)
+    private(set) var isAdFree = false    // ads off — premium OR the legacy adfree product
     private(set) var purchasingID: String?
 
     init() {
@@ -43,22 +54,25 @@ final class Store {
     }
 
     func load() async {
-        products = (try? await Product.products(for: PremiumProduct.all))?
+        products = (try? await Product.products(for: PremiumProduct.purchasable))?
             .sorted { $0.price < $1.price } ?? []
     }
 
-    /// Premium if any premium product is currently entitled — an active subscription or
-    /// the owned lifetime unlock (`currentEntitlements` only yields non-expired ones).
+    /// Scan current entitlements: premium (active sub or owned lifetime) unlocks lessons
+    /// and ads; the legacy `adfree` non-consumable removes ads only. `currentEntitlements`
+    /// yields only non-expired subscriptions and owned non-consumables.
     func refreshEntitlement() async {
-        var premium = false
+        var premium = false, adFree = false
         for await result in Transaction.currentEntitlements {
-            if case .verified(let t) = result,
-               PremiumProduct.all.contains(t.productID),
-               t.revocationDate == nil {
-                premium = true
+            guard case .verified(let t) = result, t.revocationDate == nil else { continue }
+            if PremiumProduct.premium.contains(t.productID) {
+                premium = true; adFree = true
+            } else if t.productID == PremiumProduct.adFree {
+                adFree = true
             }
         }
         isPremium = premium
+        isAdFree = adFree
     }
 
     func purchase(_ product: Product) async {

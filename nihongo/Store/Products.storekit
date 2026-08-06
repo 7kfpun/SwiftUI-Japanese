@@ -16,6 +16,21 @@
       "productID" : "com.kfpun.nihongo.premium.lifetime",
       "referenceName" : "Premium Lifetime",
       "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "2.99",
+      "familyShareable" : false,
+      "internalID" : "1005",
+      "localizations" : [
+        {
+          "description" : "Legacy RN product: removes ads only. Restore-only.",
+          "displayName" : "Remove Ads",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.kfpun.nihongo.adfree",
+      "referenceName" : "Ad-Free (legacy)",
+      "type" : "NonConsumable"
     }
   ],
   "settings" : {
