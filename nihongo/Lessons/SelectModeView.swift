@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SelectModeView: View {
     let lesson: Lesson
-    @AppStorage("translationLanguage") private var language = VocabStore.defaultLanguage
+    @AppStorage(Pref.translationLanguage) private var language = VocabStore.defaultLanguage
 
     // Re-resolve so entering a mode uses the current Meanings language.
     private var current: Lesson { VocabStore.lesson(lesson.number, language) }

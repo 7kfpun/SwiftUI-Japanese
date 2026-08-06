@@ -26,7 +26,7 @@ enum L {
     }()
 
     static var current: String {
-        UserDefaults.standard.string(forKey: "appLanguage") ?? deviceDefault
+        UserDefaults.standard.string(forKey: Pref.appLanguage) ?? deviceDefault
     }
 
     /// Localized string for `key`, falling back to English then the key itself.

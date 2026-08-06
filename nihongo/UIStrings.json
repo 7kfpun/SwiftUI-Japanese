@@ -29,11 +29,9 @@
     "Learn": "Learn",
     "Rebuild the reading from tiles": "Rebuild the reading from tiles",
     "Multiple choice, any form": "Multiple choice, any form",
-    "Needs audio (coming soon)": "Needs audio (coming soon)",
     "Listening": "Listening",
     "Hear it, pick the word": "Hear it, pick the word",
     "Read All": "Read All",
-    "Auto-play the whole lesson": "Auto-play the whole lesson",
     "This entry is a full sentence — no tile game.": "This entry is a full sentence — no tile game.",
     "App language": "App language",
     "Interface": "Interface",
@@ -75,7 +73,8 @@
     "Privacy Policy": "Privacy Policy",
     "Terms of Use": "Terms of Use",
     "Done": "Done",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings."
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.",
+    "Today": "Today"
   },
   "zh": {
     "Kana": "假名",
@@ -107,11 +106,9 @@
     "Learn": "学习",
     "Rebuild the reading from tiles": "用假名块拼出读音",
     "Multiple choice, any form": "多项选择，任意形式",
-    "Needs audio (coming soon)": "需要音频（即将推出）",
     "Listening": "听力",
     "Hear it, pick the word": "听音选词",
     "Read All": "全部朗读",
-    "Auto-play the whole lesson": "自动播放整课",
     "This entry is a full sentence — no tile game.": "该词条是完整句子——无拼块游戏。",
     "App language": "应用语言",
     "Interface": "界面",
@@ -153,7 +150,8 @@
     "Privacy Policy": "隐私政策",
     "Terms of Use": "使用条款",
     "Done": "完成",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "自动续订订阅会在当前周期结束前至少 24 小时未取消时自动续订。费用将向您的 Apple ID 收取；可在“设置”中管理。"
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "自动续订订阅会在当前周期结束前至少 24 小时未取消时自动续订。费用将向您的 Apple ID 收取；可在“设置”中管理。",
+    "Today": "今天"
   },
   "zh-Hant": {
     "Kana": "假名",
@@ -185,11 +183,9 @@
     "Learn": "學習",
     "Rebuild the reading from tiles": "用假名塊拼出讀音",
     "Multiple choice, any form": "多項選擇，任意形式",
-    "Needs audio (coming soon)": "需要音訊（即將推出）",
     "Listening": "聽力",
     "Hear it, pick the word": "聽音選字",
     "Read All": "全部朗讀",
-    "Auto-play the whole lesson": "自動播放整課",
     "This entry is a full sentence — no tile game.": "此詞條是完整句子——無拼塊遊戲。",
     "App language": "應用程式語言",
     "Interface": "介面",
@@ -231,7 +227,8 @@
     "Privacy Policy": "隱私政策",
     "Terms of Use": "使用條款",
     "Done": "完成",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "自動續訂訂閱會在目前週期結束前至少 24 小時未取消時自動續訂。費用將向您的 Apple ID 收取；可在「設定」中管理。"
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "自動續訂訂閱會在目前週期結束前至少 24 小時未取消時自動續訂。費用將向您的 Apple ID 收取；可在「設定」中管理。",
+    "Today": "今天"
   },
   "vi": {
     "Kana": "Kana",
@@ -263,11 +260,9 @@
     "Learn": "Học",
     "Rebuild the reading from tiles": "Ghép cách đọc từ các ô",
     "Multiple choice, any form": "Trắc nghiệm, mọi dạng",
-    "Needs audio (coming soon)": "Cần âm thanh (sắp có)",
     "Listening": "Nghe",
     "Hear it, pick the word": "Nghe rồi chọn từ",
     "Read All": "Đọc tất cả",
-    "Auto-play the whole lesson": "Tự phát cả bài",
     "This entry is a full sentence — no tile game.": "Mục này là câu hoàn chỉnh — không có trò ghép ô.",
     "App language": "Ngôn ngữ ứng dụng",
     "Interface": "Giao diện",
@@ -309,7 +304,8 @@
     "Privacy Policy": "Chính sách quyền riêng tư",
     "Terms of Use": "Điều khoản sử dụng",
     "Done": "Xong",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Gói đăng ký tự động gia hạn sẽ gia hạn nếu không hủy ít nhất 24 giờ trước khi kỳ hạn kết thúc. Thanh toán được tính vào Apple ID của bạn; quản lý trong Cài đặt."
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Gói đăng ký tự động gia hạn sẽ gia hạn nếu không hủy ít nhất 24 giờ trước khi kỳ hạn kết thúc. Thanh toán được tính vào Apple ID của bạn; quản lý trong Cài đặt.",
+    "Today": "Hôm nay"
   },
   "de": {
     "Kana": "Kana",
@@ -341,11 +337,9 @@
     "Learn": "Lernen",
     "Rebuild the reading from tiles": "Lesung aus Kacheln zusammensetzen",
     "Multiple choice, any form": "Multiple Choice, jede Form",
-    "Needs audio (coming soon)": "Benötigt Audio (bald)",
     "Listening": "Hören",
     "Hear it, pick the word": "Hören, das Wort wählen",
     "Read All": "Alle vorlesen",
-    "Auto-play the whole lesson": "Ganze Lektion automatisch abspielen",
     "This entry is a full sentence — no tile game.": "Dieser Eintrag ist ein ganzer Satz – kein Kachelspiel.",
     "App language": "App-Sprache",
     "Interface": "Oberfläche",
@@ -387,7 +381,8 @@
     "Privacy Policy": "Datenschutz",
     "Terms of Use": "Nutzungsbedingungen",
     "Done": "Fertig",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Automatisch verlängerbare Abos verlängern sich, sofern sie nicht mindestens 24 Stunden vor Ablauf gekündigt werden. Die Zahlung erfolgt über deine Apple-ID; verwalte sie in den Einstellungen."
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Automatisch verlängerbare Abos verlängern sich, sofern sie nicht mindestens 24 Stunden vor Ablauf gekündigt werden. Die Zahlung erfolgt über deine Apple-ID; verwalte sie in den Einstellungen.",
+    "Today": "Heute"
   },
   "th": {
     "Kana": "คานะ",
@@ -419,11 +414,9 @@
     "Learn": "เรียนรู้",
     "Rebuild the reading from tiles": "เรียงเสียงอ่านจากช่องอักษร",
     "Multiple choice, any form": "ปรนัย ทุกรูปแบบ",
-    "Needs audio (coming soon)": "ต้องใช้เสียง (เร็ว ๆ นี้)",
     "Listening": "การฟัง",
     "Hear it, pick the word": "ฟังแล้วเลือกคำ",
     "Read All": "อ่านทั้งหมด",
-    "Auto-play the whole lesson": "เล่นทั้งบทอัตโนมัติ",
     "This entry is a full sentence — no tile game.": "รายการนี้เป็นประโยคเต็ม — ไม่มีเกมเรียงช่อง",
     "App language": "ภาษาแอป",
     "Interface": "อินเทอร์เฟซ",
@@ -465,7 +458,8 @@
     "Privacy Policy": "นโยบายความเป็นส่วนตัว",
     "Terms of Use": "ข้อกำหนดการใช้งาน",
     "Done": "เสร็จ",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "การสมัครสมาชิกแบบต่ออายุอัตโนมัติจะต่ออายุหากไม่ยกเลิกอย่างน้อย 24 ชั่วโมงก่อนสิ้นสุดรอบ ระบบจะเรียกเก็บเงินผ่าน Apple ID ของคุณ จัดการได้ในการตั้งค่า"
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "การสมัครสมาชิกแบบต่ออายุอัตโนมัติจะต่ออายุหากไม่ยกเลิกอย่างน้อย 24 ชั่วโมงก่อนสิ้นสุดรอบ ระบบจะเรียกเก็บเงินผ่าน Apple ID ของคุณ จัดการได้ในการตั้งค่า",
+    "Today": "วันนี้"
   },
   "my": {
     "Kana": "ကာနာ",
@@ -497,11 +491,9 @@
     "Learn": "လေ့လာရန်",
     "Rebuild the reading from tiles": "အက္ခရာအကွက်များဖြင့် အသံထွက် တည်ဆောက်ပါ",
     "Multiple choice, any form": "ရွေးချယ်ဖြေ၊ ပုံစံမျိုးစုံ",
-    "Needs audio (coming soon)": "အသံလိုအပ် (မကြာမီ)",
     "Listening": "နားထောင်ခြင်း",
     "Hear it, pick the word": "နားထောင်ပြီး စကားလုံးရွေးပါ",
     "Read All": "အားလုံးဖတ်ရန်",
-    "Auto-play the whole lesson": "သင်ခန်းစာတစ်ခုလုံး အလိုအလျောက်ဖွင့်ရန်",
     "This entry is a full sentence — no tile game.": "ဤစာစုသည် ဝါကျအပြည့်ဖြစ်၍ အကွက်ဂိမ်းမရှိပါ။",
     "App language": "အက်ပ်ဘာသာစကား",
     "Interface": "အသုံးပြုမျက်နှာပြင်",
@@ -543,7 +535,8 @@
     "Privacy Policy": "ကိုယ်ရေးအချက်အလက် မူဝါဒ",
     "Terms of Use": "အသုံးပြုမှု စည်းကမ်းများ",
     "Done": "ပြီးပါပြီ",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "အလိုအလျောက်သက်တမ်းတိုးသည့် စာရင်းသွင်းမှုများသည် သက်တမ်းမကုန်ဆုံးမီ အနည်းဆုံး ၂၄ နာရီအလိုတွင် မဖျက်သိမ်းပါက အလိုအလျောက်သက်တမ်းတိုးပါမည်။ ငွေပေးချေမှုကို သင့် Apple ID မှ ကောက်ခံပါမည်။ ဆက်တင်များတွင် စီမံပါ။"
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "အလိုအလျောက်သက်တမ်းတိုးသည့် စာရင်းသွင်းမှုများသည် သက်တမ်းမကုန်ဆုံးမီ အနည်းဆုံး ၂၄ နာရီအလိုတွင် မဖျက်သိမ်းပါက အလိုအလျောက်သက်တမ်းတိုးပါမည်။ ငွေပေးချေမှုကို သင့် Apple ID မှ ကောက်ခံပါမည်။ ဆက်တင်များတွင် စီမံပါ။",
+    "Today": "ယနေ့"
   },
   "es": {
     "Kana": "Kana",
@@ -575,11 +568,9 @@
     "Learn": "Aprender",
     "Rebuild the reading from tiles": "Reconstruye la lectura con fichas",
     "Multiple choice, any form": "Opción múltiple, cualquier forma",
-    "Needs audio (coming soon)": "Necesita audio (próximamente)",
     "Listening": "Escucha",
     "Hear it, pick the word": "Escúchalo y elige la palabra",
     "Read All": "Leer todo",
-    "Auto-play the whole lesson": "Reproducir toda la lección",
     "This entry is a full sentence — no tile game.": "Esta entrada es una frase completa: sin juego de fichas.",
     "App language": "Idioma de la app",
     "Interface": "Interfaz",
@@ -621,7 +612,8 @@
     "Privacy Policy": "Política de privacidad",
     "Terms of Use": "Términos de uso",
     "Done": "Hecho",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Las suscripciones de renovación automática se renuevan si no se cancelan al menos 24 horas antes de que finalice el periodo. El pago se cobra a tu Apple ID; gestiónalas en Ajustes."
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Las suscripciones de renovación automática se renuevan si no se cancelan al menos 24 horas antes de que finalice el periodo. El pago se cobra a tu Apple ID; gestiónalas en Ajustes.",
+    "Today": "Hoy"
   },
   "fr": {
     "Kana": "Kana",
@@ -653,11 +645,9 @@
     "Learn": "Apprendre",
     "Rebuild the reading from tiles": "Reconstituez la lecture avec les tuiles",
     "Multiple choice, any form": "Choix multiple, toute forme",
-    "Needs audio (coming soon)": "Nécessite l'audio (bientôt)",
     "Listening": "Écoute",
     "Hear it, pick the word": "Écoutez et choisissez le mot",
     "Read All": "Tout lire",
-    "Auto-play the whole lesson": "Lire toute la leçon automatiquement",
     "This entry is a full sentence — no tile game.": "Cette entrée est une phrase complète — pas de jeu de tuiles.",
     "App language": "Langue de l'app",
     "Interface": "Interface",
@@ -699,7 +689,8 @@
     "Privacy Policy": "Politique de confidentialité",
     "Terms of Use": "Conditions d'utilisation",
     "Done": "Terminé",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Les abonnements à renouvellement automatique se renouvellent sauf annulation au moins 24 heures avant la fin de la période. Le paiement est débité de votre identifiant Apple ; gérez-les dans Réglages."
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Les abonnements à renouvellement automatique se renouvellent sauf annulation au moins 24 heures avant la fin de la période. Le paiement est débité de votre identifiant Apple ; gérez-les dans Réglages.",
+    "Today": "Aujourd'hui"
   },
   "ru": {
     "Kana": "Кана",
@@ -731,11 +722,9 @@
     "Learn": "Учить",
     "Rebuild the reading from tiles": "Соберите чтение из плиток",
     "Multiple choice, any form": "Выбор из вариантов, любая форма",
-    "Needs audio (coming soon)": "Нужен звук (скоро)",
     "Listening": "Аудирование",
     "Hear it, pick the word": "Послушайте и выберите слово",
     "Read All": "Прочитать всё",
-    "Auto-play the whole lesson": "Автовоспроизведение всего урока",
     "This entry is a full sentence — no tile game.": "Это целое предложение — без игры с плитками.",
     "App language": "Язык приложения",
     "Interface": "Интерфейс",
@@ -777,7 +766,8 @@
     "Privacy Policy": "Политика конфиденциальности",
     "Terms of Use": "Условия использования",
     "Done": "Готово",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Подписки с автопродлением продлеваются, если не отменить их не позднее чем за 24 часа до конца периода. Оплата списывается с вашего Apple ID; управление — в Настройках."
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Подписки с автопродлением продлеваются, если не отменить их не позднее чем за 24 часа до конца периода. Оплата списывается с вашего Apple ID; управление — в Настройках.",
+    "Today": "Сегодня"
   },
   "bn": {
     "Kana": "কানা",
@@ -809,11 +799,9 @@
     "Learn": "শিখুন",
     "Rebuild the reading from tiles": "টাইল থেকে উচ্চারণ সাজান",
     "Multiple choice, any form": "বহু নির্বাচন, যেকোনো রূপ",
-    "Needs audio (coming soon)": "অডিও প্রয়োজন (শীঘ্রই আসছে)",
     "Listening": "শোনা",
     "Hear it, pick the word": "শুনুন এবং শব্দ বেছে নিন",
     "Read All": "সব পড়ুন",
-    "Auto-play the whole lesson": "পুরো পাঠ স্বয়ংক্রিয় চালান",
     "This entry is a full sentence — no tile game.": "এই এন্ট্রিটি একটি পূর্ণ বাক্য — কোনো টাইল খেলা নেই।",
     "App language": "অ্যাপ ভাষা",
     "Interface": "ইন্টারফেস",
@@ -855,7 +843,8 @@
     "Privacy Policy": "গোপনীয়তা নীতি",
     "Terms of Use": "ব্যবহারের শর্তাবলী",
     "Done": "সম্পন্ন",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "স্বয়ংক্রিয়ভাবে নবায়নযোগ্য সাবস্ক্রিপশন মেয়াদ শেষ হওয়ার অন্তত ২৪ ঘণ্টা আগে বাতিল না করলে নবায়ন হয়। পেমেন্ট আপনার Apple ID থেকে নেওয়া হয়; সেটিংসে পরিচালনা করুন।"
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "স্বয়ংক্রিয়ভাবে নবায়নযোগ্য সাবস্ক্রিপশন মেয়াদ শেষ হওয়ার অন্তত ২৪ ঘণ্টা আগে বাতিল না করলে নবায়ন হয়। পেমেন্ট আপনার Apple ID থেকে নেওয়া হয়; সেটিংসে পরিচালনা করুন।",
+    "Today": "আজ"
   },
   "hi": {
     "Kana": "काना",
@@ -887,11 +876,9 @@
     "Learn": "सीखें",
     "Rebuild the reading from tiles": "टाइलों से पढ़ाई फिर से बनाएँ",
     "Multiple choice, any form": "बहुविकल्पीय, किसी भी रूप में",
-    "Needs audio (coming soon)": "ऑडियो चाहिए (जल्द आ रहा है)",
     "Listening": "सुनना",
     "Hear it, pick the word": "सुनें और शब्द चुनें",
     "Read All": "सभी पढ़ें",
-    "Auto-play the whole lesson": "पूरा पाठ अपने-आप चलाएँ",
     "This entry is a full sentence — no tile game.": "यह प्रविष्टि एक पूरा वाक्य है — कोई टाइल गेम नहीं।",
     "App language": "ऐप भाषा",
     "Interface": "इंटरफ़ेस",
@@ -933,7 +920,8 @@
     "Privacy Policy": "गोपनीयता नीति",
     "Terms of Use": "उपयोग की शर्तें",
     "Done": "हो गया",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "ऑटो-रिन्यू सदस्यताएँ अवधि समाप्त होने से कम से कम 24 घंटे पहले रद्द न करने पर नवीनीकृत हो जाती हैं। भुगतान आपकी Apple ID से लिया जाता है; सेटिंग्स में प्रबंधित करें।"
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "ऑटो-रिन्यू सदस्यताएँ अवधि समाप्त होने से कम से कम 24 घंटे पहले रद्द न करने पर नवीनीकृत हो जाती हैं। भुगतान आपकी Apple ID से लिया जाता है; सेटिंग्स में प्रबंधित करें।",
+    "Today": "आज"
   },
   "ta": {
     "Kana": "கானா",
@@ -965,11 +953,9 @@
     "Learn": "கற்று",
     "Rebuild the reading from tiles": "கட்டங்களிலிருந்து வாசிப்பை உருவாக்கு",
     "Multiple choice, any form": "பல தேர்வு, எந்த வடிவமும்",
-    "Needs audio (coming soon)": "ஆடியோ தேவை (விரைவில்)",
     "Listening": "கேட்டல்",
     "Hear it, pick the word": "கேட்டு சொல்லைத் தேர்வுசெய்",
     "Read All": "அனைத்தையும் படி",
-    "Auto-play the whole lesson": "முழு பாடத்தையும் தானாக இயக்கு",
     "This entry is a full sentence — no tile game.": "இந்த உள்ளீடு ஒரு முழு வாக்கியம் — கட்ட விளையாட்டு இல்லை.",
     "App language": "ஆப் மொழி",
     "Interface": "இடைமுகம்",
@@ -1011,7 +997,8 @@
     "Privacy Policy": "தனியுரிமைக் கொள்கை",
     "Terms of Use": "பயன்பாட்டு விதிமுறைகள்",
     "Done": "முடிந்தது",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "தானாக புதுப்பிக்கும் சந்தாக்கள் காலம் முடிவதற்கு குறைந்தது 24 மணி நேரத்திற்கு முன் ரத்து செய்யாவிட்டால் புதுப்பிக்கப்படும். கட்டணம் உங்கள் Apple ID-யில் வசூலிக்கப்படும்; அமைப்புகளில் நிர்வகிக்கவும்."
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "தானாக புதுப்பிக்கும் சந்தாக்கள் காலம் முடிவதற்கு குறைந்தது 24 மணி நேரத்திற்கு முன் ரத்து செய்யாவிட்டால் புதுப்பிக்கப்படும். கட்டணம் உங்கள் Apple ID-யில் வசூலிக்கப்படும்; அமைப்புகளில் நிர்வகிக்கவும்.",
+    "Today": "இன்று"
   },
   "te": {
     "Kana": "కానా",
@@ -1043,11 +1030,9 @@
     "Learn": "నేర్చుకో",
     "Rebuild the reading from tiles": "టైల్స్ నుండి ఉచ్చారణను నిర్మించు",
     "Multiple choice, any form": "బహుళ ఎంపిక, ఏ రూపమైనా",
-    "Needs audio (coming soon)": "ఆడియో అవసరం (త్వరలో)",
     "Listening": "వినడం",
     "Hear it, pick the word": "విని పదాన్ని ఎంచుకో",
     "Read All": "అన్నీ చదువు",
-    "Auto-play the whole lesson": "మొత్తం పాఠాన్ని ఆటోప్లే చేయి",
     "This entry is a full sentence — no tile game.": "ఈ ఎంట్రీ పూర్తి వాక్యం — టైల్ గేమ్ లేదు.",
     "App language": "యాప్ భాష",
     "Interface": "ఇంటర్‌ఫేస్",
@@ -1089,7 +1074,8 @@
     "Privacy Policy": "గోప్యతా విధానం",
     "Terms of Use": "వినియోగ నిబంధనలు",
     "Done": "పూర్తయింది",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "ఆటో-రెన్యూ సబ్‌స్క్రిప్షన్లు వ్యవధి ముగియడానికి కనీసం 24 గంటల ముందు రద్దు చేయకపోతే పునరుద్ధరించబడతాయి. చెల్లింపు మీ Apple ID నుండి వసూలు చేయబడుతుంది; సెట్టింగ్‌లలో నిర్వహించండి."
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "ఆటో-రెన్యూ సబ్‌స్క్రిప్షన్లు వ్యవధి ముగియడానికి కనీసం 24 గంటల ముందు రద్దు చేయకపోతే పునరుద్ధరించబడతాయి. చెల్లింపు మీ Apple ID నుండి వసూలు చేయబడుతుంది; సెట్టింగ్‌లలో నిర్వహించండి.",
+    "Today": "నేడు"
   },
   "fil": {
     "Kana": "Kana",
@@ -1121,11 +1107,9 @@
     "Learn": "Matuto",
     "Rebuild the reading from tiles": "Buuin ang pagbasa mula sa mga tile",
     "Multiple choice, any form": "Maraming pagpipilian, anumang anyo",
-    "Needs audio (coming soon)": "Kailangan ng audio (malapit na)",
     "Listening": "Pakikinig",
     "Hear it, pick the word": "Pakinggan, piliin ang salita",
     "Read All": "Basahin lahat",
-    "Auto-play the whole lesson": "Awtomatikong i-play ang buong aralin",
     "This entry is a full sentence — no tile game.": "Buong pangungusap ang entry na ito — walang tile game.",
     "App language": "Wika ng app",
     "Interface": "Interface",
@@ -1167,7 +1151,8 @@
     "Privacy Policy": "Patakaran sa Privacy",
     "Terms of Use": "Mga Tuntunin ng Paggamit",
     "Done": "Tapos na",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Awtomatikong nire-renew ang mga subscription maliban kung kanselahin nang hindi bababa sa 24 oras bago matapos ang panahon. Sinisingil ang bayad sa iyong Apple ID; pamahalaan sa Mga Setting."
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Awtomatikong nire-renew ang mga subscription maliban kung kanselahin nang hindi bababa sa 24 oras bago matapos ang panahon. Sinisingil ang bayad sa iyong Apple ID; pamahalaan sa Mga Setting.",
+    "Today": "Ngayon"
   },
   "id": {
     "Kana": "Kana",
@@ -1199,11 +1184,9 @@
     "Learn": "Belajar",
     "Rebuild the reading from tiles": "Susun ulang bacaan dari ubin",
     "Multiple choice, any form": "Pilihan ganda, bentuk apa pun",
-    "Needs audio (coming soon)": "Perlu audio (segera hadir)",
     "Listening": "Menyimak",
     "Hear it, pick the word": "Dengar lalu pilih katanya",
     "Read All": "Baca semua",
-    "Auto-play the whole lesson": "Putar otomatis seluruh pelajaran",
     "This entry is a full sentence — no tile game.": "Entri ini kalimat lengkap — tanpa permainan ubin.",
     "App language": "Bahasa aplikasi",
     "Interface": "Antarmuka",
@@ -1245,7 +1228,8 @@
     "Privacy Policy": "Kebijakan Privasi",
     "Terms of Use": "Ketentuan Penggunaan",
     "Done": "Selesai",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Langganan perpanjangan otomatis akan diperpanjang kecuali dibatalkan setidaknya 24 jam sebelum periode berakhir. Pembayaran ditagihkan ke Apple ID Anda; kelola di Pengaturan."
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Langganan perpanjangan otomatis akan diperpanjang kecuali dibatalkan setidaknya 24 jam sebelum periode berakhir. Pembayaran ditagihkan ke Apple ID Anda; kelola di Pengaturan.",
+    "Today": "Hari ini"
   },
   "ko": {
     "Kana": "가나",
@@ -1277,11 +1261,9 @@
     "Learn": "학습",
     "Rebuild the reading from tiles": "타일로 읽기 만들기",
     "Multiple choice, any form": "객관식, 모든 형태",
-    "Needs audio (coming soon)": "오디오 필요 (준비 중)",
     "Listening": "듣기",
     "Hear it, pick the word": "듣고 단어 고르기",
     "Read All": "모두 읽기",
-    "Auto-play the whole lesson": "전체 레슨 자동 재생",
     "This entry is a full sentence — no tile game.": "이 항목은 완전한 문장입니다 — 타일 게임 없음.",
     "App language": "앱 언어",
     "Interface": "인터페이스",
@@ -1323,6 +1305,7 @@
     "Privacy Policy": "개인정보 처리방침",
     "Terms of Use": "이용약관",
     "Done": "완료",
-    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "자동 갱신 구독은 기간 종료 최소 24시간 전에 취소하지 않으면 갱신됩니다. 결제는 Apple ID로 청구되며 설정에서 관리할 수 있습니다."
+    "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "자동 갱신 구독은 기간 종료 최소 24시간 전에 취소하지 않으면 갱신됩니다. 결제는 Apple ID로 청구되며 설정에서 관리할 수 있습니다.",
+    "Today": "오늘"
   }
 }

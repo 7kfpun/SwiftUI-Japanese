@@ -38,7 +38,9 @@ final class QuizModel {
         self.from = from
         // Audio/translation prompts pair with the written word; else default to meaning.
         self.to = (from == .translation || from == .audio) ? .kana : .translation
-        self.answer = vocab.first!
+        // Degrade gracefully on empty data (bad regen) instead of crashing at launch.
+        self.answer = vocab.first ?? Vocab(lesson: 0, kanji: "", kana: "", romaji: "",
+                                           dictionary: nil, useKana: false, translation: "", audio: nil)
         next()
     }
 

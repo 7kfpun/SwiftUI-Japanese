@@ -59,6 +59,21 @@ Code: `nihongo/Store/Store.swift` (entitlement + gating), `PaywallView.swift`,
 `Products.storekit`. Gating is `Gating.isLocked(lesson:isPremium:)`; ads hide via
 `BannerAd` reading `Store.isPremium`.
 
+## Home-screen widget (Today)
+
+The widget shows a word from Today's 7 random picks, cycling through them. Code is in
+`TodayWidget/`; the app publishes the 7 words to an App Group and the widget reads them.
+
+One-time Xcode setup:
+1. *File ▸ New ▸ Target ▸ Widget Extension* → name it **TodayWidget** (uncheck "Include
+   Configuration Intent"). Delete the auto-generated sample `.swift`.
+2. Add `TodayWidget/TodayWidget.swift` and `TodayWidget/TodayWidgetBundle.swift` to the
+   **TodayWidget** target.
+3. Add `nihongo/Today/TodayShared.swift` to **both** targets (Target Membership: app + widget).
+4. Add an **App Group** `group.com.kfpun.nihongo` in Signing & Capabilities on **both** the
+   app and the widget target (create it once in the Developer portal). Until this exists the
+   shared write is a safe no-op and the widget shows a placeholder.
+
 ## Where it lives in code
 
 - `nihongo/Ads/AdConfig.swift` — unit-ID resolution (test ⇢ `Secrets.plist`)

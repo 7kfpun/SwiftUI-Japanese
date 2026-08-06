@@ -18,27 +18,30 @@ struct SilentPronouncer: Pronouncer {
     func stop() {}
 }
 
+/// One-time, mixable audio-session activation shared by every playback path
+/// (`AudioPronouncer`, `LessonPlayer`). `.mixWithOthers` keeps the user's background
+/// music playing (and lets the word be heard even with the silent switch on) instead
+/// of taking over audio at launch.
+enum PlaybackSession {
+    private static var activated = false
+    static func activate() {
+        guard !activated else { return }
+        let session = AVAudioSession.sharedInstance()
+        try? session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+        try? session.setActive(true)
+        activated = true
+    }
+}
+
 /// Plays the bundled Kyoko clip for a vocab word; falls back to live
 /// `AVSpeechSynthesizer` (ja-JP) for the 2 clip-less words and for bare kana tiles.
 final class AudioPronouncer: Pronouncer {
     private let synth = AVSpeechSynthesizer()
     private var player: AVAudioPlayer?
-    private var sessionActivated = false
-
-    /// Configure the audio session once, lazily, right before the first sound.
-    /// `.mixWithOthers` keeps the user's background music playing (and lets the word
-    /// be heard even with the silent switch on) instead of taking over audio at launch.
-    private func activateSession() {
-        guard !sessionActivated else { return }
-        let session = AVAudioSession.sharedInstance()
-        try? session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
-        try? session.setActive(true)
-        sessionActivated = true
-    }
 
     func speak(_ vocab: Vocab) {
         stop()
-        activateSession()
+        PlaybackSession.activate()
         if let url = VocabStore.audioURL(for: vocab),
            let p = try? AVAudioPlayer(contentsOf: url) {
             player = p
@@ -53,7 +56,7 @@ final class AudioPronouncer: Pronouncer {
 
     func speak(kana: K) {
         stop()
-        activateSession()
+        PlaybackSession.activate()
         // Prefer the bundled kana clip (reliable, incl. simulator); TTS backup.
         if let url = VocabStore.kanaAudioURL(kana.romaji),
            let p = try? AVAudioPlayer(contentsOf: url) {

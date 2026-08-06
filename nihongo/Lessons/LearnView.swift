@@ -53,20 +53,19 @@ final class LearnModel {
 
 struct LearnView: View {
     @State private var model: LearnModel
-    @State private var drag: CGFloat = 0
+    @State private var fling: Int? = nil   // programmatic CardPager trigger (Random button)
     @State private var viewed = 1          // cards seen so far (first card is showing)
     @State private var showPaywall = false
     // Read the visibility flags directly so the current card updates the instant a toggle flips.
-    @AppStorage("isKanjiShown")       private var showKanji = true
-    @AppStorage("isKanaShown")        private var showKana = true
-    @AppStorage("isRomajiShown")      private var showRomaji = true
-    @AppStorage("isTranslationShown") private var showTranslation = true
-    @AppStorage("isOrdered") private var ordered = true
-    @AppStorage("isSoundOn") private var soundOn = true
+    @AppStorage(Pref.kanjiShown)       private var showKanji = true
+    @AppStorage(Pref.kanaShown)        private var showKana = true
+    @AppStorage(Pref.romajiShown)      private var showRomaji = true
+    @AppStorage(Pref.translationShown) private var showTranslation = true
+    @AppStorage(Pref.ordered) private var ordered = true
+    @AppStorage(Pref.soundOn) private var soundOn = true
     @Environment(\.pronouncer) private var pronouncer
     @Environment(Store.self) private var store
 
-    private let swipeThreshold: CGFloat = 80
     private let lessonNumber: Int
 
     init(lesson: Lesson) {
@@ -120,23 +119,10 @@ struct LearnView: View {
         if soundOn { pronouncer.speak(model.current) }
     }
 
-    /// Swipe the card to move: left/right = next/prev (ordered) or shuffle (random).
-    private func handleSwipe(_ width: CGFloat) {
-        guard abs(width) > swipeThreshold else { withAnimation(.spring) { drag = 0 }; return }
-        if reachedLimit {                           // out of free cards on a locked lesson
-            withAnimation(.spring) { drag = 0 }
-            showPaywall = true
-            Track.event("trial_limit", ["mode": "learn", "lesson": lessonNumber])
-            return
-        }
-        let dir: CGFloat = width < 0 ? -1 : 1
-        withAnimation(.easeOut(duration: 0.18)) { drag = dir * 500 }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
-            if ordered { width < 0 ? model.next() : model.prev() } else { model.random() }
-            viewed += 1
-            drag = -dir * 500                       // new card enters from the opposite side
-            withAnimation(.spring) { drag = 0 }
-        }
+    /// Swipe/fling handler: next/prev (ordered) or shuffle (random).
+    private func turnPage(_ dir: Int) {
+        if ordered { dir > 0 ? model.next() : model.prev() } else { model.random() }
+        viewed += 1
     }
 
     private var card: some View {
@@ -178,14 +164,14 @@ struct LearnView: View {
             }
         }
         .contentShape(Rectangle())
-        .offset(x: drag)
-        .rotationEffect(.degrees(Double(drag / 30)))
         .onTapGesture { pronouncer.speak(model.current) }
-        .gesture(
-            DragGesture()
-                .onChanged { drag = $0.translation.width }
-                .onEnded { handleSwipe($0.translation.width) }
-        )
+        .cardPager(fling: $fling,
+                   canPage: { !reachedLimit },
+                   onBlocked: {
+                       showPaywall = true
+                       Track.event("trial_limit", ["mode": "learn", "lesson": lessonNumber])
+                   },
+                   page: turnPage)
     }
 
     private var tileGrid: some View {
@@ -221,7 +207,7 @@ struct LearnView: View {
                 }
                 Spacer()
                 if !ordered {
-                    Button { handleSwipe(-200) } label: {
+                    Button { fling = 1 } label: {
                         Label(L.t("Random"), systemImage: "shuffle")
                     }
                     .buttonStyle(.borderedProminent)

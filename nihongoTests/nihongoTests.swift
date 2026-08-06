@@ -307,6 +307,30 @@ struct LegalTests {
     }
 }
 
+// MARK: - Today daily picker
+
+struct DailyPickerTests {
+    private var lesson: [Vocab] { VocabStore.lesson(2).entries }
+
+    @Test func randomPickReturnsCountUniqueWords() {
+        let picks = DailyPicker.pick(from: lesson, count: 7, savedIDs: [])
+        #expect(picks.count == 7)
+        #expect(Set(picks.map(\.id)).count == 7)
+        #expect(picks.allSatisfy { lesson.contains($0) })
+    }
+
+    @Test func savedSelectionRestoresInOrder() {
+        let saved: [String] = lesson.prefix(7).map(\.id).reversed()
+        let picks = DailyPicker.pick(from: lesson, count: 7, savedIDs: saved)
+        #expect(picks.map(\.id) == saved)   // exact words, saved order
+    }
+
+    @Test func staleSavedIDsFallBackToFreshPick() {
+        let picks = DailyPicker.pick(from: lesson, count: 7, savedIDs: ["999/does-not-exist"])
+        #expect(picks.count == 7)
+    }
+}
+
 // MARK: - Premium gating
 
 struct GatingTests {

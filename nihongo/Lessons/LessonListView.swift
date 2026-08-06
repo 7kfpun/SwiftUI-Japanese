@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct LessonListView: View {
-    @AppStorage("translationLanguage") private var language = VocabStore.defaultLanguage
+    @AppStorage(Pref.translationLanguage) private var language = VocabStore.defaultLanguage
     @State private var query = ""
     @State private var group = 0
 

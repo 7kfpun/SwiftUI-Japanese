@@ -1,9 +1,9 @@
-Versi 3.0 adalah pembangunan ulang native sepenuhnya — lebih cepat, lebih bersih, dan sepenuhnya luring.
+Versi 3.0 — dibangun ulang total!
 
-• Kana dan Pelajaran didesain ulang menyeluruh
-• Lima cara belajar tiap pelajaran: Daftar, Kartu kilas, Belajar, Kuis, dan Menyimak
-• Audio alami untuk setiap kata dan kana
-• Banyak bahasa antarmuka dan terjemahan
-• Pelajaran 1–5 gratis; Premium membuka semua 50 dan menghilangkan iklan
+Lebih cepat, lebih bersih, sepenuhnya luring
+Kartu kilas + Menyimak baru di tiap pelajaran
+Audio alami untuk setiap kata & kana
+17 bahasa
+Pelajaran 1–5 gratis; Premium buka semua 50 & hilangkan iklan
 
-Kami aktif mengembangkan — beri tahu kami lewat Pengaturan → Masukan.
+Kami rilis cepat — beri tahu kami di Pengaturan → Masukan!

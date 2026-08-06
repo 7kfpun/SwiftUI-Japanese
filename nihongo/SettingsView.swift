@@ -2,8 +2,8 @@ import SwiftUI
 import SafariServices
 
 struct SettingsView: View {
-    @AppStorage("appLanguage") private var appLanguage = L.deviceDefault
-    @AppStorage("translationLanguage") private var vocabLanguage = VocabStore.defaultLanguage
+    @AppStorage(Pref.appLanguage) private var appLanguage = L.deviceDefault
+    @AppStorage(Pref.translationLanguage) private var vocabLanguage = VocabStore.defaultLanguage
     @Environment(Store.self) private var store
     @State private var showPaywall = false
     @State private var showFeedback = false

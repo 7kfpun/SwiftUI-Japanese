@@ -4,11 +4,11 @@ import SwiftUI
 /// (port of the RN CardOptionSelector). Read the same keys directly on the host view
 /// (not via a wrapper struct) so the card re-renders the moment a toggle flips.
 struct CardOptionsBar: View {
-    @AppStorage("isKanjiShown")       private var showKanji = true
-    @AppStorage("isKanaShown")        private var showKana = true
-    @AppStorage("isRomajiShown")      private var showRomaji = true
-    @AppStorage("isTranslationShown") private var showTranslation = true
-    @AppStorage("isSoundOn")          private var soundOn = true
+    @AppStorage(Pref.kanjiShown)       private var showKanji = true
+    @AppStorage(Pref.kanaShown)        private var showKana = true
+    @AppStorage(Pref.romajiShown)      private var showRomaji = true
+    @AppStorage(Pref.translationShown) private var showTranslation = true
+    @AppStorage(Pref.soundOn)          private var soundOn = true
 
     var body: some View {
         HStack(spacing: 14) {

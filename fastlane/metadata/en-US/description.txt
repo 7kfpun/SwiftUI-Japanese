@@ -1,29 +1,25 @@
-Japanese Daily helps you build real Japanese — kana, vocabulary, and listening — a little every day. Rebuilt natively for speed and a clean, distraction-free design that works fully offline.
+Learn Japanese the smart way — kana, vocabulary, and listening — in just a few minutes a day.
 
-KANA
-• Browse hiragana and katakana with romaji
-• Practice with a classic quiz, a swipe quiz, or flashcards
-• See which kana you've mastered
+Rebuilt from the ground up: lightning-fast, beautifully simple, and 100% offline. No fluff — just real progress.
 
-50 LESSONS
-• Vocabulary from beginner to advanced, in 50 lessons
-• Five ways to study each lesson:
-  - Vocab List: browse and hear every word
-  - Flashcards: swipe through and mark what you know
-  - Learn: rebuild each reading from kana tiles
-  - Quiz: multiple choice in any form (kana, kanji, romaji, meaning)
-  - Listening: hear a word and pick it
+MASTER KANA
+Hiragana & katakana with romaji, drilled three ways: classic quiz, swipe quiz, and flashcards. Watch your mastery grow.
+
+50 LESSONS · 5 WAYS TO LEARN
+• Vocab List — browse & hear every word
+• Flashcards — swipe to sort what you know
+• Learn — rebuild readings from kana tiles
+• Quiz — multiple choice, any form
+• Listening — hear it, pick the word
 
 NATURAL AUDIO
-• Every word and kana has clear, natural audio
-• Auto-play a whole lesson hands-free
+Every word and kana spoken clearly. Auto-play a whole lesson, hands-free.
 
 STUDY IN YOUR LANGUAGE
-Interface and word meanings in many languages.
+Interface and meanings in 17 languages.
 
-FREE & PREMIUM
-• Lessons 1–5 are free
-• Premium unlocks all 50 lessons and removes ads — as a subscription (3, 6, or 12 months) or a one-time Lifetime purchase
+FREE TO START
+Lessons 1–5 are free. Go Premium to unlock all 50 and remove ads — subscribe, or buy once for life.
 
-No account needed. Works offline. Start today.
-Questions or ideas? Settings → Feedback.
+No sign-up. No internet needed. Just open and learn.
+Got ideas? Settings → Feedback.

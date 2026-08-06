@@ -12,7 +12,6 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
     private var entries: [Vocab] = []
     private var player: AVAudioPlayer?
     private let synth = AVSpeechSynthesizer()
-    private var sessionActivated = false
 
     override init() { super.init(); synth.delegate = self }
 
@@ -20,7 +19,7 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
 
     private func start(_ list: [Vocab]) {
         entries = list
-        activateSession()
+        PlaybackSession.activate()
         isPlaying = true
         play(0)
     }
@@ -30,15 +29,6 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
         currentIndex = nil
         player?.delegate = nil; player?.stop(); player = nil
         if synth.isSpeaking { synth.stopSpeaking(at: .immediate) }
-    }
-
-    /// Configure the session lazily and mixably, so background music keeps playing.
-    private func activateSession() {
-        guard !sessionActivated else { return }
-        let s = AVAudioSession.sharedInstance()
-        try? s.setCategory(.playback, mode: .default, options: [.mixWithOthers])
-        try? s.setActive(true)
-        sessionActivated = true
     }
 
     private func play(_ i: Int) {
@@ -75,7 +65,7 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
 
 struct VocabListView: View {
     let lesson: Lesson
-    @AppStorage("translationLanguage") private var language = VocabStore.defaultLanguage
+    @AppStorage(Pref.translationLanguage) private var language = VocabStore.defaultLanguage
     @State private var player = LessonPlayer()
 
     // Re-resolve by lesson number so meanings update immediately when the language changes.

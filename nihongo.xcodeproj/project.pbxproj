@@ -10,6 +10,9 @@
 		AADAA70D3023ACC5006010F5 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = AADAA70C3023ACC5006010F5 /* GoogleMobileAds */; };
 		AAF4B1BD30245931001F7D2E /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = AAF4B1BC30245931001F7D2E /* FirebaseAnalytics */; };
 		AAF4B1BF30245931001F7D2E /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = AAF4B1BE30245931001F7D2E /* FirebaseCrashlytics */; };
+		AAF4D4BA30247E5E001F7D2E /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAF4D4B930247E5E001F7D2E /* WidgetKit.framework */; };
+		AAF4D4BC30247E5E001F7D2E /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAF4D4BB30247E5E001F7D2E /* SwiftUI.framework */; };
+		AAF4D4CD30247E61001F7D2E /* TodayWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AAF4D4B730247E5E001F7D2E /* TodayWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -27,13 +30,47 @@
 			remoteGlobalIDString = AADA49643023578E006010F5;
 			remoteInfo = nihongo;
 		};
+		AAF4D4CB30247E61001F7D2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AADA495D3023578E006010F5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AAF4D4B630247E5E001F7D2E;
+			remoteInfo = TodayWidgetExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AAF4D4D230247E61001F7D2E /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AAF4D4CD30247E61001F7D2E /* TodayWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		AADA49653023578E006010F5 /* nihongo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = nihongo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AADA497430235791006010F5 /* nihongoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = nihongoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AADA497E30235791006010F5 /* nihongoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = nihongoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AAF4D4B730247E5E001F7D2E /* TodayWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TodayWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AAF4D4B930247E5E001F7D2E /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		AAF4D4BB30247E5E001F7D2E /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AAF4D4CE30247E61001F7D2E /* Exceptions for "TodayWidget" folder in "TodayWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = AAF4D4B630247E5E001F7D2E /* TodayWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		AADA49673023578E006010F5 /* nihongo */ = {
@@ -49,6 +86,14 @@
 		AADA498130235791006010F5 /* nihongoUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = nihongoUITests;
+			sourceTree = "<group>";
+		};
+		AAF4D4BD30247E5E001F7D2E /* TodayWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AAF4D4CE30247E61001F7D2E /* Exceptions for "TodayWidget" folder in "TodayWidgetExtension" target */,
+			);
+			path = TodayWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -78,6 +123,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AAF4D4B430247E5E001F7D2E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AAF4D4BC30247E5E001F7D2E /* SwiftUI.framework in Frameworks */,
+				AAF4D4BA30247E5E001F7D2E /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -87,6 +141,8 @@
 				AADA49673023578E006010F5 /* nihongo */,
 				AADA497730235791006010F5 /* nihongoTests */,
 				AADA498130235791006010F5 /* nihongoUITests */,
+				AAF4D4BD30247E5E001F7D2E /* TodayWidget */,
+				AAF4D4B830247E5E001F7D2E /* Frameworks */,
 				AADA49663023578E006010F5 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -97,8 +153,18 @@
 				AADA49653023578E006010F5 /* nihongo.app */,
 				AADA497430235791006010F5 /* nihongoTests.xctest */,
 				AADA497E30235791006010F5 /* nihongoUITests.xctest */,
+				AAF4D4B730247E5E001F7D2E /* TodayWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		AAF4D4B830247E5E001F7D2E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AAF4D4B930247E5E001F7D2E /* WidgetKit.framework */,
+				AAF4D4BB30247E5E001F7D2E /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -111,10 +177,12 @@
 				AADA49613023578E006010F5 /* Sources */,
 				AADA49623023578E006010F5 /* Frameworks */,
 				AADA49633023578E006010F5 /* Resources */,
+				AAF4D4D230247E61001F7D2E /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AAF4D4CC30247E61001F7D2E /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				AADA49673023578E006010F5 /* nihongo */,
@@ -175,6 +243,28 @@
 			productReference = AADA497E30235791006010F5 /* nihongoUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		AAF4D4B630247E5E001F7D2E /* TodayWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AAF4D4CF30247E61001F7D2E /* Build configuration list for PBXNativeTarget "TodayWidgetExtension" */;
+			buildPhases = (
+				AAF4D4B330247E5E001F7D2E /* Sources */,
+				AAF4D4B430247E5E001F7D2E /* Frameworks */,
+				AAF4D4B530247E5E001F7D2E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AAF4D4BD30247E5E001F7D2E /* TodayWidget */,
+			);
+			name = TodayWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = TodayWidgetExtension;
+			productReference = AAF4D4B730247E5E001F7D2E /* TodayWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -195,6 +285,9 @@
 					AADA497D30235791006010F5 = {
 						CreatedOnToolsVersion = 26.6;
 						TestTargetID = AADA49643023578E006010F5;
+					};
+					AAF4D4B630247E5E001F7D2E = {
+						CreatedOnToolsVersion = 26.6;
 					};
 				};
 			};
@@ -219,6 +312,7 @@
 				AADA49643023578E006010F5 /* nihongo */,
 				AADA497330235791006010F5 /* nihongoTests */,
 				AADA497D30235791006010F5 /* nihongoUITests */,
+				AAF4D4B630247E5E001F7D2E /* TodayWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -239,6 +333,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		AADA497C30235791006010F5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AAF4D4B530247E5E001F7D2E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -269,6 +370,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AAF4D4B330247E5E001F7D2E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -281,6 +389,11 @@
 			isa = PBXTargetDependency;
 			target = AADA49643023578E006010F5 /* nihongo */;
 			targetProxy = AADA497F30235791006010F5 /* PBXContainerItemProxy */;
+		};
+		AAF4D4CC30247E61001F7D2E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AAF4D4B630247E5E001F7D2E /* TodayWidgetExtension */;
+			targetProxy = AAF4D4CB30247E61001F7D2E /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -558,6 +671,66 @@
 			};
 			name = Release;
 		};
+		AAF4D4D030247E61001F7D2E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CC4C8V8BXN;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TodayWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TodayWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kfpun.nihongo.TodayWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AAF4D4D130247E61001F7D2E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CC4C8V8BXN;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TodayWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TodayWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kfpun.nihongo.TodayWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -593,6 +766,15 @@
 			buildConfigurations = (
 				AADA498F30235791006010F5 /* Debug */,
 				AADA499030235791006010F5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AAF4D4CF30247E61001F7D2E /* Build configuration list for PBXNativeTarget "TodayWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AAF4D4D030247E61001F7D2E /* Debug */,
+				AAF4D4D130247E61001F7D2E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

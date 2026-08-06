@@ -1,9 +1,9 @@
-Phiên bản 3.0 được viết lại hoàn toàn bằng native — nhanh hơn, gọn hơn và hoạt động offline.
+Phiên bản 3.0 — viết lại hoàn toàn!
 
-• Giao diện Kana và Bài học được thiết kế lại
-• Năm cách học mỗi bài: Danh sách từ, Thẻ ghi nhớ, Học, Trắc nghiệm, Luyện nghe
-• Âm thanh tự nhiên cho mọi từ và mọi kana
-• Nhiều ngôn ngữ giao diện và bản dịch
-• Bài 1–5 miễn phí; Cao cấp mở khoá toàn bộ 50 bài và gỡ quảng cáo
+Nhanh hơn, gọn hơn, hoàn toàn offline
+Thẻ ghi nhớ + Luyện nghe cho mỗi bài
+Âm thanh tự nhiên cho mọi từ & kana
+17 ngôn ngữ
+Bài 1–5 miễn phí; Cao cấp mở khoá cả 50 & gỡ quảng cáo
 
-Chúng tôi đang phát triển tích cực — hãy góp ý tại Cài đặt → Phản hồi.
+Chúng tôi cập nhật nhanh — góp ý tại Cài đặt → Phản hồi!

@@ -31,6 +31,7 @@ struct LegalView: View {
             }
             .navigationTitle(L.t(titleKey))
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear { Track.screen("legal", ["doc": resource]) }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(L.t("Done")) { dismiss() }

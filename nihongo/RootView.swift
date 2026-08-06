@@ -2,10 +2,14 @@ import SwiftUI
 import SwiftData
 
 struct RootView: View {
-    @AppStorage("appLanguage") private var appLanguage = L.deviceDefault
+    @AppStorage(Pref.appLanguage) private var appLanguage = L.deviceDefault
 
     var body: some View {
         TabView {
+            TodayView()
+                .safeAreaInset(edge: .bottom) { BannerAd(slot: .today) }
+                .tabItem { Label(L.t("Today"), systemImage: "sun.max") }
+
             KanaBrowserView()
                 .safeAreaInset(edge: .bottom) { BannerAd(slot: .kana) }
                 .tabItem { Label(L.t("Kana"), systemImage: "character.book.closed") }

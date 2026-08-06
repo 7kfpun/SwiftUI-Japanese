@@ -3,6 +3,7 @@ import Foundation
 /// Where a banner appears. Keys match the slot names in `Secrets.plist` (and the
 /// iOS unit names in the original RN `config.js`, e.g. `ios-kana-banner`).
 enum AdSlot: String {
+    case today
     case kana, lessons
     case selectMode = "select-mode"
     case vocabList  = "vocab-list"
@@ -37,8 +38,12 @@ enum AdConfig {
     static var isProduction: Bool { !productionBanners.isEmpty }
 
     /// The banner unit ID for a slot — production when configured, else the test unit.
+    /// Slots added after the Secrets.plist was written fall back to another production
+    /// unit first, so a missing key never ships test ads in a production build.
     static func banner(_ slot: AdSlot) -> String {
-        productionBanners[slot.rawValue] ?? testBanner
+        if let id = productionBanners[slot.rawValue] { return id }
+        if slot == .today, let id = productionBanners[AdSlot.vocabList.rawValue] { return id }
+        return testBanner
     }
 
     /// The interstitial unit ID (RN's `assessment-popup`) — production or test.

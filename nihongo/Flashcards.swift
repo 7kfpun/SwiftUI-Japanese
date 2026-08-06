@@ -50,7 +50,8 @@ struct FlashcardScreen<Element, Face: View>: View {
     @State private var drag: CGSize = .zero
     @State private var revealed = false
     @State private var graded = 0
-    @AppStorage("isSoundOn") private var soundOn = true
+    @State private var animating = false   // guards double-grades mid-animation
+    @AppStorage(Pref.soundOn) private var soundOn = true
 
     private let idOf: (Element) -> String
     private let speak: (Element) -> Void
@@ -162,7 +163,7 @@ struct FlashcardScreen<Element, Face: View>: View {
         .onTapGesture { speak(element) }
         .gesture(
             DragGesture()
-                .onChanged { drag = $0.translation }
+                .onChanged { if !animating { drag = $0.translation } }
                 .onEnded { value in
                     if reachedLimit { withAnimation(.spring) { drag = .zero }; return }
                     if value.translation.width > threshold { grade(right: true) }
@@ -218,7 +219,8 @@ struct FlashcardScreen<Element, Face: View>: View {
     }
 
     private func grade(right: Bool) {
-        guard !reachedLimit else { return }
+        guard !reachedLimit, !animating else { return }
+        animating = true
         graded += 1
         if let n = trackName { Track.event("\(n)_grade", ["known": right]) }
         withAnimation(.easeOut(duration: 0.25)) { drag.width = right ? 700 : -700 }
@@ -226,6 +228,7 @@ struct FlashcardScreen<Element, Face: View>: View {
             if right { deck.know() } else { deck.dontKnow() }
             revealed = false
             drag = .zero
+            animating = false
             if deck.isDone, let n = trackName { Track.event("\(n)_done") }
             if reachedLimit { onReachLimit() } else { autoPlay() }
         }
