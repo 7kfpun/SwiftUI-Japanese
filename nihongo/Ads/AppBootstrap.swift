@@ -25,6 +25,15 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         #if canImport(FirebaseCore)
         if Bundle.main.url(forResource: "GoogleService-Info", withExtension: "plist") != nil {
             FirebaseApp.configure()   // enables Analytics + Crashlytics
+            #if DEBUG
+            // Developer/Xcode runs are DEBUG — don't pollute production analytics/crash counts.
+            #if canImport(FirebaseAnalytics)
+            Analytics.setAnalyticsCollectionEnabled(false)
+            #endif
+            #if canImport(FirebaseCrashlytics)
+            Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(false)
+            #endif
+            #endif
         }
         #endif
 
