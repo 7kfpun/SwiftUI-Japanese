@@ -7,6 +7,7 @@ struct SettingsView: View {
     @Environment(Store.self) private var store
     @State private var showPaywall = false
     @State private var showFeedback = false
+    @State private var legal: LegalDoc?
 
     /// Airtable feedback form (from the RN app), prefilled with the platform.
     private static let feedbackURL = URL(string: "https://airtable.com/shr7xvYAyInUbJNif?prefill_Platform=iOS")!
@@ -65,8 +66,16 @@ struct SettingsView: View {
                 } footer: {
                     Text(L.t("Something wrong or missing? Feel free to reach out."))
                 }
+
+                Section {
+                    Button(L.t("Privacy Policy")) { legal = .privacy }
+                    Button(L.t("Terms of Use")) { legal = .terms }
+                } header: {
+                    Text(L.t("Legal"))
+                }
             }
             .navigationTitle(L.t("Settings"))
+            .sheet(item: $legal) { doc in LegalView(titleKey: doc.titleKey, resource: doc.rawValue) }
             .onAppear { Track.screen("settings") }
             .onChange(of: appLanguage) { Track.event("set_app_language", ["code": appLanguage]) }
             .onChange(of: vocabLanguage) { Track.event("set_vocab_language", ["code": vocabLanguage]) }

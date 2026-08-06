@@ -294,6 +294,19 @@ struct QuizTests {
     }
 }
 
+// MARK: - Legal documents
+
+struct LegalTests {
+    @Test func privacyAndTermsAreBundled() throws {
+        for name in ["PrivacyPolicy", "TermsOfUse"] {
+            let url = try #require(Bundle.main.url(forResource: name, withExtension: "txt"),
+                                   "\(name).txt not bundled")
+            let text = try String(contentsOf: url, encoding: .utf8)
+            #expect(text.count > 200)
+        }
+    }
+}
+
 // MARK: - Premium gating
 
 struct GatingTests {
@@ -330,7 +343,7 @@ struct GatingTests {
 // MARK: - App localization (UIStrings.json)
 
 struct LocalizationTests {
-    private let langs = ["en", "zh", "zh-Hant", "vi", "de", "th", "my", "es", "fr", "ru"]
+    private let langs = ["en", "zh", "zh-Hant", "vi", "de", "th", "my", "es", "fr", "ru", "bn", "hi", "ta", "te"]
 
     @Test func uiStringsCoverEveryLanguageAndKey() throws {
         let url = try #require(Bundle.main.url(forResource: "UIStrings", withExtension: "json"))

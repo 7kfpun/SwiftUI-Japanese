@@ -44,6 +44,7 @@ struct LessonListView: View {
                     }
                 }
             }
+            .background(Color(.systemGroupedBackground))   // match the grouped List behind the picker
             .navigationTitle(L.t("Lessons"))
             .onAppear { Track.screen("lessons") }
             .onChange(of: group) { Track.event("lesson_group", ["group": group]) }
@@ -86,8 +87,8 @@ struct VocabRow: View {
                     .font(.caption).foregroundStyle(Theme.accent)
             }
             .contentShape(Rectangle())
+            .foregroundStyle(.primary)   // keep text neutral; the row still greys on tap
         }
-        .buttonStyle(.plain)
     }
 }
 

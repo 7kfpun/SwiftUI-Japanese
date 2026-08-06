@@ -1,0 +1,34 @@
+Privacy Policy
+
+Last updated: August 6, 2026
+
+This app ("the App") helps you study Japanese. We respect your privacy and keep data collection to a minimum. This policy explains what we collect and how it is used.
+
+Information we collect
+• We do not require an account and do not collect your name, email, or contacts.
+• Your learning progress (e.g. kana results) and settings are stored on your device.
+• Analytics: we use Google Firebase Analytics and Crashlytics to understand how the App is used and to diagnose crashes. This includes anonymous usage events and device information.
+• Advertising: the free version shows ads via Google AdMob. Ads may use your device's advertising identifier (IDFA) to be more relevant, only if you allow tracking when prompted.
+• Purchases are handled by Apple. We receive your purchase status but not your payment details.
+
+How we use information
+• To operate and improve the App, diagnose problems, and show ads in the free version.
+
+Third parties
+• Google (Firebase, AdMob) and Apple (App Store, in-app purchases) process data under their own privacy policies.
+
+Your choices
+• You can decline app tracking when prompted; ads will then be non-personalized.
+• Purchasing Premium removes ads.
+
+Data retention and security
+• On-device data stays on your device and is removed when you delete the App.
+
+Children
+• The App is not directed to children under 13 and does not knowingly collect their data.
+
+Changes
+• We may update this policy; the "Last updated" date will change.
+
+Contact
+• Questions? Use the Feedback option in Settings to reach us.

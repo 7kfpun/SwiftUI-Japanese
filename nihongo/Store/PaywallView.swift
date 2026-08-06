@@ -6,6 +6,9 @@ import StoreKit
 struct PaywallView: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @State private var legal: LegalDoc?
+
+    private let subscriptionTerms = "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings."
 
     var body: some View {
         NavigationStack {
@@ -35,6 +38,17 @@ struct PaywallView: View {
                     }
                     .font(.footnote)
                     .padding(.top, 4)
+
+                    // App Review requires the auto-renewal disclosure + legal links.
+                    Text(L.t(subscriptionTerms))
+                        .font(.caption2).foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
+                    HStack(spacing: 18) {
+                        Button(L.t("Terms of Use")) { legal = .terms }
+                        Button(L.t("Privacy Policy")) { legal = .privacy }
+                    }
+                    .font(.caption2)
                 }
                 .padding()
                 .frame(maxWidth: .infinity)
@@ -47,6 +61,7 @@ struct PaywallView: View {
                     Button(L.t("Cancel")) { dismiss() }
                 }
             }
+            .sheet(item: $legal) { doc in LegalView(titleKey: doc.titleKey, resource: doc.rawValue) }
             .onAppear { Track.event("paywall_shown") }
             .onChange(of: store.isPremium) { if store.isPremium { dismiss() } }
         }

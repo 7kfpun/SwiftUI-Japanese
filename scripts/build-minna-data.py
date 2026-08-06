@@ -14,7 +14,7 @@ REPO = os.path.join(os.path.dirname(__file__), "..")
 SRC  = os.path.join(REPO, "minna")
 ROOT = os.path.join(REPO, "nihongo", "Resources")
 AUDIO_DST = os.path.join(ROOT, "audio")
-LANGS = ["en", "zh", "zh-Hant", "vi", "de", "th", "my", "es", "fr", "ru"]
+LANGS = ["en", "zh", "zh-Hant", "vi", "de", "th", "my", "es", "fr", "ru", "bn", "hi", "ta", "te"]
 os.makedirs(AUDIO_DST, exist_ok=True)
 
 lessons, audio_copied = [], 0
