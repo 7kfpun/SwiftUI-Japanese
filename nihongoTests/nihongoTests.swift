@@ -343,7 +343,7 @@ struct GatingTests {
 // MARK: - App localization (UIStrings.json)
 
 struct LocalizationTests {
-    private let langs = ["en", "zh", "zh-Hant", "vi", "de", "th", "my", "es", "fr", "ru", "bn", "hi", "ta", "te"]
+    private let langs = ["en", "zh", "zh-Hant", "vi", "de", "th", "my", "es", "fr", "ru", "bn", "hi", "ta", "te", "fil", "id", "ko"]
 
     @Test func uiStringsCoverEveryLanguageAndKey() throws {
         let url = try #require(Bundle.main.url(forResource: "UIStrings", withExtension: "json"))
