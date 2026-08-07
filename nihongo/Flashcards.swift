@@ -157,6 +157,14 @@ struct FlashcardScreen<Element, Face: View>: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .overlay(alignment: .bottom) {
+            HStack(spacing: 10) {
+                Image(systemName: "chevron.compact.left")
+                Text(L.t("Swipe"))
+                Image(systemName: "chevron.compact.right")
+            }
+            .font(.caption).foregroundStyle(.tertiary).padding(.bottom, 8)
+        }
         .offset(x: drag.width, y: drag.height / 10)
         .rotationEffect(.degrees(Double(drag.width / 22)))
         .contentShape(Rectangle())
@@ -173,14 +181,25 @@ struct FlashcardScreen<Element, Face: View>: View {
         )
     }
 
+    /// The grade buttons double as swipe legends: arrows on the outer edges point the
+    /// way to swipe for each outcome (left = again, right = got it).
     private var graders: some View {
-        HStack {
+        HStack(spacing: 12) {
             Button { grade(right: false) } label: {
-                Label(L.t("Again"), systemImage: "arrow.uturn.left").frame(maxWidth: .infinity)
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.left")
+                    Text(L.t("Again")).fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
             }
             .tint(Theme.wrong)
+
             Button { grade(right: true) } label: {
-                Label(L.t("Got it"), systemImage: "checkmark").frame(maxWidth: .infinity)
+                HStack(spacing: 6) {
+                    Text(L.t("Got it")).fontWeight(.semibold)
+                    Image(systemName: "arrow.right")
+                }
+                .frame(maxWidth: .infinity)
             }
             .tint(Theme.correct)
         }

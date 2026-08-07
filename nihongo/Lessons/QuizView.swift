@@ -71,6 +71,11 @@ final class QuizModel {
 
     func isCorrectOption(_ i: Int) -> Bool { options[i].id == answer.id }
 
+    /// Whether auto-playing the answer's pronunciation is safe for a prompt form.
+    /// Hearing the word identifies it — fine when the prompt IS the word (kana/kanji/
+    /// romaji/audio), but a translation prompt with word options would be given away.
+    static func promptAudioSafe(from: VForm) -> Bool { from != .translation }
+
     func choose(_ i: Int) {
         guard picked == nil else { return }
         picked = i
@@ -84,6 +89,7 @@ struct QuizView: View {
     @State private var showPaywall = false
     @Environment(\.pronouncer) private var pronouncer
     @Environment(Store.self) private var store
+    @AppStorage(Pref.soundOn) private var soundOn = true
     private let lessonNumber: Int
     private let screenName: String
 
@@ -136,7 +142,7 @@ struct QuizView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
             } else {
-                Button { model.next() } label: { Text(L.t("Next")).frame(maxWidth: .infinity) }
+                Button { model.next(); autoPlay() } label: { Text(L.t("Next")).frame(maxWidth: .infinity) }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
                     .disabled(model.picked == nil)
@@ -145,14 +151,16 @@ struct QuizView: View {
         .padding()
         .background(Theme.canvas)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .principal) { ScoreBadge(correct: model.correct, total: model.total) } }
+        .toolbar {
+            ToolbarItem(placement: .principal) { ScoreBadge(correct: model.correct, total: model.total) }
+            ToolbarItem(placement: .topBarTrailing) { SoundToggle() }
+        }
         .onAppear {
-            autoPlayIfAudio()
+            autoPlay()
             Track.screen(screenName, ["lesson": lessonNumber])
             if !store.isPremium { Ads.preloadInterstitial() }
         }
-        .onChange(of: model.answer.id) { autoPlayIfAudio() }
-        .onChange(of: model.from) { autoPlayIfAudio() }
+        .onChange(of: model.from) { autoPlay() }
         .onChange(of: model.total) {
             if reachedLimit {
                 showPaywall = true
@@ -162,6 +170,13 @@ struct QuizView: View {
         .sheet(isPresented: $showPaywall) { PaywallView() }
         // A popup ad on the way out of the quiz — non-premium only, throttled.
         .onDisappear { if !store.isPremium && model.total > 0 { Ads.showInterstitialIfReady() } }
+    }
+
+    /// Listening prompts always speak — the audio IS the question. Text prompts speak
+    /// too when sound is on, unless that would reveal the answer (translation prompt).
+    private func autoPlay() {
+        if model.from.isAudio { pronouncer.speak(model.answer) }
+        else if soundOn, QuizModel.promptAudioSafe(from: model.from) { pronouncer.speak(model.answer) }
     }
 
     /// The prompt: a big speaker for the audio form, otherwise the word text.
@@ -177,7 +192,7 @@ struct QuizView: View {
                 .foregroundStyle(Theme.accent)
             } else {
                 Text(model.from.value(model.answer))
-                    .font(.system(size: 40, weight: .light))
+                    .font(Theme.jp(38))
                     .multilineTextAlignment(.center)
                     .minimumScaleFactor(0.5)
             }
@@ -187,10 +202,6 @@ struct QuizView: View {
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
         .contentShape(Rectangle())
         .onTapGesture { pronouncer.speak(model.answer) }
-    }
-
-    private func autoPlayIfAudio() {
-        if model.from.isAudio { pronouncer.speak(model.answer) }
     }
 
     private func optionBorder(_ i: Int) -> Color {

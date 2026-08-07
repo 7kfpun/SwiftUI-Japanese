@@ -35,11 +35,11 @@ private struct VocabFace: View {
     var body: some View {
         VStack(spacing: 14) {
             Text(vocab.kana)
-                .font(.system(size: 60, weight: .light))
+                .font(Theme.jp(56))
                 .minimumScaleFactor(0.4)
                 .multilineTextAlignment(.center)
             if vocab.displaysKanji {
-                Text(vocab.kanji).font(.title2).foregroundStyle(.secondary)
+                Text(vocab.kanji).font(Theme.jp(22)).foregroundStyle(.secondary)
             }
             if revealed {
                 Divider().padding(.horizontal, 40)

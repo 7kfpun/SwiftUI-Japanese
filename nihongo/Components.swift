@@ -1,5 +1,18 @@
 import SwiftUI
 
+/// Toolbar button toggling the app-wide auto-play sound setting (`Pref.soundOn`) —
+/// the same flag the Learn/Flashcards/Today toggles use, so it's global.
+struct SoundToggle: View {
+    @AppStorage(Pref.soundOn) private var soundOn = true
+
+    var body: some View {
+        Button { soundOn.toggle() } label: {
+            Image(systemName: soundOn ? "speaker.wave.2.fill" : "speaker.slash.fill")
+        }
+        .accessibilityLabel(soundOn ? "Turn sound off" : "Turn sound on")
+    }
+}
+
 /// One consistent score indicator used by every quiz in the app
 /// (Kana classic, Kana swipe, Lessons quiz). Shows right / wrong / total.
 struct ScoreBadge: View {
@@ -39,12 +52,13 @@ struct QuizOptionButton: View {
     let text: String
     let border: Color
     let disabled: Bool
+    var font: Font = .headline   // kana quizzes pass a bigger Japanese face
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             Text(text)
-                .font(.headline)
+                .font(font)
                 .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.6)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

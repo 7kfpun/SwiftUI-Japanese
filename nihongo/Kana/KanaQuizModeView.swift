@@ -7,6 +7,10 @@ struct KanaQuizModeView: View {
     var body: some View {
         List {
             Section {
+                NavigationLink { KanaFlashcardView(table: table) } label: {
+                    ModeCard(icon: "rectangle.on.rectangle.angled", title: L.t("Flashcards"),
+                             subtitle: L.t("Swipe right if you know it"))
+                }
                 NavigationLink { KanaQuizView(table: table) } label: {
                     ModeCard(icon: "hand.tap", title: L.t("Classic"),
                              subtitle: L.t("Tap one of 4 options"))
@@ -15,9 +19,13 @@ struct KanaQuizModeView: View {
                     ModeCard(icon: "rectangle.portrait.and.arrow.right", title: L.t("Swipe"),
                              subtitle: L.t("Swipe left / right between 2 options"))
                 }
-                NavigationLink { KanaFlashcardView(table: table) } label: {
-                    ModeCard(icon: "rectangle.on.rectangle.angled", title: L.t("Flashcards"),
-                             subtitle: L.t("Swipe right if you know it"))
+                NavigationLink { KanaQuizView(table: table, listening: true) } label: {
+                    ModeCard(icon: "speaker.wave.2", title: L.t("Listening"),
+                             subtitle: L.t("Hear it, pick the word"))
+                }
+                NavigationLink { KanaWriteView(table: table) } label: {
+                    ModeCard(icon: "pencil.and.outline", title: L.t("Write"),
+                             subtitle: L.t("Hear it, draw it"))
                 }
             }
         }

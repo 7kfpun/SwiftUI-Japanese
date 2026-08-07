@@ -80,10 +80,10 @@ struct TodayView: View {
     private func card(_ word: Vocab) -> some View {
         VStack(spacing: 12) {
             if showKanji && word.displaysKanji {
-                Text(word.kanji).font(.title2).foregroundStyle(.secondary)
+                Text(word.kanji).font(Theme.jp(22)).foregroundStyle(.secondary)
             }
             if showKana {
-                Text(word.kana).font(.system(size: 46, weight: .light))
+                Text(word.kana).font(Theme.jp(46))
                     .minimumScaleFactor(0.4).multilineTextAlignment(.center)
             }
             if showRomaji {

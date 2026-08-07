@@ -10,4 +10,13 @@ enum Theme {
     // Semantic system colors so Dark Mode works for free.
     static let surface = Color(.systemBackground)
     static let canvas  = Color(.secondarySystemBackground)
+
+    /// Japanese display font for the big word/kana text — iOS's built-in rounded
+    /// Hiragino Maru Gothic (no bundled font files needed). To swap in a bundled
+    /// typeface later (e.g. Zen Maru Gothic), change only this name.
+    static func jp(_ size: CGFloat) -> Font { .custom("HiraMaruProN-W4", size: size) }
+
+    /// Bold Japanese display font (the rounded Maru has no bold weight on iOS, so
+    /// this uses the built-in Hiragino Sans W6). Used for kana glyphs in Kana modes.
+    static func jpBold(_ size: CGFloat) -> Font { .custom("HiraginoSans-W6", size: size) }
 }

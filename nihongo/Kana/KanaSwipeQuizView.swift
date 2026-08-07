@@ -5,6 +5,8 @@ import SwiftData
 /// Swipe the card left to choose the left option, right to choose the right option.
 struct KanaSwipeQuizView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.pronouncer) private var pronouncer
+    @AppStorage(Pref.soundOn) private var soundOn = true
     @State private var model: KanaQuizModel
     @State private var drag: CGSize = .zero
     @State private var lastCorrect: Bool? = nil
@@ -36,7 +38,7 @@ struct KanaSwipeQuizView: View {
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(cardBorder, lineWidth: 3))
                     .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
                 Text(model.from.value(model.answer))
-                    .font(.system(size: 110, weight: .light))
+                    .font(Theme.jpBold(100))
                     .minimumScaleFactor(0.4)
                 if drag.width != 0, model.picked == nil {
                     Image(systemName: drag.width > 0 ? "arrow.right.circle.fill"
@@ -48,8 +50,18 @@ struct KanaSwipeQuizView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .overlay(alignment: .bottom) {
+                HStack(spacing: 10) {
+                    Image(systemName: "chevron.compact.left")
+                    Text(L.t("Swipe"))
+                    Image(systemName: "chevron.compact.right")
+                }
+                .font(.caption).foregroundStyle(.tertiary).padding(.bottom, 8)
+            }
             .offset(x: drag.width, y: drag.height / 8)
             .rotationEffect(.degrees(Double(drag.width / 22)))
+            .contentShape(Rectangle())
+            .onTapGesture { pronouncer.speak(kana: model.answer) }
             .gesture(
                 DragGesture()
                     .onChanged { if model.picked == nil { drag = $0.translation } }
@@ -70,8 +82,16 @@ struct KanaSwipeQuizView: View {
         .background(Theme.canvas)
         .overlay { if let lastCorrect { resultBadge(lastCorrect) } }
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { Track.screen("kana_quiz_swipe") }
-        .toolbar { ToolbarItem(placement: .principal) { ScoreBadge(correct: model.correct, total: model.total) } }
+        .onAppear { autoPlay(); Track.screen("kana_quiz_swipe") }
+        .toolbar {
+            ToolbarItem(placement: .principal) { ScoreBadge(correct: model.correct, total: model.total) }
+            ToolbarItem(placement: .topBarTrailing) { SoundToggle() }
+        }
+    }
+
+    /// Kana audio can never reveal the answer — hiragana/katakana/romaji share one sound.
+    private func autoPlay() {
+        if soundOn { pronouncer.speak(kana: model.answer) }
     }
 
     private func optionChip(_ opt: K, systemImage: String, correctSide: Int) -> some View {
@@ -125,6 +145,7 @@ struct KanaSwipeQuizView: View {
                 lastCorrect = nil
                 drag = .zero
             }
+            autoPlay()   // explicit: every new card speaks (answer may repeat, so no onChange)
         }
     }
 }

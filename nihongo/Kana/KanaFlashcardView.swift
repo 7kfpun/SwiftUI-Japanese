@@ -27,11 +27,11 @@ private struct KanaFace: View {
 
     var body: some View {
         VStack(spacing: 14) {
-            Text(kana.hiragana).font(.system(size: 90, weight: .light))
+            Text(kana.hiragana).font(Theme.jpBold(84))
             if revealed {
                 Divider().padding(.horizontal, 40)
                 Text(kana.romaji).font(.title).foregroundStyle(Theme.accent)
-                Text(kana.katakana).font(.title3).foregroundStyle(.secondary)
+                Text(kana.katakana).font(Theme.jpBold(20)).foregroundStyle(.secondary)
             }
         }
     }

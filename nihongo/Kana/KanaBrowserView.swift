@@ -6,9 +6,9 @@ enum KanaTable: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .seion:  return "清音"
-        case .dakuon: return "濁音"
-        case .youon:  return "拗音"
+        case .seion:  return L.t("Basic")    // 清音
+        case .dakuon: return L.t("Voiced")   // 濁音
+        case .youon:  return L.t("Combos")   // 拗音
         }
     }
     var rows: [[K]] {
@@ -122,7 +122,7 @@ struct KanaTileView: View {
 
     var body: some View {
         VStack(spacing: 2) {
-            Text(cell.hiragana).font(.title).fontWeight(.light)
+            Text(cell.hiragana).font(Theme.jpBold(26))
             HStack(spacing: 6) {
                 Text(cell.katakana)
                 Text(cell.romaji)

@@ -63,35 +63,37 @@ final class KanaQuizModel {
         let right = isCorrectOption(i)
         total += 1
         if right { correct += 1 }
-        upsert(romaji: answer.romaji, isCorrect: right, context: context)
-    }
-
-    private func upsert(romaji: String, isCorrect: Bool, context: ModelContext) {
-        let descriptor = FetchDescriptor<KanaResult>(predicate: #Predicate { $0.romaji == romaji })
-        if let existing = try? context.fetch(descriptor).first {
-            existing.isCorrect = isCorrect
-            existing.timestamp = .now
-        } else {
-            context.insert(KanaResult(romaji: romaji, isCorrect: isCorrect))
-        }
-        try? context.save()
+        KanaResult.record(romaji: answer.romaji, isCorrect: right, context: context)
     }
 }
 
 struct KanaQuizView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.pronouncer) private var pronouncer
+    @AppStorage(Pref.soundOn) private var soundOn = true
     @State private var model: KanaQuizModel
+    private let listening: Bool
 
-    init(table: KanaTable) {
+    init(table: KanaTable, listening: Bool = false) {
+        self.listening = listening
         _model = State(initialValue: KanaQuizModel(pool: table.rows.flatMap { $0 }))
+    }
+
+    /// Kana audio can never reveal the answer — hiragana/katakana/romaji share one
+    /// sound. In listening mode the sound IS the question, so it ignores the toggle.
+    private func autoPlay() {
+        if listening || soundOn { pronouncer.speak(kana: model.answer) }
     }
 
     var body: some View {
         VStack(spacing: 16) {
-            // Direction toggles
+            // Direction toggles (in listening mode the prompt side is the audio)
             HStack(spacing: 8) {
-                Button(model.from.label) { model.swapFrom() }
+                if listening {
+                    Image(systemName: "speaker.wave.2.fill").foregroundStyle(Theme.accent)
+                } else {
+                    Button(model.from.label) { model.swapFrom() }
+                }
                 Image(systemName: "arrow.right")
                 Button(model.to.label) { model.swapTo() }
             }
@@ -99,26 +101,38 @@ struct KanaQuizView: View {
             .buttonStyle(.bordered)
             .disabled(model.picked != nil)
 
-            // Question prompt
-            Text(model.from.value(model.answer))
-                .font(.system(size: 80, weight: .light))
-                .minimumScaleFactor(0.5)
-                .frame(maxWidth: .infinity)
-                .frame(maxHeight: .infinity)
-                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
-                .contentShape(Rectangle())
-                .onTapGesture { pronouncer.speak(kana: model.answer) }
+            // Question prompt: the kana glyph, or a speaker in listening mode.
+            Group {
+                if listening {
+                    VStack(spacing: 12) {
+                        Image(systemName: "speaker.wave.3.fill")
+                            .font(.system(size: 64)).foregroundStyle(Theme.accent)
+                        Text(L.t("Hear it, pick the word"))
+                            .font(.subheadline).foregroundStyle(.secondary)
+                    }
+                } else {
+                    Text(model.from.value(model.answer))
+                        .font(Theme.jpBold(74))
+                        .minimumScaleFactor(0.5)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(maxHeight: .infinity)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
+            .contentShape(Rectangle())
+            .onTapGesture { pronouncer.speak(kana: model.answer) }
 
             OptionGrid(count: model.options.count) { i in
                 QuizOptionButton(text: model.to.value(model.options[i]),
                                  border: optionBorder(i),
-                                 disabled: model.picked != nil) {
+                                 disabled: model.picked != nil,
+                                 font: Theme.jpBold(26)) {
                     model.choose(i, context: context)
                     Track.event("kana_quiz_answer", ["correct": model.isCorrectOption(i)])
                 }
             }
 
-            Button(action: { model.next() }) {
+            Button(action: { model.next(); autoPlay() }) {
                 Text(L.t("Next")).frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -128,8 +142,11 @@ struct KanaQuizView: View {
         .padding()
         .background(Theme.canvas)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { Track.screen("kana_quiz_classic") }
-        .toolbar { ToolbarItem(placement: .principal) { ScoreBadge(correct: model.correct, total: model.total) } }
+        .onAppear { autoPlay(); Track.screen(listening ? "kana_quiz_listening" : "kana_quiz_classic") }
+        .toolbar {
+            ToolbarItem(placement: .principal) { ScoreBadge(correct: model.correct, total: model.total) }
+            ToolbarItem(placement: .topBarTrailing) { SoundToggle() }
+        }
     }
 
     private func optionBorder(_ i: Int) -> Color {

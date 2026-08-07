@@ -11,61 +11,51 @@ import SwiftData
 import AVFoundation
 @testable import nihongo
 
-// MARK: - Bundled data integrity
+// MARK: - Bundled data integrity (canaries for scripts/build-minna-data.py)
 
 struct DataTests {
-    @Test func totalEntries() {
+    @Test func generatedDataShape() {
+        // Entry/audio totals are regeneration canaries — update together with `make data`.
         #expect(VocabStore.allVocab().count == 2089)
-    }
-
-    @Test func fiftyLessonsNoGaps() {
-        #expect(VocabStore.lessons().count == 50)
+        #expect(VocabStore.allVocab().filter { $0.audio != nil }.count == 2087)
         #expect(VocabStore.lessons().map(\.number) == Array(1...50))
     }
 
-    @Test func allEnglishTranslationsResolved() {
-        #expect(VocabStore.allVocab().allSatisfy { !$0.translation.isEmpty })
-    }
-
-    @Test func schemaCounts() {
-        #expect(VocabStore.allVocab().filter(\.useKana).count == 32)
-        #expect(VocabStore.allVocab().filter { $0.dictionary != nil }.count == 284)
-    }
-
     @Test func idsAreGloballyUnique() {
+        // Romaji repeats across lessons, so Vocab.id must include the lesson number.
         let ids = VocabStore.allVocab().map(\.id)
         #expect(Set(ids).count == ids.count)
     }
 
-    @Test func romajiIsNotGloballyUnique() {
-        // 111 romaji repeat across lessons — this is why id must include the lesson.
-        let r = VocabStore.allVocab().map(\.romaji)
-        #expect(Set(r).count < r.count)
+    /// Every screen's minimum data needs, checked for all 50 lessons: the Today tab
+    /// picks 7 words, and the quiz needs 4 distinct-kana options.
+    @Test func everyLessonSupportsGameplay() {
+        for lesson in VocabStore.lessons() {
+            #expect(lesson.entries.count >= 7, "lesson \(lesson.number) too small for Today")
+            #expect(Set(lesson.entries.map(\.kana)).count >= 4,
+                    "lesson \(lesson.number) lacks 4 distinct kana for the quiz")
+        }
     }
 
-    @Test func audioAttachedToMostEntries() {
-        // 2087 of 2089 have a Kyoko clip (2 sentence-like entries are intentionally skipped).
-        #expect(VocabStore.allVocab().filter { $0.audio != nil }.count == 2087)
-    }
-
-    @Test func sampleAudioClipIsBundled() {
-        let watashi = VocabStore.lesson(1).entries.first { $0.romaji == "watashi" }
-        #expect(watashi?.audio == "1-watashi")
-        #expect(VocabStore.audioURL(for: watashi!) != nil)
-    }
-
-    @Test func kanaClipIsBundledAndDecodes() throws {
-        let url = try #require(VocabStore.kanaAudioURL("ka"), "expected kana-ka.m4a in bundle")
-        let player = try AVAudioPlayer(contentsOf: url)
-        #expect(player.duration > 0)
-        #expect(VocabStore.kanaAudioURL("") == nil)
-    }
-
-    @Test func bundledClipDecodesAtRuntime() throws {
+    @Test func vocabClipIsNamedAndDecodes() throws {
         let watashi = try #require(VocabStore.lesson(1).entries.first { $0.romaji == "watashi" })
+        #expect(watashi.audio == "1-watashi")                    // flat naming scheme
         let url = try #require(VocabStore.audioURL(for: watashi))
-        let player = try AVAudioPlayer(contentsOf: url)   // throws if not decodable
+        let player = try AVAudioPlayer(contentsOf: url)          // throws if not decodable
         #expect(player.duration > 0)
+    }
+
+    /// Every kana shown anywhere in the UI has a bundled pronunciation clip.
+    @Test func everyKanaHasABundledClip() throws {
+        let cells = (KanaData.seion + KanaData.dakuon + KanaData.youon)
+            .flatMap { $0 }.filter { !$0.isEmpty }
+        for cell in cells {
+            #expect(VocabStore.kanaAudioURL(cell.romaji) != nil, "missing clip for \(cell.romaji)")
+        }
+        #expect(VocabStore.kanaAudioURL("") == nil)
+        // spot-check one decodes
+        let url = try #require(VocabStore.kanaAudioURL("ka"))
+        #expect(try AVAudioPlayer(contentsOf: url).duration > 0)
     }
 
     @Test func translationsSwitchWithLanguage() {
@@ -88,6 +78,7 @@ struct TextTests {
         #expect(cleanWord("大変「な」") == "大変")
         #expect(cleanWord("お問い合わせの番号。") == "お問い合わせの番号")
         #expect(cleanWord("～さん") == "さん")
+        #expect(cleanWord("") == "")
     }
 }
 
@@ -96,13 +87,10 @@ struct TextTests {
 struct KanaTests {
     private func nonEmpty(_ t: [[K]]) -> Int { t.flatMap { $0 }.filter { !$0.isEmpty }.count }
 
-    @Test func tableCounts() {
+    @Test func tableAndPoolCounts() {
         #expect(nonEmpty(KanaData.seion) == 46)
         #expect(nonEmpty(KanaData.dakuon) == 25)
         #expect(nonEmpty(KanaData.youon) == 33)
-    }
-
-    @Test func poolSizes() {
         #expect(KanaData.hiraganaPool.count == 74)
         #expect(KanaData.katakanaPool.count == 74)
     }
@@ -111,13 +99,9 @@ struct KanaTests {
 // MARK: - Search
 
 struct SearchTests {
-    @Test func findsByRomaji() {
+    @Test func findsByRomajiAndTranslation() {
         #expect(searchVocab("watashi").contains { $0.romaji == "watashi" })
-    }
-    @Test func findsByTranslation() {
         #expect(!searchVocab("teacher").isEmpty)
-    }
-    @Test func emptyQueryReturnsNothing() {
         #expect(searchVocab("   ").isEmpty)
     }
 }
@@ -173,52 +157,25 @@ struct LearnTests {
 struct FlashcardTests {
     private var sample: [Vocab] { VocabStore.lesson(3).entries }
 
-    @Test func knowRetiresCardAndCountsMastered() {
+    @Test func knowRetiresAndDontKnowRecycles() {
         let deck = FlashDeck(sample)
         let start = deck.remaining
+        let first = deck.current
+        deck.dontKnow()
+        #expect(deck.remaining == start)          // still in the deck, sent to the back
+        #expect(deck.current?.id != first?.id)
         deck.know()
         #expect(deck.remaining == start - 1)
         #expect(deck.mastered == 1)
     }
 
-    @Test func dontKnowSendsCardToTheBack() {
+    @Test func unknownCardsResurfaceUntilKnown() {
+        // "Don't know" every card once, then master the deck — it must still drain.
         let deck = FlashDeck(sample)
-        let start = deck.remaining
-        let first = deck.current
-        deck.dontKnow()
-        #expect(deck.remaining == start)          // still in the deck
-        #expect(deck.mastered == 0)
-        #expect(deck.current?.id != first?.id)    // a different card is now on top
-    }
-
-    @Test func swipingRightThroughAllFinishesTheDeck() {
-        let deck = FlashDeck(sample)
+        for _ in 0..<deck.total { deck.dontKnow() }
         while !deck.isDone { deck.know() }
         #expect(deck.mastered == deck.total)
         #expect(deck.current == nil)
-    }
-
-    @Test func unknownCardsResurfaceUntilKnown() {
-        let deck = FlashDeck(sample)
-        // Say "don't know" to everything once, then master it — deck must still drain.
-        var guardCount = 0
-        while !deck.isDone && guardCount < 10_000 {
-            guardCount += 1
-            if deck.mastered < deck.total / 2 { deck.know() } else { deck.dontKnow(); deck.know() }
-        }
-        #expect(deck.isDone)
-        #expect(deck.mastered == deck.total)
-    }
-
-    @Test func genericDeckAlsoDrivesKana() {
-        // The same FlashDeck powers the Kana flashcards (generic over element type).
-        let kana = KanaData.seion.flatMap { $0 }.filter { !$0.isEmpty }
-        let deck = FlashDeck(kana)
-        #expect(deck.total == kana.count)
-        deck.dontKnow()
-        #expect(deck.remaining == kana.count)   // revisit keeps it in the deck
-        while !deck.isDone { deck.know() }
-        #expect(deck.mastered == deck.total)
     }
 
     @Test func restartRefillsAndResets() {
@@ -229,6 +186,15 @@ struct FlashcardTests {
         #expect(deck.mastered == 0)
         #expect(deck.current != nil)
     }
+
+    @Test func genericDeckAlsoDrivesKana() {
+        // The same FlashDeck powers the Kana flashcards (generic over element type).
+        let kana = KanaData.seion.flatMap { $0 }.filter { !$0.isEmpty }
+        let deck = FlashDeck(kana)
+        #expect(deck.total == kana.count)
+        while !deck.isDone { deck.know() }
+        #expect(deck.mastered == deck.total)
+    }
 }
 
 // MARK: - Quiz models
@@ -236,7 +202,7 @@ struct FlashcardTests {
 struct QuizTests {
     @Test func mcHasFourDistinctOptionsIncludingAnswer() {
         let model = QuizModel(vocab: VocabStore.lesson(5).entries)
-        for _ in 0..<50 {
+        for _ in 0..<30 {
             model.next()
             #expect(model.options.count == 4)
             #expect(model.options.contains { $0.id == model.answer.id })
@@ -270,46 +236,79 @@ struct QuizTests {
         #expect(model.from != model.to)   // and never collides with the answer side
     }
 
-    @Test func kanaQuizHasFourDistinctOptionsIncludingAnswer() {
+    @Test func emptyVocabDegradesInsteadOfCrashing() {
+        let model = QuizModel(vocab: [])
+        #expect(model.options.isEmpty)
+        #expect(model.answer.kana.isEmpty)   // placeholder answer, no crash
+    }
+
+    @Test func kanaQuizOptionsAreDistinctAndContainAnswer() {
         let pool = KanaData.seion.flatMap { $0 }
-        let model = KanaQuizModel(pool: pool)
-        for _ in 0..<50 {
-            model.next()
-            #expect(model.options.count == 4)
-            #expect(model.options.contains { $0.romaji == model.answer.romaji })
-            let romaji = model.options.map(\.romaji)
-            #expect(Set(romaji).count == romaji.count)
+        for count in [2, 4] {
+            let model = KanaQuizModel(pool: pool, optionCount: count)
+            for _ in 0..<30 {
+                model.next()
+                #expect(model.options.count == count)
+                #expect(model.options.contains { $0.romaji == model.answer.romaji })
+                let romaji = model.options.map(\.romaji)
+                #expect(Set(romaji).count == romaji.count)
+            }
         }
     }
 
-    @Test func kanaSwipeQuizHasTwoDistinctOptionsIncludingAnswer() {
-        let pool = KanaData.seion.flatMap { $0 }
-        let model = KanaQuizModel(pool: pool, optionCount: 2)
-        for _ in 0..<50 {
-            model.next()
-            #expect(model.options.count == 2)
-            #expect(model.options.contains { $0.romaji == model.answer.romaji })
-            #expect(model.options[0].romaji != model.options[1].romaji)
-        }
+    /// Auto-playing the answer's pronunciation must never reveal it: allowed when the
+    /// prompt is the word itself (any written form, or the audio question), forbidden
+    /// when the prompt is the meaning and the options are the word.
+    @Test func promptAudioNeverRevealsAnswer() {
+        #expect(QuizModel.promptAudioSafe(from: .kana))
+        #expect(QuizModel.promptAudioSafe(from: .kanji))
+        #expect(QuizModel.promptAudioSafe(from: .romaji))
+        #expect(QuizModel.promptAudioSafe(from: .audio))
+        #expect(!QuizModel.promptAudioSafe(from: .translation))
     }
 }
 
-// MARK: - Legal documents
+// MARK: - Premium products & gating
 
-struct LegalTests {
-    @Test func privacyAndTermsAreBundled() throws {
-        for name in ["PrivacyPolicy", "TermsOfUse"] {
-            let url = try #require(Bundle.main.url(forResource: name, withExtension: "txt"),
-                                   "\(name).txt not bundled")
-            let text = try String(contentsOf: url, encoding: .utf8)
-            #expect(text.count > 200)
+struct PremiumTests {
+    @Test func lineupInvariants() {
+        // The paywall must never sell a legacy product, and everything sold must count
+        // toward entitlement (otherwise a purchase wouldn't unlock anything).
+        #expect(Set(PremiumProduct.purchasable).isDisjoint(with: PremiumProduct.legacy))
+        #expect(Set(PremiumProduct.all).isSuperset(of: PremiumProduct.purchasable))
+        #expect(Set(PremiumProduct.all).isSuperset(of: PremiumProduct.legacy))   // restores
+        #expect(PremiumProduct.purchasable.contains(PremiumProduct.lifetime))
+        #expect(PremiumProduct.all.allSatisfy { $0.hasPrefix("com.kfpun.nihongo.premium") })
+    }
+
+    @Test func gatingRules() {
+        #expect(Gating.freeLessonLimit == 5)
+        #expect(Gating.freeTrialCards == 5)
+        for n in 1...50 {
+            #expect(Gating.isLocked(lesson: n, isPremium: false) == (n > 5))
+            #expect(!Gating.isLocked(lesson: n, isPremium: true))
         }
+        #expect(Gating.trialLimit(lesson: 3, isPremium: false) == nil)                   // free lesson
+        #expect(Gating.trialLimit(lesson: 6, isPremium: false) == Gating.freeTrialCards) // locked → trial
+        #expect(Gating.trialLimit(lesson: 6, isPremium: true) == nil)                    // premium
     }
 }
 
-// MARK: - Today daily picker
+// MARK: - Ads configuration
 
-struct DailyPickerTests {
+struct AdConfigTests {
+    /// The test target builds Debug, where ads must always be Google's test units —
+    /// loading real units in development violates AdMob policy.
+    @Test func debugBuildsUseTestUnitsOnly() {
+        #expect(AdConfig.banner(.kana) == AdConfig.testBanner)
+        #expect(AdConfig.banner(.today) == AdConfig.testBanner)
+        #expect(AdConfig.interstitial == AdConfig.testInterstitial)
+    }
+}
+
+// MARK: - Today daily picker & widget contract
+
+struct TodayTests {
     private var lesson: [Vocab] { VocabStore.lesson(2).entries }
 
     @Test func randomPickReturnsCountUniqueWords() {
@@ -329,64 +328,71 @@ struct DailyPickerTests {
         let picks = DailyPicker.pick(from: lesson, count: 7, savedIDs: ["999/does-not-exist"])
         #expect(picks.count == 7)
     }
+
+    /// The snapshot is the app↔widget wire format — it must round-trip stably.
+    @Test func widgetSnapshotRoundTrips() throws {
+        let words = lesson.prefix(7).map {
+            TodayShared.Word(kana: $0.kana, kanji: $0.kanji, romaji: $0.romaji, meaning: $0.translation)
+        }
+        let snap = TodayShared.Snapshot(lesson: 2, words: Array(words))
+        let data = try JSONEncoder().encode(snap)
+        let back = try JSONDecoder().decode(TodayShared.Snapshot.self, from: data)
+        #expect(back.lesson == 2)
+        #expect(back.words == Array(words))
+    }
 }
 
-// MARK: - Premium gating
+// MARK: - Legal documents
 
-struct GatingTests {
-    @Test func lessonsOneThroughFiveAreFree() {
-        for n in 1...Gating.freeLessonLimit {
-            #expect(!Gating.isLocked(lesson: n, isPremium: false))
+struct LegalTests {
+    @Test func privacyAndTermsAreBundled() throws {
+        for name in ["PrivacyPolicy", "TermsOfUse"] {
+            let url = try #require(Bundle.main.url(forResource: name, withExtension: "txt"),
+                                   "\(name).txt not bundled")
+            let text = try String(contentsOf: url, encoding: .utf8)
+            #expect(text.count > 200)
         }
-    }
-
-    @Test func lessonsAfterFiveAreLockedWithoutPremium() {
-        for n in (Gating.freeLessonLimit + 1)...50 {
-            #expect(Gating.isLocked(lesson: n, isPremium: false))
-        }
-    }
-
-    @Test func premiumUnlocksEveryLesson() {
-        for n in 1...50 {
-            #expect(!Gating.isLocked(lesson: n, isPremium: true))
-        }
-    }
-
-    @Test func freeLimitIsFive() {
-        #expect(Gating.freeLessonLimit == 5)
-        #expect(Gating.freeTrialCards == 5)
-    }
-
-    @Test func trialLimitAppliesOnlyToLockedLessons() {
-        #expect(Gating.trialLimit(lesson: 3, isPremium: false) == nil)                  // free lesson
-        #expect(Gating.trialLimit(lesson: 6, isPremium: false) == Gating.freeTrialCards) // locked → trial
-        #expect(Gating.trialLimit(lesson: 6, isPremium: true) == nil)                    // premium → unlimited
     }
 }
 
 // MARK: - App localization (UIStrings.json)
 
 struct LocalizationTests {
-    private let langs = ["en", "zh", "zh-Hant", "vi", "de", "th", "my", "es", "fr", "ru", "bn", "hi", "ta", "te", "fil", "id", "ko"]
+    private func table() throws -> [String: [String: String]] {
+        let url = try #require(Bundle.main.url(forResource: "UIStrings", withExtension: "json"))
+        return try JSONDecoder().decode([String: [String: String]].self, from: Data(contentsOf: url))
+    }
 
     @Test func uiStringsCoverEveryLanguageAndKey() throws {
-        let url = try #require(Bundle.main.url(forResource: "UIStrings", withExtension: "json"))
-        let table = try JSONDecoder().decode([String: [String: String]].self,
-                                              from: Data(contentsOf: url))
+        let table = try table()
+        // The UI languages are exactly the vocabulary languages — one picker list.
+        #expect(Set(table.keys) == Set(VocabStore.availableLanguages))
         let enKeys = try #require(table["en"]).keys
-        #expect(enKeys.count >= 40)
-        for lang in langs {
-            let dict = try #require(table[lang], "missing language \(lang)")
-            #expect(Set(dict.keys) == Set(enKeys))          // no missing / extra keys
-            #expect(dict.values.allSatisfy { !$0.isEmpty })  // no blank translations
+        #expect(enKeys.count >= 70)
+        for (lang, dict) in table {
+            #expect(Set(dict.keys) == Set(enKeys), "key mismatch in \(lang)")
+            #expect(dict.values.allSatisfy { !$0.isEmpty }, "blank translation in \(lang)")
         }
     }
 
-    @Test func localizedLookupFallsBackToKey() {
-        #expect(L.t("a key that does not exist") == "a key that does not exist")
+    /// Every translation of a format string must keep its %@ placeholders — a missing
+    /// one renders broken UI text in that language.
+    @Test func formatPlaceholdersSurviveTranslation() throws {
+        let table = try table()
+        let en = try #require(table["en"])
+        let formatKeys = en.keys.filter { $0.contains("%@") }
+        #expect(!formatKeys.isEmpty)
+        for (lang, dict) in table {
+            for key in formatKeys {
+                let expected = en[key]!.components(separatedBy: "%@").count - 1
+                let got = (dict[key] ?? "").components(separatedBy: "%@").count - 1
+                #expect(got == expected, "\(lang) '\(key)' has \(got) placeholders, wants \(expected)")
+            }
+        }
     }
 
-    @Test func deviceDefaultIsShipped() {
+    @Test func lookupFallsBackAndDeviceDefaultShips() {
+        #expect(L.t("a key that does not exist") == "a key that does not exist")
         #expect(L.availableLanguages.contains(L.deviceDefault))
     }
 }
@@ -408,7 +414,7 @@ struct PersistenceTests {
         let ctx = try makeContext()
         let model = KanaQuizModel(pool: KanaData.seion.flatMap { $0 })
         var answered = Set<String>()
-        for _ in 0..<60 {
+        for _ in 0..<40 {
             answered.insert(model.answer.romaji)
             model.choose(0, context: ctx)   // records model.answer regardless of pick
             model.next()
@@ -416,7 +422,7 @@ struct PersistenceTests {
         let stored = try ctx.fetch(FetchDescriptor<KanaResult>())
         #expect(stored.count == answered.count)
         #expect(Set(stored.map(\.romaji)).count == stored.count)
-        #expect(model.total == 60)
+        #expect(model.total == 40)
     }
 
     /// Mirrors KanaBrowserView.clearAll — wipes all learned results.

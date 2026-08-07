@@ -15,4 +15,16 @@ final class KanaResult {
         self.isCorrect = isCorrect
         self.timestamp = timestamp
     }
+
+    /// Upsert the single row for a kana (unique romaji) — shared by quiz and write modes.
+    static func record(romaji: String, isCorrect: Bool, context: ModelContext) {
+        let descriptor = FetchDescriptor<KanaResult>(predicate: #Predicate { $0.romaji == romaji })
+        if let existing = try? context.fetch(descriptor).first {
+            existing.isCorrect = isCorrect
+            existing.timestamp = .now
+        } else {
+            context.insert(KanaResult(romaji: romaji, isCorrect: isCorrect))
+        }
+        try? context.save()
+    }
 }

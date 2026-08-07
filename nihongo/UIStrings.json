@@ -74,7 +74,13 @@
     "Terms of Use": "Terms of Use",
     "Done": "Done",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.",
-    "Today": "Today"
+    "Today": "Today",
+    "Basic": "Basic",
+    "Voiced": "Voiced",
+    "Combos": "Combos",
+    "Write": "Write",
+    "Hear it, draw it": "Hear it, draw it",
+    "Check": "Check"
   },
   "zh": {
     "Kana": "假名",
@@ -151,7 +157,13 @@
     "Terms of Use": "使用条款",
     "Done": "完成",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "自动续订订阅会在当前周期结束前至少 24 小时未取消时自动续订。费用将向您的 Apple ID 收取；可在“设置”中管理。",
-    "Today": "今天"
+    "Today": "今天",
+    "Basic": "清音",
+    "Voiced": "濁音",
+    "Combos": "拗音",
+    "Write": "书写",
+    "Hear it, draw it": "听音写字",
+    "Check": "检查"
   },
   "zh-Hant": {
     "Kana": "假名",
@@ -228,7 +240,13 @@
     "Terms of Use": "使用條款",
     "Done": "完成",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "自動續訂訂閱會在目前週期結束前至少 24 小時未取消時自動續訂。費用將向您的 Apple ID 收取；可在「設定」中管理。",
-    "Today": "今天"
+    "Today": "今天",
+    "Basic": "清音",
+    "Voiced": "濁音",
+    "Combos": "拗音",
+    "Write": "書寫",
+    "Hear it, draw it": "聽音寫字",
+    "Check": "檢查"
   },
   "vi": {
     "Kana": "Kana",
@@ -305,7 +323,13 @@
     "Terms of Use": "Điều khoản sử dụng",
     "Done": "Xong",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Gói đăng ký tự động gia hạn sẽ gia hạn nếu không hủy ít nhất 24 giờ trước khi kỳ hạn kết thúc. Thanh toán được tính vào Apple ID của bạn; quản lý trong Cài đặt.",
-    "Today": "Hôm nay"
+    "Today": "Hôm nay",
+    "Basic": "Cơ bản",
+    "Voiced": "Hữu thanh",
+    "Combos": "Âm ghép",
+    "Write": "Viết",
+    "Hear it, draw it": "Nghe rồi viết",
+    "Check": "Kiểm tra"
   },
   "de": {
     "Kana": "Kana",
@@ -382,7 +406,13 @@
     "Terms of Use": "Nutzungsbedingungen",
     "Done": "Fertig",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Automatisch verlängerbare Abos verlängern sich, sofern sie nicht mindestens 24 Stunden vor Ablauf gekündigt werden. Die Zahlung erfolgt über deine Apple-ID; verwalte sie in den Einstellungen.",
-    "Today": "Heute"
+    "Today": "Heute",
+    "Basic": "Basis",
+    "Voiced": "Stimmhaft",
+    "Combos": "Kombis",
+    "Write": "Schreiben",
+    "Hear it, draw it": "Hören und schreiben",
+    "Check": "Prüfen"
   },
   "th": {
     "Kana": "คานะ",
@@ -459,7 +489,13 @@
     "Terms of Use": "ข้อกำหนดการใช้งาน",
     "Done": "เสร็จ",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "การสมัครสมาชิกแบบต่ออายุอัตโนมัติจะต่ออายุหากไม่ยกเลิกอย่างน้อย 24 ชั่วโมงก่อนสิ้นสุดรอบ ระบบจะเรียกเก็บเงินผ่าน Apple ID ของคุณ จัดการได้ในการตั้งค่า",
-    "Today": "วันนี้"
+    "Today": "วันนี้",
+    "Basic": "พื้นฐาน",
+    "Voiced": "เสียงขุ่น",
+    "Combos": "เสียงควบ",
+    "Write": "เขียน",
+    "Hear it, draw it": "ฟังแล้วเขียน",
+    "Check": "ตรวจ"
   },
   "my": {
     "Kana": "ကာနာ",
@@ -536,7 +572,13 @@
     "Terms of Use": "အသုံးပြုမှု စည်းကမ်းများ",
     "Done": "ပြီးပါပြီ",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "အလိုအလျောက်သက်တမ်းတိုးသည့် စာရင်းသွင်းမှုများသည် သက်တမ်းမကုန်ဆုံးမီ အနည်းဆုံး ၂၄ နာရီအလိုတွင် မဖျက်သိမ်းပါက အလိုအလျောက်သက်တမ်းတိုးပါမည်။ ငွေပေးချေမှုကို သင့် Apple ID မှ ကောက်ခံပါမည်။ ဆက်တင်များတွင် စီမံပါ။",
-    "Today": "ယနေ့"
+    "Today": "ယနေ့",
+    "Basic": "အခြေခံ",
+    "Voiced": "အသံပြောင်း",
+    "Combos": "ပေါင်းစပ်",
+    "Write": "ရေးရန်",
+    "Hear it, draw it": "နားထောင်ပြီး ရေးပါ",
+    "Check": "စစ်ဆေးရန်"
   },
   "es": {
     "Kana": "Kana",
@@ -613,7 +655,13 @@
     "Terms of Use": "Términos de uso",
     "Done": "Hecho",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Las suscripciones de renovación automática se renuevan si no se cancelan al menos 24 horas antes de que finalice el periodo. El pago se cobra a tu Apple ID; gestiónalas en Ajustes.",
-    "Today": "Hoy"
+    "Today": "Hoy",
+    "Basic": "Básico",
+    "Voiced": "Sonoro",
+    "Combos": "Combinadas",
+    "Write": "Escribir",
+    "Hear it, draw it": "Escúchalo y escríbelo",
+    "Check": "Comprobar"
   },
   "fr": {
     "Kana": "Kana",
@@ -690,7 +738,13 @@
     "Terms of Use": "Conditions d'utilisation",
     "Done": "Terminé",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Les abonnements à renouvellement automatique se renouvellent sauf annulation au moins 24 heures avant la fin de la période. Le paiement est débité de votre identifiant Apple ; gérez-les dans Réglages.",
-    "Today": "Aujourd'hui"
+    "Today": "Aujourd'hui",
+    "Basic": "De base",
+    "Voiced": "Voisé",
+    "Combos": "Combinés",
+    "Write": "Écrire",
+    "Hear it, draw it": "Écoutez et écrivez",
+    "Check": "Vérifier"
   },
   "ru": {
     "Kana": "Кана",
@@ -767,7 +821,13 @@
     "Terms of Use": "Условия использования",
     "Done": "Готово",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Подписки с автопродлением продлеваются, если не отменить их не позднее чем за 24 часа до конца периода. Оплата списывается с вашего Apple ID; управление — в Настройках.",
-    "Today": "Сегодня"
+    "Today": "Сегодня",
+    "Basic": "Базовые",
+    "Voiced": "Звонкие",
+    "Combos": "Сочетания",
+    "Write": "Письмо",
+    "Hear it, draw it": "Послушай и напиши",
+    "Check": "Проверить"
   },
   "bn": {
     "Kana": "কানা",
@@ -844,7 +904,13 @@
     "Terms of Use": "ব্যবহারের শর্তাবলী",
     "Done": "সম্পন্ন",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "স্বয়ংক্রিয়ভাবে নবায়নযোগ্য সাবস্ক্রিপশন মেয়াদ শেষ হওয়ার অন্তত ২৪ ঘণ্টা আগে বাতিল না করলে নবায়ন হয়। পেমেন্ট আপনার Apple ID থেকে নেওয়া হয়; সেটিংসে পরিচালনা করুন।",
-    "Today": "আজ"
+    "Today": "আজ",
+    "Basic": "মৌলিক",
+    "Voiced": "ঘোষ",
+    "Combos": "যুক্ত",
+    "Write": "লেখা",
+    "Hear it, draw it": "শুনে লিখুন",
+    "Check": "যাচাই"
   },
   "hi": {
     "Kana": "काना",
@@ -921,7 +987,13 @@
     "Terms of Use": "उपयोग की शर्तें",
     "Done": "हो गया",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "ऑटो-रिन्यू सदस्यताएँ अवधि समाप्त होने से कम से कम 24 घंटे पहले रद्द न करने पर नवीनीकृत हो जाती हैं। भुगतान आपकी Apple ID से लिया जाता है; सेटिंग्स में प्रबंधित करें।",
-    "Today": "आज"
+    "Today": "आज",
+    "Basic": "मूल",
+    "Voiced": "सघोष",
+    "Combos": "संयुक्त",
+    "Write": "लिखें",
+    "Hear it, draw it": "सुनें और लिखें",
+    "Check": "जाँचें"
   },
   "ta": {
     "Kana": "கானா",
@@ -998,7 +1070,13 @@
     "Terms of Use": "பயன்பாட்டு விதிமுறைகள்",
     "Done": "முடிந்தது",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "தானாக புதுப்பிக்கும் சந்தாக்கள் காலம் முடிவதற்கு குறைந்தது 24 மணி நேரத்திற்கு முன் ரத்து செய்யாவிட்டால் புதுப்பிக்கப்படும். கட்டணம் உங்கள் Apple ID-யில் வசூலிக்கப்படும்; அமைப்புகளில் நிர்வகிக்கவும்.",
-    "Today": "இன்று"
+    "Today": "இன்று",
+    "Basic": "அடிப்படை",
+    "Voiced": "ஒலிப்பு",
+    "Combos": "கூட்டு",
+    "Write": "எழுது",
+    "Hear it, draw it": "கேட்டு எழுதுங்கள்",
+    "Check": "சரிபார்"
   },
   "te": {
     "Kana": "కానా",
@@ -1075,7 +1153,13 @@
     "Terms of Use": "వినియోగ నిబంధనలు",
     "Done": "పూర్తయింది",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "ఆటో-రెన్యూ సబ్‌స్క్రిప్షన్లు వ్యవధి ముగియడానికి కనీసం 24 గంటల ముందు రద్దు చేయకపోతే పునరుద్ధరించబడతాయి. చెల్లింపు మీ Apple ID నుండి వసూలు చేయబడుతుంది; సెట్టింగ్‌లలో నిర్వహించండి.",
-    "Today": "నేడు"
+    "Today": "నేడు",
+    "Basic": "ప్రాథమిక",
+    "Voiced": "ఘోష",
+    "Combos": "సంయుక్త",
+    "Write": "రాయి",
+    "Hear it, draw it": "విని రాయండి",
+    "Check": "తనిఖీ"
   },
   "fil": {
     "Kana": "Kana",
@@ -1152,7 +1236,13 @@
     "Terms of Use": "Mga Tuntunin ng Paggamit",
     "Done": "Tapos na",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Awtomatikong nire-renew ang mga subscription maliban kung kanselahin nang hindi bababa sa 24 oras bago matapos ang panahon. Sinisingil ang bayad sa iyong Apple ID; pamahalaan sa Mga Setting.",
-    "Today": "Ngayon"
+    "Today": "Ngayon",
+    "Basic": "Batayan",
+    "Voiced": "May tinig",
+    "Combos": "Kombinasyon",
+    "Write": "Sulat",
+    "Hear it, draw it": "Pakinggan at isulat",
+    "Check": "Suriin"
   },
   "id": {
     "Kana": "Kana",
@@ -1229,7 +1319,13 @@
     "Terms of Use": "Ketentuan Penggunaan",
     "Done": "Selesai",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Langganan perpanjangan otomatis akan diperpanjang kecuali dibatalkan setidaknya 24 jam sebelum periode berakhir. Pembayaran ditagihkan ke Apple ID Anda; kelola di Pengaturan.",
-    "Today": "Hari ini"
+    "Today": "Hari ini",
+    "Basic": "Dasar",
+    "Voiced": "Bersuara",
+    "Combos": "Gabungan",
+    "Write": "Menulis",
+    "Hear it, draw it": "Dengar lalu tulis",
+    "Check": "Periksa"
   },
   "ko": {
     "Kana": "가나",
@@ -1306,6 +1402,12 @@
     "Terms of Use": "이용약관",
     "Done": "완료",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "자동 갱신 구독은 기간 종료 최소 24시간 전에 취소하지 않으면 갱신됩니다. 결제는 Apple ID로 청구되며 설정에서 관리할 수 있습니다.",
-    "Today": "오늘"
+    "Today": "오늘",
+    "Basic": "기본",
+    "Voiced": "탁음",
+    "Combos": "요음",
+    "Write": "쓰기",
+    "Hear it, draw it": "듣고 쓰기",
+    "Check": "확인"
   }
 }

@@ -132,17 +132,17 @@ struct LearnView: View {
             // assembled reading (the task)
             HStack(spacing: 4) {
                 Text(model.answer.joined())
-                    .font(.system(size: 34, weight: .semibold))
+                    .font(Theme.jp(32))
                 Image(systemName: stateIcon).foregroundStyle(stateColor)
                     .opacity(model.state == .inProgress ? 0 : 1)
             }
             .frame(height: 46)
 
             if showKana {
-                Text(model.target).font(.title3.weight(.medium))   // the reading (hint / reveal)
+                Text(model.target).font(Theme.jp(20))   // the reading (hint / reveal)
             }
             if showKanji && model.current.displaysKanji {
-                Text(model.current.kanji).font(.title3)
+                Text(model.current.kanji).font(Theme.jp(20))
             }
             if showRomaji {
                 Text(model.current.romaji).foregroundStyle(.secondary)
