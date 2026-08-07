@@ -51,11 +51,18 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 enum Track {
     static let prefix = "nihongo_2026_"
 
+    /// Cached from the last `setPremium` call so every event can carry it as a
+    /// param — `user_type`/`premium_tier` (below) already attach via Firebase user
+    /// properties, but an explicit per-event `is_premium` also lets funnels filter
+    /// without joining user-level data.
+    private static var isPremium = false
+
     /// Log a custom event (prefixed). No-op until Firebase is linked + configured.
     static func event(_ name: String, _ params: [String: Any]? = nil) {
         #if canImport(FirebaseAnalytics)
         if FirebaseApp.app() != nil {
-            Analytics.logEvent(prefix + name, parameters: params)
+            let merged = (params ?? [:]).merging(["is_premium": isPremium]) { existing, _ in existing }
+            Analytics.logEvent(prefix + name, parameters: merged)
         }
         #endif
     }
@@ -68,6 +75,7 @@ enum Track {
     /// Segment users by entitlement: `user_type` = premium/free, `premium_tier` =
     /// lifetime / 3m / 6m / 12m / none. User properties attach to every event.
     static func setPremium(_ isPremium: Bool, tier: String) {
+        Self.isPremium = isPremium
         #if canImport(FirebaseAnalytics)
         if FirebaseApp.app() != nil {
             Analytics.setUserProperty(isPremium ? "premium" : "free", forName: "user_type")

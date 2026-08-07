@@ -90,12 +90,23 @@ final class Store {
     func purchase(_ product: Product) async {
         purchasingID = product.id
         defer { purchasingID = nil }
-        Track.event("purchase_start", ["tier": Self.tierLabel(product.id)])
-        guard let result = try? await product.purchase() else { return }
-        if case .success(.verified(let t)) = result {
+        let tier = Self.tierLabel(product.id)
+        Track.event("purchase_start", ["tier": tier])
+        guard let result = try? await product.purchase() else {
+            Track.event("purchase_failed", ["tier": tier, "reason": "error"])
+            return
+        }
+        switch result {
+        case .success(.verified(let t)):
             await t.finish()
             await refreshEntitlement()
-            Track.event("purchase_success", ["tier": Self.tierLabel(product.id)])
+            Track.event("purchase_success", ["tier": tier])
+        case .userCancelled:
+            Track.event("purchase_failed", ["tier": tier, "reason": "cancelled"])
+        case .pending:
+            Track.event("purchase_failed", ["tier": tier, "reason": "pending"])
+        default:
+            Track.event("purchase_failed", ["tier": tier, "reason": "unverified"])
         }
     }
 

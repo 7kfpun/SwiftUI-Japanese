@@ -37,14 +37,14 @@ struct TodayView: View {
         NavigationStack {
             VStack(spacing: 16) {
                 CardOptionsBar()
-                if let word = current { card(word) } else { ProgressView().frame(maxHeight: .infinity) }
+                if let word = current { cardStack(word) } else { ProgressView().frame(maxHeight: .infinity) }
             }
             .padding()
             .background(Theme.canvas)
             .navigationTitle(L.t("Today"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .topBarTrailing) { lessonMenu } }
-            .sheet(isPresented: $showPaywall) { PaywallView() }
+            .sheet(isPresented: $showPaywall) { PaywallView(source: "today_lock") }
             .onAppear { clampIfLocked(); loadPicks(); autoPlay(); Track.screen("today", ["lesson": lessonNumber]) }
             .onChange(of: lessonNumber) {
                 loadPicks(reshuffle: true); autoPlay()
@@ -75,6 +75,16 @@ struct TodayView: View {
         } label: {
             Text(L.t("Lesson %@", "\(lessonNumber)")).fontWeight(.semibold)
         }
+    }
+
+    /// A peek stack behind the card — the same deck look as Flashcards/Kana swipe,
+    /// so paging through the day's words reads as "a stack of cards" too.
+    private func cardStack(_ word: Vocab) -> some View {
+        ZStack {
+            CardStackPeek()
+            card(word)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func card(_ word: Vocab) -> some View {

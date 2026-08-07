@@ -41,25 +41,27 @@ out = {"languages": LANGS, "lessons": lessons, "translations": translations}
 dst = os.path.join(ROOT, "MinnaData.json")
 json.dump(out, open(dst, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 
-# Kana clips: copy minna's Kyoko kana recordings → flat `kana-<romaji>.m4a`.
-# The app romanizes じ/ぢ→"ji" and ず/づ→"zu", matching minna's ji.m4a / zu.m4a.
-KANA_SRC = os.path.join(SRC, "audio", "kana", "kyoko")
-KANA = ["a","i","u","e","o","ka","ki","ku","ke","ko","sa","shi","su","se","so",
-        "ta","chi","tsu","te","to","na","ni","nu","ne","no","ha","hi","fu","he","ho",
-        "ma","mi","mu","me","mo","ya","yu","yo","ra","ri","ru","re","ro","wa","wo","n",
-        "ga","gi","gu","ge","go","za","ji","zu","ze","zo","da","de","do",
-        "ba","bi","bu","be","bo","pa","pi","pu","pe","po",
-        "kya","kyu","kyo","sha","shu","sho","cha","chu","cho","nya","nyu","nyo",
-        "hya","hyu","hyo","mya","myu","myo","rya","ryu","ryo","gya","gyu","gyo",
-        "ja","ju","jo","bya","byu","byo","pya","pyu","pyo"]
-kana_made, kana_missing = 0, []
-for romaji in KANA:
-    src = os.path.join(KANA_SRC, f"{romaji}.m4a")
-    if os.path.exists(src):
-        shutil.copyfile(src, os.path.join(AUDIO_DST, f"kana-{romaji}.m4a"))
-        kana_made += 1
-    else:
-        kana_missing.append(romaji)
+# Kana chart: vocab/kana.json is the source of truth (grid layout, per-script
+# stroke counts, clip paths). Bundle it verbatim, and drive the clip copying from
+# it — no hardcoded kana list in this script or in Swift.
+kana = json.load(open(f"{SRC}/vocab/kana.json"))
+shutil.copyfile(f"{SRC}/vocab/kana.json", os.path.join(ROOT, "KanaChart.json"))
+kana_made, kana_missing, kana_seen = 0, [], set()
+for group in kana["data"].values():
+    for e in group:
+        # じ/ぢ and ず/づ share a romaji (and a pronunciation): first clip wins,
+        # so kana-ji.m4a comes from じ's ji.m4a, not ぢ's ji-di.m4a.
+        name = f"kana-{e['romaji']}.m4a"
+        if name in kana_seen:
+            continue
+        kana_seen.add(name)
+        rel = (e.get("audio") or {}).get("kyoko")
+        src = os.path.join(SRC, rel) if rel else None
+        if src and os.path.exists(src):
+            shutil.copyfile(src, os.path.join(AUDIO_DST, name))
+            kana_made += 1
+        else:
+            kana_missing.append(e["romaji"])
 
 msg = (f"MinnaData.json {os.path.getsize(dst)//1024}KB | entries={sum(len(l['entries']) for l in lessons)}"
        f" | vocab clips={audio_copied} | kana clips={kana_made}")

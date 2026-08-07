@@ -36,4 +36,22 @@ platform :ios do
       submit_for_review: false,
     )
   end
+
+  desc "Push App Store screenshots (draft metadata only) — no binary, no text metadata, no submission"
+  lane :screenshots do
+    deliver(
+      api_key: asc_api_key,
+      screenshots_path: "fastlane/screenshots",
+      # fastlane's built-in locale list lags App Store Connect (Tamil, Filipino, ...)
+      ignore_language_directory_validation: true,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_screenshots: false,
+      overwrite_screenshots: true,
+      sync_screenshots: false,
+      force: true,                 # skip the HTML confirmation prompt
+      run_precheck_before_submit: false,
+      submit_for_review: false,
+    )
+  end
 end

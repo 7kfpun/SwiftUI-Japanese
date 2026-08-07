@@ -12,5 +12,6 @@ enum Pref {
     static let romajiShown         = "isRomajiShown"
     static let translationShown    = "isTranslationShown"
     static let todayLesson         = "todayLesson"
+    static let kanaTileScript      = "kanaTileScript"
     static let todaySelection      = "todaySelection"
 }

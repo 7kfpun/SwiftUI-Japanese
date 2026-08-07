@@ -4,6 +4,7 @@ struct LessonListView: View {
     @AppStorage(Pref.translationLanguage) private var language = VocabStore.defaultLanguage
     @State private var query = ""
     @State private var group = 0
+    @State private var searchDebounce: Task<Void, Never>?
 
     private static let groups: [(String, ClosedRange<Int>)] = [
         ("Beginning 1", 1...13),
@@ -52,6 +53,15 @@ struct LessonListView: View {
             .searchable(text: $query, prompt: L.t("Search vocabulary"))
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
+            .onChange(of: query) {
+                searchDebounce?.cancel()
+                let q = query, count = results.count
+                searchDebounce = Task {
+                    try? await Task.sleep(for: .milliseconds(600))
+                    guard !Task.isCancelled, !q.isEmpty else { return }
+                    Track.event("search_vocab", ["query_length": q.count, "results": count])
+                }
+            }
         }
     }
 }

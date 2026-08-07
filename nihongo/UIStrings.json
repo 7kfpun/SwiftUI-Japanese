@@ -80,7 +80,12 @@
     "Combos": "Combos",
     "Write": "Write",
     "Hear it, draw it": "Hear it, draw it",
-    "Check": "Check"
+    "Check": "Check",
+    "Licenses": "Licenses",
+    "Hiragana": "Hiragana",
+    "Katakana": "Katakana",
+    "Mix": "Mix",
+    "Romaji": "Romaji"
   },
   "zh": {
     "Kana": "假名",
@@ -163,7 +168,12 @@
     "Combos": "拗音",
     "Write": "书写",
     "Hear it, draw it": "听音写字",
-    "Check": "检查"
+    "Check": "检查",
+    "Licenses": "许可证",
+    "Hiragana": "平假名",
+    "Katakana": "片假名",
+    "Mix": "混合",
+    "Romaji": "罗马音"
   },
   "zh-Hant": {
     "Kana": "假名",
@@ -246,7 +256,12 @@
     "Combos": "拗音",
     "Write": "書寫",
     "Hear it, draw it": "聽音寫字",
-    "Check": "檢查"
+    "Check": "檢查",
+    "Licenses": "授權條款",
+    "Hiragana": "平假名",
+    "Katakana": "片假名",
+    "Mix": "混合",
+    "Romaji": "羅馬拼音"
   },
   "vi": {
     "Kana": "Kana",
@@ -329,7 +344,12 @@
     "Combos": "Âm ghép",
     "Write": "Viết",
     "Hear it, draw it": "Nghe rồi viết",
-    "Check": "Kiểm tra"
+    "Check": "Kiểm tra",
+    "Licenses": "Giấy phép",
+    "Hiragana": "Hiragana",
+    "Katakana": "Katakana",
+    "Mix": "Trộn",
+    "Romaji": "Romaji"
   },
   "de": {
     "Kana": "Kana",
@@ -412,7 +432,12 @@
     "Combos": "Kombis",
     "Write": "Schreiben",
     "Hear it, draw it": "Hören und schreiben",
-    "Check": "Prüfen"
+    "Check": "Prüfen",
+    "Licenses": "Lizenzen",
+    "Hiragana": "Hiragana",
+    "Katakana": "Katakana",
+    "Mix": "Mix",
+    "Romaji": "Romaji"
   },
   "th": {
     "Kana": "คานะ",
@@ -495,7 +520,12 @@
     "Combos": "เสียงควบ",
     "Write": "เขียน",
     "Hear it, draw it": "ฟังแล้วเขียน",
-    "Check": "ตรวจ"
+    "Check": "ตรวจ",
+    "Licenses": "สัญญาอนุญาต",
+    "Hiragana": "ฮิรางานะ",
+    "Katakana": "คาตาคานะ",
+    "Mix": "ผสม",
+    "Romaji": "โรมาจิ"
   },
   "my": {
     "Kana": "ကာနာ",
@@ -578,7 +608,12 @@
     "Combos": "ပေါင်းစပ်",
     "Write": "ရေးရန်",
     "Hear it, draw it": "နားထောင်ပြီး ရေးပါ",
-    "Check": "စစ်ဆေးရန်"
+    "Check": "စစ်ဆေးရန်",
+    "Licenses": "လိုင်စင်များ",
+    "Hiragana": "ဟီရာဂနာ",
+    "Katakana": "ခတခနာ",
+    "Mix": "ရောနှော",
+    "Romaji": "ရိုမာဂျီ"
   },
   "es": {
     "Kana": "Kana",
@@ -661,7 +696,12 @@
     "Combos": "Combinadas",
     "Write": "Escribir",
     "Hear it, draw it": "Escúchalo y escríbelo",
-    "Check": "Comprobar"
+    "Check": "Comprobar",
+    "Licenses": "Licencias",
+    "Hiragana": "Hiragana",
+    "Katakana": "Katakana",
+    "Mix": "Mixto",
+    "Romaji": "Romaji"
   },
   "fr": {
     "Kana": "Kana",
@@ -744,7 +784,12 @@
     "Combos": "Combinés",
     "Write": "Écrire",
     "Hear it, draw it": "Écoutez et écrivez",
-    "Check": "Vérifier"
+    "Check": "Vérifier",
+    "Licenses": "Licences",
+    "Hiragana": "Hiragana",
+    "Katakana": "Katakana",
+    "Mix": "Mixte",
+    "Romaji": "Romaji"
   },
   "ru": {
     "Kana": "Кана",
@@ -827,7 +872,12 @@
     "Combos": "Сочетания",
     "Write": "Письмо",
     "Hear it, draw it": "Послушай и напиши",
-    "Check": "Проверить"
+    "Check": "Проверить",
+    "Licenses": "Лицензии",
+    "Hiragana": "Хирагана",
+    "Katakana": "Катакана",
+    "Mix": "Микс",
+    "Romaji": "Ромадзи"
   },
   "bn": {
     "Kana": "কানা",
@@ -910,7 +960,12 @@
     "Combos": "যুক্ত",
     "Write": "লেখা",
     "Hear it, draw it": "শুনে লিখুন",
-    "Check": "যাচাই"
+    "Check": "যাচাই",
+    "Licenses": "লাইসেন্স",
+    "Hiragana": "হিরাগানা",
+    "Katakana": "কাতাকানা",
+    "Mix": "মিশ্র",
+    "Romaji": "রোমাজি"
   },
   "hi": {
     "Kana": "काना",
@@ -993,7 +1048,12 @@
     "Combos": "संयुक्त",
     "Write": "लिखें",
     "Hear it, draw it": "सुनें और लिखें",
-    "Check": "जाँचें"
+    "Check": "जाँचें",
+    "Licenses": "लाइसेंस",
+    "Hiragana": "हिरागाना",
+    "Katakana": "कातकाना",
+    "Mix": "मिश्रित",
+    "Romaji": "रोमाजी"
   },
   "ta": {
     "Kana": "கானா",
@@ -1076,7 +1136,12 @@
     "Combos": "கூட்டு",
     "Write": "எழுது",
     "Hear it, draw it": "கேட்டு எழுதுங்கள்",
-    "Check": "சரிபார்"
+    "Check": "சரிபார்",
+    "Licenses": "உரிமங்கள்",
+    "Hiragana": "ஹிரகானா",
+    "Katakana": "கடகானா",
+    "Mix": "கலவை",
+    "Romaji": "ரோமாஜி"
   },
   "te": {
     "Kana": "కానా",
@@ -1159,7 +1224,12 @@
     "Combos": "సంయుక్త",
     "Write": "రాయి",
     "Hear it, draw it": "విని రాయండి",
-    "Check": "తనిఖీ"
+    "Check": "తనిఖీ",
+    "Licenses": "లైసెన్సులు",
+    "Hiragana": "హిరగానా",
+    "Katakana": "కటకానా",
+    "Mix": "మిశ్రమం",
+    "Romaji": "రోమాజీ"
   },
   "fil": {
     "Kana": "Kana",
@@ -1242,7 +1312,12 @@
     "Combos": "Kombinasyon",
     "Write": "Sulat",
     "Hear it, draw it": "Pakinggan at isulat",
-    "Check": "Suriin"
+    "Check": "Suriin",
+    "Licenses": "Mga Lisensya",
+    "Hiragana": "Hiragana",
+    "Katakana": "Katakana",
+    "Mix": "Halo",
+    "Romaji": "Romaji"
   },
   "id": {
     "Kana": "Kana",
@@ -1325,7 +1400,12 @@
     "Combos": "Gabungan",
     "Write": "Menulis",
     "Hear it, draw it": "Dengar lalu tulis",
-    "Check": "Periksa"
+    "Check": "Periksa",
+    "Licenses": "Lisensi",
+    "Hiragana": "Hiragana",
+    "Katakana": "Katakana",
+    "Mix": "Campur",
+    "Romaji": "Romaji"
   },
   "ko": {
     "Kana": "가나",
@@ -1408,6 +1488,11 @@
     "Combos": "요음",
     "Write": "쓰기",
     "Hear it, draw it": "듣고 쓰기",
-    "Check": "확인"
+    "Check": "확인",
+    "Licenses": "라이선스",
+    "Hiragana": "히라가나",
+    "Katakana": "가타카나",
+    "Mix": "혼합",
+    "Romaji": "로마자"
   }
 }

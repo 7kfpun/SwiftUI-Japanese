@@ -1,54 +1,62 @@
-// Generated from context/reference-rn/app/utils/kana.js by scripts (do not hand-edit).
-// Counts: seion 46, dakuon 25, youon 33 non-empty; flat pools 74 each.
 import Foundation
 
-/// A kana cell: hiragana, katakana, romaji. Empty strings are grid-alignment placeholders.
+/// A kana cell: hiragana, katakana, romaji, and textbook stroke counts per script.
+/// Empty strings are grid-alignment placeholders.
 struct K: Hashable, Identifiable {
     let hiragana: String, katakana: String, romaji: String
-    init(_ h: String, _ k: String, _ r: String) { hiragana = h; katakana = k; romaji = r }
+    let hiraganaStrokes: Int, katakanaStrokes: Int
+    init(_ h: String, _ k: String, _ r: String, _ hStrokes: Int = 0, _ kStrokes: Int = 0) {
+        hiragana = h; katakana = k; romaji = r
+        hiraganaStrokes = hStrokes; katakanaStrokes = kStrokes
+    }
     var isEmpty: Bool { romaji.isEmpty }
     var id: String { romaji.isEmpty ? "_" + hiragana + katakana : romaji }
 }
 
+/// The kana chart, loaded from the bundled KanaChart.json (copied verbatim from
+/// minna's vocab/kana.json by scripts/build-minna-data.py) — grid layout, romaji,
+/// and stroke counts all come from the data file, not code.
 enum KanaData {
-    static let seion: [[K]] = [
-        [K("あ","ア","a"), K("い","イ","i"), K("う","ウ","u"), K("え","エ","e"), K("お","オ","o")],
-        [K("か","カ","ka"), K("き","キ","ki"), K("く","ク","ku"), K("け","ケ","ke"), K("こ","コ","ko")],
-        [K("さ","サ","sa"), K("し","シ","shi"), K("す","ス","su"), K("せ","セ","se"), K("そ","ソ","so")],
-        [K("た","タ","ta"), K("ち","チ","chi"), K("つ","ツ","tsu"), K("て","テ","te"), K("と","ト","to")],
-        [K("な","ナ","na"), K("に","ニ","ni"), K("ぬ","ヌ","nu"), K("ね","ネ","ne"), K("の","ノ","no")],
-        [K("は","ハ","ha"), K("ひ","ヒ","hi"), K("ふ","フ","fu"), K("へ","ヘ","he"), K("ほ","ホ","ho")],
-        [K("ま","マ","ma"), K("み","ミ","mi"), K("む","ム","mu"), K("め","メ","me"), K("も","モ","mo")],
-        [K("や","ヤ","ya"), K("","",""), K("ゆ","ユ","yu"), K("","",""), K("よ","ヨ","yo")],
-        [K("ら","ラ","ra"), K("り","リ","ri"), K("る","ル","ru"), K("れ","レ","re"), K("ろ","ロ","ro")],
-        [K("わ","ワ","wa"), K("","",""), K("","",""), K("","",""), K("を","ヲ","wo")],
-        [K("ん","ン","n")]
-    ]
+    static let seion  = grid("seion", cols: 5)
+    static let dakuon = grid("dakuon", cols: 5)
+    static let youon  = grid("youon", cols: 3)
 
-    static let dakuon: [[K]] = [
-        [K("が","ガ","ga"), K("ぎ","ギ","gi"), K("ぐ","グ","gu"), K("げ","ゲ","ge"), K("ご","ゴ","go")],
-        [K("ざ","ザ","za"), K("じ","ジ","ji"), K("ず","ズ","zu"), K("ぜ","ゼ","ze"), K("ぞ","ゾ","zo")],
-        [K("だ","ダ","da"), K("ぢ","ヂ","ji"), K("づ","ヅ","zu"), K("で","デ","de"), K("ど","ド","do")],
-        [K("ば","バ","ba"), K("び","ビ","bi"), K("ぶ","ブ","bu"), K("べ","ベ","be"), K("ぼ","ボ","bo")],
-        [K("ぱ","パ","pa"), K("ぴ","ピ","pi"), K("ぷ","プ","pu"), K("ぺ","ペ","pe"), K("ぽ","ポ","po")]
-    ]
+    // MARK: chart loading
 
-    static let youon: [[K]] = [
-        [K("きゃ","キァ","kya"), K("きゅ","キュ","kyu"), K("きょ","キョ","kyo")],
-        [K("しゃ","シァ","sha"), K("しゅ","シュ","shu"), K("しょ","ショ","sho")],
-        [K("ちゃ","チァ","cha"), K("ちゅ","チュ","chu"), K("ちょ","チョ","cho")],
-        [K("にゃ","ニァ","nya"), K("にゅ","ニュ","nyu"), K("にょ","ニョ","nyo")],
-        [K("ひゃ","ヒァ","hya"), K("ひゅ","ヒュ","hyu"), K("ひょ","ヒョ","hyo")],
-        [K("みゃ","ミァ","mya"), K("みゅ","ミュ","myu"), K("みょ","ミョ","myo")],
-        [K("りゃ","リァ","rya"), K("りゅ","リュ","ryu"), K("りょ","リョ","ryo")],
-        [K("ぎゃ","ギァ","gya"), K("ぎゅ","ギュ","gyu"), K("ぎょ","ギョ","gyo")],
-        [K("じゃ","ジァ","ja"), K("じゅ","ジュ","ju"), K("じょ","ジョ","jo")],
-        [K("びゃ","ビァ","bya"), K("びゅ","ビュ","byu"), K("びょ","ビョ","byo")],
-        [K("ぴゃ","ピァ","pya"), K("ぴゅ","ピュ","pyu"), K("ぴょ","ピョ","pyo")]
-    ]
+    private struct Chart: Decodable { let data: [String: [Entry]] }
+    private struct Entry: Decodable {
+        struct Strokes: Decodable { let hiragana: Int, katakana: Int }
+        let hiragana: String, katakana: String, romaji: String
+        let row: Int, col: Int
+        let strokes: Strokes
+    }
 
-    /// Flat distractor pools for the Lessons → Learn tile game (74 each).
+    private static let chart: [String: [Entry]] = {
+        guard let url = Bundle.main.url(forResource: "KanaChart", withExtension: "json"),
+              let chart = try? JSONDecoder().decode(Chart.self, from: Data(contentsOf: url))
+        else { fatalError("KanaChart.json missing — run scripts/build-minna-data.py") }
+        return chart.data
+    }()
+
+    /// Place entries by row/col, pad gaps with placeholders, trim trailing empties
+    /// (so ん sits alone on its row, exactly like the printed chart).
+    private static func grid(_ group: String, cols: Int) -> [[K]] {
+        let entries = chart[group] ?? []
+        let rowCount = (entries.map(\.row).max() ?? -1) + 1
+        var rows = [[K]](repeating: [K](repeating: K("", "", ""), count: cols), count: rowCount)
+        for e in entries {
+            rows[e.row][e.col] = K(e.hiragana, e.katakana, e.romaji,
+                                   e.strokes.hiragana, e.strokes.katakana)
+        }
+        return rows.map { row in
+            var row = row
+            while let last = row.last, last.isEmpty { row.removeLast() }
+            return row
+        }
+    }
+
+    /// Flat distractor pools for the Lessons → Learn tile game (74 each):
+    /// every kana that can appear inside a vocab word, including small ゃゅょ.
     static let hiraganaPool: [String] = ["あ", "い", "う", "え", "お", "か", "き", "く", "け", "こ", "が", "ぎ", "ぐ", "げ", "ご", "さ", "し", "す", "せ", "そ", "ざ", "じ", "ず", "ぜ", "ぞ", "た", "ち", "つ", "て", "と", "だ", "ぢ", "づ", "で", "ど", "な", "に", "ぬ", "ね", "の", "は", "ひ", "ふ", "へ", "ほ", "ば", "び", "ぶ", "べ", "ぼ", "ぱ", "ぴ", "ぷ", "ぺ", "ぽ", "ま", "み", "む", "め", "も", "や", "ゆ", "よ", "ゃ", "ゅ", "ょ", "ら", "り", "る", "れ", "ろ", "わ", "を", "ん"]
-    static let katakanaPool: [String] = ["ア", "イ", "ウ", "エ", "オ", "カ", "キ", "ク", "ケ", "コ", "ガ", "ギ", "グ", "ゲ", "ゴ", "サ", "シ", "ス", "セ", "ソ", "ザ", "ジ", "ズ", "ゼ", "ゾ", "タ", "チ", "ツ", "テ", "ト", "ダ", "ヂ", "ヅ", "デ", "ド", "ナ", "ニ", "ヌ", "ネ", "ノ", "ハ", "ヒ", "フ", "ヘ", "ホ", "バ", "ビ", "ブ", "ベ", "ボ", "パ", "ピ", "プ", "ペ", "ポ", "マ", "ミ", "ム", "メ", "モ", "ヤ", "ユ", "ヨ", "ァ", "ュ", "ョ", "ラ", "リ", "ル", "レ", "ロ", "ワ", "ヲ", "ン"]
+    static let katakanaPool: [String] = ["ア", "イ", "ウ", "エ", "オ", "カ", "キ", "ク", "ケ", "コ", "ガ", "ギ", "グ", "ゲ", "ゴ", "サ", "シ", "ス", "セ", "ソ", "ザ", "ジ", "ズ", "ゼ", "ゾ", "タ", "チ", "ツ", "テ", "ト", "ダ", "ヂ", "ヅ", "デ", "ド", "ナ", "ニ", "ヌ", "ネ", "ノ", "ハ", "ヒ", "フ", "ヘ", "ホ", "バ", "ビ", "ブ", "ベ", "ボ", "パ", "ピ", "プ", "ペ", "ポ", "マ", "ミ", "ム", "メ", "モ", "ヤ", "ユ", "ヨ", "ャ", "ュ", "ョ", "ラ", "リ", "ル", "レ", "ロ", "ワ", "ヲ", "ン"]
 }
-

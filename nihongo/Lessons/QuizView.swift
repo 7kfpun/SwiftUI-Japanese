@@ -167,7 +167,7 @@ struct QuizView: View {
                 Track.event("trial_limit", ["mode": screenName, "lesson": lessonNumber])
             }
         }
-        .sheet(isPresented: $showPaywall) { PaywallView() }
+        .sheet(isPresented: $showPaywall) { PaywallView(source: "quiz_trial_limit") }
         // A popup ad on the way out of the quiz — non-premium only, throttled.
         .onDisappear { if !store.isPremium && model.total > 0 { Ads.showInterstitialIfReady() } }
     }
@@ -205,9 +205,9 @@ struct QuizView: View {
     }
 
     private func optionBorder(_ i: Int) -> Color {
-        guard model.picked != nil else { return Color(.separator) }
+        guard model.picked != nil else { return Theme.line }
         if model.isCorrectOption(i) { return Theme.correct }
         if model.picked == i { return Theme.wrong }
-        return Color(.separator)
+        return Theme.line
     }
 }

@@ -22,6 +22,10 @@ final class FlashDeck<Element> {
     var isDone: Bool { deck.isEmpty }
     var remaining: Int { deck.count }
 
+    /// Up to `n` cards after the current one — purely decorative, for the peek of
+    /// cards waiting behind the top one.
+    func peek(_ n: Int) -> [Element] { Array(deck.dropFirst().prefix(n)) }
+
     /// Swipe right — known, retire it.
     func know() {
         guard !deck.isEmpty else { return }
@@ -89,7 +93,6 @@ struct FlashcardScreen<Element, Face: View>: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            header
             if let card = deck.current {
                 cardView(card)
                 if reachedLimit { unlockBar } else { graders }
@@ -103,19 +106,12 @@ struct FlashcardScreen<Element, Face: View>: View {
         .onAppear { autoPlay() }
         .onChange(of: deck.current.map(idOf)) { autoPlay() }
         .onChange(of: soundOn) { if soundOn { autoPlay() } }
-    }
-
-    /// Count on the left (updates as you swipe), audio toggle on the right.
-    private var header: some View {
-        HStack {
-            progress
-            Spacer()
-            Button { soundOn.toggle() } label: {
-                Image(systemName: soundOn ? "speaker.wave.2.fill" : "speaker.slash.fill")
-                    .font(.title3)
-                    .foregroundStyle(soundOn ? Theme.accent : .secondary)
-            }
-            .accessibilityLabel(soundOn ? "Turn sound off" : "Turn sound on")
+        // Same toolbar placement as every other quiz/practice screen (counter
+        // centered, sound toggle top-right) — was previously a custom inline
+        // row with its own accent-tinted button, out of step with the rest of the app.
+        .toolbar {
+            ToolbarItem(placement: .principal) { progress }
+            ToolbarItem(placement: .topBarTrailing) { SoundToggle() }
         }
     }
 
@@ -128,12 +124,22 @@ struct FlashcardScreen<Element, Face: View>: View {
         .font(.subheadline.weight(.semibold).monospacedDigit())
     }
 
+    /// The peek stack is a static backdrop — only `topCard` moves. Applying the
+    /// drag offset/rotation to the whole ZStack would drag all three at once.
     private func cardView(_ element: Element) -> some View {
+        ZStack {
+            CardStackPeek(count: deck.peek(2).count)
+            topCard(element)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func topCard(_ element: Element) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 20)
                 .fill(Theme.surface)
-                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(.separator), lineWidth: 1))
-                .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
+                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.line, lineWidth: 1))
+                .shadow(color: Theme.shadow, radius: 8, y: 4)
 
             VStack(spacing: 14) {
                 face(element, revealed)
@@ -146,17 +152,17 @@ struct FlashcardScreen<Element, Face: View>: View {
                 }
             }
             .padding(24)
-
-            // Directional hint while dragging.
-            if drag.width != 0 {
-                Image(systemName: drag.width > 0 ? "checkmark.circle.fill"
-                                                 : "arrow.uturn.left.circle.fill")
-                    .font(.system(size: 64))
-                    .foregroundStyle(drag.width > 0 ? Theme.correct : Theme.wrong)
-                    .opacity(min(abs(drag.width) / threshold, 1))
-            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .overlay(alignment: .topTrailing) {
+            SwipeStamp(systemImage: "checkmark", color: Theme.correct, rotation: 8)
+                .opacity(drag.width > 0 ? min(drag.width / threshold, 1) : 0)
+                .padding(16)
+        }
+        .overlay(alignment: .topLeading) {
+            SwipeStamp(systemImage: "xmark", color: Theme.wrong, rotation: -8)
+                .opacity(drag.width < 0 ? min(-drag.width / threshold, 1) : 0)
+                .padding(16)
+        }
         .overlay(alignment: .bottom) {
             HStack(spacing: 10) {
                 Image(systemName: "chevron.compact.left")
@@ -182,7 +188,8 @@ struct FlashcardScreen<Element, Face: View>: View {
     }
 
     /// The grade buttons double as swipe legends: arrows on the outer edges point the
-    /// way to swipe for each outcome (left = again, right = got it).
+    /// way to swipe for each outcome (left = again, right = got it). Same chip chrome
+    /// as the kana swipe quiz's option chips, so every Tinder-like screen matches.
     private var graders: some View {
         HStack(spacing: 12) {
             Button { grade(right: false) } label: {
@@ -191,8 +198,10 @@ struct FlashcardScreen<Element, Face: View>: View {
                     Text(L.t("Again")).fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)
+                .frame(height: 52)
             }
-            .tint(Theme.wrong)
+            .buttonStyle(.plain)
+            .choiceChip(Theme.wrong)
 
             Button { grade(right: true) } label: {
                 HStack(spacing: 6) {
@@ -200,11 +209,12 @@ struct FlashcardScreen<Element, Face: View>: View {
                     Image(systemName: "arrow.right")
                 }
                 .frame(maxWidth: .infinity)
+                .frame(height: 52)
             }
-            .tint(Theme.correct)
+            .buttonStyle(.plain)
+            .choiceChip(Theme.correct)
         }
-        .buttonStyle(.bordered)
-        .controlSize(.large)
+        .font(.headline)
     }
 
     private var unlockBar: some View {

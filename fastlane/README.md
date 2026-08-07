@@ -21,7 +21,8 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 [bundle exec] fastlane ios privacy
 ```
 
-Upload App Privacy details (nutrition labels) from fastlane/app_privacy_details.json
+Upload + publish App Privacy details (nutrition labels). Interactive: this
+        rides Apple's private web API, so it asks for your Apple ID password + 2FA.
 
 ### ios metadata
 
@@ -30,6 +31,14 @@ Upload App Privacy details (nutrition labels) from fastlane/app_privacy_details.
 ```
 
 Push App Store text metadata (all localizations) — no binary, no screenshots
+
+### ios screenshots
+
+```sh
+[bundle exec] fastlane ios screenshots
+```
+
+Push App Store screenshots (draft metadata only) — no binary, no text metadata, no submission
 
 ----
 

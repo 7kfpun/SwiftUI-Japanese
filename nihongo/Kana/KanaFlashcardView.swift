@@ -27,7 +27,10 @@ private struct KanaFace: View {
 
     var body: some View {
         VStack(spacing: 14) {
-            Text(kana.hiragana).font(Theme.jpBold(84))
+            Text(kana.hiragana)
+                .font(Theme.jpStrokes(160))
+                .lineLimit(1)
+                .minimumScaleFactor(0.4)   // combos (びゃ) shrink to fit instead of truncating
             if revealed {
                 Divider().padding(.horizontal, 40)
                 Text(kana.romaji).font(.title).foregroundStyle(Theme.accent)

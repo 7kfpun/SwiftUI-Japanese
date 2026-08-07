@@ -19,6 +19,10 @@
 	<string>ca-app-pub-8610011634603119~3848593989</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>UIAppFonts</key>
+	<array>
+		<string>KanjiStrokeOrders_v4.005.ttf</string>
+	</array>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>

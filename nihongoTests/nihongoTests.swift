@@ -9,6 +9,7 @@ import Testing
 import Foundation
 import SwiftData
 import AVFoundation
+import UIKit
 @testable import nihongo
 
 // MARK: - Bundled data integrity (canaries for scripts/build-minna-data.py)
@@ -93,6 +94,10 @@ struct KanaTests {
         #expect(nonEmpty(KanaData.youon) == 33)
         #expect(KanaData.hiraganaPool.count == 74)
         #expect(KanaData.katakanaPool.count == 74)
+    }
+
+    @Test func strokeOrderFontIsBundled() {
+        #expect(UIFont(name: "KanjiStrokeOrders", size: 20) != nil)
     }
 }
 
@@ -303,6 +308,96 @@ struct AdConfigTests {
         #expect(AdConfig.banner(.kana) == AdConfig.testBanner)
         #expect(AdConfig.banner(.today) == AdConfig.testBanner)
         #expect(AdConfig.interstitial == AdConfig.testInterstitial)
+    }
+}
+
+// MARK: - Kana sketch matcher (Write mode)
+
+struct KanaSketchTests {
+    @Test func templateMatchesItselfPerfectly() throws {
+        let a = try #require(KanaSketch.glyphGrid("あ"))
+        #expect(KanaSketch.distance(a, a) == 0)
+    }
+
+    @Test func distinctKanaAreSeparated() throws {
+        // Templates must be non-degenerate: identical to themselves, measurably far
+        // from every other seion glyph (guards an all-empty/collapsed pipeline).
+        let cells = KanaData.seion.flatMap { $0 }.filter { !$0.isEmpty }
+        let grids = try cells.map { (cell: $0, grid: try #require(KanaSketch.glyphGrid($0.hiragana))) }
+        for (i, me) in grids.enumerated() {
+            #expect(KanaSketch.distance(me.grid, me.grid) == 0)
+            for other in grids[(i + 1)...] {
+                let d = KanaSketch.distance(me.grid, other.grid)
+                #expect(d > 0.3, "\(me.cell.hiragana) vs \(other.cell.hiragana) too close (\(d))")
+            }
+        }
+    }
+
+    @Test func emptyStrokesProduceNoGrid() {
+        #expect(KanaSketch.strokeGrid([]) == nil)
+        #expect(KanaSketch.strokeGrid([[CGPoint(x: 1, y: 1)]]) == nil)
+    }
+
+    @Test func tinyComponentsAreStrippedButRealMarksSurvive() {
+        // Stroke-order-number-sized blob (≤6×6) is erased; a dakuten-sized one isn't.
+        let size = 32
+        var g = [Bool](repeating: false, count: size * size)
+        func blob(x0: Int, y0: Int, w: Int, h: Int) {
+            for y in y0..<(y0 + h) { for x in x0..<(x0 + w) { g[y * size + x] = true } }
+        }
+        blob(x0: 2, y0: 2, w: 4, h: 5)     // "digit": should vanish
+        blob(x0: 12, y0: 12, w: 12, h: 3)  // real stroke: wide, must stay
+        blob(x0: 12, y0: 20, w: 8, h: 6)   // dakuten-sized mark: must stay
+        KanaSketch.stripTinyComponents(&g, size: size)
+        let lit = (0..<g.count).filter { g[$0] }
+        #expect(lit.count == 12 * 3 + 8 * 6)
+        #expect(!g[3 * size + 3])   // the digit blob is gone
+        #expect(g[13 * size + 13] && g[22 * size + 14])
+    }
+
+    @Test func strokeOrderTemplateIsUsableForScoring() throws {
+        // The stroke-order font renders with digit annotations; after stripping,
+        // its マ should land in the normal same-glyph cross-font range (measured
+        // 4.2 vs Hiragino; unstripped digits inflate the bbox well past that).
+        let annotated = try #require(KanaSketch.glyphGrid("マ", font: "KanjiStrokeOrders"))
+        let clean = try #require(KanaSketch.glyphGrid("マ", font: "HiraginoSans-W6"))
+        #expect(KanaSketch.distance(annotated, annotated) == 0)
+        #expect(KanaSketch.distance(annotated, clean) < 6)
+    }
+
+    @Test func traceTemplateImageIsDigitFreeAndSized() async throws {
+        // The on-screen Write template must render the glyph shape without the
+        // font's baked-in stroke-number digits (they'd read as clutter, not ink).
+        let size = 320
+        let img = try #require(await KanaSketch.strokeTemplateImage("マ", pixelSize: size))
+        #expect(Int(img.size.width) == size && Int(img.size.height) == size)
+
+        guard let cg = img.cgImage, let data = cg.dataProvider?.data,
+              let bytes = CFDataGetBytePtr(data) else { Issue.record("no pixel data"); return }
+        let bpr = cg.bytesPerRow
+        var ink = 0
+        for y in 0..<size {
+            for x in 0..<size where bytes[y * bpr + x * 4 + 3] > 40 { ink += 1 }
+        }
+        #expect(ink > 0)                       // the glyph itself still renders
+        #expect(ink < size * size / 3)         // and isn't just a filled block (stripping worked)
+    }
+
+    @Test func strokeCountsCoverEveryDrawableKana() throws {
+        // Counts come from the bundled KanaChart.json (minna vocab/kana.json) —
+        // spot-check known textbook values, then require them on every cell.
+        let all = (KanaData.seion + KanaData.dakuon + KanaData.youon)
+            .flatMap { $0 }.filter { !$0.isEmpty }
+        let a = try #require(all.first { $0.hiragana == "あ" })
+        #expect(a.hiraganaStrokes == 3 && a.katakanaStrokes == 2)     // あ3 / ア2
+        let ga = try #require(all.first { $0.hiragana == "が" })
+        #expect(ga.hiraganaStrokes == 5 && ga.katakanaStrokes == 4)   // か3+゛2 / カ2+゛2
+        let kya = try #require(all.first { $0.hiragana == "きゃ" })
+        #expect(kya.katakana == "キャ")                                // chart fixed キァ typo
+        #expect(kya.hiraganaStrokes == 7 && kya.katakanaStrokes == 5) // き4+ゃ3 / キ3+ャ2
+        for cell in all {
+            #expect(cell.hiraganaStrokes > 0 && cell.katakanaStrokes > 0, "\(cell.romaji)")
+        }
     }
 }
 

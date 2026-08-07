@@ -112,8 +112,9 @@ struct KanaQuizView: View {
                     }
                 } else {
                     Text(model.from.value(model.answer))
-                        .font(Theme.jpBold(74))
-                        .minimumScaleFactor(0.5)
+                        .font(Theme.jpStrokes(120))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.4)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -128,7 +129,8 @@ struct KanaQuizView: View {
                                  disabled: model.picked != nil,
                                  font: Theme.jpBold(26)) {
                     model.choose(i, context: context)
-                    Track.event("kana_quiz_answer", ["correct": model.isCorrectOption(i)])
+                    Track.event("kana_quiz_answer",
+                               ["correct": model.isCorrectOption(i), "mode": listening ? "listening" : "classic"])
                 }
             }
 
@@ -150,9 +152,9 @@ struct KanaQuizView: View {
     }
 
     private func optionBorder(_ i: Int) -> Color {
-        guard model.picked != nil else { return Color(.separator) }
+        guard model.picked != nil else { return Theme.line }
         if model.isCorrectOption(i) { return Theme.correct }
         if model.picked == i { return Theme.wrong }
-        return Color(.separator)
+        return Theme.line
     }
 }

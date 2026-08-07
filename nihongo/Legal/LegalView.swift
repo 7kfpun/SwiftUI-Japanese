@@ -1,11 +1,18 @@
 import SwiftUI
 
-/// The two bundled legal docs, usable as a `.sheet(item:)` selector.
+/// The bundled legal docs, usable as a `.sheet(item:)` selector.
 enum LegalDoc: String, Identifiable {
     case privacy = "PrivacyPolicy"
     case terms = "TermsOfUse"
+    case licenses = "KanjiStrokeOrders-LICENSE"   // third-party notices (BSD requires shipping them)
     var id: String { rawValue }
-    var titleKey: String { self == .privacy ? "Privacy Policy" : "Terms of Use" }
+    var titleKey: String {
+        switch self {
+        case .privacy: return "Privacy Policy"
+        case .terms: return "Terms of Use"
+        case .licenses: return "Licenses"
+        }
+    }
 }
 
 /// Shows a bundled legal document (Privacy Policy / Terms of Use) in a scrollable sheet.

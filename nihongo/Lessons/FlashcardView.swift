@@ -22,7 +22,7 @@ struct FlashcardView: View {
             speak: { pronouncer.speak($0) },
             face: { vocab, revealed in VocabFace(vocab: vocab, revealed: revealed) }
         )
-        .sheet(isPresented: $showPaywall) { PaywallView() }
+        .sheet(isPresented: $showPaywall) { PaywallView(source: "flashcard_trial_limit") }
         .onAppear { Track.screen("flashcards", ["lesson": lesson.number]) }
     }
 }

@@ -16,8 +16,12 @@ struct BannerAd: View {
     @State private var adHeight: CGFloat = 0
     #endif
 
+    /// Screenshot runs (UI tests launched with "-SCREENSHOTS") hide the banner
+    /// so marketing shots stay clean. No effect on normal launches.
+    private static let screenshotMode = ProcessInfo.processInfo.arguments.contains("-SCREENSHOTS")
+
     var body: some View {
-        if store.isPremium {
+        if store.isPremium || Self.screenshotMode {
             EmptyView()   // premium removes ads
         } else {
             adBody

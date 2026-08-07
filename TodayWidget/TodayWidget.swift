@@ -52,7 +52,13 @@ struct TodayProvider: TimelineProvider {
 struct TodayWidgetEntryView: View {
     @Environment(\.widgetFamily) private var family
     var entry: TodayEntry
-    private let accent = Color(red: 0.06, green: 0.69, blue: 0.75)
+    // Mirrors Theme.accent (app target) — brighter teal in dark so it keeps its
+    // pop on the dark widget background.
+    private let accent = Color(uiColor: UIColor { t in
+        t.userInterfaceStyle == .dark
+            ? UIColor(red: 0.25, green: 0.78, blue: 0.84, alpha: 1)
+            : UIColor(red: 0.06, green: 0.69, blue: 0.75, alpha: 1)
+    })
 
     var body: some View {
         Group {

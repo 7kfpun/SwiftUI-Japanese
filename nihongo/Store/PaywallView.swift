@@ -8,6 +8,11 @@ struct PaywallView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var legal: LegalDoc?
 
+    /// Where this paywall was triggered from (settings, a locked Today lesson, or a
+    /// trial-limit hit in flashcards/learn/quiz) — lets analytics tell which entry
+    /// point actually converts.
+    let source: String
+
     private let subscriptionTerms = "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings."
 
     var body: some View {
@@ -58,11 +63,14 @@ struct PaywallView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(L.t("Cancel")) { dismiss() }
+                    Button(L.t("Cancel")) {
+                        Track.event("paywall_dismissed", ["source": source, "purchased": false])
+                        dismiss()
+                    }
                 }
             }
             .sheet(item: $legal) { doc in LegalView(titleKey: doc.titleKey, resource: doc.rawValue) }
-            .onAppear { Track.event("paywall_shown") }
+            .onAppear { Track.event("paywall_shown", ["source": source]) }
             .onChange(of: store.isPremium) { if store.isPremium { dismiss() } }
         }
     }
@@ -104,7 +112,7 @@ struct PaywallView: View {
             .padding()
             .frame(maxWidth: .infinity)
             .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(.separator)))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.line))
         }
         .buttonStyle(.plain)
         .disabled(store.purchasingID != nil)

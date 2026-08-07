@@ -65,8 +65,11 @@ struct LearnView: View {
     @AppStorage(Pref.soundOn) private var soundOn = true
     @Environment(\.pronouncer) private var pronouncer
     @Environment(Store.self) private var store
+    @State private var tileGridWidth: CGFloat = 0
 
     private let lessonNumber: Int
+    private let tileCols = 5
+    private let tileSpacing: CGFloat = 8
 
     init(lesson: Lesson) {
         lessonNumber = lesson.number
@@ -89,6 +92,7 @@ struct LearnView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+            .onChange(of: ordered) { Track.event("learn_order_mode", ["ordered": ordered]) }
 
             card
 
@@ -113,7 +117,7 @@ struct LearnView: View {
             if model.state == .correct { Track.event("learn_answer", ["correct": true]) }
             else if model.state == .wrong { Track.event("learn_answer", ["correct": false]) }
         }
-        .sheet(isPresented: $showPaywall) { PaywallView() }
+        .sheet(isPresented: $showPaywall) { PaywallView(source: "learn_trial_limit") }
     }
 
     private func autoPlay() {
@@ -176,21 +180,31 @@ struct LearnView: View {
                    page: turnPage)
     }
 
+    /// Explicit square size, computed from the measured grid width — matches the
+    /// Kana table tiles: `.aspectRatio(1, .fit)` combined with flexible grid
+    /// columns doesn't reliably divide space into even squares.
+    private var tileSize: CGFloat {
+        guard tileGridWidth > 0 else { return 44 }
+        return (tileGridWidth - tileSpacing * CGFloat(tileCols - 1)) / CGFloat(tileCols)
+    }
+
     private var tileGrid: some View {
-        let cols = Array(repeating: GridItem(.flexible()), count: 5)
-        return LazyVGrid(columns: cols, spacing: 8) {
+        let cols = Array(repeating: GridItem(.flexible(), spacing: tileSpacing), count: tileCols)
+        return LazyVGrid(columns: cols, spacing: tileSpacing) {
             ForEach(model.tiles) { tile in
                 Button { model.tap(tile) } label: {
                     Text(tile.text)
                         .font(.title3)
-                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .frame(width: tileSize, height: tileSize)
                         .contentShape(Rectangle())
                 }
                 .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(.separator)))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.line))
                 .buttonStyle(.plain)
             }
         }
+        .frame(maxWidth: .infinity)
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { tileGridWidth = $0 }
         .disabled(model.state != .inProgress)
     }
 

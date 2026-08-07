@@ -6,7 +6,10 @@ struct SoundToggle: View {
     @AppStorage(Pref.soundOn) private var soundOn = true
 
     var body: some View {
-        Button { soundOn.toggle() } label: {
+        Button {
+            soundOn.toggle()
+            Track.event("toggle_sound", ["on": soundOn])
+        } label: {
             Image(systemName: soundOn ? "speaker.wave.2.fill" : "speaker.slash.fill")
         }
         .accessibilityLabel(soundOn ? "Turn sound off" : "Turn sound on")
@@ -69,6 +72,58 @@ struct QuizOptionButton: View {
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(border, lineWidth: 2))
         .disabled(disabled)
+    }
+}
+
+extension View {
+    /// Shared chrome for every choice control on a Tinder-like screen — light tint
+    /// fill + colored border, foreground tinted to match. Used by the flashcard
+    /// grade buttons and the kana swipe quiz's option chips so both look like one
+    /// design language instead of two (pill buttons vs. bordered boxes).
+    func choiceChip(_ color: Color) -> some View {
+        foregroundStyle(color)
+            .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(color, lineWidth: 2))
+    }
+}
+
+/// Tinder-style corner stamp for swipeable cards — one consistent visual language
+/// for every drag-to-decide screen in the app (flashcards, kana swipe quiz).
+struct SwipeStamp: View {
+    let systemImage: String
+    let color: Color
+    let rotation: Double
+
+    var body: some View {
+        Image(systemName: systemImage)
+            .font(.system(size: 22, weight: .bold))
+            .foregroundStyle(color)
+            .padding(10)
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(color, lineWidth: 3))
+            .rotationEffect(.degrees(rotation))
+    }
+}
+
+/// Faded, rotated cards peeking out behind a swipeable top card — reads as a real
+/// deck. Purely decorative: it never moves, only the top card being dragged does.
+struct CardStackPeek: View {
+    var count: Int = 2   // how many peek layers to show (0–2)
+
+    private var layer: some View {
+        RoundedRectangle(cornerRadius: 20)
+            .fill(Theme.surface)
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.line, lineWidth: 1))
+    }
+
+    var body: some View {
+        Group {
+            // Rotation alone reveals the peek corners at the sides. No vertical
+            // offset: a same-size card nudged downward pokes out past the bottom
+            // edge, into whatever sits right below (grade/option buttons) — this
+            // stays fully behind the top card instead.
+            if count > 1 { layer.rotationEffect(.degrees(-6)).opacity(0.5) }
+            if count > 0 { layer.rotationEffect(.degrees(3.5)).opacity(0.75) }
+        }
     }
 }
 

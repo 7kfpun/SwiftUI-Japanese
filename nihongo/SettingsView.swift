@@ -70,6 +70,7 @@ struct SettingsView: View {
                 Section {
                     Button(L.t("Privacy Policy")) { legal = .privacy }
                     Button(L.t("Terms of Use")) { legal = .terms }
+                    Button(L.t("Licenses")) { legal = .licenses }
                 } header: {
                     Text(L.t("Legal"))
                 }
@@ -79,7 +80,7 @@ struct SettingsView: View {
             .onAppear { Track.screen("settings") }
             .onChange(of: appLanguage) { Track.event("set_app_language", ["code": appLanguage]) }
             .onChange(of: vocabLanguage) { Track.event("set_vocab_language", ["code": vocabLanguage]) }
-            .sheet(isPresented: $showPaywall) { PaywallView() }
+            .sheet(isPresented: $showPaywall) { PaywallView(source: "settings") }
             .sheet(isPresented: $showFeedback) {
                 SafariView(url: Self.feedbackURL).ignoresSafeArea()
             }

@@ -25,7 +25,10 @@ struct CardOptionsBar: View {
 
     private func chip<Label: View>(_ value: Binding<Bool>, _ name: String,
                                    @ViewBuilder _ label: () -> Label) -> some View {
-        Button { value.wrappedValue.toggle() } label: {
+        Button {
+            value.wrappedValue.toggle()
+            Track.event("toggle_field", ["field": name, "shown": value.wrappedValue])
+        } label: {
             label()
                 .frame(width: 36, height: 30)
                 .background(value.wrappedValue ? Theme.accent.opacity(0.15) : Color.clear,
