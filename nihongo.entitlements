@@ -1,11 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- App target entitlements: the App Group shared with the TodayWidget extension. -->
+<!-- App target entitlements: the App Group shared with the TodayWidget extension,
+     plus the iCloud/CloudKit container that syncs kana + challenge progress
+     (SwiftData's cloudKitDatabase in nihongoApp.swift). Automatic signing registers
+     the container with the developer account on the next Xcode build. -->
 <plist version="1.0">
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>group.com.kfpun.nihongo</string>
+	</array>
+	<key>com.apple.developer.icloud-container-identifiers</key>
+	<array>
+		<string>iCloud.com.kfpun.nihongo</string>
+	</array>
+	<key>com.apple.developer.icloud-services</key>
+	<array>
+		<string>CloudKit</string>
 	</array>
 </dict>
 </plist>

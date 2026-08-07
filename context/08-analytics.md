@@ -51,30 +51,97 @@ enum Track {
   only runs if that file exists — see `config/README.md`). A fresh clone with
   neither has a fully-working, silently-no-op `Track`.
 
-## Event catalog (as of this writing — grep `Track\.` to keep current)
+## Event catalog
 
-**Screens** (all via `Track.screen`, i.e. `nihongo_2026_screen` with `name=`):
-`today`, `kana`, `kana_quiz_mode`, `kana_quiz_classic` / `kana_quiz_listening`
-(same `KanaQuizView`, name depends on the `listening:` flag), `kana_quiz_swipe`,
-`kana_flashcard`, `kana_write`, `lessons`, `select_mode`, `vocab_list`,
-`flashcards`, `learn`, `quiz` / `listening` (same `QuizView`, name depends on
-`from: .audio`), `settings`, `legal`.
+~60 names: 15 literal screens + 2 dynamic, 41 literal events + 4 dynamic.
+Regenerate the literal ones with:
 
-**Custom events**: `kana_quiz_open`, `kana_quiz_answer` (params: `correct`,
-`mode` = classic/listening/swipe), `kana_clear`, `kana_write_grade` (params:
-`pass`, `score`), `play_kana`, `lesson_group`, `search_vocab` (params:
-`query_length`, `results`), `play_vocab`, `learn_answer`, `learn_order_mode`,
-`quiz_answer` / `listening_answer` (dynamic name = `"\(screenName)_answer"`),
-`flashcard_grade` / `flashcard_done`, `kana_flashcard_grade` /
-`kana_flashcard_done` (dynamic name = `"\(trackName)_grade"`/`"_done"` — the
-`FlashcardScreen`'s `trackName` parameter), `read_all`, `today_lesson`,
-`toggle_field` (params: `field`, `shown`), `toggle_sound`, `trial_limit`
-(params: `mode`, `lesson`), `paywall_shown` / `paywall_dismissed` (params:
-`source`, and `purchased` on dismiss), `purchase_start` / `purchase_success` /
-`purchase_failed` (params: `tier`, and `reason` on failure), `restore` (param:
-`premium`), `manage_subscription`, `open_feedback`, `set_app_language` /
-`set_vocab_language` (param: `code`), `interstitial_shown`, `ad_failed`
-(param: `error`), `audio_missing` (param: `item`, via `Track.audioMissing`).
+```sh
+grep -rhoE 'Track\.(event|screen)\("[a-z_]+"' nihongo --include="*.swift" | sort -u
+```
+
+That grep **misses the dynamic names** (they're built from interpolation, so no
+literal exists to match) — see the note under each group below.
+
+### Screens
+All via `Track.screen`, i.e. `nihongo_2026_screen` filtered by its `name` param.
+
+`today`, `lessons`, `select_mode`, `vocab_list`, `flashcards`, `train`, `learn`,
+`challenge` (params `lesson`, `index`), `kana`, `kana_quiz_mode`,
+`kana_quiz_swipe`, `kana_flashcard`, `kana_write`, `settings`, `legal`.
+
+*Dynamic:* `kana_quiz_classic` / `kana_quiz_listening` — one `KanaQuizView`,
+name chosen by its `listening:` flag.
+
+### Challenge ladder — the funnel that matters
+| Event | Params |
+|---|---|
+| `challenge_start` | `lesson`, `index`, `questions` |
+| `challenge_complete` | `lesson`, `index`, `score`, `stars`, `passed` |
+| `challenge_abandon` | `lesson`, `index`, `question`, `of`, `correct` |
+| `challenge_retry` | `lesson`, `index`, `previous_score` |
+| `challenge_done_tapped` | `lesson`, `index`, `passed` |
+| `locked_challenge` | `lesson`, `index` |
+
+`challenge_abandon` fires from `onDisappear` when a run is left past question 1.
+The count alone is `start − complete`; the point of the event is **`question`** —
+*where* people bail. Bailing at Q2 is a difficulty wall, at Q9 it's fatigue or an
+interruption, and those want opposite fixes.
+
+### Learn-side practice (untested modes)
+`train_answer` (`correct`, `lesson`), `train_form` (`from`, `to`, `lesson`),
+`train_order_mode` (`ordered`), `learn_answer` (`correct`), `learn_order_mode`
+(`ordered`), `read_all` (`lesson`), `play_vocab` (`lesson`), `search_vocab`
+(`query_length`, `results`), `lesson_group` (`group`).
+
+`train_form` matters because a switchable prompt/answer pair is Train's whole
+premise — untracked, it's the one thing about the mode we'd know nothing about.
+
+*Dynamic:* `flashcard_grade` / `flashcard_done` and `kana_flashcard_grade` /
+`kana_flashcard_done` — built as `"\(trackName)_grade"` / `"_done"` from
+`FlashcardScreen`'s `trackName` parameter.
+
+### Kana
+`kana_quiz_open`, `kana_quiz_answer` (`correct`, `mode` = classic/listening/swipe),
+`kana_write_grade` (`pass`, `score`), `kana_write_template` (`shown`, `romaji`),
+`kana_table` (`table`), `kana_tile_script` (`script`), `kana_clear`, `play_kana`
+(`romaji`).
+
+`kana_write_template` is the difficulty signal for Write mode: revealing the
+stroke guide means the kana isn't learned yet.
+
+### Today + widget
+`today_swipe` (`lesson`, `depth`, `deck`, `for_challenge`), `today_lesson`
+(`lesson`), `widget_open` (`lesson`).
+
+`today_swipe` reports **depth** (furthest card reached this deck), not swipe
+count — bouncing between cards 1 and 2 isn't engagement. `for_challenge` lets you
+ask whether people who study Today go on to pass that rung. Today is the landing
+tab, so a depth distribution stuck at 1 means the cards are wallpaper.
+
+`widget_open` needs three cooperating pieces, all required: `.widgetURL` in
+`TodayWidget.swift`, the `nihongo` scheme in `CFBundleURLTypes` (Info.plist), and
+`onOpenURL` in `nihongoApp.swift`. Without all three a widget tap is
+indistinguishable from any other cold launch.
+
+### Monetization
+`paywall_shown` / `paywall_dismissed` (`source`, plus `purchased` on dismiss),
+`purchase_start` / `purchase_success` / `purchase_failed` (`tier`, plus `reason`
+on failure), `restore` (`premium`), `manage_subscription`, `locked_mode`
+(`mode`, `lesson`), `interstitial_shown`, `ad_failed` (`error`).
+
+### Preferences & housekeeping
+`toggle_sound` (`on`), `toggle_field` (`field`, `shown`), `set_app_language` /
+`set_vocab_language` (`code`), `open_feedback`, `audio_missing` (`item`, via
+`Track.audioMissing`).
+
+### Deliberately not tracked
+- **Per-question challenge answers** — ~10 events per run (2,780 across the whole
+  ladder) to learn which *words* are hardest. You can't edit Minna no Nihongo's
+  vocabulary, so it's high volume for near-zero actionability.
+- **`Pref.analyticsExcluded` toggle** — tracking the control whose job is
+  disabling tracking would be self-defeating.
+- **`app_open` / `first_open` / `screen_view`** — Firebase logs these itself.
 
 ## Source-attribution pattern on paywall events
 

@@ -13,6 +13,9 @@ enum Pref {
     static let translationShown    = "isTranslationShown"
     static let todayLesson         = "todayLesson"
     static let kanaTileScript      = "kanaTileScript"
+    /// Train's word order — false (random) by default; Learn's `ordered` key defaults
+    /// the other way, so the two modes deliberately don't share a switch.
+    static let trainOrdered        = "trainOrdered"
     static let todaySelection      = "todaySelection"
     /// Per-device opt-out of analytics collection, independent of DEBUG/Release —
     /// toggled via a long-press on the version footer in Settings. Lets the

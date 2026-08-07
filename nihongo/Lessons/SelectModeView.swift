@@ -23,6 +23,11 @@ struct SelectModeView: View {
             // Study first, test second — the two halves are separated because they ask
             // different things of you: the Learn modes are untested practice you can
             // wander through, the ladder is scored and gates the next rung.
+            //
+            // Rows run shallow → deep, the order you'd actually study new material:
+            // meet the words (Vocab List), recognise them (Flashcards), choose under a
+            // gentle 50/50 ask (Train, audio prompts included), then produce them from
+            // tiles (Learn) — the last stop before the Challenge ladder tests you.
             Section {
                 // Vocab List is free on every lesson — browsing and search stay open.
                 NavigationLink { VocabListView(lesson: current) } label: {
@@ -31,6 +36,8 @@ struct SelectModeView: View {
                 }
                 mode(icon: "rectangle.on.rectangle.angled", title: L.t("Flashcards"),
                      subtitle: L.t("Swipe right if you know it")) { FlashcardView(lesson: current) }
+                mode(icon: "arrow.left.arrow.right", title: L.t("Train"),
+                     subtitle: L.t("Swipe to the right answer")) { TrainView(lesson: current) }
                 mode(icon: "square.grid.2x2", title: L.t("Learn"),
                      subtitle: L.t("Rebuild the reading from tiles")) { LearnView(lesson: current) }
             } header: {

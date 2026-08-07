@@ -9,7 +9,7 @@ import Foundation
 /// Every challenge asks the same `questionsPerChallenge`, so each rung costs the same
 /// effort and the pass bar means the same thing everywhere. The prompt/answer forms
 /// harden as you climb, which is where Listening now lives — it used to be a separate
-/// mode running the very same `QuizModel`.
+/// mode running the very same model (now `TrainModel`).
 enum Challenge {
     /// New words a later challenge aims to introduce — a target, not a fixed size.
     static let wordsPerStep = 7
@@ -138,7 +138,7 @@ enum Challenge {
 }
 
 /// One question in a challenge: a fixed prompt, fixed options, fixed forms. Unlike
-/// `QuizModel` — which regenerates endlessly and lets the user cycle forms — a
+/// `TrainModel` — which regenerates endlessly and lets the user cycle forms — a
 /// challenge's questions are decided up front so the run is bounded and scoreable.
 struct ChallengeQuestion: Identifiable {
     let id: Int

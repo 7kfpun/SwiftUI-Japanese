@@ -112,6 +112,10 @@ struct TodayWidgetEntryView: View {
             }
         }
         .containerBackground(.background, for: .widget)
+        // Deep link so a widget tap is distinguishable from a cold launch — without
+        // it the app can't tell whether the home-screen widget drives any returns.
+        // The app answers this in `onOpenURL` (nihongoApp.swift).
+        .widgetURL(URL(string: "nihongo://widget?lesson=\(entry.lesson)"))
     }
 }
 

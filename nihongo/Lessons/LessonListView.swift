@@ -74,11 +74,14 @@ struct LessonListView: View {
     }
 
     /// One fetch of every passed challenge, tallied per lesson. Refreshed on appear so
-    /// finishing a challenge and navigating back updates the ring behind you.
+    /// finishing a challenge and navigating back updates the bar behind you. Collapse
+    /// by challenge id first: a CloudKit merge can leave duplicate rows for the same
+    /// rung, and counting both would overfill the bar.
     private func reloadProgress() {
         let descriptor = FetchDescriptor<ChallengeResult>()
         let rows = (try? context.fetch(descriptor)) ?? []
-        passed = rows.filter(\.isPassed).reduce(into: [:]) { tally, row in
+        let unique = Dictionary(rows.map { ($0.id, $0) }, uniquingKeysWith: ChallengeResult.better)
+        passed = unique.values.filter(\.isPassed).reduce(into: [:]) { tally, row in
             tally[row.lesson, default: 0] += 1
         }
     }

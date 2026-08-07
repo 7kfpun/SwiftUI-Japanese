@@ -1,28 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!--
-  Custom Info.plist keys merged into Xcode's generated Info.plist
-  (GENERATE_INFOPLIST_FILE stays YES; INFOPLIST_FILE points here).
-
-  GADApplicationIdentifier: required by the Google Mobile Ads SDK; can't be set via
-  INFOPLIST_KEY_ build settings. Real iOS AdMob app ID for com.kfpun.nihongo.
-
-  SKAdNetworkItems: Google Mobile Ads' recommended ad-network IDs for install-conversion
-  attribution (from https://developers.google.com/admob/ios/3p-skadnetworks). Regenerate
-  from that page when Google updates the list.
--->
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
 	<string>Japanese Daily 每日日本語</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.kfpun.nihongo</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>nihongo</string>
+			</array>
+		</dict>
+	</array>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-8610011634603119~3848593989</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<key>UIAppFonts</key>
-	<array>
-		<string>KanjiStrokeOrders_v4.005.ttf</string>
-	</array>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>
@@ -225,6 +221,14 @@
 			<key>SKAdNetworkIdentifier</key>
 			<string>3qcr597p9d.skadnetwork</string>
 		</dict>
+	</array>
+	<key>UIAppFonts</key>
+	<array>
+		<string>KanjiStrokeOrders_v4.005.ttf</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
 	</array>
 </dict>
 </plist>

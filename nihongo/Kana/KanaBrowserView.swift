@@ -50,6 +50,10 @@ struct KanaBrowserView: View {
             .navigationTitle(L.t("Kana"))
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { Track.screen("kana") }
+            // Which chart people actually study, and which script they read it in —
+            // the two study preferences this screen exposes.
+            .onChange(of: table) { Track.event("kana_table", ["table": table.rawValue]) }
+            .onChange(of: tileScript) { Track.event("kana_tile_script", ["script": tileScript]) }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button(role: .destructive) { confirmClear = true } label: {
@@ -106,8 +110,12 @@ private struct KanaGrid: View {
     private let spacing: CGFloat = 6
     private let flexibleHeight: CGFloat = 64
 
+    /// Latest answer per kana. Merged by timestamp, not first-wins: a CloudKit merge
+    /// can leave duplicate rows, and "the most recent answer" is this store's meaning.
     private var byRomaji: [String: Bool] {
-        Dictionary(results.map { ($0.romaji, $0.isCorrect) }, uniquingKeysWith: { a, _ in a })
+        Dictionary(results.map { ($0.romaji, ($0.timestamp, $0.isCorrect)) },
+                   uniquingKeysWith: { a, b in a.0 >= b.0 ? a : b })
+            .mapValues(\.1)
     }
 
     private var cols: Int { rows.map(\.count).max() ?? 1 }

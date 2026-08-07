@@ -3,7 +3,7 @@ import SwiftData
 
 /// One run of a challenge: a bounded set of questions, then a result screen.
 ///
-/// Deliberately unlike `QuizView`, which is an open-ended practice loop with
+/// Deliberately unlike `TrainView`, which is an open-ended practice loop with
 /// user-switchable forms and no ending. Here the questions, their forms and their
 /// order are all fixed up front by `ChallengeModel`, because a score only means
 /// something if the run is the same shape every time.
@@ -78,8 +78,21 @@ struct ChallengeView: View {
         }
         .onChange(of: model.current) { autoPlay() }
         .onChange(of: model.isDone) { if model.isDone { finish() } }
-        // A popup ad on the way out — non-premium only, throttled. Never mid-run.
-        .onDisappear { if !store.isPremium && model.isDone { Ads.showInterstitialIfReady() } }
+        .onDisappear {
+            // Left mid-run. `challenge_start` minus `challenge_complete` would give the
+            // count, but not the shape: `question` says *where* people bail — question 2
+            // is a difficulty wall, question 9 is fatigue or an interruption, and those
+            // want opposite fixes.
+            if !model.isDone && model.current > 0 {
+                Track.event("challenge_abandon", ["lesson": lesson.number,
+                                                  "index": index,
+                                                  "question": model.current + 1,
+                                                  "of": model.questions.count,
+                                                  "correct": model.correct])
+            }
+            // A popup ad on the way out — non-premium only, throttled. Never mid-run.
+            if !store.isPremium && model.isDone { Ads.showInterstitialIfReady() }
+        }
     }
 
     /// Persist the result once. Guarded because `isDone` can re-fire on redraws and a

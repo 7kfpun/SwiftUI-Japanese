@@ -202,31 +202,56 @@ struct FlashcardTests {
     }
 }
 
-// MARK: - Quiz models
+// MARK: - Train / kana quiz models
 
-struct QuizTests {
-    @Test func mcHasFourDistinctOptionsIncludingAnswer() {
-        let model = QuizModel(vocab: VocabStore.lesson(5).entries)
-        for _ in 0..<30 {
+struct TrainTests {
+    /// Two chips, one swipe: the answer is present and the distractor differs on BOTH
+    /// faces — a shared display text is unanswerable, a shared prompt text (homophones,
+    /// なん/なに-style glosses) is a second right answer that would be marked wrong.
+    @Test func dealsTwoOptionsDistinctOnBothFaces() {
+        let model = TrainModel(vocab: VocabStore.lesson(5).entries)
+        for _ in 0..<50 {
             model.next()
-            #expect(model.options.count == 4)
+            #expect(model.options.count == 2)
             #expect(model.options.contains { $0.id == model.answer.id })
-            let kanas = model.options.map(\.kana)
-            #expect(Set(kanas).count == kanas.count)
+            let shown = model.options.map { model.to.value($0) }
+            #expect(Set(shown).count == shown.count)
+            let prompts = model.options.map { model.from.value($0) }
+            #expect(Set(prompts).count == prompts.count)
         }
     }
 
-    @Test func mcFormCyclingSkipsOtherSide() {
-        let model = QuizModel(vocab: VocabStore.lesson(1).entries)
-        model.cycleFrom()
-        #expect(model.from != model.to)
-        model.cycleTo()
-        #expect(model.from != model.to)
+    /// Cycling a form re-deals the distractor — it was picked to be distinct under the
+    /// old pair, and with two chips a collision under the new one is fatal.
+    @Test func formCyclingSkipsOtherSideAndKeepsOptionsDistinct() {
+        let model = TrainModel(vocab: VocabStore.lesson(1).entries)
+        for _ in 0..<8 {
+            model.cycleFrom()
+            #expect(model.from != model.to)
+            model.cycleTo()
+            #expect(model.from != model.to)
+            let shown = model.options.map { model.to.value($0) }
+            #expect(Set(shown).count == shown.count)
+        }
+    }
+
+    /// Ordered mode walks the lesson front to back, wrapping — and switching it on
+    /// mid-run resumes from the word on screen rather than snapping to word 1.
+    @Test func orderedModeWalksTheLessonAndResumesInPlace() {
+        let vocab = VocabStore.lesson(1).entries
+        let model = TrainModel(vocab: vocab)
+        model.ordered = true
+        let start = vocab.firstIndex { $0.id == model.answer.id } ?? -1
+        for step in 1...vocab.count {                       // one full wrapping lap
+            model.next()
+            #expect(model.answer.id == vocab[(start + step) % vocab.count].id)
+            #expect(model.options.contains { $0.id == model.answer.id })
+        }
     }
 
     @Test func listeningVariantUsesAudioPromptAndWordOptions() {
-        // "Listening" is Quiz with an audio prompt; options are the written word (kana).
-        let model = QuizModel(vocab: VocabStore.lesson(3).entries, from: .audio)
+        // The old Listening mode is Train with an audio prompt; options are the word.
+        let model = TrainModel(vocab: VocabStore.lesson(3).entries, from: .audio)
         #expect(model.from == .audio)
         #expect(model.to == .kana)
         // Cycling the answer side must never land on audio (audio can't be an option).
@@ -234,7 +259,7 @@ struct QuizTests {
     }
 
     @Test func promptCanCycleToAudioButBackAgain() {
-        let model = QuizModel(vocab: VocabStore.lesson(1).entries)
+        let model = TrainModel(vocab: VocabStore.lesson(1).entries)
         var sawAudio = false
         for _ in 0..<VForm.allCases.count { model.cycleFrom(); if model.from == .audio { sawAudio = true } }
         #expect(sawAudio)                 // audio is reachable as a prompt
@@ -242,9 +267,9 @@ struct QuizTests {
     }
 
     @Test func emptyVocabDegradesInsteadOfCrashing() {
-        let model = QuizModel(vocab: [])
-        #expect(model.options.isEmpty)
-        #expect(model.answer.kana.isEmpty)   // placeholder answer, no crash
+        let model = TrainModel(vocab: [])
+        #expect(model.options.count <= 1)    // just the placeholder answer, no crash
+        #expect(model.answer.kana.isEmpty)
     }
 
     @Test func kanaQuizOptionsAreDistinctAndContainAnswer() {
@@ -265,11 +290,11 @@ struct QuizTests {
     /// prompt is the word itself (any written form, or the audio question), forbidden
     /// when the prompt is the meaning and the options are the word.
     @Test func promptAudioNeverRevealsAnswer() {
-        #expect(QuizModel.promptAudioSafe(from: .kana))
-        #expect(QuizModel.promptAudioSafe(from: .kanji))
-        #expect(QuizModel.promptAudioSafe(from: .romaji))
-        #expect(QuizModel.promptAudioSafe(from: .audio))
-        #expect(!QuizModel.promptAudioSafe(from: .translation))
+        #expect(TrainModel.promptAudioSafe(from: .kana))
+        #expect(TrainModel.promptAudioSafe(from: .kanji))
+        #expect(TrainModel.promptAudioSafe(from: .romaji))
+        #expect(TrainModel.promptAudioSafe(from: .audio))
+        #expect(!TrainModel.promptAudioSafe(from: .translation))
     }
 }
 
@@ -843,6 +868,47 @@ struct ChallengeResultTests {
         #expect(ChallengeResult.isUnlocked(index: 2, results: results))
         #expect(!ChallengeResult.isUnlocked(index: 3, results: results))
         #expect(ChallengeResult.passedCount(results: results) == 1)
+    }
+
+    /// Today's study deck points at the first unpassed rung: 1 on a fresh lesson,
+    /// skipping passed rungs (not failed ones), nil once the ladder is cleared.
+    @Test func firstUnpassedTracksTheLadder() throws {
+        let ctx = try makeContext()
+        var results = ChallengeResult.byIndex(lesson: 7, context: ctx)
+        #expect(ChallengeResult.firstUnpassed(total: 3, results: results) == 1)
+
+        ChallengeResult.record(lesson: 7, index: 1, score: 90, context: ctx)   // passed
+        ChallengeResult.record(lesson: 7, index: 2, score: 50, context: ctx)   // failed
+        results = ChallengeResult.byIndex(lesson: 7, context: ctx)
+        #expect(ChallengeResult.firstUnpassed(total: 3, results: results) == 2)
+
+        ChallengeResult.record(lesson: 7, index: 2, score: 80, context: ctx)
+        ChallengeResult.record(lesson: 7, index: 3, score: 100, context: ctx)
+        results = ChallengeResult.byIndex(lesson: 7, context: ctx)
+        #expect(ChallengeResult.firstUnpassed(total: 3, results: results) == nil)
+        #expect(ChallengeResult.firstUnpassed(total: 0, results: results) == nil)
+    }
+
+    /// CloudKit forbids unique constraints, so a two-device merge can leave duplicate
+    /// rows for one challenge. Readers must collapse them to the strongest — and a
+    /// later `record` must update that strongest row, not a weaker twin.
+    @Test func duplicateRowsFromSyncCollapseToTheStrongest() throws {
+        let ctx = try makeContext()
+        // Simulate a merge: two rows for lesson 9 / challenge 1 from different devices.
+        ctx.insert(ChallengeResult(lesson: 9, index: 1, bestScore: 70, stars: 0, attempts: 4))
+        ctx.insert(ChallengeResult(lesson: 9, index: 1, bestScore: 90, stars: 2,
+                                   attempts: 1, completedAt: .now))
+        try ctx.save()
+
+        let results = ChallengeResult.byIndex(lesson: 9, context: ctx)
+        #expect(results[1]?.bestScore == 90)                 // strongest wins the read
+        #expect(ChallengeResult.passedCount(results: results) == 1)   // counted once
+        #expect(ChallengeResult.isUnlocked(index: 2, results: results))
+
+        // Recording another attempt lands on the strongest row and keeps its best.
+        let row = ChallengeResult.record(lesson: 9, index: 1, score: 80, context: ctx)
+        #expect(row.bestScore == 90)
+        #expect(row.attempts == 2)
     }
 
     /// Results are scoped per lesson — lesson 5's ladder can't be unlocked by lesson 4.

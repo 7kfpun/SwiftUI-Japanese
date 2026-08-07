@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import WidgetKit
 
 /// Pure daily-picker: restore a saved selection by id (order preserved), else pick
@@ -10,9 +11,12 @@ enum DailyPicker {
     }
 }
 
-/// A card browser (à la the RN "Today"): shows **7 random words** from the chosen lesson,
-/// one per card, with the field toggles, swipe to move, tap to hear. The same 7 feed the
-/// home-screen widget. Pick a lesson from the top-right text menu — 1–5 free, 6–50 Premium.
+/// A card browser (à la the RN "Today"), tied to the challenge ladder: it deals the
+/// new words of the lesson's **next unpassed challenge**, so studying here is direct
+/// preparation for the test you're about to take — pass it and Today advances with
+/// you. Once a lesson's ladder is fully cleared it falls back to a random daily 7 as
+/// review. The same words feed the home-screen widget. Lesson picked from the
+/// top-right menu; locked lessons open the paywall.
 struct TodayView: View {
     @AppStorage(Pref.translationLanguage) private var language = VocabStore.defaultLanguage
     @AppStorage(Pref.todayLesson) private var lessonNumber = 1
@@ -24,10 +28,16 @@ struct TodayView: View {
     @AppStorage(Pref.soundOn)          private var soundOn = true
     @Environment(\.pronouncer) private var pronouncer
     @Environment(Store.self) private var store
+    @Environment(\.modelContext) private var context
 
     @State private var picks: [Vocab] = []
     @State private var index = 0
     @State private var showPaywall = false
+    /// The rung these cards prepare for — nil once the lesson's ladder is cleared.
+    @State private var upNext: Int?
+    /// Furthest card reached in this deck, so `today_swipe` reports depth rather than
+    /// raw swipe count — back-and-forth on the same two cards isn't engagement.
+    @State private var deepestCard = 1
     private let dailyCount = 7
 
     private struct Selection: Codable { let lesson: Int; let ids: [String] }
@@ -37,6 +47,15 @@ struct TodayView: View {
         NavigationStack {
             VStack(spacing: 16) {
                 CardOptionsBar()
+                // Why these words: they're the next test's material. Goal-framed on
+                // purpose — studying Today IS preparing for that rung.
+                if let upNext {
+                    Label(L.t("Get ready for Challenge %@", "\(upNext)"), systemImage: "flag.checkered")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Theme.accent)
+                        .padding(.horizontal, 12).padding(.vertical, 5)
+                        .background(Theme.accent.opacity(0.12), in: Capsule())
+                }
                 if let word = current { cardStack(word) } else { ProgressView().frame(maxHeight: .infinity) }
             }
             .padding()
@@ -121,24 +140,48 @@ struct TodayView: View {
             let count = picks.count
             index = dir > 0 ? (index + 1) % count : (index - 1 + count) % count
             autoPlay()   // explicit: every completed page-turn speaks the new word
+            // Today is the landing tab, so "did anyone go past the first card" is the
+            // question that decides whether it earns the slot. `depth` is how far into
+            // the deck this swipe reached — a distribution stuck at 1 means the cards
+            // are wallpaper; one that runs to the end means it's the study surface.
+            deepestCard = max(deepestCard, index + 1)
+            Track.event("today_swipe", ["lesson": lessonNumber,
+                                        "depth": deepestCard,
+                                        "deck": picks.count,
+                                        "for_challenge": upNext ?? 0])
         }
     }
 
-    /// Choose 7 random words for the lesson (stable per lesson via `todaySelection`), or
-    /// re-map the stored 7 into the current language. `reshuffle` forces a fresh pick.
+    /// Deal the study deck: the new words of the lesson's first unpassed challenge.
+    /// Deterministic (that rung's words, lesson order), so it needs no persistence and
+    /// advances by itself the moment the challenge is passed. Only a fully-cleared
+    /// ladder falls back to the random daily 7, kept stable via `todaySelection`.
     private func loadPicks(reshuffle: Bool = false) {
         let all = VocabStore.lesson(lessonNumber, language).entries
-        var savedIDs: [String] = []
-        if !reshuffle,
-           let data = selectionJSON.data(using: .utf8),
-           let sel = try? JSONDecoder().decode(Selection.self, from: data),
-           sel.lesson == lessonNumber {
-            savedIDs = sel.ids
-        }
-        picks = DailyPicker.pick(from: all, count: dailyCount, savedIDs: savedIDs)
-        if let data = try? JSONEncoder().encode(Selection(lesson: lessonNumber, ids: picks.map(\.id))),
-           let str = String(data: data, encoding: .utf8) {
-            selectionJSON = str
+        let results = ChallengeResult.byIndex(lesson: lessonNumber, context: context)
+        let next = ChallengeResult.firstUnpassed(total: Challenge.count(wordCount: all.count),
+                                                 results: results)
+        if let next {
+            let words = Challenge.newWords(all, index: next)
+            // Reset the page only when the deck actually changed (a rung was passed,
+            // or the lesson switched) — not on every tab visit mid-study.
+            if upNext != next || picks.map(\.id) != words.map(\.id) { index = 0; deepestCard = 1 }
+            upNext = next
+            picks = words
+        } else {
+            upNext = nil
+            var savedIDs: [String] = []
+            if !reshuffle,
+               let data = selectionJSON.data(using: .utf8),
+               let sel = try? JSONDecoder().decode(Selection.self, from: data),
+               sel.lesson == lessonNumber {
+                savedIDs = sel.ids
+            }
+            picks = DailyPicker.pick(from: all, count: dailyCount, savedIDs: savedIDs)
+            if let data = try? JSONEncoder().encode(Selection(lesson: lessonNumber, ids: picks.map(\.id))),
+               let str = String(data: data, encoding: .utf8) {
+                selectionJSON = str
+            }
         }
         if index >= picks.count { index = 0 }
         publishWidget()

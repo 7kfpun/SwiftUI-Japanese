@@ -1,7 +1,7 @@
 import UIKit
 
 /// Compile-safe facade for the full-screen interstitial ("popup") ad. All SDK use is
-/// behind `#if canImport`, so callers (e.g. `QuizView`) don't depend on the package.
+/// behind `#if canImport`, so callers (e.g. `TrainView`) don't depend on the package.
 /// Callers must gate on `!store.isPremium` — premium users see no ads.
 enum Ads {
     /// Warm up an interstitial so it's ready to show at the next break.

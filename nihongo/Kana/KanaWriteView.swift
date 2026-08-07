@@ -75,7 +75,13 @@ struct KanaWriteView: View {
             HStack(spacing: 12) {
                 Button(L.t("Clear")) { clear() }
                     .buttonStyle(.bordered)
-                Button { withAnimation { showTemplate.toggle() } } label: {
+                Button {
+                    withAnimation { showTemplate.toggle() }
+                    // How often the stroke guide is needed is the difficulty signal
+                    // for this mode — leaning on it means the kana isn't learned yet.
+                    Track.event("kana_write_template", ["shown": showTemplate,
+                                                        "romaji": answer.romaji])
+                } label: {
                     Label(L.t("Reveal"), systemImage: showTemplate ? "eye.slash" : "eye")
                 }
                 .buttonStyle(.bordered)
