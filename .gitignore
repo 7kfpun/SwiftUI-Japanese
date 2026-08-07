@@ -36,7 +36,13 @@ vendor/
 
 # App Store screenshot pipeline — regenerable from fastlane/generate_framed_screenshots.py
 # + nihongoUITests; not worth tracking as binary churn. Device frame PNGs are a cache
-# auto-downloaded from fastlane's own public frameit-frames CDN.
+# auto-downloaded from fastlane's own public frameit-frames CDN. screenshots/ holds only
+# the staged per-locale uploads (deliver reads every subdir there as a locale), while
+# screenshot_sources/ holds the raw captures and framed intermediates.
 fastlane/screenshots/
+fastlane/screenshot_sources/
 fastlane/screenshot_frames/
 scripts/__pycache__/
+
+# CodeGraph local index
+.codegraph/

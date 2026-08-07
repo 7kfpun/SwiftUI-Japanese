@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
-"""Composite the raw iOS Simulator screenshots (fastlane/screenshots/*.png,
-captured at 1206x2622 on the "iPhone 17 Pro" simulator) into framed, titled
-App Store marketing screenshots: gradient background + bold rounded headline
-+ official Apple device frame, rendered at the exact pixel resolutions
-App Store Connect / fastlane `deliver` require. Pure Pillow, no ImageMagick
-(frameit's own tool needs ImageMagick's `convert`, which isn't installed on
-this machine and needs sudo/brew doctor fixes to install — this script
-reimplements the same idea directly with Pillow).
+"""Composite the raw iOS Simulator screenshots — iPhone captures in
+fastlane/screenshot_sources/raw/iphone/*.png (1206x2622 on the "iPhone 17 Pro"
+simulator), iPad captures in fastlane/screenshot_sources/raw/ipad/*.png
+(2064x2752 on the "iPad Pro 13-inch (M5)" simulator) — into framed, titled App
+Store marketing screenshots: gradient background + bold rounded headline +
+official Apple device frame, rendered at the exact pixel resolutions App Store
+Connect / fastlane `deliver` require. Pure Pillow, no ImageMagick (frameit's own
+tool needs ImageMagick's `convert`, which isn't installed on this machine and
+needs sudo/brew doctor fixes to install — this script reimplements the same idea
+directly with Pillow).
+
+Note the split between the two trees: everything this script reads and writes
+lives under fastlane/screenshot_sources/, and only the final staged copies go in
+fastlane/screenshots/. That's deliberate — `deliver` treats *every* subdirectory
+of its screenshots_path as a locale folder (see Deliver::Loader::LanguageFolder),
+so working directories must not live there.
 
 Usage:
     arch -x86_64 python3 fastlane/generate_framed_screenshots.py [filter]
@@ -20,21 +28,25 @@ load Pillow's compiled extension. Always run this via `arch -x86_64 python3`
 (or reinstall an arm64-native Pillow with `pip install --force-reinstall
 --no-binary :all: pillow` if you'd rather fix that properly).
 
-Outputs go to fastlane/screenshots/framed/6.9/*.png and
-fastlane/screenshots/framed/6.3/*.png (14 screenshots each, matching the
-APP_IPHONE_67 "6.9-inch" mandatory/largest bucket and the APP_IPHONE_61
-"6.1-6.3-inch" bucket). To stage them for `fastlane screenshots` (the
-`deliver` lane in fastlane/Fastfile), copy them into
-fastlane/screenshots/en-US/ with unique filenames per device (deliver
+Outputs go to fastlane/screenshot_sources/framed/<locale>/6.9/*.png,
+.../6.3/*.png, and .../ipad13/*.png — matching the APP_IPHONE_67 "6.9-inch"
+mandatory/largest bucket, the APP_IPHONE_61 "6.1-6.3-inch" bucket, and the
+APP_IPAD_PRO_3GEN_129 "13-inch iPad" bucket. To stage them for `fastlane
+screenshots` (the `deliver` lane in fastlane/Fastfile), copy them into
+fastlane/screenshots/<locale>/ with unique filenames per device (deliver
 detects the target device purely by each PNG's pixel resolution, not by
 filename, but every file in a locale folder needs a unique name) — e.g.:
 
-    for f in fastlane/screenshots/framed/6.9/*.png; do
-      cp "$f" "fastlane/screenshots/en-US/$(basename "$f" .png)-6.9.png"
+    for locale in en-US de-DE zh-Hant zh-Hans; do
+      for dev in 6.9 6.3 ipad13; do
+        for f in fastlane/screenshot_sources/framed/$locale/$dev/*.png; do
+          cp "$f" "fastlane/screenshots/$locale/$(basename "$f" .png)-$dev.png"
+        done
+      done
     done
-    for f in fastlane/screenshots/framed/6.3/*.png; do
-      cp "$f" "fastlane/screenshots/en-US/$(basename "$f" .png)-6.3.png"
-    done
+
+zh-Hans has no copy of its own in LOCALES below; it reuses zh-Hant's rendered
+images (plain file copy after generating), same as the iPhone buckets already do.
 
 Apple/deliver caps each device-size screenshot set at 10 images per locale,
 so with 14 source screenshots only the first 10 alphabetically (01-10) will
@@ -56,9 +68,10 @@ import urllib.request
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RAW_DIR = os.path.join(ROOT, "fastlane/screenshots")
+RAW_DIR = os.path.join(ROOT, "fastlane/screenshot_sources/raw/iphone")
+IPAD_RAW_DIR = os.path.join(ROOT, "fastlane/screenshot_sources/raw/ipad")
 FRAMES_DIR = os.path.join(ROOT, "fastlane/screenshot_frames")
-OUT_DIR = os.path.join(ROOT, "fastlane/screenshots/framed")
+OUT_DIR = os.path.join(ROOT, "fastlane/screenshot_sources/framed")
 FRAMES_CDN = "https://fastlane.github.io/frameit-frames/latest"
 
 FONT_BOLD = "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf"
@@ -80,10 +93,18 @@ DEVICES = {
                 off=(75, 66), off_w=1320),
     "6.3": dict(canvas=(1206, 2622), frame="Apple iPhone 17 Pro Silver.png",
                 off=(72, 69), off_w=1206),
+    # 13-inch iPad (ASC's APP_IPAD_PRO_3GEN_129 bucket). Raw captures come from
+    # the "iPad Pro 13-inch (M5)" simulator at its native 2064x2752 — the canvas
+    # matches that 1:1. No frameit-frames asset exists yet for the M4/M5 13-inch
+    # panel, so this reuses the 12.9-inch (4th gen) frame (2048x2732, near-identical
+    # aspect) purely as decorative device art; it doesn't affect the required
+    # output pixel size.
+    "ipad13": dict(canvas=(2064, 2752), frame="Apple iPad Pro (12.9-inch) (4th generation) Silver.png",
+                   off=(96, 102), off_w=2048, raw_dir=IPAD_RAW_DIR),
 }
 
-# headline, subtitle for each raw screenshot (fastlane/screenshots/<key>.png),
-# per App Store Connect locale. The screenshots themselves are the same
+# headline, subtitle for each raw screenshot (<raw dir>/<key>.png), per App
+# Store Connect locale. The screenshots themselves are the same
 # English-UI captures for every locale (re-capturing the app UI in each
 # language is out of scope here — "just the frame") — only the marketing
 # title/subtitle overlay is localized.
@@ -91,7 +112,7 @@ DEVICES = {
 # Curated to exactly 10 — Apple/deliver caps each device-size screenshot set
 # at 10 images per locale, so all 10 of these upload cleanly with nothing
 # skipped. Dropped from the original 14 (still available as raw captures in
-# fastlane/screenshots/*.png if you want to swap any of these back in):
+# fastlane/screenshot_sources/raw/iphone/*.png if you want to swap any back in):
 #   05-kana-swipe        - redundant with quiz/flashcards, generic UX pattern
 #   10-lesson-flashcards - redundant with kana flashcards + lesson-learn
 #   13-settings          - settings screens don't sell an app
@@ -211,7 +232,10 @@ def compose_device(raw_shot: Image.Image, frame_path: str, off_x, off_y, off_w) 
 
 
 def process(locale, key, dev_key, dev):
-    raw = Image.open(os.path.join(RAW_DIR, f"{key}.png"))
+    raw_path = os.path.join(dev.get("raw_dir", RAW_DIR), f"{key}.png")
+    if not os.path.exists(raw_path):
+        return None
+    raw = Image.open(raw_path)
 
     W, H = dev["canvas"]
     frame_path = ensure_frame(dev["frame"])
@@ -278,4 +302,7 @@ if __name__ == "__main__":
             if key_filter and key_filter not in key:
                 continue
             for dev_key, dev in DEVICES.items():
-                print("wrote", process(locale, key, dev_key, dev))
+                out = process(locale, key, dev_key, dev)
+                # None = no raw capture for this key on this device (e.g. only a
+                # couple of screens were ever captured on the iPad simulator).
+                print("wrote", out) if out else print(f"skip  {locale}/{dev_key}/{key} (no raw capture)")

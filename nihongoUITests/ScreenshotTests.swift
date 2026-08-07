@@ -141,10 +141,15 @@ final class ScreenshotTests: XCTestCase {
     }
 
     /// Switch tab (tab bar buttons; falls back to a plain button match).
+    ///
+    /// Known gap: on iPad this reliably lands only on the already-selected tab.
+    /// iPadOS 26 renders the `TabView` as a floating "Liquid Glass" pill rather
+    /// than a `UITabBar`, so neither query matches something tappable and most
+    /// shots silently fall through their `guard` (the test still passes — it just
+    /// captures nothing). Retrying on hittability, below, did not fix it. Only
+    /// the iPhone captures are complete; iPad has Today + Lessons.
     private func openTab(_ name: String) {
-        let tab = app.tabBars.buttons[name]
-        if tab.waitForExistence(timeout: 3) { tab.tap() }
-        else { tapQuiet(app.buttons[name]) }
+        if !tap(app.tabBars.buttons[name], 3) { tapQuiet(app.buttons[name]) }
         Thread.sleep(forTimeInterval: 0.5)
     }
 
@@ -163,16 +168,24 @@ final class ScreenshotTests: XCTestCase {
         e.waitForExistence(timeout: timeout)
     }
 
-    /// Tap if it appears in time; report whether it was tapped.
+    /// Tap once the element exists AND is hittable, polling until `timeout` instead
+    /// of checking once — a one-shot check right after `waitForExistence` flakes
+    /// whenever a screen is still mid-transition (e.g. right after a cold launch).
     @discardableResult
     private func tap(_ e: XCUIElement, _ timeout: TimeInterval = 5) -> Bool {
-        guard e.waitForExistence(timeout: timeout), e.isHittable else { return false }
-        e.tap()
-        return true
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            if e.exists, e.isHittable {
+                e.tap()
+                return true
+            }
+            Thread.sleep(forTimeInterval: 0.2)
+        } while Date() < deadline
+        return false
     }
 
     /// Tap without caring about the result (optional embellishments).
     private func tapQuiet(_ e: XCUIElement) {
-        if e.waitForExistence(timeout: 2), e.isHittable { e.tap() }
+        _ = tap(e, 2)
     }
 }
