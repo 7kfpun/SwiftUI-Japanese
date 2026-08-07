@@ -511,6 +511,39 @@ struct LocalizationTests {
         }
     }
 
+    /// Every literal `%` must be escaped as `%%`.
+    ///
+    /// `L.t(_:_:)` runs the string through `String(format:)`, so a bare `%` is read as
+    /// the start of a format specifier. A trailing one ("Save %@%") is simply eaten —
+    /// the sign vanishes from the UI. Worse, a `%` before a letter ("%@ % sparen")
+    /// parses as `%s`, i.e. a C-string specifier applied to something that isn't one.
+    /// Both only ever show up by eye, in one language, on one screen.
+    @Test func literalPercentSignsAreEscaped() throws {
+        for (lang, dict) in try table() {
+            for (key, value) in dict {
+                let leftover = value
+                    .replacingOccurrences(of: "%@", with: "")
+                    .replacingOccurrences(of: "%%", with: "")
+                #expect(!leftover.contains("%"),
+                        "\(lang) '\(key)' has an unescaped % — write %% for a literal sign")
+            }
+        }
+    }
+
+    /// And the escaping must actually round-trip: formatting a percent string has to
+    /// produce exactly one visible `%`.
+    @Test func formattedPercentStringsRenderTheSign() throws {
+        let table = try table()
+        for (lang, dict) in table {
+            for key in dict.keys where key.contains("%@%") {
+                let rendered = String(format: dict[key]!, "42")
+                #expect(rendered.contains("42"), "\(lang) '\(key)' lost its number")
+                #expect(rendered.filter { $0 == "%" }.count == 1,
+                        "\(lang) '\(key)' rendered \(rendered) — expected exactly one % sign")
+            }
+        }
+    }
+
     @Test func lookupFallsBackAndDeviceDefaultShips() {
         #expect(L.t("a key that does not exist") == "a key that does not exist")
         #expect(L.availableLanguages.contains(L.deviceDefault))

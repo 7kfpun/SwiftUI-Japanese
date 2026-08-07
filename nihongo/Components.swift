@@ -49,29 +49,63 @@ struct ScoreBadge: View {
     }
 }
 
-/// A quiz answer button that fills the space it's given, with a colored state border.
-/// Shared by the two multiple-choice quizzes so they look identical.
+/// A quiz answer button that fills the space it's given. Shared by the two
+/// multiple-choice quizzes so they look identical — and now wearing the same
+/// `choiceChip` chrome as every other choice control in the app. It used to be a
+/// plain white box with a thin grey outline: inert before you answered, and the only
+/// control still speaking the old visual language.
+///
+/// Takes the answer state rather than a pre-computed colour, so the idle/correct/
+/// wrong rules live here instead of being re-derived at each call site.
 struct QuizOptionButton: View {
     let text: String
-    let border: Color
-    let disabled: Bool
+    /// This button's position in the grid.
+    let index: Int
+    /// Which option was chosen; nil while the question is still open.
+    let picked: Int?
+    /// Whether this button holds the correct answer.
+    let isAnswer: Bool
     var font: Font = .headline   // kana quizzes pass a bigger Japanese face
     let action: () -> Void
+
+    private var answered: Bool { picked != nil }
+    private var isPicked: Bool { picked == index }
+    /// Neither chosen nor correct — dimmed once the question is settled, so the two
+    /// buttons that matter carry the eye.
+    private var isAlsoRan: Bool { answered && !isAnswer && !isPicked }
+
+    private var color: Color {
+        guard answered else { return Theme.accent }
+        if isAnswer { return Theme.correct }
+        return isPicked ? Theme.wrong : Theme.line
+    }
 
     var body: some View {
         Button(action: action) {
             Text(text)
                 .font(font)
+                .foregroundStyle(answered ? color : .primary)   // the word reads as text
                 .multilineTextAlignment(.center)
-                .minimumScaleFactor(0.6)
+                .minimumScaleFactor(0.5)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(8)
+                .padding(10)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(border, lineWidth: 2))
-        .disabled(disabled)
+        .choiceChip(color)
+        // Corner badge rather than inline, so revealing the verdict doesn't reflow
+        // the label. Colour alone would exclude red/green colourblind users.
+        .overlay(alignment: .topTrailing) {
+            if answered, isAnswer || isPicked {
+                Image(systemName: isAnswer ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .font(.footnote)
+                    .foregroundStyle(color)
+                    .padding(7)
+            }
+        }
+        .opacity(isAlsoRan ? 0.45 : 1)
+        .animation(.easeOut(duration: 0.2), value: answered)
+        .disabled(answered)
     }
 }
 
@@ -84,6 +118,71 @@ extension View {
         foregroundStyle(color)
             .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 18))
             .overlay(RoundedRectangle(cornerRadius: 18).stroke(color, lineWidth: 2))
+    }
+}
+
+/// One of the two candidates on a swipe-to-choose screen — shared by Train (vocab)
+/// and the kana swipe quiz, which pose the same question about different content.
+///
+/// The word is the content and gets the weight; the arrow is only an instruction, so
+/// it's a chevron on the chip's *outer* edge, pointing the way you'd swipe. A centred
+/// arrow says that less clearly while competing with the text for attention.
+///
+/// After answering the chevron gives way to a check/cross, so the verdict never rests
+/// on colour alone — red/green are the same colour to roughly 8% of men.
+struct SwipeOptionChip: View {
+    let text: String
+    /// 0 = left chip (swipe left to pick), 1 = right.
+    let side: Int
+    /// Which side was chosen; nil while the question is still open.
+    let picked: Int?
+    /// Whether this chip holds the correct answer.
+    let isAnswer: Bool
+    /// Kana readings are short and want to be large; vocab glosses run long and don't.
+    var font: Font = .title3.weight(.semibold)
+
+    private var answered: Bool { picked != nil }
+    private var isPicked: Bool { picked == side }
+
+    private var color: Color {
+        guard answered else { return Theme.accent }
+        if isAnswer { return Theme.correct }
+        return isPicked ? Theme.wrong : Theme.line
+    }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if side == 0 { marker }
+            Text(text)
+                .font(font)
+                .foregroundStyle(answered ? color : .primary)   // reads as text, not a link
+                .minimumScaleFactor(0.4)
+                .lineLimit(3)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+            if side == 1 { marker }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, minHeight: 96)   // min, not fixed: long glosses need room
+        .choiceChip(color)
+    }
+
+    /// Direction chevron before answering, verdict icon after. The unpicked wrong chip
+    /// keeps a faint placeholder so the row doesn't shift when icons appear.
+    @ViewBuilder private var marker: some View {
+        Group {
+            if answered {
+                if isAnswer { Image(systemName: "checkmark.circle.fill") }
+                else if isPicked { Image(systemName: "xmark.circle.fill") }
+                else { Image(systemName: "circle").opacity(0.25) }
+            } else {
+                Image(systemName: side == 0 ? "chevron.left" : "chevron.right")
+                    .fontWeight(.semibold)
+            }
+        }
+        .font(.subheadline)
+        .frame(width: 18)
     }
 }
 

@@ -125,8 +125,9 @@ struct KanaQuizView: View {
 
             OptionGrid(count: model.options.count) { i in
                 QuizOptionButton(text: model.to.value(model.options[i]),
-                                 border: optionBorder(i),
-                                 disabled: model.picked != nil,
+                                 index: i,
+                                 picked: model.picked,
+                                 isAnswer: model.isCorrectOption(i),
                                  font: Theme.jpBold(26)) {
                     model.choose(i, context: context)
                     Track.event("kana_quiz_answer",
@@ -151,10 +152,4 @@ struct KanaQuizView: View {
         }
     }
 
-    private func optionBorder(_ i: Int) -> Color {
-        guard model.picked != nil else { return Theme.line }
-        if model.isCorrectOption(i) { return Theme.correct }
-        if model.picked == i { return Theme.wrong }
-        return Theme.line
-    }
 }

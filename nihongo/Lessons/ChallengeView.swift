@@ -48,8 +48,9 @@ struct ChallengeView: View {
                 prompt(question)
                 OptionGrid(count: question.options.count) { i in
                     QuizOptionButton(text: question.to.value(question.options[i]),
-                                     border: optionBorder(question, i),
-                                     disabled: model.picked != nil) {
+                                     index: i,
+                                     picked: model.picked,
+                                     isAnswer: question.isCorrect(i)) {
                         model.choose(i)
                         if soundOn || question.from.isAudio { pronouncer.speak(question.answer) }
                     }
@@ -154,13 +155,6 @@ struct ChallengeView: View {
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
         .disabled(model.picked == nil)
-    }
-
-    private func optionBorder(_ q: ChallengeQuestion, _ i: Int) -> Color {
-        guard model.picked != nil else { return Theme.line }
-        if q.isCorrect(i) { return Theme.correct }
-        if model.picked == i { return Theme.wrong }
-        return Theme.line
     }
 
     /// Audio questions must always speak — the clip *is* the question, so the sound

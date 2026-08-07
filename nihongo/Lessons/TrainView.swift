@@ -279,53 +279,11 @@ struct TrainView: View {
         )
     }
 
-    /// One of the two candidates.
-    ///
-    /// The word is the content and gets the weight; the arrow is only an instruction,
-    /// so it shrinks to a chevron and moves to the chip's *outer* edge — pointing the
-    /// way you'd swipe, which the old centred arrow said less clearly while competing
-    /// with the text for attention. Once answered the chevron gives way to a
-    /// check/cross, so the verdict isn't carried by colour alone.
     private func optionChip(_ opt: Vocab?, side: Int) -> some View {
-        let show = model.picked != nil
-        let isAnswer = opt?.id == model.answer.id
-        let isPicked = model.picked == side
-        let color: Color = show
-            ? (isAnswer ? Theme.correct : (isPicked ? Theme.wrong : Theme.line))
-            : Theme.accent
-
-        return HStack(spacing: 6) {
-            if side == 0 { marker(show: show, isAnswer: isAnswer, isPicked: isPicked, side: side) }
-            Text(opt.map { model.to.value($0) } ?? "")
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(show ? color : .primary)   // the word reads as text, not as a link
-                .minimumScaleFactor(0.4)
-                .lineLimit(3)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
-            if side == 1 { marker(show: show, isAnswer: isAnswer, isPicked: isPicked, side: side) }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 14)
-        .frame(maxWidth: .infinity, minHeight: 96)   // min, not fixed: long glosses need room
-        .choiceChip(color)
-    }
-
-    /// Direction chevron before answering, verdict icon after.
-    @ViewBuilder
-    private func marker(show: Bool, isAnswer: Bool, isPicked: Bool, side: Int) -> some View {
-        Group {
-            if show {
-                if isAnswer { Image(systemName: "checkmark.circle.fill") }
-                else if isPicked { Image(systemName: "xmark.circle.fill") }
-                else { Image(systemName: "circle").opacity(0.25) }
-            } else {
-                Image(systemName: side == 0 ? "chevron.left" : "chevron.right")
-                    .fontWeight(.semibold)
-            }
-        }
-        .font(.subheadline)
-        .frame(width: 18)
+        SwipeOptionChip(text: opt.map { model.to.value($0) } ?? "",
+                        side: side,
+                        picked: model.picked,
+                        isAnswer: opt?.id == model.answer.id)
     }
 
     private func resultBadge(_ ok: Bool) -> some View {

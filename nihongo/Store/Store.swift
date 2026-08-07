@@ -64,10 +64,30 @@ final class Store {
         Task { await load(); await refreshEntitlement() }
     }
 
+    /// Whether a fetch is in flight, and whether one has ever finished — the paywall
+    /// needs to tell "still loading" from "loaded nothing", which a bare `isEmpty`
+    /// can't. Without the distinction a failed fetch renders as an eternal spinner.
+    private(set) var isLoadingProducts = false
+    private(set) var didAttemptLoad = false
+
+    /// A load finished and produced nothing: offline, StoreKit unavailable, or the
+    /// products aren't approved in App Store Connect yet.
+    var productsUnavailable: Bool { didAttemptLoad && !isLoadingProducts && products.isEmpty }
+
     func load() async {
+        isLoadingProducts = true
+        defer { isLoadingProducts = false; didAttemptLoad = true }
         products = (try? await Product.products(for: PremiumProduct.purchasable))?
             .sorted { $0.price < $1.price } ?? []
     }
+
+    /// Subscriptions only, cheapest first — the paywall's main list.
+    var subscriptions: [Product] { products.filter { $0.subscription != nil } }
+
+    /// The lifetime non-consumable, shown apart from the subscriptions rather than as
+    /// a fourth peer in the same list: it's a different kind of commitment, and mixed
+    /// in among them it reads as "the expensive one" instead of "the other option".
+    var lifetime: Product? { products.first { $0.subscription == nil } }
 
     /// Premium if any premium product is currently entitled — an active subscription or
     /// the owned lifetime unlock (`currentEntitlements` only yields non-expired ones).

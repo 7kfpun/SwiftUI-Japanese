@@ -42,8 +42,8 @@ struct KanaSwipeQuizView: View {
 
             // The two options, left and right — large tappable chips.
             HStack(spacing: 12) {
-                optionChip(leftOption, systemImage: "arrow.left", correctSide: 0)
-                optionChip(rightOption, systemImage: "arrow.right", correctSide: 1)
+                optionChip(leftOption, side: 0)
+                optionChip(rightOption, side: 1)
             }
         }
         .padding()
@@ -107,23 +107,14 @@ struct KanaSwipeQuizView: View {
         )
     }
 
-    private func optionChip(_ opt: K, systemImage: String, correctSide: Int) -> some View {
-        let show = model.picked != nil
-        let isAnswer = opt.romaji == model.answer.romaji
-        let color: Color = show
-            ? (isAnswer ? Theme.correct : (model.picked == correctSide ? Theme.wrong : Theme.line))
-            : Theme.accent
-        return VStack(spacing: 8) {
-            Image(systemName: systemImage).font(.title2)
-            Text(opt.romaji.isEmpty ? "" : model.to.value(opt))
-                .font(.system(size: 30, weight: .semibold))
-                .minimumScaleFactor(0.5)
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 120)
-        .choiceChip(color)
+    /// Kana readings are one to three characters, so they take a much larger face than
+    /// Train's vocab glosses — the only thing this screen varies on the shared chip.
+    private func optionChip(_ opt: K, side: Int) -> some View {
+        SwipeOptionChip(text: opt.romaji.isEmpty ? "" : model.to.value(opt),
+                        side: side,
+                        picked: model.picked,
+                        isAnswer: opt.romaji == model.answer.romaji,
+                        font: .system(size: 30, weight: .semibold))
     }
 
     private func resultBadge(_ ok: Bool) -> some View {
