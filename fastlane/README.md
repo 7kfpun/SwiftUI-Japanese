@@ -32,6 +32,16 @@ Upload + publish App Privacy details (nutrition labels). Interactive: this
 
 Push App Store text metadata (all localizations) — no binary, no screenshots
 
+### ios release
+
+```sh
+[bundle exec] fastlane ios release
+```
+
+Archive + upload a new build to App Store Connect. No metadata/screenshots
+        touched, no submission — the build lands in TestFlight/ASC processing and
+        a human decides when (and whether) to submit it for review.
+
 ### ios screenshots
 
 ```sh

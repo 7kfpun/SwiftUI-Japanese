@@ -14,7 +14,7 @@ from string import Template
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
-BASE_URL = "https://kf-nihongo.web.app"
+BASE_URL = "https://japanesedaily.wahthefox.com"
 APP_STORE = "https://apps.apple.com/app/id1447639161"
 
 # (lang dir, html lang attr, hreflang, og:locale)
@@ -43,6 +43,16 @@ TEMPLATE = Template(r"""<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Google Analytics (GA4) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-P8QWZ4BQ94"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-P8QWZ4BQ94');
+</script>
+
 <title>$title</title>
 <meta name="description" content="$desc">
 <link rel="canonical" href="$canonical">
@@ -586,7 +596,8 @@ $faq_jsonld
     max-width: 36rem; margin: 0 auto; padding: 4rem 1.5rem 2rem; text-align: center;
   }
   .try-quiz .quiz-badge {
-    display: inline-flex;
+    display: flex;
+    width: fit-content;
     align-items: center;
     gap: 0.4rem;
     font-size: 0.9rem;
@@ -596,8 +607,8 @@ $faq_jsonld
     background: var(--accent);
     border-radius: 999px;
     padding: 0.5rem 1.3rem;
-    margin-bottom: 1.1rem;
-    box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 45%, transparent);
+    margin: 0 auto 1.1rem;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 35%, transparent);
     animation: badge-pop 1.6s ease-in-out 2;
   }
   .try-quiz .quiz-badge::before { content: "▶"; font-size: 0.7em; }

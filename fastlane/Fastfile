@@ -37,6 +37,27 @@ platform :ios do
     )
   end
 
+  desc "Archive + upload a new build to App Store Connect. No metadata/screenshots
+        touched, no submission — the build lands in TestFlight/ASC processing and
+        a human decides when (and whether) to submit it for review."
+  lane :release do
+    build_app(
+      scheme: "nihongo",
+      export_method: "app-store",
+      output_directory: "build",
+    )
+    upload_to_app_store(
+      api_key: asc_api_key,
+      # fastlane's built-in locale list lags App Store Connect (Tamil, Filipino, ...)
+      ignore_language_directory_validation: true,
+      skip_metadata: true,
+      skip_screenshots: true,
+      submit_for_review: false,
+      force: true,                 # skip the HTML confirmation prompt
+      run_precheck_before_submit: false,
+    )
+  end
+
   desc "Push App Store screenshots (draft metadata only) — no binary, no text metadata, no submission"
   lane :screenshots do
     deliver(

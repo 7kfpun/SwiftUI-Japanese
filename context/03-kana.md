@@ -1,174 +1,113 @@
-# 03 — Kana tab (reference + quiz)
+# 03 — Kana tab
 
-Reference source:
-- `reference-rn/app/containers/kana/index.js` — browser
-- `reference-rn/app/containers/kana/assessment.js` — quiz
-- `reference-rn/app/containers/kana/components/tile.js` — tile
-- `reference-rn/app/utils/kana.js` — data tables
+Everything under the Kana tab is **always free** — there is no premium gating
+anywhere in this feature (contrast with Lessons, `04-lessons.md`).
 
-## Data (`utils/kana.js`)
+## Browser (`nihongo/Kana/KanaBrowserView.swift`)
 
-Each entry is a 3-tuple **`[hiragana, katakana, romaji]`**, e.g. `['あ','ア','a']`.
-Three grouped tables (`exports.seion` ~L92, `exports.dakuon` ~L168, `exports.youon`
-~L206), each an array of rows:
+A segmented `Picker` over `KanaTable.allCases` (`.seion`/`.dakuon`/`.youon`,
+labeled **Basic / Voiced / Combos**) with the selected table's grid below.
 
-| Table | Meaning | Rows | Real entries | Notes |
-|---|---|---|---|---|
-| `seion` 清音 | basic | 11 | **46** ✓ | uses `['','','']` placeholders for grid alignment; lone `['ん','ン','n']` last |
-| `dakuon` 濁音 | voiced | 5 | **25** ✓ | all rows are 5-wide |
-| `youon` 拗音 | combos | 11 | **33** ✓ | mostly 3-wide rows |
+- **Grid shape**: Basic and Voiced render as **square** tiles; Combos (拗音,
+  only 3 columns wide) deliberately render **non-square** (`KanaGrid(square:)`)
+  — forcing 3-wide rows into squares would make each tile huge and
+  out-of-proportion with the other two tables. Tile size is computed
+  explicitly from the measured row width (`onGeometryChange`) rather than via
+  `.aspectRatio`, because `.aspectRatio(1, .fit)` inside a flexible `HStack`
+  doesn't reliably divide space into even squares across cells.
+- **What's "big" on each tile** is a 3-way toggle (hiragana / katakana /
+  romaji), stored in `Pref.kanaTileScript` and exposed as a compact toolbar
+  menu (a glyph button showing あ/ア/A) rather than a second segmented row —
+  two stacked segmented controls looked cluttered.
+- **Mastery coloring**: each tile borders green/red/neutral from the learner's
+  most recent `KanaResult` for that romaji (`Theme.correct`/`.wrong`/`.line`).
+  A trash-can toolbar button (disabled when there are no results) opens a
+  confirmation dialog to wipe all `KanaResult` rows and reset every tile.
+- Tapping a tile speaks it (`pronouncer.speak(kana:)`) and logs `play_kana`.
 
-(Non-empty counts **verified** against `utils/kana.js`: 46 / 25 / 33 — use these as the
-transcription checksum.)
+## Choosing a quiz mode (`KanaQuizModeView`)
 
-`utils/kana.js` also exports flat `exports.hiragana` (~L1) and `exports.katakana`
-(~L264) arrays — **74 entries each** (verified) — these are the distractor pools used
-by the **Lessons → Learn** tile mode, not the Kana tab (see `04-lessons.md`). Note
-they do **not** include small kana (っ ャ ッ ォ ィ), the chōonpu (ー), or the
-punctuation/full-width chars that appear in some words, so distractors never contain
-those — but target words still do (targets are added separately). **Transcribe both
-flat pools verbatim** (all 74 each) to preserve distractor behavior.
+Five modes, all operating over whichever table (`KanaTable`) was showing in
+the browser:
 
-### Swift port of the data
+| Mode | View | Mechanic |
+|---|---|---|
+| Flashcards | `KanaFlashcardView` | Shared `FlashcardScreen` — swipe right if you know it |
+| Classic | `KanaQuizView` | Tap 1 of 4 options |
+| Swipe | `KanaSwipeQuizView` | Tinder-style: swipe left/right between 2 options |
+| Listening | `KanaQuizView(listening: true)` | Same as Classic, but the prompt is audio, not a glyph |
+| Write | `KanaWriteView` | Hear it, draw it — freehand scored against the target glyph |
 
-Keep the exact tuple + placeholder structure so the grid lays out identically.
+### Classic / Listening — `KanaQuizModel`
 
-```swift
-struct Kana: Hashable, Identifiable {
-    let hiragana: String
-    let katakana: String
-    let romaji: String
-    var id: String { romaji.isEmpty ? UUID().uuidString : romaji }
-    var isEmpty: Bool { romaji.isEmpty }          // grid placeholder
-}
+Any-form→any-form multiple choice, same shape as the RN original: `from`/`to`/
+`other` (`KForm`: hiragana/katakana/romaji) with `swapFrom()`/`swapTo()`
+exchanging the active side with the reserve. `next()` picks a random answer
+plus up to `optionCount - 1` distinct-romaji distractors from the pool,
+shuffled. `choose(_:context:)` locks the pick, updates the session
+correct/total, and calls `KanaResult.record` unconditionally (right or wrong).
 
-enum KanaTable: String, CaseIterable, Identifiable {
-    case seion, dakuon, youon
-    var id: String { rawValue }
-    var title: String { ... }                     // 清音 / 濁音 / 拗音 labels
-    var rows: [[Kana]] { ... }                    // transcribe from utils/kana.js
-}
-```
+Listening mode reuses the exact same model with `listening: true`: the
+direction-toggle row collapses to a static speaker icon (no `swapFrom`, since
+the prompt form is fixed to "hear it"), and `autoPlay()` always speaks
+regardless of the global sound toggle — **in Listening, the sound IS the
+question, so the toggle can't silence it.** Classic mode respects the sound
+toggle for its optional auto-play. Either way, tapping the prompt card always
+replays audio.
 
-Transcribe the three tables verbatim from `utils/kana.js` (a mechanical copy — ~104
-non-empty cells total). Preserve `['','','']` as `Kana(hiragana:"",katakana:"",
-romaji:"")` so the grid keeps its shape.
+### Swipe — `KanaSwipeQuizView`
 
-## Browser (`kana/index.js`)
+`KanaQuizModel(optionCount: 2)` — same model, just 2 options instead of 4. The
+prompt card sits over a static `CardStackPeek()` backdrop (decorative — it
+never moves) and is the only draggable element. Dragging past a 90pt threshold
+in either direction commits that side's option; a `SwipeStamp` (arrow +
+colored border) previews which way you're about to commit as you drag, scaled
+by how far past the threshold you are. On decide, the card flings off-screen,
+a correct/wrong badge flashes for 0.5s, then the next question loads and
+auto-plays.
 
-- 3 pages in an `IndicatorViewPager` (rn-viewpager): Seion / Dakuon / Youon, chosen
-  by a top tab indicator (`PagerTabIndicator` ~L147; `onPageSelected` ~L140).
-- Each page is a `ScrollView` of rows (`assessment.kana.map` ~L179), each row
-  `flexDirection:'row'`, space-between.
-- **Tile** (`components/tile.js` ~L87): hiragana big on top (26px), katakana + romaji
-  small below. Tapping a tile speaks the hiragana (~L100). Tile width =
-  `width / itemsPerRow - 10`.
-- **History coloring:** on mount each tile reads `kana.assessment.{romaji}` (~L71)
-  and borders itself **green** if last quiz answer was correct, **red** if wrong,
-  white/none if never tested (~L89).
+### Write (`KanaWriteView` + `KanaSketch`)
 
-### SwiftUI target
+The one Kana mode with real scoring logic, not just multiple choice.
 
-- `KanaBrowserView`: a **segmented `Picker`** (`.pickerStyle(.segmented)`) over
-  `KanaTable.allCases` (清音 / 濁音 / 拗音) at the top, with the selected table's grid
-  below. (Decided over a paged `TabView` — see `07-ux-ui.md`; segmented shows all
-  labels, allows random access, and is VoiceOver-correct.)
-- The grid: `LazyVGrid` (or rows of `HStack`) of `KanaTileView`. Empty cells render as
-  invisible spacers to preserve the あいうえお alignment.
-- `KanaTileView`: VStack(hiragana / HStack(katakana, romaji)); border via
-  `.overlay(RoundedRectangle().stroke(...))` colored by the stored `KanaResult` (see
-  below); tap → `pronouncer.speak(...)` (no-op in v1, per tap-anywhere-to-hear).
+- Learner picks Hiragana/Katakana via a segmented control, sees the romaji
+  prompt, and draws freehand in a `Canvas` over an optional translucent
+  stroke-order template (toggle with **Reveal**).
+- **Template**: rendered from the bundled **KanjiStrokeOrders** font — the
+  same shape shown as guidance is also the scoring template, so it has to be
+  scoring-clean. That font bakes small numbered stroke-order digits into every
+  glyph; `KanaSketch.stripTinyComponents` erases them via connected-component
+  analysis (any blob smaller than `maxDim` in both axes is assumed to be a
+  digit, not ink — calibrated against the font's actual digit size) before
+  either display or scoring.
+- **Scoring** (`KanaSketch.matchScore`): strokes are rasterized into a 48×48
+  boolean grid, stretched per-axis to normalize away position/scale/aspect,
+  then compared against the target glyph rendered in **5 template fonts**
+  (the stroke-order font plus print/rounded/textbook faces — 教科書体
+  YuKyokasho/Klee — so both printed and handwritten letterforms count as a
+  good match) using the **best (lowest-distance) match across all 5**. The
+  distance metric is symmetric **chamfer distance** (mean distance from each
+  shape's ink to the other's nearest ink — tolerant of wobble) plus a
+  **zone-density term** (6×6 region ink-mass histogram L1 difference) because
+  chamfer alone under-punishes a missing stroke (e.g. に vs ロ can look close
+  on chamfer alone). The raw distance maps to a 0–100 score via a curve tuned
+  so a faithful trace lands mid-90s and a correct-but-wobbly freehand attempt
+  lands 70s–80s.
+- **Stroke-count penalty**: drawing the wrong number of strokes costs 10
+  points per stroke of difference inside `matchScore` (shape matching alone
+  can't distinguish a one-swipe scribble from a properly multi-stroke glyph).
+  Separately, on **Next**, grading (`KanaWriteView.grade()`) is a hard
+  pass/fail: the stroke count must match the textbook count from
+  `KanaChart.json` **exactly** (when known) *and* the shape score must clear
+  `passScore = 80` — chosen because that's exactly where the score curve
+  turns green, so the pass/fail verdict and the visual feedback color always
+  agree. A pass upserts `KanaResult` and feeds the same green/red browser tile
+  coloring as every other quiz mode.
+- Score/stroke feedback is deliberately **wordless** (no localized strings) —
+  just an icon + percentage + `drawn/expected` stroke counter — so it needs no
+  translation.
 
-## Quiz (`kana/assessment.js`)
+## `ScoreBadge` / `SoundToggle` / `OptionGrid`
 
-The distinctive mechanic: **any-form → any-form** multiple choice.
-
-### Direction state (~L101)
-
-Three slots: `modeFrom` (question form), `modeTo` (answer form), `modeOther` (the
-form held in reserve). Defaults: `hiragana → romaji`, reserve `katakana`. The
-form→tuple-index map is `{hiragana:0, katakana:1, romaji:2}` (~L211).
-
-- **swapModeFrom** (~L159): exchange `modeFrom ↔ modeOther` (toggles the question
-  between hiragana/katakana).
-- **swapModeTo** (~L164): exchange `modeTo ↔ modeOther` (toggles the answer form).
-
-Tapping the question label calls swapModeFrom; tapping the answer label calls
-swapModeTo. So the learner can drill hiragana→romaji, katakana→romaji,
-hiragana→katakana, etc.
-
-### Question generation — `getNext()` (~L119)
-
-1. Pick a random non-empty origin tuple: `choice(choice(kana))`, reroll while
-   `origin[0] === ''` (skip placeholders).
-2. Build **3 distractors**: random tuples where `origin[0] !== temp[0]` and
-   `temp[0] !== ''` (distinct, non-empty).
-3. Insert the correct origin at a random slot: `choices.splice(randomInt(4), 0,
-   origin)` → **4 options**.
-4. Reset `isCorrect=null`, `answerPosition=-1`.
-
-`question = origin[idx(modeFrom)]`, `rightAnswer = origin[idx(modeTo)]`,
-`answers = choices.map { $0[idx(modeTo)] }` (~L216).
-
-### Scoring & feedback — `checkAnswer()` (~L169)
-
-- Compare `rightAnswer === userAnswer`.
-- Correct → `correctNumber += 1`; wrong → unchanged. `total += 1` always. Header
-  shows `correctNumber / total`.
-- Persist **every** answer: `kana.assessment.{origin.romaji}` = `true|false` and
-  `kana.assessment.{origin.romaji}.timestamp` = `floor(Date.now()/1000)` (~L185,199).
-- Colors: correct option border **green `#2ECC40`**; the user's wrong pick border
-  **red `#FF4136`**; others white. Options disabled after answering until **Next**
-  (`disabled = answerPosition !== -1`).
-
-### SwiftUI target
-
-`KanaQuizView` + `@Observable KanaQuizModel`:
-
-```swift
-enum KanaForm: Int { case hiragana = 0, katakana = 1, romaji = 2 }
-
-@Observable final class KanaQuizModel {
-    var from: KanaForm = .hiragana
-    var to:   KanaForm = .romaji
-    var other: KanaForm = .katakana
-    private(set) var options: [Kana] = []
-    private(set) var answer: Kana!
-    private(set) var picked: Int? = nil
-    private(set) var correct = 0, total = 0
-
-    func swapFrom()  { swap(&from, &other) }
-    func swapTo()    { swap(&to, &other) }
-    func next() { /* getNext(): pick answer + 3 distractors, insert at random slot */ }
-    func choose(_ i: Int, into ctx: ModelContext) { /* checkAnswer + record */ }
-}
-```
-
-- 2×2 grid of option buttons; tap the question/answer headers to swap forms.
-- On `choose`, compare `options[i][to] == answer[to]`, update score, upsert a
-  `KanaResult`, then lock until Next.
-
-### Persistence model (SwiftData)
-
-Replaces the two `kana.assessment.*` keys:
-
-```swift
-@Model final class KanaResult {
-    @Attribute(.unique) var romaji: String
-    var isCorrect: Bool
-    var timestamp: Date
-    init(romaji: String, isCorrect: Bool, timestamp: Date) { ... }
-}
-```
-
-The browser tile queries `KanaResult` by `romaji` to pick its border color; the quiz
-upserts one on every answer. `correct/total` is per-session (view state), not
-persisted — matches RN (`correctNumber`/`total` reset to 0 when entering the quiz,
-`index.js` ~L107).
-
-## Cleanup / porting notes
-
-- RN speaks kana at rate 0.4 on tile tap; in v1 this routes to the no-op
-  `Pronouncer` (audio deferred).
-- The `choice`, `randomInt`, `shuffle` helpers (`utils/helpers.js`) become
-  `Array.randomElement()`, `Int.random(in:)`, `Array.shuffle()` / `.shuffled()`.
+Shared across every quiz screen (Kana and Lessons alike) — see
+`05-shared-and-audio.md`.

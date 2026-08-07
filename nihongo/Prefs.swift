@@ -14,4 +14,8 @@ enum Pref {
     static let todayLesson         = "todayLesson"
     static let kanaTileScript      = "kanaTileScript"
     static let todaySelection      = "todaySelection"
+    /// Per-device opt-out of analytics collection, independent of DEBUG/Release —
+    /// toggled via a long-press on the version footer in Settings. Lets the
+    /// developer exclude their own TestFlight/Release usage without a rebuild.
+    static let analyticsExcluded   = "analyticsExcluded"
 }

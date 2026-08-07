@@ -1,204 +1,179 @@
-# 01 — Data model & bundling the `minna` submodule
+# 01 — Data model
 
-This is the foundation: every screen reads from this data. Get the models and the
-loader right first.
+Every screen reads from data compiled ahead of build time. This doc covers what
+gets generated, what's hand-written, and the Swift types that consume it.
 
-## Source of truth
+## Source of truth: the `minna` submodule
 
-Submodule at **`nihongo/Resources/minna/`**. Authoritative format spec:
-`nihongo/Resources/minna/SCHEMA.md`. Summary:
+`minna/` at the repo root is a **git submodule** (`.gitmodules` →
+`git@github.com:7kfpun/minna.git`). It is *not* bundled into the app directly —
+it's pure source data, refreshed independently of app releases. Its structure:
 
 ```
-Resources/minna/
-  vocab/{1..50}.json                       Japanese source of truth
-  en|zh|zh-Hant|vi|de|th|my/{1..50}.json   translations, keyed by romaji
+minna/
+  vocab/{1..50}.json     Japanese source of truth (kanji/kana/romaji/dictionary/useKana/audio path)
+  vocab/kana.json        the kana chart: grid layout (row/col), stroke counts, audio paths
+  audio/…                Kyoko (`say -v Kyoko`) source clips, referenced by relative path
+  en|zh|zh-Hant|vi|de|th|my|es|fr|ru|bn|hi|ta|te|fil|id|ko/{1..50}.json
+                         translations, keyed by romaji — 17 languages total
 ```
 
-- **50 lessons**, **2089 entries total**, **7 translation languages**.
-- **`romaji` is the join key.** Each language file is a flat `{ romaji: translation }`
-  map whose key set exactly equals that lesson's `vocab/` romaji set.
+`romaji` is the join key between a lesson's `vocab/{n}.json` and its translation
+files, but it is only **unique within a lesson** — 111 romaji repeat across
+different lessons, so nothing downstream can key off romaji alone (see
+`Vocab.id` below).
 
-### `vocab/{lesson}.json`
+## Why there's a compile step (`scripts/build-minna-data.py`)
 
-```json
-{
-  "data": [
-    { "kanji": "わたし",   "kana": "わたし",       "romaji": "watashi" },
-    { "kanji": "飼います", "kana": "かいます", "dictionary": "飼う", "romaji": "kaimasu" },
-    { "kanji": "～君",     "kana": "～くん",       "romaji": "~kun", "useKana": true }
-  ]
-}
+An earlier attempt bundled `minna/` directly as an Xcode folder reference. That
+didn't survive contact with this project's Xcode setup: the app target uses
+**file-system-synchronized groups** (Xcode 26), which flatten resource
+subfolders — `vocab/1.json` and `en/1.json` would both want to land at bundle
+root as `1.json` and collide. The fix was to compile everything into a small
+number of **flat, uniquely-named** files ahead of time:
+
+Run from the repo root:
+```sh
+python3 scripts/build-minna-data.py
 ```
 
-| Field | Req | Meaning |
-|---|---|---|
-| `kanji` | ✅ | Headword as written (polite ます form for verbs) |
-| `kana` | ✅ | Reading, kana only. May carry a bracketed example: `のります［でんしゃに～］` |
-| `romaji` | ✅ | Join key, unique **within a lesson** (not globally) |
-| `dictionary` | — | Alternate/plain form where the source recorded one (284 entries) |
-| `useKana` | — | `true` → display kana instead of kanji (32 entries) |
+It reads `minna/` and writes into `nihongo/Resources/`:
 
-### language file `en/{lesson}.json`
+- **`MinnaData.json`** (tracked in git, ~700 KB) — one JSON file: `languages`
+  (the 17 codes), `lessons` (50 × `{number, entries}`, each entry has
+  `kanji/kana/romaji/dictionary?/useKana?/audio?`), and `translations`
+  (`lang → lessonNumber(as string) → romaji → text`).
+- **`KanaChart.json`** (tracked) — `minna/vocab/kana.json` copied **verbatim**:
+  grid position (`row`/`col`), romaji, hiragana/katakana stroke counts, and
+  audio paths for every kana cell, grouped by `seion`/`dakuon`/`youon`.
+- **`Resources/audio/<lesson>-<slug>.m4a`** — every vocab word's Kyoko clip,
+  renamed flat (`1-watashi.m4a`, …) so the synchronized group can bundle them
+  as individually-copied resources with no name collisions. **Git-ignored** —
+  regenerate by re-running the script; it isn't checked in because it's ~75 MB.
+- **`Resources/audio/kana-<romaji>.m4a`** — one clip per kana cell, deduped by
+  romaji (じ/ぢ and ず/づ share a pronunciation, so the *first* one wins;
+  see the comment in the script for exactly which).
 
-```json
-{ "watashi": "I", "watashitachi": "we", "anata": "you" }
-```
+Re-run the script whenever `minna/` updates (see the `refresh-data` skill) or
+whenever `nihongo/Resources/MinnaData.json` looks stale relative to the
+submodule. It's also idempotent and safe to run any time — it always
+regenerates all outputs from scratch.
 
-## Swift models (`Codable`)
+## Swift models
 
-These decode the JSON directly. Keep them value types; they are immutable reference
-data, **not** SwiftData models (see persistence note below).
+`nihongo/Models.swift`:
 
 ```swift
-struct VocabEntry: Codable, Identifiable, Hashable {
+struct VocabEntry: Codable, Hashable {          // one row as stored in MinnaData.json
     let kanji: String
     let kana: String
     let romaji: String
     let dictionary: String?
     let useKana: Bool?
-
-    var id: String { romaji }          // unique within its lesson
+    let audio: String?        // bundled clip basename, no extension, e.g. "1-watashi"
 }
 
-private struct VocabFile: Codable { let data: [VocabEntry] }
-
-struct Lesson: Identifiable, Hashable {
-    let number: Int                    // 1...50
-    let entries: [VocabEntry]
-    var id: Int { number }
-}
-```
-
-A vocab item enriched with its translation (what the UI actually renders and what
-search indexes — mirrors RN `vocab-helpers.js`, which pre-joins translation + lesson
-onto every item):
-
-```swift
-struct Vocab: Identifiable, Hashable {
+struct Vocab: Identifiable, Hashable {          // enriched — what the UI actually renders
     let lesson: Int
     let kanji: String
     let kana: String
     let romaji: String
     let dictionary: String?
     let useKana: Bool
-    let translation: String            // resolved from the active language file
-    var id: String { "\(lesson)/\(romaji)" }   // globally unique
+    let translation: String
+    let audio: String?
+    var id: String { "\(lesson)/\(romaji)" }     // must include lesson — romaji isn't globally unique
+    var displaysKanji: Bool { !useKana && kanji != kana }
+}
+
+struct Lesson: Identifiable, Hashable {
+    let number: Int
+    let entries: [Vocab]
+    var id: Int { number }
 }
 ```
 
-## ⚙️ IMPLEMENTATION NOTE (what was actually built)
-
-The plan below described a raw **folder reference**. During the build we discovered
-the Xcode project uses **file-system-synchronized groups** (Xcode 26), which *flatten*
-resource subfolders → `vocab/1.json` and `en/1.json` (all 50 numbers × 8 folders)
-would collide on identical output names. So the shipped design instead:
-
-- The **submodule was relocated to the repo root `minna/`** (out of the synchronized
-  `nihongo/` source folder) and is now pure **source-of-truth**, not bundled directly.
-- `scripts/build-minna-data.py` **compiles it into a single `nihongo/Resources/
-  MinnaData.json`** (708 KB, all 50 lessons + 7 languages) — one file, no collisions,
-  auto-bundled by the synchronized group. Re-run the script when the submodule updates.
-- `VocabStore` loads that one file via `Bundle.main.url(forResource:"MinnaData",
-  withExtension:"json")` — see `nihongo/VocabStore.swift`.
-
-The rest of this section (models, `cleanWord`, persistence split) is accurate as built.
-The raw per-directory loader below is superseded by the single-file loader.
-
-## Loading from the bundle (original plan — superseded, see note above)
-
-### Xcode setup (do this once)
-
-Add `Resources/minna` to the app target as a **folder reference** (blue folder,
-"Create folder references" — *not* a group). This copies the whole tree into the
-`.app` **preserving subdirectories**, so `vocab/`, `en/`, … survive as real
-directories in the bundle. This is what makes the romaji-join layout work at runtime.
-
-> **Bundling caveat (verified):** the submodule root also contains non-data files —
-> `SCHEMA.md`, `.gitignore`, a `.claude/` dir, and a `.git` gitlink file. A folder
-> reference copies everything. It's only ~a few KB of junk against 1.9 MB / 400 JSON
-> of real data, so the pragmatic choice is **ship the whole folder** (harmless). If
-> you want a spotless bundle, add only the data subdirs (`vocab` + the language dirs
-> you ship) as separate references instead — but then adjust `subdirectory:` paths
-> (they'd be `vocab`/`en` at bundle root, not `minna/vocab`). Recommend: ship the
-> whole folder, don't over-engineer.
->
-> **Languages:** all 7 (`en zh zh-Hant vi de th my`) total 1.9 MB — fine to bundle
-> all. Default `en`.
-
-Lookup then uses `subdirectory:`:
+`nihongo/KanaData.swift`:
 
 ```swift
-Bundle.main.url(forResource: "1", withExtension: "json",
-                subdirectory: "minna/vocab")
-Bundle.main.url(forResource: "1", withExtension: "json",
-                subdirectory: "minna/en")
-```
-
-### Loader (mirrors RN `utils/items.js` + `utils/i18n.js` + `vocab-helpers.js`)
-
-```swift
-enum VocabStore {
-    static let lessonNumbers = Array(1...50)
-
-    static func lesson(_ n: Int, language: String = "en") -> [Vocab] {
-        let base: VocabFile = decode("minna/vocab", "\(n)")
-        let tr: [String: String] = decode("minna/\(language)", "\(n)")
-        return base.data.map { e in
-            Vocab(lesson: n, kanji: e.kanji, kana: e.kana, romaji: e.romaji,
-                  dictionary: e.dictionary, useKana: e.useKana ?? false,
-                  translation: tr[e.romaji] ?? "")
-        }
-    }
-
-    /// Flattened 2089-item index for search (RN `vocabs` array in vocab-helpers.js).
-    static func allVocab(language: String = "en") -> [Vocab] {
-        lessonNumbers.flatMap { lesson($0, language: language) }
-    }
-
-    private static func decode<T: Decodable>(_ dir: String, _ name: String) -> T {
-        let url = Bundle.main.url(forResource: name, withExtension: "json",
-                                  subdirectory: dir)!
-        return try! JSONDecoder().decode(T.self, from: Data(contentsOf: url))
-    }
+struct K: Hashable, Identifiable {              // one kana chart cell
+    let hiragana: String, katakana: String, romaji: String
+    let hiraganaStrokes: Int, katakanaStrokes: Int   // 0 = unknown
+    var isEmpty: Bool { romaji.isEmpty }             // grid-alignment placeholder
 }
 ```
 
-Consider caching `allVocab()` once (it is static reference data) rather than
-re-decoding per view.
+`KanaData.seion` / `.dakuon` / `.youon` are `[[K]]` grids built at load time
+from `KanaChart.json` by placing entries at their `row`/`col`, padding gaps
+with empty placeholders, and trimming trailing-empty cells per row (so ん sits
+alone on its row, matching the printed textbook chart). `KanaData.hiraganaPool`
+/ `.katakanaPool` are flat 74-entry arrays (hand-transcribed, not
+data-driven) used as the distractor source for Lessons → Learn's tile game.
 
-### RN translation lookup this replaces
+## `VocabStore` — the bundle loader (`nihongo/VocabStore.swift`)
 
-RN resolves translations via i18n keys `I18n.t("minna.\(lesson).\(romaji)")`
-(`reference-rn/app/utils/i18n.js`, which `require`s every `minna/{lang}/{n}.json`
-into `I18n.translations[lang].minna[lesson][romaji]`). In Swift we skip i18n and read
-the same JSON straight into a `[String: String]` dictionary per lesson.
+Loads `MinnaData.json` once into a `fatalError`-on-missing static (missing
+means someone forgot to run the build script). Per-language `[Lesson]` arrays
+are built **lazily and cached** — only the language actually shown gets
+decoded/resolved, not all 17, keeping launch cheap. The cache is guarded by an
+`NSLock` because Swift Testing runs test cases in parallel and an unlocked
+mutable `static var` would data-race.
 
-## Text cleaning — `cleanWord` (needed by Kana Learn & audio)
+Key entry points:
+- `VocabStore.lessons(_ language:)` / `.allVocab(_:)` / `.lesson(_:_:)`
+- `VocabStore.audioURL(for: Vocab)` — resolves a word's `.m4a` by its stored
+  `audio` basename.
+- `VocabStore.kanaAudioURL(_ romaji:)` — resolves `kana-<romaji>.m4a`.
+- `VocabStore.displayName(_ code:)` — a language code → its localized display
+  name (`Locale.localizedString(forIdentifier:)`), used in Settings' language
+  pickers.
 
-RN `reference-rn/app/utils/helpers.js → cleanWord` (~L39) strips display annotations
-before tiling/speaking. Port it verbatim:
+`cleanWord(_:)` (also in `VocabStore.swift`) strips display annotations before
+tiling/speaking: `（…）`, `［…］`, `「…」`, `[…]`, `～`, `。`. Used by Learn's
+tile target and by every TTS fallback path.
 
-```swift
-func cleanWord(_ text: String) -> String {
-    var s = text
-    for pattern in ["（.*?）", "［.*?］", "「.*?」", "\\[.*\\]"] {   // full/half brackets
-        s = s.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
-    }
-    s = s.replacingOccurrences(of: "～", with: "")
-    s = s.replacingOccurrences(of: "。", with: "")
-    return s
-}
-```
+`searchVocab(_:in:)` is a simple case-insensitive `contains` across
+kanji/kana/romaji/translation — not fuzzy matching. `LessonListView` debounces
+input 600ms before logging a `search_vocab` analytics event, but filtering
+itself is synchronous and instant.
 
-Removes: `（…）`, `［…］`, `「…」`, `[…]`, `～`, `。`. Used to derive the
-reconstruct-target in Learn mode and the spoken string.
+## Persistence split
 
-## Persistence split (SwiftUI)
-
-| Data | RN storage | SwiftUI |
+| Data | Storage | Notes |
 |---|---|---|
-| Field toggles (`isKanaShown`, `isKanjiShown`, `isRomajiShown`, `isTranslationShown`, `isSoundOn`, `isOrdered`) | `react-native-simple-store` keys | `@AppStorage` |
-| Kana quiz result per kana (`kana.assessment.{romaji}` → bool, `.timestamp`) | same | SwiftData model `KanaResult` (see `03-kana.md`) |
-| Bookmarks (`lessons.assessment.{romaji}` → 1\|2\|3) | same | **dropped** |
+| Vocab/Lesson/kana chart | Bundled JSON, decoded to structs | Immutable reference data — never `@Model` |
+| Field-visibility + sound/order toggles (`isKanjiShown`, `isKanaShown`, `isRomajiShown`, `isTranslationShown`, `isSoundOn`, `isOrdered`) | `@AppStorage` | Keys centralized in `Pref` (`nihongo/Prefs.swift`) — never inline string literals |
+| App-UI language / vocab-translation language | `@AppStorage` (`Pref.appLanguage`, `Pref.translationLanguage`) | Two independent settings — see `07-ux-ui.md` |
+| Kana quiz/write mastery (`KanaResult`) | **SwiftData** `@Model` | One row per romaji, upserted on every answer |
+| Today's daily lesson + saved 7-word selection | `@AppStorage` (`Pref.todayLesson`, `Pref.todaySelection` as JSON) | Also mirrored into an App Group for the widget — see `05-shared-and-audio.md` |
 
-`Vocab`/`Lesson` are immutable bundle data → plain structs, **not** `@Model`.
+`Pref` (`nihongo/Prefs.swift`) is the single registry of `@AppStorage` key
+strings — the file comment explains why: a typo in an inline string literal
+would silently create a brand-new, disconnected setting instead of erroring.
+
+### `KanaResult` (`nihongo/KanaResult.swift`)
+
+```swift
+@Model final class KanaResult {
+    @Attribute(.unique) var romaji: String
+    var isCorrect: Bool
+    var timestamp: Date
+    static func record(romaji:isCorrect:context:)   // upsert — used by every kana quiz/write mode
+}
+```
+
+Registered in the app's single `ModelContainer` (`nihongoApp.swift`, schema
+`[KanaResult.self]`). Drives the green/red tile borders in `KanaBrowserView`
+and is the only SwiftData model in the app — there's no bookmarking, no
+lesson-level progress persistence beyond this.
+
+## Data integrity — what the tests actually pin down
+
+`nihongoTests/nihongoTests.swift` (`DataTests`) is the living contract for the
+generated data and will fail loudly if `build-minna-data.py`'s output shape
+changes: exactly 2089 vocab entries across 50 lessons, 2087 of them with a
+bundled audio clip (2 don't — those fall back to live TTS), globally-unique
+`Vocab.id`, every lesson has ≥7 entries (Today needs 7) and ≥4 distinct kana
+readings (the quiz needs 4 options), every kana cell has a bundled clip, and
+every one of the 17 languages resolves non-empty translations for lesson 1.
+Update these numbers together with a data regeneration, not independently.

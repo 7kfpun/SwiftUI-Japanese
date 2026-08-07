@@ -8,6 +8,14 @@ struct SettingsView: View {
     @State private var showPaywall = false
     @State private var showFeedback = false
     @State private var legal: LegalDoc?
+    @State private var analyticsExcluded = Track.isExcluded
+    @State private var versionTapCount = 0
+
+    private static var appVersion: String {
+        let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+        return "\(v) (\(b))"
+    }
 
     /// Airtable feedback form (from the RN app), prefilled with the platform.
     private static let feedbackURL = URL(string: "https://airtable.com/shr7xvYAyInUbJNif?prefill_Platform=iOS")!
@@ -73,6 +81,19 @@ struct SettingsView: View {
                     Button(L.t("Licenses")) { legal = .licenses }
                 } header: {
                     Text(L.t("Legal"))
+                } footer: {
+                    // Tap 7 times to exclude this device from analytics — a hidden
+                    // developer toggle, not a normal end-user setting, so no
+                    // localized label; the small suffix is the only visible cue.
+                    Text(Self.appVersion + (analyticsExcluded ? " • Analytics off" : ""))
+                        .onTapGesture {
+                            versionTapCount += 1
+                            guard versionTapCount >= 7 else { return }
+                            versionTapCount = 0
+                            analyticsExcluded.toggle()
+                            Track.setExcluded(analyticsExcluded)
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        }
                 }
             }
             .navigationTitle(L.t("Settings"))

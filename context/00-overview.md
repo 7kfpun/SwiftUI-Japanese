@@ -1,79 +1,114 @@
-# 00 — Overview & architecture
+# 00 — Overview
 
-## What the app teaches
+**Japanese Daily 每日日本語** is a native SwiftUI + SwiftData iOS app that teaches
+the **Minna no Nihongo** textbook vocabulary (50 lessons, 2089 entries) plus the
+hiragana/katakana kana syllabaries. It replaced an older React Native app of the
+same name; that RN app still exists at `~/Documents/OwnWorkspace/JapaneseBak` if
+anyone ever needs to check original behavior, but nothing from it is vendored into
+this repo anymore. The rebuild is feature-complete and in App Store submission.
 
-The **Minna no Nihongo** textbook: 50 lessons, ~2089 vocabulary entries, plus the
-two kana syllabaries (hiragana + katakana). It is a vocabulary + kana drill app, not
-a grammar app.
+This folder documents the app **as it exists today** — not a porting plan.
 
-## Navigation graph
+## Tab structure
 
-The RN app's root is a **bottom tab bar** of 5 tabs; each tab is its own navigation
-stack. Reference: `reference-rn/app/App.js`. Below, tabs kept for the rebuild are
-marked ✅ and dropped ones ❌.
+`RootView` (`nihongo/RootView.swift`) is a 4-tab `TabView`:
 
 ```
-TabView (bottom)
-├─ ❌ Today    → todayNavigator      : today                     (DROPPED / deferred)
-├─ ✅ Kana     → kanaNavigator       : kana → kana-assessment
-├─ ✅ Lessons  → lessonNavigator     : lessons → vocab-list
-│                                             → select-mode → assessment          (Learn)
-│                                                           → assessment-mc        (Quiz / MC)
-│                                                           → assessment-listening (Listening)
-│                                                           → read-all             (Read All)
-├─ ❌ Bookmark → bookmarkNavigator   : bookmark → bookmark-list   (DROPPED)
-└─ ❌ About    → aboutNavigator      : settings/premium           (DROPPED)
+TabView
+├─ Today     → TodayView            (daily 7-word card browser + widget)
+├─ Kana      → KanaBrowserView      → KanaQuizModeView → {Flashcards|Classic|Swipe|Listening|Write}
+├─ Lessons   → LessonListView       → SelectModeView    → {Vocab List|Flashcards|Learn|Quiz|Listening}
+└─ Settings  → SettingsView         (languages, premium, legal, feedback)
 ```
 
-In scope for the rebuild: **Kana** and **Lessons** only. Explicitly **dropped**:
-the **Today** tab, the **Bookmark** tab and all star-rating/bookmarking, the
-**About** tab, and any **study reminder** / notification feature. The rebuilt app is
-a 2-tab (Kana, Lessons) offline study app.
+Every tab is wrapped in `RootView.banner(_:_:)`, which stacks a `BannerAd` below
+the tab's content in a plain `VStack` — **not** `.safeAreaInset`. That's a
+deliberate fix: screens pushed onto a `NavigationStack` (e.g. `QuizView`) don't
+see an ancestor's safe-area inset, so a `.safeAreaInset`-based banner used to
+render *underneath* controls like the Quiz "Next" button. The `VStack` reserves
+real layout space instead.
 
-## The 5 tabs at a glance
+The whole tab tree is `.id(appLanguage)`-keyed in `RootView`, so switching the
+interface language rebuilds the entire view hierarchy instantly rather than
+requiring a relaunch.
 
-1. **Today** (`02-today.md`) — a daily set of vocab flashcards selected from the
-   **bundled** data (no server), with field-visibility toggles, shuffle/next, and
-   reveal-on-hold. Simplest tab.
+## Data model in one sentence
 
-2. **Kana** (`03-kana.md`) — a 3-page reference (Seion / Dakuon / Youon) of the kana
-   grid, each tile showing hiragana + katakana + romaji; plus a 4-choice quiz with
-   any-form→any-form direction toggles. Tiles remember your last quiz result
-   (green/red).
+Everything the app displays — vocab, translations, audio clip names, the kana
+chart — is compiled ahead of time by `scripts/build-minna-data.py` from the
+`minna` git submodule into two bundled JSON files (`MinnaData.json`,
+`KanaChart.json`) plus a flat folder of `.m4a` clips; see `01-data-model.md`.
 
-3. **Lessons** (`04-lessons.md`) — the core engine. Browse 50 lessons in 4 groups,
-   fuzzy-search all vocab, and drill each lesson in 5 modes: Vocab List, Learn (tile
-   reconstruction), Quiz (MC), Listening, Read All.
+## Premium model
 
-(Bookmark and About tabs are dropped — see scope note above.)
+Defined in `nihongo/Store/Store.swift` (`Gating` enum):
 
-## Cross-cutting pieces (see `05-shared-and-tts.md`)
+- **Lessons 1–5 are free forever.** Lessons 6–50 are premium.
+- **Kana (all of it — browser + every quiz mode) is always free.** There is no
+  Kana gating anywhere in the code.
+- On a locked lesson, the practice modes (Flashcards, Learn, Quiz, Listening)
+  give a **5-card free trial** (`Gating.freeTrialCards`) before a paywall sheet
+  appears. **Vocab List stays free on every lesson** — you can always read a
+  locked lesson's word list, just not drill it past 5 cards without buying in.
+- **Today** can only select lessons 1–5 without premium; picking a locked lesson
+  from its menu opens the paywall and the view snaps back to lesson 1
+  (`TodayView.clampIfLocked()`).
 
-- **Card** — the shared vocab display with per-field visibility, used by Today and
-  Learn.
-- **CardOptionSelector** — the row of toggle buttons (kanji/kana/romaji/translation/
-  sound, plus ordered/random in Learn).
-- **Audio** — word pronunciation (RN used `react-native-tts`). **Deferred for now**
-  but designed in: every "speak" call goes through a `Pronouncer` protocol that is a
-  no-op stub in v1, so audio can be dropped in later (planned: macOS `say -v Kyoko`
-  pre-generated clips, or live `AVSpeechSynthesizer`). See `05-shared-and-audio.md`.
-- **helpers** — `shuffle` (Fisher-Yates), `cleanWord`, `choice`, `randomInt`,
-  `range`, `getRandom`.
+Purchases are **StoreKit 2**, on-device only — no server, no shared secret.
+`PremiumProduct` in `Store.swift` lists a lifetime non-consumable
+(`com.kfpun.nihongo.premium.lifetime`) plus a current subscription lineup
+(`…premium.1m/3M/6M` — note the case-sensitive uppercase M) and a `legacy` array
+of RN-era subscription IDs (`…premium.3m/6m/12m`) that are no longer sold but
+are still honored so pre-existing buyers restore correctly. `Store.isPremium`
+is derived from `Transaction.currentEntitlements` and drives both lesson
+gating and ad visibility everywhere (`BannerAd`, `Interstitial`).
 
-(The `SaveVocab` + `Rating` star control is dropped with bookmarking.)
+## Monetization
 
-## State & persistence model (RN → SwiftUI)
+- **AdMob banners** (`nihongo/Ads/AdBanner.swift`) — one per tab/screen slot
+  (`AdSlot`), hidden entirely for premium users. The SDK is wrapped in
+  `#if canImport(GoogleMobileAds)` so the app builds and runs before the
+  package is even added to the project; without it (or without
+  `Secrets.plist`) DEBUG builds render a placeholder label instead of a real ad.
+- **AdMob interstitial** (`nihongo/Ads/Interstitial.swift`) — shown at most once
+  every 3 minutes, on leaving a Quiz/Listening screen, non-premium only.
+- **Firebase Analytics + Crashlytics** — see `08-analytics.md`.
+- Ships with **no App Tracking Transparency prompt**: AdMob is explicitly
+  configured non-personalized (`publisherPrivacyPersonalizationState = .disabled`
+  in `AppBootstrap.swift`) so there's no IDFA use and nothing to declare in App
+  Privacy — a deliberate trade of ad revenue for a simpler privacy posture.
 
-- **User preferences** (`@AppStorage` in SwiftUI): `isKanjiShown`, `isKanaShown`,
-  `isRomajiShown`, `isTranslationShown`, `isSoundOn`, `isOrdered`. All default `true`
-  (except `isOrdered`), gated on a first-run flag `isNotFirstStart`.
-- **Kana quiz history** (SwiftData in SwiftUI): key `kana.assessment.{romaji}` →
-  `true|false`, plus `kana.assessment.{romaji}.timestamp` → unix seconds. Drives the
-  green/red tile coloring in the Kana browser.
+## Promo website
 
-These live in `react-native-simple-store` (a thin AsyncStorage key/value wrapper) in
-the RN app. In the rebuild: prefs → `@AppStorage`; the kana quiz history → a small
-SwiftData model (see `06-swiftui-rebuild-plan.md`).
+`web/` is a static, statically-generated marketing site (`scripts/build-web.py`,
+one big Python template — never hand-edit the generated HTML). It builds
+English by default; `--all` regenerates all 17 language folders. Hosted on
+**Firebase Hosting** (`kf-nihongo` project, `web` as the `public` dir — see
+`firebase.json` / `.firebaserc`) at `kf-nihongo.web.app`. `web/privacy.html`
+and `web/terms.html` are **not** touched by the generator — they're the live
+App Store Connect privacy/terms URLs and must be edited by hand if ever
+changed. See `build-and-deploy-web` skill.
 
-(The bookmark store `lessons.assessment.{romaji}` → `1|2|3` is **dropped** with the
-bookmarking feature.)
+## Shipped feature state (current)
+
+- **Kana**: segmented Basic/Voiced/Combos browser with green/red mastery tiles,
+  5 quiz modes (Flashcards, Classic 4-option, Swipe 2-option Tinder-style,
+  Listening, Write-with-scoring), all free.
+- **Lessons**: 50 lessons in 4 groups + debounced fuzzy-ish search, 5 modes per
+  lesson (Vocab List, Flashcards, Learn tile-reconstruction, Quiz, Listening).
+- **Today**: daily 7-word card browser feeding a Lock-Screen/Home-Screen widget
+  via an App Group.
+- **Settings**: separate app-UI language vs. vocabulary-translation language
+  (17 languages each), premium management, legal docs, feedback link.
+- **Audio**: ~2087 pre-generated Kyoko (`say -v Kyoko`) clips bundled in the
+  app, with a live `AVSpeechSynthesizer` fallback for the ~2 clip-less words
+  and for bare kana tiles.
+- 21 unit tests (`nihongoTests`) + UI smoke/screenshot tests (`nihongoUITests`)
+  pass. Deployment target iOS 26.5; developed against the iPhone 17 Pro (iOS
+  26.5) simulator.
+
+## Where to go next
+
+See `context/README.md` for the full file index. The short version: data model
+→ `01`, Kana → `03`, Lessons → `04`, shared UI/audio → `05`, visual language →
+`07`, analytics → `08`.

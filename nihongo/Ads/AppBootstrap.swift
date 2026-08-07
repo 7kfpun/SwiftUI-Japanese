@@ -22,15 +22,21 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         #if canImport(FirebaseCore)
         if Bundle.main.url(forResource: "GoogleService-Info", withExtension: "plist") != nil {
             FirebaseApp.configure()   // enables Analytics + Crashlytics
+            // Developer/Xcode runs (DEBUG) never pollute production counts. A
+            // Release/TestFlight build on the developer's own device can opt out
+            // too, via the hidden toggle in Settings (Track.setExcluded).
+            var excludeThisDevice = UserDefaults.standard.bool(forKey: Pref.analyticsExcluded)
             #if DEBUG
-            // Developer/Xcode runs are DEBUG — don't pollute production analytics/crash counts.
-            #if canImport(FirebaseAnalytics)
-            Analytics.setAnalyticsCollectionEnabled(false)
+            excludeThisDevice = true
             #endif
-            #if canImport(FirebaseCrashlytics)
-            Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(false)
-            #endif
-            #endif
+            if excludeThisDevice {
+                #if canImport(FirebaseAnalytics)
+                Analytics.setAnalyticsCollectionEnabled(false)
+                #endif
+                #if canImport(FirebaseCrashlytics)
+                Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(false)
+                #endif
+            }
         }
         #endif
 
@@ -83,6 +89,21 @@ enum Track {
         }
         #endif
     }
+
+    /// Per-device analytics opt-out (Settings' hidden long-press toggle) — persists
+    /// across launches via `Pref.analyticsExcluded` and also applies immediately,
+    /// so switching it off mid-session stops collection right away.
+    static func setExcluded(_ excluded: Bool) {
+        UserDefaults.standard.set(excluded, forKey: Pref.analyticsExcluded)
+        #if canImport(FirebaseAnalytics)
+        if FirebaseApp.app() != nil { Analytics.setAnalyticsCollectionEnabled(!excluded) }
+        #endif
+        #if canImport(FirebaseCrashlytics)
+        if FirebaseApp.app() != nil { Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(!excluded) }
+        #endif
+    }
+
+    static var isExcluded: Bool { UserDefaults.standard.bool(forKey: Pref.analyticsExcluded) }
 
     /// A bundled clip was missing so playback fell back to TTS — Analytics event +
     /// Crashlytics breadcrumb, to surface coverage gaps.

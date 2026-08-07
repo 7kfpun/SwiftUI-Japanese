@@ -1,117 +1,117 @@
-# 05 — Shared components, helpers & audio
+# 05 — Shared components & audio
 
-Cross-tab pieces used by Kana and Lessons.
+Cross-cutting pieces used by both Kana and Lessons (and Today).
 
-## Card (`reference-rn/app/components/card.js`)
-
-The shared vocab display used by Learn (and, in the original, Today). Renders, with
-per-field visibility:
-
-- **kana** slots (always the backbone; in Learn, the assembled answer overlays here)
-- **kanji** — only if `(isAllShown || isKanjiShown)` **and** `kanji !== kana` (~L238)
-- **romaji** — if `(isAllShown || isRomajiShown)` (~L252)
-- **translation** — if `(isAllShown || isTranslationShown)` (~L262)
-- tap the card → speak kana (routes to `Pronouncer`, no-op v1)
-- `SaveVocab` star control at ~L273 → **omit** (bookmarking dropped)
-
-**SwiftUI:** `VocabCard(vocab:, reveal:)` where `reveal` is the set of currently
-shown fields. Kanji hidden when equal to kana. Keep it a pure view driven by the
-toggle state.
-
-## CardOptionSelector (`reference-rn/app/components/card-option-selector.js`)
-
-Row of toggle buttons persisting to `react-native-simple-store`; loaded on mount
-(~L75), toggled + saved immediately (~L111). Keys and defaults (all default `true`
-on first run, guarded by `isNotFirstStart`; `isOrdered` is the exception):
-
-| Key | Controls | Default |
-|---|---|---|
-| `isKanjiShown` | show kanji | true |
-| `isKanaShown` | show kana | true |
-| `isRomajiShown` | show romaji | true |
-| `isTranslationShown` | show translation | true |
-| `isSoundOn` | auto-speak | true |
-| `isOrdered` | Learn: ordered vs random nav | (per screen) |
-
-**SwiftUI:** back each with `@AppStorage`:
-
-```swift
-@AppStorage("isKanjiShown")       var showKanji       = true
-@AppStorage("isKanaShown")        var showKana        = true
-@AppStorage("isRomajiShown")      var showRomaji      = true
-@AppStorage("isTranslationShown") var showTranslation = true
-@AppStorage("isSoundOn")          var soundOn         = true
-@AppStorage("isOrdered")          var ordered         = true
-```
-
-A `CardOptionsBar` view = a row of SF-Symbol toggle buttons bound to these. No
-first-run seeding needed — `@AppStorage` defaults handle it.
-
-## CircleButton (`reference-rn/app/components/circle-button.js`)
-
-Press-and-hold reveal control (Today's reveal-all). Today is dropped; if a
-reveal-all affordance is wanted in Learn, model it as a `.gesture` setting a
-`revealAll` `@State` on press-in / clearing on press-out.
-
-## Helpers (`reference-rn/app/utils/helpers.js`) → Swift equivalents
-
-| RN helper | Line | Swift |
-|---|---|---|
-| `shuffle(a)` Fisher-Yates | ~L26 | `Array.shuffle()` / `.shuffled()` |
-| `cleanWord(text)` | ~L39 | port verbatim (see `01-data-model.md`) |
-| `range(start, stop, step)` | ~L49 | `stride(from:to:by:)` |
-| `choice(arr)` | ~L65 | `Array.randomElement()` |
-| `randomInt(max)` | ~L68 | `Int.random(in: 0..<max)` |
-| `getRandom(arr, n)` (Learn tiles) | `assessment.js` ~L152 | `Array(arr.shuffled().prefix(n))` (throw/guard if `n > count`) |
-
-## Audio — deferred, but designed in
-
-**Status: not implemented in v1.** Every "speak" path goes through one protocol so
-audio can be added later without touching views.
+## Audio — `Pronouncer` (`nihongo/Pronouncer.swift`)
 
 ```swift
 protocol Pronouncer {
     func speak(_ vocab: Vocab)
-    func speak(kana: String)
+    func speak(kana: K)
     func stop()
-}
-
-/// v1: does nothing. Injected via environment so views can call it freely.
-struct SilentPronouncer: Pronouncer {
-    func speak(_ vocab: Vocab) {}
-    func speak(kana: String) {}
-    func stop() {}
 }
 ```
 
-Inject through the environment (`.environment(\.pronouncer, SilentPronouncer())`) so
-Vocab List tap, Kana tile tap, Quiz speaker button, Listening prompt, and Read All
-all call the same seam.
+Every "tap to hear" / auto-play path in the app calls through this seam,
+injected via `.environment(\.pronouncer, ...)` from `nihongoApp.swift`.
+`SilentPronouncer` (no-op) exists for previews/tests. The real implementation
+is `AudioPronouncer`:
 
-### Planned real implementations (later)
+1. **Bundled clip first** — `VocabStore.audioURL(for:)` /
+   `.kanaAudioURL(_:)` resolve the pre-generated Kyoko `.m4a`, played via
+   `AVAudioPlayer`. This is the primary path for ~2087/2089 words and every
+   kana cell — reliable, works in the simulator, no on-device-voice
+   dependency.
+   - Learn tile game and Today card also use `AudioPronouncer.speak(_:)`.
+2. **Live TTS fallback** — for the 2 clip-less words and any bare kana glyph
+   without its own clip path (shouldn't happen — see the Kana data-integrity
+   test), `AVSpeechSynthesizer` speaks `cleanWord(text)` at rate 0.4 with a
+   `ja-JP` voice (falling back to any installed voice whose language starts
+   with `ja`). Every fallback logs `Track.audioMissing(_:)` (an Analytics
+   event *and* a Crashlytics breadcrumb) so clip-coverage gaps surface in
+   production instead of silently degrading.
+3. **`PlaybackSession`** — a one-time, idempotent `AVAudioSession` activation
+   (`.playback`, `.mixWithOthers`) shared by `AudioPronouncer` and
+   `LessonPlayer` (Vocab List's "Play all"). `.mixWithOthers` deliberately
+   keeps the user's background music playing and lets words be heard even
+   with the silent switch on, instead of taking over system audio at launch.
 
-RN behavior to reproduce (`utils/helpers.js → ttsSpeak` ~L83): rate **0.4**, language
-`ja`, speak `cleanWord(kana)` (kana is the safe, unambiguous reading; RN spoke kana
-on Android / kanji on iOS unless `useKana` — the rebuild should just always speak
-**kana** to avoid kanji reading ambiguity).
+Audio clips are generated by `scripts/build-minna-data.py` from the `minna`
+submodule's `audio/` folder (macOS `say -v Kyoko`, pre-recorded upstream, not
+regenerated per build) — see `01-data-model.md`.
 
-1. **`SystemTTS`** — live `AVSpeechSynthesizer`, voice `ja-JP` (Kyoko), rate ≈ 0.4.
-   Zero assets, offline, but synthetic. Simplest drop-in.
-2. **`BundledAudio`** — pre-generated clips shipped in the bundle. **Confirmed
-   feasible on this Mac:** `say -v Kyoko` is installed (`ja_JP`), and `afconvert` is
-   present for AAC. Generate once from the bundled `minna` data:
+## `CardOptionsBar` (`nihongo/Lessons/CardOptionsBar.swift`)
 
-   ```bash
-   # one-time, run on macOS; writes Resources/minna/audio/{lesson}_{safeRomaji}.m4a
-   say -v Kyoko -o out.m4a --data-format=aac "<cleanWord(kana)>"
-   ```
+The field-visibility + sound toggle row shown on Learn and Today. Backed
+directly by `@AppStorage` (`Pref.kanjiShown/.kanaShown/.romajiShown/
+.translationShown/.soundOn`) so toggling instantly re-renders whatever card is
+showing — there's no intermediate view-model layer to keep in sync. Each toggle
+logs `toggle_field` with the field name and new state.
 
-   Key it by `lesson_romaji` (romaji is only unique within a lesson) or dedup by the
-   spoken kana string (identical readings → one file). ~2089 clips, roughly tens of
-   MB at AAC. Note: `say`'s Kyoko is the **same engine** as `AVSpeechSynthesizer`'s
-   Kyoko — the win of pre-generating is consistency + offline + no on-device voice
-   dependency (and the option to use an *enhanced* voice at generation time), not raw
-   quality.
+## Shared quiz/flashcard chrome (`nihongo/Components.swift`)
 
-When audio lands, swap `SilentPronouncer` → `SystemTTS` or `BundledAudio`; that also
-switches on **Listening** and **Read All** (see `04-lessons.md`).
+- **`SoundToggle`** — the single global sound on/off button, used in every
+  quiz/flashcard toolbar. Backed by the same `Pref.soundOn` that
+  `CardOptionsBar`'s sound chip controls.
+- **`ScoreBadge`** — one consistent right/wrong/total pill, used by every quiz
+  in the app (Kana Classic/Listening, Kana Swipe, Kana Write, Lessons Quiz).
+- **`QuizOptionButton`** / **`OptionGrid`** — the 2×2 full-height multiple
+  choice grid shared by Kana Classic/Listening and Lessons Quiz, so both look
+  identical.
+- **`choiceChip(_:)`** (a `View` extension) — the tinted-fill + colored-border
+  chrome shared by flashcard grade buttons and the Kana Swipe quiz's option
+  chips, unifying what used to be two different button styles.
+- **`SwipeStamp`** — the corner arrow/checkmark/xmark stamp that previews a
+  swipe's outcome as you drag, shared by every swipe-to-decide screen
+  (Flashcards, Kana Swipe).
+- **`CardStackPeek`** — the decorative faded-card backdrop behind every
+  swipeable top card, giving the "stack of cards" look to Flashcards, Kana
+  Swipe, and Today. It never moves; only the top card being dragged does.
+
+## `FlashDeck` + `FlashcardScreen` (`nihongo/Flashcards.swift`)
+
+A generic, spaced-repetition-lite deck: `FlashDeck<Element>` shuffles once,
+swipe-right ("know it") retires a card, swipe-left ("don't know") sends it to
+the back of the deck to resurface later; the deck is done when every card has
+been swiped right at least once. `FlashcardScreen<Element, Face>` is the whole
+shared screen — drag gesture, grade buttons, top progress counter, auto-play,
+reveal button, and the congrats/restart screen at the end — parameterized only
+by what's type-specific (the card face view, an id closure for
+auto-play-on-change detection, the speak closure, labels, and an optional
+trial limit + callback). **Both Lessons Flashcards and Kana Flashcards are the
+same `FlashcardScreen` instantiated over different element types** (`Vocab`
+vs. `K`) — this is why they look and behave identically.
+
+## `CardPager` (`nihongo/CardPager.swift`)
+
+The horizontal swipe-to-turn-page gesture shared by Learn (ordered mode) and
+Today: drag with a slight rotation, fling off-screen past an 80pt threshold,
+then the next card re-enters from the opposite side. `canPage()` gates paging
+(used for trial limits) — refusing it triggers `onBlocked()` instead of
+turning the page; a re-entrancy guard ignores a swipe started mid-animation. A
+`fling` binding lets a button (e.g. Learn's Random button) trigger the same
+animated transition programmatically.
+
+## Localization split — two independent languages
+
+There are deliberately **two separate language settings**, both `@AppStorage`
+and both offering the same 17 codes:
+
+- `Pref.appLanguage` — the app's own UI text (tab labels, buttons, screen
+  titles), resolved through `L.t(_:)` (`nihongo/Localization.swift`) against
+  the bundled `UIStrings.json`. Falls back English → key-itself if a
+  translation is missing. `RootView` keys its whole tree on
+  `.id(appLanguage)` so switching it rebuilds the UI instantly.
+- `Pref.translationLanguage` — which language Japanese vocabulary is
+  translated *into* (vocab lists, flashcards, quizzes, search). Resolved
+  per-lesson via `VocabStore.lesson(_:language:)`.
+
+They can differ freely (e.g. UI in English, meanings in French) — this mirrors
+the RN app's separation of interface language from study-content language.
+
+## `LegalView` (`nihongo/Legal/LegalView.swift`)
+
+Renders a bundled `.txt` (Privacy Policy / Terms of Use / the KanjiStrokeOrders
+BSD license notice, via `LegalDoc`) in a plain scrollable sheet. Used from both
+`SettingsView` and `PaywallView` (the paywall must surface the subscription
+terms + these links for App Review).
