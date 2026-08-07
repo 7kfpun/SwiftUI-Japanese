@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
 """Composite the raw iOS Simulator screenshots — iPhone captures in
-fastlane/screenshot_sources/raw/iphone/*.png (1206x2622 on the "iPhone 17 Pro"
-simulator), iPad captures in fastlane/screenshot_sources/raw/ipad/*.png
-(2064x2752 on the "iPad Pro 13-inch (M5)" simulator) — into framed, titled App
-Store marketing screenshots: gradient background + bold rounded headline +
-official Apple device frame, rendered at the exact pixel resolutions App Store
-Connect / fastlane `deliver` require. Pure Pillow, no ImageMagick (frameit's own
-tool needs ImageMagick's `convert`, which isn't installed on this machine and
-needs sudo/brew doctor fixes to install — this script reimplements the same idea
+fastlane/screenshot_raw/iphone/*.png (1206x2622 on the "iPhone 17 Pro"
+simulator), iPad captures in fastlane/screenshot_raw/ipad/*.png (2064x2752 on
+the "iPad Pro 13-inch (M5)" simulator) — into framed, titled App Store marketing
+screenshots: gradient background + bold rounded headline + official Apple device
+frame, rendered at the exact pixel resolutions App Store Connect / fastlane
+`deliver` require. Pure Pillow, no ImageMagick (frameit's own tool needs
+ImageMagick's `convert`, which isn't installed on this machine and needs
+sudo/brew doctor fixes to install — this script reimplements the same idea
 directly with Pillow).
 
-Note the split between the two trees: everything this script reads and writes
-lives under fastlane/screenshot_sources/, and only the final staged copies go in
-fastlane/screenshots/. That's deliberate — `deliver` treats *every* subdirectory
-of its screenshots_path as a locale folder (see Deliver::Loader::LanguageFolder),
-so working directories must not live there.
+Two directories, one job each:
+
+    fastlane/screenshot_raw/<device>/    hand-captured, the only real source
+    fastlane/screenshots/<locale>/       generated, exactly what deliver uploads
+
+There is deliberately no intermediate tree: this writes final upload filenames
+straight into the locale folders. Note that `deliver` reads *every* subdirectory
+of its screenshots_path as a locale (see Deliver::Loader::LanguageFolder), so
+nothing but locale folders may live under fastlane/screenshots/ — which is why
+the raw captures sit in their own top-level directory rather than beneath it.
 
 Usage:
     arch -x86_64 python3 fastlane/generate_framed_screenshots.py [filter]
@@ -28,25 +33,14 @@ load Pillow's compiled extension. Always run this via `arch -x86_64 python3`
 (or reinstall an arm64-native Pillow with `pip install --force-reinstall
 --no-binary :all: pillow` if you'd rather fix that properly).
 
-Outputs go to fastlane/screenshot_sources/framed/<locale>/6.9/*.png,
-.../6.3/*.png, and .../ipad13/*.png — matching the APP_IPHONE_67 "6.9-inch"
+Outputs are fastlane/screenshots/<locale>/<key>-<device>.png, where <device> is
+one of 6.9 / 6.3 / ipad13 — matching the APP_IPHONE_67 "6.9-inch"
 mandatory/largest bucket, the APP_IPHONE_61 "6.1-6.3-inch" bucket, and the
-APP_IPAD_PRO_3GEN_129 "13-inch iPad" bucket. To stage them for `fastlane
-screenshots` (the `deliver` lane in fastlane/Fastfile), copy them into
-fastlane/screenshots/<locale>/ with unique filenames per device (deliver
-detects the target device purely by each PNG's pixel resolution, not by
-filename, but every file in a locale folder needs a unique name) — e.g.:
-
-    for locale in en-US de-DE zh-Hant zh-Hans; do
-      for dev in 6.9 6.3 ipad13; do
-        for f in fastlane/screenshot_sources/framed/$locale/$dev/*.png; do
-          cp "$f" "fastlane/screenshots/$locale/$(basename "$f" .png)-$dev.png"
-        done
-      done
-    done
-
-zh-Hans has no copy of its own in LOCALES below; it reuses zh-Hant's rendered
-images (plain file copy after generating), same as the iPhone buckets already do.
+APP_IPAD_PRO_3GEN_129 "13-inch iPad" bucket. deliver resolves which bucket a
+file belongs to from its pixel size alone; the `-<device>` suffix exists only to
+keep names unique within a locale folder. Once this has run, upload with
+`bundle exec fastlane screenshots` (the deliver lane in fastlane/Fastfile) —
+no copying or staging step in between.
 
 Apple/deliver caps each device-size screenshot set at 10 images per locale,
 so with 14 source screenshots only the first 10 alphabetically (01-10) will
@@ -68,10 +62,10 @@ import urllib.request
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RAW_DIR = os.path.join(ROOT, "fastlane/screenshot_sources/raw/iphone")
-IPAD_RAW_DIR = os.path.join(ROOT, "fastlane/screenshot_sources/raw/ipad")
+RAW_DIR = os.path.join(ROOT, "fastlane/screenshot_raw/iphone")
+IPAD_RAW_DIR = os.path.join(ROOT, "fastlane/screenshot_raw/ipad")
 FRAMES_DIR = os.path.join(ROOT, "fastlane/screenshot_frames")
-OUT_DIR = os.path.join(ROOT, "fastlane/screenshot_sources/framed")
+OUT_DIR = os.path.join(ROOT, "fastlane/screenshots")
 FRAMES_CDN = "https://fastlane.github.io/frameit-frames/latest"
 
 FONT_BOLD = "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf"
@@ -155,6 +149,11 @@ LOCALES = {
         "12-lesson-quiz": ("課程測驗", "檢查你真正學到了什麼"),
     },
 }
+
+# Locales that ship another locale's rendered images verbatim. Simplified Chinese
+# readers get the Traditional copy rather than an empty screenshot set; swap this
+# for a real "zh-Hans" block in LOCALES above once the copy is translated.
+LOCALE_ALIASES = {"zh-Hans": "zh-Hant"}
 
 # CJK titles need a font with CJK glyph coverage — Arial Rounded Bold has none.
 # "Heiti TC" (bundled in STHeiti Medium.ttc, a stable base macOS system font)
@@ -247,7 +246,7 @@ def process(locale, key, dev_key, dev):
     bg = make_gradient(W, H, BLUE, TEAL).convert("RGBA")
     draw = ImageDraw.Draw(bg)
 
-    title, subtitle = LOCALES[locale][key]
+    title, subtitle = LOCALES[LOCALE_ALIASES.get(locale, locale)][key]
     font_path = CJK_FONT_BOLD if locale in CJK_LOCALES else FONT_BOLD
     sub_font_path = CJK_FONT_BOLD if locale in CJK_LOCALES else FONT_SUB
     title_font = ImageFont.truetype(font_path, round(W * 0.088))
@@ -274,9 +273,12 @@ def process(locale, key, dev_key, dev):
     device_left_x = round((W - frame_target_w) / 2)
     bg.alpha_composite(device_scaled, (device_left_x, device_top_y))
 
-    out_dir = os.path.join(OUT_DIR, locale, dev_key)
+    # Written straight to its final upload name. deliver picks the device bucket
+    # from each PNG's pixel size, not its filename, but names must be unique
+    # within a locale — hence the `-<dev_key>` suffix.
+    out_dir = os.path.join(OUT_DIR, locale)
     os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, f"{key}.png")
+    out_path = os.path.join(out_dir, f"{key}-{dev_key}.png")
     bg.convert("RGB").save(out_path, "PNG")
     return out_path
 
@@ -290,12 +292,15 @@ if __name__ == "__main__":
     if arg:
         if ":" in arg:
             locale_filter, key_filter = arg.split(":", 1)
-        elif arg in LOCALES:
+        elif arg in LOCALES or arg in LOCALE_ALIASES:
             locale_filter = arg
         else:
             key_filter = arg
 
-    for locale, copy in LOCALES.items():
+    # Aliased locales render the same copy as the locale they point at.
+    targets = {**LOCALES, **{alias: LOCALES[src] for alias, src in LOCALE_ALIASES.items()}}
+
+    for locale, copy in targets.items():
         if locale_filter and locale != locale_filter:
             continue
         for key in copy:
