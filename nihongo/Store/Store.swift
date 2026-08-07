@@ -6,12 +6,24 @@ import UIKit
 /// tied to the Apple ID forever; StoreKit 2 surfaces it via `currentEntitlements`).
 enum PremiumProduct {
     static let lifetime = "com.kfpun.nihongo.premium.lifetime"
+    /// Current subscription lineup in App Store Connect. Note the uppercase M on 3M/6M:
+    /// product IDs are case-sensitive and immutable, and the lowercase 2019 IDs are
+    /// reserved forever, so the new products had to differ.
     static let subscriptions = [
+        "com.kfpun.nihongo.premium.1m",
+        "com.kfpun.nihongo.premium.3M",
+        "com.kfpun.nihongo.premium.6M",
+    ]
+    /// Legacy RN-era subscriptions — no longer sold, still honored so old buyers restore.
+    static let legacy = [
         "com.kfpun.nihongo.premium.3m",
         "com.kfpun.nihongo.premium.6m",
         "com.kfpun.nihongo.premium.12m",
     ]
-    static let all = subscriptions + [lifetime]
+    /// What the paywall sells.
+    static let purchasable = subscriptions + [lifetime]
+    /// Everything that grants premium (incl. legacy) — used for the entitlement scan.
+    static let all = purchasable + legacy
 }
 
 /// Free/premium gating. Lessons 1…`freeLessonLimit` are fully free. On the rest, the
@@ -55,7 +67,7 @@ final class Store {
     }
 
     func load() async {
-        products = (try? await Product.products(for: PremiumProduct.all))?
+        products = (try? await Product.products(for: PremiumProduct.purchasable))?
             .sorted { $0.price < $1.price } ?? []
     }
 
@@ -104,8 +116,9 @@ final class Store {
         await refreshEntitlement()
     }
 
-    /// Short tier label from a product ID (…premium.3m → "3m", lifetime → "lifetime").
+    /// Short tier label from a product ID (…premium.3M → "3m", lifetime → "lifetime").
     private static func tierLabel(_ id: String) -> String {
-        id == PremiumProduct.lifetime ? "lifetime" : (id.components(separatedBy: ".").last ?? id)
+        id == PremiumProduct.lifetime ? "lifetime"
+            : (id.components(separatedBy: ".").last ?? id).lowercased()
     }
 }

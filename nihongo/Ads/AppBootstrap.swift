@@ -11,9 +11,6 @@ import FirebaseCrashlytics
 #if canImport(GoogleMobileAds)
 import GoogleMobileAds
 #endif
-#if canImport(AppTrackingTransparency)
-import AppTrackingTransparency
-#endif
 
 /// Starts Firebase + AdMob at launch. Every SDK touch is behind `canImport`, so the
 /// app builds and runs before the packages are added; and Firebase only configures
@@ -38,23 +35,14 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         #endif
 
         #if canImport(GoogleMobileAds)
+        // Non-personalized ads only: we deliberately ship without App Tracking
+        // Transparency, so ads must never use the IDFA. No ATT prompt, no tracking
+        // declaration in App Privacy — at the cost of lower ad personalization/eCPM.
+        MobileAds.shared.requestConfiguration.publisherPrivacyPersonalizationState = .disabled
         MobileAds.shared.start(completionHandler: nil)
         #endif
 
-        requestTracking()
         return true
-    }
-
-    /// Ask for App Tracking Transparency once the app is active (AdMob/Firebase use the
-    /// IDFA). Requesting again after a decision is a no-op, so this is safe every launch.
-    private func requestTracking() {
-        #if canImport(AppTrackingTransparency)
-        Task {
-            try? await Task.sleep(nanoseconds: 1_500_000_000)   // let the app become active
-            let status = await ATTrackingManager.requestTrackingAuthorization()
-            Track.event("att", ["status": Int(status.rawValue)])
-        }
-        #endif
     }
 }
 

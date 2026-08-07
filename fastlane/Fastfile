@@ -11,10 +11,22 @@ def asc_api_key
 end
 
 platform :ios do
+  desc "Upload + publish App Privacy details (nutrition labels). Interactive: this
+        rides Apple's private web API, so it asks for your Apple ID password + 2FA."
+  lane :privacy do
+    upload_app_privacy_details_to_app_store(
+      username: "kf@voltra.org",
+      app_identifier: "com.kfpun.nihongo",
+      json_path: "fastlane/app_privacy_details.json",
+    )
+  end
+
   desc "Push App Store text metadata (all localizations) — no binary, no screenshots"
   lane :metadata do
     deliver(
       api_key: asc_api_key,
+      # fastlane's built-in locale list lags App Store Connect (Tamil, Filipino, ...)
+      ignore_language_directory_validation: true,
       skip_binary_upload: true,
       skip_screenshots: true,
       overwrite_screenshots: false,

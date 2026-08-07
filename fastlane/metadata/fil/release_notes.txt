@@ -1,0 +1,9 @@
+Kompletong native rebuild ang bersyon 3.0 — mas mabilis, mas malinis, at ganap na offline.
+
+• Muling dinisenyo ang Kana at Mga Aralin
+• Limang paraan ng pag-aaral bawat aralin: Listahan, Flashcards, Matuto, Pagsusulit, at Pakikinig
+• Natural na audio para sa bawat salita at kana
+• Maraming wika ng interface at pagsasalin
+• Libre ang aralin 1–5; ina-unlock ng Premium ang lahat ng 50 at inaalis ang mga ad
+
+Aktibo kaming nagde-develop — sabihin sa amin sa Mga Setting → Feedback.

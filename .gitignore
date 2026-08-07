@@ -29,3 +29,6 @@ DerivedData/
 # Ruby / Bundler (Fastlane) local install
 vendor/
 .bundle/
+
+# Firebase Hosting deploy cache
+.firebase/

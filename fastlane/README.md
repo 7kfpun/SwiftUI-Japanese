@@ -15,6 +15,14 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 ## iOS
 
+### ios privacy
+
+```sh
+[bundle exec] fastlane ios privacy
+```
+
+Upload App Privacy details (nutrition labels) from fastlane/app_privacy_details.json
+
 ### ios metadata
 
 ```sh

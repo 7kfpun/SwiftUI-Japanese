@@ -2,14 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
   App privacy manifest. The Google/Firebase SDKs ship their own manifests declaring
-  their data collection and tracking domains; this file covers the app itself.
-  NSPrivacyTracking is true because ads use the IDFA (behind the ATT prompt).
+  their data collection; this file covers the app itself. NSPrivacyTracking is false:
+  the app ships without App Tracking Transparency and forces non-personalized ads
+  (publisherPrivacyPersonalizationState = .disabled), so the IDFA is never used.
   Reconcile NSPrivacyCollectedDataTypes with your App Store Connect privacy labels.
 -->
 <plist version="1.0">
 <dict>
 	<key>NSPrivacyTracking</key>
-	<true/>
+	<false/>
 	<key>NSPrivacyTrackingDomains</key>
 	<array/>
 	<key>NSPrivacyCollectedDataTypes</key>

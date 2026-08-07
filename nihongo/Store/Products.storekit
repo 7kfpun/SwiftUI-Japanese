@@ -3,7 +3,7 @@
   "nonRenewingSubscriptions" : [],
   "products" : [
     {
-      "displayPrice" : "38.99",
+      "displayPrice" : "34.99",
       "familyShareable" : false,
       "internalID" : "1001",
       "localizations" : [
@@ -22,17 +22,38 @@
   },
   "subscriptionGroups" : [
     {
-      "id" : "21351",
+      "id" : "20499759",
       "localizations" : [],
       "name" : "premium",
       "subscriptions" : [
         {
           "adHocOffers" : [],
           "codeOffers" : [],
-          "displayPrice" : "5.99",
+          "displayPrice" : "2.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "1002",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Premium, billed monthly.",
+              "displayName" : "1 Month",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.kfpun.nihongo.premium.1m",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Premium 1 month",
+          "subscriptionGroupID" : "20499759",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "6.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "1003",
           "introductoryOffer" : null,
           "localizations" : [
             {
@@ -41,19 +62,19 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "com.kfpun.nihongo.premium.3m",
+          "productID" : "com.kfpun.nihongo.premium.3M",
           "recurringSubscriptionPeriod" : "P3M",
-          "referenceName" : "Premium 3 Months",
-          "subscriptionGroupID" : "21351",
+          "referenceName" : "Premium 3 months",
+          "subscriptionGroupID" : "20499759",
           "type" : "RecurringSubscription"
         },
         {
           "adHocOffers" : [],
           "codeOffers" : [],
-          "displayPrice" : "9.99",
+          "displayPrice" : "11.99",
           "familyShareable" : false,
-          "groupNumber" : 2,
-          "internalID" : "1003",
+          "groupNumber" : 3,
+          "internalID" : "1004",
           "introductoryOffer" : null,
           "localizations" : [
             {
@@ -62,31 +83,10 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "com.kfpun.nihongo.premium.6m",
+          "productID" : "com.kfpun.nihongo.premium.6M",
           "recurringSubscriptionPeriod" : "P6M",
-          "referenceName" : "Premium 6 Months",
-          "subscriptionGroupID" : "21351",
-          "type" : "RecurringSubscription"
-        },
-        {
-          "adHocOffers" : [],
-          "codeOffers" : [],
-          "displayPrice" : "16.99",
-          "familyShareable" : false,
-          "groupNumber" : 3,
-          "internalID" : "1004",
-          "introductoryOffer" : null,
-          "localizations" : [
-            {
-              "description" : "Premium, billed every 12 months.",
-              "displayName" : "12 Months",
-              "locale" : "en_US"
-            }
-          ],
-          "productID" : "com.kfpun.nihongo.premium.12m",
-          "recurringSubscriptionPeriod" : "P1Y",
-          "referenceName" : "Premium 12 Months",
-          "subscriptionGroupID" : "21351",
+          "referenceName" : "Premium 6 months",
+          "subscriptionGroupID" : "20499759",
           "type" : "RecurringSubscription"
         }
       ]
