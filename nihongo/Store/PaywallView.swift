@@ -8,9 +8,8 @@ struct PaywallView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var legal: LegalDoc?
 
-    /// Where this paywall was triggered from (settings, a locked Today lesson, or a
-    /// trial-limit hit in flashcards/learn/quiz) — lets analytics tell which entry
-    /// point actually converts.
+    /// Where this paywall was triggered from (settings, a locked Today lesson, a
+    /// locked mode row) — lets analytics tell which entry point actually converts.
     let source: String
 
     private let subscriptionTerms = "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings."
@@ -22,7 +21,10 @@ struct PaywallView: View {
                     Image(systemName: "crown.fill")
                         .font(.system(size: 44)).foregroundStyle(Theme.accent)
                     Text(L.t("Unlock all lessons")).font(.title.bold())
-                    Text(L.t("Free through lesson 5 — unlock the rest and remove ads."))
+                    // Interpolated from Gating rather than written out, so the offer on
+                    // screen can't drift from the rule the app actually enforces.
+                    Text(L.t("Free through lesson %@ — unlock the rest and remove ads.",
+                             "\(Gating.freeLessonLimit)"))
                         .font(.subheadline).foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
 
@@ -78,8 +80,9 @@ struct PaywallView: View {
     private var features: some View {
         VStack(alignment: .leading, spacing: 12) {
             feature("All 50 lessons unlocked")
+            feature("Every challenge, from lesson 1 to 50")
             feature("No ads, ever")
-            feature("Unlimited flashcards, quizzes & listening")
+            feature("Flashcards, Learn, quizzes & listening")
             feature("Native audio for every word")
             feature("Study offline, anywhere")
         }

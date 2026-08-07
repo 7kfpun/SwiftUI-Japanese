@@ -287,15 +287,15 @@ struct PremiumTests {
     }
 
     @Test func gatingRules() {
-        #expect(Gating.freeLessonLimit == 5)
-        #expect(Gating.freeTrialCards == 5)
+        // Lessons 1…3 free in full, 4…50 premium — one rule, no partial trial.
+        #expect(Gating.freeLessonLimit == 3)
         for n in 1...50 {
-            #expect(Gating.isLocked(lesson: n, isPremium: false) == (n > 5))
+            #expect(Gating.isLocked(lesson: n, isPremium: false) == (n > 3))
             #expect(!Gating.isLocked(lesson: n, isPremium: true))
         }
-        #expect(Gating.trialLimit(lesson: 3, isPremium: false) == nil)                   // free lesson
-        #expect(Gating.trialLimit(lesson: 6, isPremium: false) == Gating.freeTrialCards) // locked → trial
-        #expect(Gating.trialLimit(lesson: 6, isPremium: true) == nil)                    // premium
+        // The boundary specifically: 3 free, 4 locked.
+        #expect(!Gating.isLocked(lesson: 3, isPremium: false))
+        #expect(Gating.isLocked(lesson: 4, isPremium: false))
     }
 }
 
@@ -531,5 +531,326 @@ struct PersistenceTests {
         try ctx.delete(model: KanaResult.self)
         try ctx.save()
         #expect(try ctx.fetch(FetchDescriptor<KanaResult>()).isEmpty)
+    }
+}
+
+// MARK: - Challenge ladder
+
+@MainActor
+struct ChallengeTests {
+    private var lesson1: [Vocab] { VocabStore.lesson(1).entries }
+
+    /// Every lesson gets a ladder covering exactly its words — no word unreachable,
+    /// none counted twice.
+    @Test func laddersCoverEveryLessonExactly() {
+        for lesson in VocabStore.lessons() {
+            let words = lesson.entries
+            let steps = Challenge.steps(wordCount: words.count)
+            #expect(steps.reduce(0, +) == words.count)
+            #expect(Challenge.count(wordCount: words.count) == steps.count)
+
+            // Coverage is the union of what each rung introduces — the pool is now a
+            // sliding window, so no single rung sees the whole lesson.
+            var introduced = Set<String>()
+            for i in 1...steps.count {
+                introduced.formUnion(Challenge.newWords(words, index: i).map(\.id))
+            }
+            #expect(introduced.count == words.count)
+        }
+    }
+
+    /// The review window: a challenge sees its own words plus the previous two steps,
+    /// never the whole lesson. That's what stops review thinning out as a lesson grows.
+    @Test func poolIsASlidingWindow() {
+        let words = VocabStore.lesson(40).entries       // 63 words — the longest ladder
+        let steps = Challenge.steps(wordCount: words.count)
+        #expect(steps.count > Challenge.reviewWindow)   // long enough for the window to bite
+
+        for i in 1...steps.count {
+            let pool = Challenge.pool(words, index: i)
+            let expected = steps[max(0, i - Challenge.reviewWindow)..<i].reduce(0, +)
+            #expect(pool.count == expected)
+            // Every new word is in its own pool, and there's room left for review.
+            let new = Challenge.newWords(words, index: i)
+            #expect(new.allSatisfy { w in pool.contains { $0.id == w.id } })
+            if i > 1 { #expect(pool.count > new.count) }
+        }
+        // The final rung must not see the whole lesson any more.
+        #expect(Challenge.pool(words, index: steps.count).count < words.count)
+    }
+
+    /// The balance guarantees, checked on real data — these are the whole reason the
+    /// steps are computed rather than fixed.
+    @Test func everyRungIsWellSized() {
+        for lesson in VocabStore.lessons() {
+            let words = lesson.entries
+            let steps = Challenge.steps(wordCount: words.count)
+
+            // Rung 1 is a full quiz's worth: nothing to review yet, and a short first
+            // rung would be the strictest in the lesson (fewer questions = fewer
+            // mistakes allowed to reach the pass mark).
+            #expect(steps[0] == Challenge.questionsPerChallenge)
+
+            for (i, size) in steps.enumerated().dropFirst() {
+                // Never a token rung — a lesson must not end on "1 new word".
+                #expect(size >= 3, "lesson \(lesson.number) rung \(i + 1) adds only \(size)")
+                // Always room left for review, or the cumulative pool is pointless:
+                // a rung of 10 new words would fill all 10 questions with itself.
+                #expect(size <= Challenge.questionsPerChallenge - Challenge.minReviewSlots,
+                        "lesson \(lesson.number) rung \(i + 1) leaves no review room")
+            }
+
+            // Every rung can therefore ask the full, uniform question count.
+            for i in 1...steps.count {
+                #expect(Challenge.pool(words, index: i).count >= Challenge.questionsPerChallenge)
+            }
+        }
+    }
+
+    /// Uniform length is what makes the pass bar and the star bands mean the same
+    /// thing on every rung: exactly 2 misses allowed, and 100/90/80 all reachable.
+    @Test func everyChallengeAsksTheSameNumberOfQuestions() {
+        for lesson in VocabStore.lessons() {
+            let words = lesson.entries
+            let total = Challenge.count(wordCount: words.count)
+            for i in 1...total {
+                let model = ChallengeModel(lessonNumber: lesson.number, index: i,
+                                           total: total, words: words)
+                #expect(model.questions.count == Challenge.questionsPerChallenge)
+            }
+        }
+        // 8/10 passes, 7/10 does not — the same bar everywhere.
+        #expect(Challenge.stars(score: 80) == 1)
+        #expect(Challenge.stars(score: 70) == 0)
+    }
+
+    /// The pool grows monotonically and every challenge introduces something new —
+    /// otherwise a rung would be pure review and teach nothing.
+    @Test func eachStepIntroducesGenuinelyNewWords() {
+        for lesson in VocabStore.lessons() {
+            let words = lesson.entries
+            let n = Challenge.count(wordCount: words.count)
+            var seen = Set<String>()
+            for i in 1...n {
+                let new = Challenge.newWords(words, index: i)
+                #expect(!new.isEmpty)
+                // Never re-introduces a word an earlier rung already taught.
+                #expect(new.allSatisfy { !seen.contains($0.id) })
+                seen.formUnion(new.map(\.id))
+                // And a rung can always draw on what it just introduced.
+                let pool = Challenge.pool(words, index: i)
+                #expect(new.allSatisfy { w in pool.contains { $0.id == w.id } })
+            }
+        }
+    }
+
+    /// Difficulty climbs by absolute rung, and — crucially — doesn't stretch out for
+    /// long lessons. Only the first challenge may be single-form.
+    @Test func formsHardenAcrossTheLadder() {
+        for total in [2, 5, 9] {
+            #expect(Challenge.forms(index: 1, of: total).count == 1)      // recognition only
+            #expect(!Challenge.forms(index: 1, of: total).contains { $0.from == .audio })
+            for i in 2...max(2, total) {
+                // Recall arrives immediately after the intro rung, in every lesson.
+                #expect(Challenge.forms(index: i, of: total).count > 1)
+                #expect(Challenge.forms(index: i, of: total).contains { $0.to == .kana })
+            }
+            #expect(Challenge.forms(index: 3, of: total).contains { $0.from == .audio })
+        }
+        // No lesson may spend more than its first rung on a single form.
+        for lesson in VocabStore.lessons() {
+            let total = Challenge.count(wordCount: lesson.entries.count)
+            let singleForm = (1...total).filter { Challenge.forms(index: $0, of: total).count == 1 }
+            #expect(singleForm == [1], "lesson \(lesson.number) has single-form rungs \(singleForm)")
+        }
+    }
+
+    /// A generated challenge must actually *use* the variety it unlocked. Sampling a
+    /// pair per question independently could still yield ten identical forms by
+    /// chance, so the pairs are dealt in rotation — this pins that down.
+    @Test func challengesMixPromptDirections() {
+        for lesson in VocabStore.lessons() {
+            let words = lesson.entries
+            let total = Challenge.count(wordCount: words.count)
+            for i in 2...total {
+                let model = ChallengeModel(lessonNumber: lesson.number, index: i,
+                                           total: total, words: words)
+                let used = Set(model.questions.map { "\($0.from.label)->\($0.to.label)" })
+                #expect(used.count >= 2,
+                        "lesson \(lesson.number) challenge \(i) used only \(used)")
+                // Both directions present: recognition and recall.
+                #expect(model.questions.contains { $0.to == .translation })
+                #expect(model.questions.contains { $0.to != .translation })
+            }
+        }
+    }
+
+    /// Stars follow the documented bands, and nothing below the pass mark scores one.
+    @Test func starBands() {
+        #expect(Challenge.stars(score: 100) == 3)
+        #expect(Challenge.stars(score: 95) == 2)
+        #expect(Challenge.stars(score: 90) == 2)
+        #expect(Challenge.stars(score: 85) == 1)
+        #expect(Challenge.stars(score: Challenge.passScore) == 1)
+        #expect(Challenge.stars(score: Challenge.passScore - 1) == 0)
+        #expect(Challenge.stars(score: 0) == 0)
+    }
+
+    /// Generated questions are always answerable: bounded in number, four distinct
+    /// options, the answer present, and the form pair valid for that word.
+    @Test func generatedQuestionsAreAnswerable() {
+        for lesson in VocabStore.lessons() {
+            let words = lesson.entries
+            let total = Challenge.count(wordCount: words.count)
+            for i in 1...total {
+                let model = ChallengeModel(lessonNumber: lesson.number, index: i,
+                                           total: total, words: words)
+                let pool = Challenge.pool(words, index: i)
+                #expect(model.questions.count == min(Challenge.questionsPerChallenge, pool.count))
+
+                for q in model.questions {
+                    #expect(q.options.contains { $0.id == q.answer.id })
+                    // Usually 4; a pool with homophones / shared glosses may yield 3
+                    // after the prompt-collision guard, never fewer than 2.
+                    #expect((2...4).contains(q.options.count))
+                    if pool.count >= 6 { #expect(q.options.count >= 3) }
+                    // Option labels must be distinct, or two buttons look identical.
+                    let labels = q.options.map { q.to.value($0) }
+                    #expect(Set(labels).count == labels.count)
+                    // And no distractor may match the prompt: a homophone under an
+                    // audio prompt, or a shared gloss under a translation prompt,
+                    // would be a second right answer that gets marked wrong.
+                    let prompt = q.from.value(q.answer)
+                    #expect(q.options.allSatisfy { $0.id == q.answer.id || q.from.value($0) != prompt })
+                    #expect(Challenge.supports(q.answer, from: q.from, to: q.to)
+                            || (q.from == .kana && q.to == .translation))
+                    #expect(pool.contains { $0.id == q.answer.id })
+                }
+            }
+        }
+    }
+
+    /// A challenge always tests what it just taught: every newly introduced word gets
+    /// asked (as long as there's room in the question cap).
+    @Test func newWordsAreAlwaysAsked() {
+        let words = lesson1
+        let total = Challenge.count(wordCount: words.count)
+        for i in 1...total {
+            let model = ChallengeModel(lessonNumber: 1, index: i, total: total, words: words)
+            let new = Challenge.newWords(words, index: i)
+            guard new.count <= Challenge.questionsPerChallenge else { continue }
+            let asked = Set(model.questions.map(\.answer.id))
+            #expect(new.allSatisfy { asked.contains($0.id) })
+        }
+    }
+
+    /// Scoring a full run: all-correct passes with 3 stars, all-wrong fails with none,
+    /// and the model refuses to advance past an unanswered question.
+    @Test func scoringAndFlow() {
+        let words = lesson1
+        let total = Challenge.count(wordCount: words.count)
+
+        let perfect = ChallengeModel(lessonNumber: 1, index: 1, total: total, words: words)
+        while let q = perfect.question {
+            let right = q.options.firstIndex { $0.id == q.answer.id }!
+            perfect.advance()                      // no-op: nothing picked yet
+            #expect(perfect.question?.id == q.id)
+            perfect.choose(right)
+            perfect.choose(right)                  // second pick ignored
+            perfect.advance()
+        }
+        #expect(perfect.isDone)
+        #expect(perfect.scorePercent == 100)
+        #expect(perfect.passed)
+        #expect(perfect.stars == 3)
+        #expect(perfect.missed.isEmpty)
+
+        let failed = ChallengeModel(lessonNumber: 1, index: 1, total: total, words: words)
+        let questionCount = failed.questions.count
+        while let q = failed.question {
+            failed.choose(q.options.firstIndex { $0.id != q.answer.id }!)
+            failed.advance()
+        }
+        #expect(failed.scorePercent == 0)
+        #expect(!failed.passed)
+        #expect(failed.stars == 0)
+        #expect(failed.missed.count == questionCount)
+    }
+}
+
+// MARK: - Challenge persistence
+
+@MainActor
+struct ChallengeResultTests {
+    private func makeContext() throws -> ModelContext {
+        let container = try ModelContainer(
+            for: ChallengeResult.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        return ModelContext(container)
+    }
+
+    /// Repeated attempts upsert one row, keep the *best* score, and never regress.
+    @Test func keepsBestScoreAcrossAttempts() throws {
+        let ctx = try makeContext()
+        ChallengeResult.record(lesson: 1, index: 1, score: 60, context: ctx)
+        ChallengeResult.record(lesson: 1, index: 1, score: 90, context: ctx)
+        ChallengeResult.record(lesson: 1, index: 1, score: 70, context: ctx)
+
+        let rows = try ctx.fetch(FetchDescriptor<ChallengeResult>())
+        #expect(rows.count == 1)
+        let row = rows[0]
+        #expect(row.attempts == 3)
+        #expect(row.bestScore == 90)
+        #expect(row.stars == 2)
+        #expect(row.isPassed)
+    }
+
+    /// A failing run records the attempt but leaves the challenge incomplete.
+    @Test func failingDoesNotComplete() throws {
+        let ctx = try makeContext()
+        let row = ChallengeResult.record(lesson: 2, index: 1,
+                                         score: Challenge.passScore - 1, context: ctx)
+        #expect(row.attempts == 1)
+        #expect(!row.isPassed)
+        #expect(row.stars == 0)
+    }
+
+    /// completedAt marks the *first* pass, so replaying later doesn't move it.
+    @Test func completionTimestampIsStable() throws {
+        let ctx = try makeContext()
+        let first = ChallengeResult.record(lesson: 3, index: 1, score: 80, context: ctx)
+        let stamp = first.completedAt
+        #expect(stamp != nil)
+        let again = ChallengeResult.record(lesson: 3, index: 1, score: 100, context: ctx)
+        #expect(again.completedAt == stamp)
+        #expect(again.bestScore == 100)
+    }
+
+    /// Unlocking is sequential — challenge 1 always open, the rest need the prior pass.
+    @Test func unlockingIsSequential() throws {
+        let ctx = try makeContext()
+        var results = ChallengeResult.byIndex(lesson: 4, context: ctx)
+        #expect(ChallengeResult.isUnlocked(index: 1, results: results))
+        #expect(!ChallengeResult.isUnlocked(index: 2, results: results))
+
+        ChallengeResult.record(lesson: 4, index: 1, score: 50, context: ctx)   // failed
+        results = ChallengeResult.byIndex(lesson: 4, context: ctx)
+        #expect(!ChallengeResult.isUnlocked(index: 2, results: results))
+        #expect(ChallengeResult.passedCount(results: results) == 0)
+
+        ChallengeResult.record(lesson: 4, index: 1, score: 80, context: ctx)   // passed
+        results = ChallengeResult.byIndex(lesson: 4, context: ctx)
+        #expect(ChallengeResult.isUnlocked(index: 2, results: results))
+        #expect(!ChallengeResult.isUnlocked(index: 3, results: results))
+        #expect(ChallengeResult.passedCount(results: results) == 1)
+    }
+
+    /// Results are scoped per lesson — lesson 5's ladder can't be unlocked by lesson 4.
+    @Test func resultsAreScopedPerLesson() throws {
+        let ctx = try makeContext()
+        ChallengeResult.record(lesson: 4, index: 1, score: 100, context: ctx)
+        let other = ChallengeResult.byIndex(lesson: 5, context: ctx)
+        #expect(other.isEmpty)
+        #expect(!ChallengeResult.isUnlocked(index: 2, results: other))
     }
 }

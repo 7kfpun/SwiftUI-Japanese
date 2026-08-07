@@ -53,7 +53,6 @@ struct FlashcardScreen<Element, Face: View>: View {
     @State private var deck: FlashDeck<Element>
     @State private var drag: CGSize = .zero
     @State private var revealed = false
-    @State private var graded = 0
     @State private var animating = false   // guards double-grades mid-animation
     @AppStorage(Pref.soundOn) private var soundOn = true
 
@@ -61,22 +60,15 @@ struct FlashcardScreen<Element, Face: View>: View {
     private let speak: (Element) -> Void
     private let revealLabel: String
     private let summary: (Int) -> String
-    private let trialLimit: Int?
-    private let onReachLimit: () -> Void
     private let trackName: String?
     private let face: (Element, Bool) -> Face
 
     private let threshold: CGFloat = 100
 
-    /// After `trialLimit` grades (nil = unlimited), grading stops and `onReachLimit` fires.
-    private var reachedLimit: Bool { trialLimit.map { graded >= $0 } ?? false }
-
     init(deck: FlashDeck<Element>,
          id: @escaping (Element) -> String,
          revealLabel: String,
          summary: @escaping (Int) -> String,
-         trialLimit: Int? = nil,
-         onReachLimit: @escaping () -> Void = {},
          trackName: String? = nil,
          speak: @escaping (Element) -> Void,
          @ViewBuilder face: @escaping (Element, Bool) -> Face) {
@@ -84,8 +76,6 @@ struct FlashcardScreen<Element, Face: View>: View {
         self.idOf = id
         self.revealLabel = revealLabel
         self.summary = summary
-        self.trialLimit = trialLimit
-        self.onReachLimit = onReachLimit
         self.trackName = trackName
         self.speak = speak
         self.face = face
@@ -95,7 +85,7 @@ struct FlashcardScreen<Element, Face: View>: View {
         VStack(spacing: 16) {
             if let card = deck.current {
                 cardView(card)
-                if reachedLimit { unlockBar } else { graders }
+                graders
             } else {
                 congrats
             }
@@ -179,7 +169,6 @@ struct FlashcardScreen<Element, Face: View>: View {
             DragGesture()
                 .onChanged { if !animating { drag = $0.translation } }
                 .onEnded { value in
-                    if reachedLimit { withAnimation(.spring) { drag = .zero }; return }
                     if value.translation.width > threshold { grade(right: true) }
                     else if value.translation.width < -threshold { grade(right: false) }
                     else { withAnimation(.spring) { drag = .zero } }
@@ -217,15 +206,6 @@ struct FlashcardScreen<Element, Face: View>: View {
         .font(.headline)
     }
 
-    private var unlockBar: some View {
-        Button { onReachLimit() } label: {
-            Label(L.t("Unlock to continue"), systemImage: "lock.open.fill")
-                .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-    }
-
     private var congrats: some View {
         VStack(spacing: 20) {
             Image(systemName: "party.popper.fill")
@@ -248,9 +228,8 @@ struct FlashcardScreen<Element, Face: View>: View {
     }
 
     private func grade(right: Bool) {
-        guard !reachedLimit, !animating else { return }
+        guard !animating else { return }
         animating = true
-        graded += 1
         if let n = trackName { Track.event("\(n)_grade", ["known": right]) }
         withAnimation(.easeOut(duration: 0.25)) { drag.width = right ? 700 : -700 }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
@@ -259,7 +238,7 @@ struct FlashcardScreen<Element, Face: View>: View {
             drag = .zero
             animating = false
             if deck.isDone, let n = trackName { Track.event("\(n)_done") }
-            if reachedLimit { onReachLimit() } else { autoPlay() }
+            autoPlay()
         }
     }
 

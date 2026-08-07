@@ -1,11 +1,10 @@
 import SwiftUI
 
 /// Lessons flashcards — the shared `FlashcardScreen` over a lesson's vocab.
+/// Entry is gated in `SelectModeView`, so reaching this means the lesson is unlocked.
 struct FlashcardView: View {
     let lesson: Lesson
     @Environment(\.pronouncer) private var pronouncer
-    @Environment(Store.self) private var store
-    @State private var showPaywall = false
 
     var body: some View {
         FlashcardScreen(
@@ -13,16 +12,10 @@ struct FlashcardView: View {
             id: { $0.id },
             revealLabel: L.t("Show meaning"),
             summary: { L.t("You reviewed %@ words", "\($0)") },
-            trialLimit: Gating.trialLimit(lesson: lesson.number, isPremium: store.isPremium),
-            onReachLimit: {
-                showPaywall = true
-                Track.event("trial_limit", ["mode": "flashcards", "lesson": lesson.number])
-            },
             trackName: "flashcard",
             speak: { pronouncer.speak($0) },
             face: { vocab, revealed in VocabFace(vocab: vocab, revealed: revealed) }
         )
-        .sheet(isPresented: $showPaywall) { PaywallView(source: "flashcard_trial_limit") }
         .onAppear { Track.screen("flashcards", ["lesson": lesson.number]) }
     }
 }

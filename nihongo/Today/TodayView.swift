@@ -55,7 +55,7 @@ struct TodayView: View {
         }
     }
 
-    /// Text label (no icon). Free users can pick 1–5; locked lessons open the paywall.
+    /// Text label (no icon). Free users can pick the free lessons; locked ones open the paywall.
     private var lessonMenu: some View {
         Menu {
             ForEach(1...50, id: \.self) { n in

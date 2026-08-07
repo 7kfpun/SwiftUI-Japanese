@@ -1,10 +1,15 @@
 import SwiftUI
+import SwiftData
 
 struct LessonListView: View {
     @AppStorage(Pref.translationLanguage) private var language = VocabStore.defaultLanguage
     @State private var query = ""
     @State private var group = 0
     @State private var searchDebounce: Task<Void, Never>?
+    @Environment(\.modelContext) private var context
+    /// challenges passed, keyed by lesson — one fetch for the whole list rather than
+    /// a query per visible row.
+    @State private var passed: [Int: Int] = [:]
 
     private static let groups: [(String, ClosedRange<Int>)] = [
         ("Beginning 1", 1...13),
@@ -33,7 +38,10 @@ struct LessonListView: View {
                     if query.isEmpty {
                         ForEach(Self.groups[group].1, id: \.self) { n in
                             NavigationLink(value: VocabStore.lesson(n, language)) {
-                                Text(L.t("Lesson %@", "\(n)"))
+                                LessonRow(number: n,
+                                          done: passed[n] ?? 0,
+                                          total: Challenge.count(
+                                            wordCount: VocabStore.lesson(n, language).entries.count))
                             }
                         }
                     } else {
@@ -47,7 +55,7 @@ struct LessonListView: View {
             }
             .background(Color(.systemGroupedBackground))   // match the grouped List behind the picker
             .navigationTitle(L.t("Lessons"))
-            .onAppear { Track.screen("lessons") }
+            .onAppear { Track.screen("lessons"); reloadProgress() }
             .onChange(of: group) { Track.event("lesson_group", ["group": group]) }
             .navigationDestination(for: Lesson.self) { SelectModeView(lesson: $0) }
             .searchable(text: $query, prompt: L.t("Search vocabulary"))
@@ -63,6 +71,69 @@ struct LessonListView: View {
                 }
             }
         }
+    }
+
+    /// One fetch of every passed challenge, tallied per lesson. Refreshed on appear so
+    /// finishing a challenge and navigating back updates the ring behind you.
+    private func reloadProgress() {
+        let descriptor = FetchDescriptor<ChallengeResult>()
+        let rows = (try? context.fetch(descriptor)) ?? []
+        passed = rows.filter(\.isPassed).reduce(into: [:]) { tally, row in
+            tally[row.lesson, default: 0] += 1
+        }
+    }
+}
+
+/// A lesson row with its challenge progress — the bar is the reason to come back, so
+/// it sits on the screen you see most rather than one level in. Laid out to match the
+/// promo site's lesson list: numbered badge, title, then the bar trailing.
+private struct LessonRow: View {
+    let number: Int, done: Int, total: Int
+
+    private var fraction: Double { total > 0 ? Double(done) / Double(total) : 0 }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text("\(number)")
+                .font(.subheadline.weight(.semibold).monospacedDigit())
+                .foregroundStyle(Theme.accent)
+                .frame(width: 32, height: 32)
+                .background(Theme.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 9))
+
+            Text(L.t("Lesson %@", "\(number)"))
+
+            Spacer(minLength: 12)
+
+            // Untouched lessons show no bar at all — an empty track on all 50 rows
+            // would read as "nothing works" rather than "nothing started".
+            if done > 0 {
+                ProgressBar(fraction: fraction)
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(done > 0
+                            ? L.t("Lesson %@", "\(number)") + ", \(done) / \(total)"
+                            : L.t("Lesson %@", "\(number)"))
+    }
+}
+
+/// A slim capsule progress bar. Fixed width so the bars line up down the list instead
+/// of jittering with each row's title length.
+private struct ProgressBar: View {
+    let fraction: Double
+
+    var body: some View {
+        Capsule()
+            .fill(Color.secondary.opacity(0.18))
+            .frame(width: 92, height: 6)
+            .overlay(alignment: .leading) {
+                GeometryReader { geo in
+                    Capsule()
+                        .fill(Theme.accent)
+                        .frame(width: geo.size.width * max(0, min(fraction, 1)))
+                }
+            }
+            .accessibilityHidden(true)   // the row's combined label already says n / m
     }
 }
 
@@ -97,9 +168,19 @@ struct VocabRow: View {
                     .font(.caption).foregroundStyle(Theme.accent)
             }
             .contentShape(Rectangle())
-            .foregroundStyle(.primary)   // keep text neutral; the row still greys on tap
         }
+        // Plain style so the words read as text, not as a link. The default button
+        // style tints its whole label with the accent color, and that tint beats a
+        // `.foregroundStyle(.primary)` applied inside the label — only the style
+        // change actually keeps the vocabulary black. The speaker icon opts back in
+        // to the accent explicitly above.
+        .buttonStyle(.plain)
     }
 }
 
-#Preview { LessonListView().tint(Theme.accent) }
+#Preview {
+    // Needs the container: the rows read challenge progress for their rings.
+    LessonListView()
+        .tint(Theme.accent)
+        .modelContainer(for: ChallengeResult.self, inMemory: true)
+}

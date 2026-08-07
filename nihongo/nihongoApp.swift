@@ -15,7 +15,7 @@ struct nihongoApp: App {
     private let pronouncer = AudioPronouncer()
 
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([KanaResult.self])
+        let schema = Schema([KanaResult.self, ChallengeResult.self])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         do {

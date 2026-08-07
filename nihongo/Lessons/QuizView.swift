@@ -86,7 +86,6 @@ final class QuizModel {
 
 struct QuizView: View {
     @State private var model: QuizModel
-    @State private var showPaywall = false
     @Environment(\.pronouncer) private var pronouncer
     @Environment(Store.self) private var store
     @AppStorage(Pref.soundOn) private var soundOn = true
@@ -107,12 +106,6 @@ struct QuizView: View {
         _model = State(initialValue: QuizModel(vocab: pool, from: from))
     }
 
-    /// Locked lessons give `freeTrialCards` questions before the paywall.
-    private var reachedLimit: Bool {
-        Gating.trialLimit(lesson: lessonNumber, isPremium: store.isPremium)
-            .map { model.total >= $0 } ?? false
-    }
-
     var body: some View {
         VStack(spacing: 16) {
             HStack(spacing: 8) {
@@ -128,25 +121,16 @@ struct QuizView: View {
             OptionGrid(count: model.options.count) { i in
                 QuizOptionButton(text: model.to.value(model.options[i]),
                                  border: optionBorder(i),
-                                 disabled: model.picked != nil || reachedLimit) {
+                                 disabled: model.picked != nil) {
                     model.choose(i)
                     Track.event("\(screenName)_answer", ["correct": model.isCorrectOption(i)])
                 }
             }
 
-            if reachedLimit {
-                Button { showPaywall = true } label: {
-                    Label(L.t("Unlock to continue"), systemImage: "lock.open.fill")
-                        .frame(maxWidth: .infinity)
-                }
+            Button { model.next(); autoPlay() } label: { Text(L.t("Next")).frame(maxWidth: .infinity) }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-            } else {
-                Button { model.next(); autoPlay() } label: { Text(L.t("Next")).frame(maxWidth: .infinity) }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .disabled(model.picked == nil)
-            }
+                .disabled(model.picked == nil)
         }
         .padding()
         .background(Theme.canvas)
@@ -161,13 +145,6 @@ struct QuizView: View {
             if !store.isPremium { Ads.preloadInterstitial() }
         }
         .onChange(of: model.from) { autoPlay() }
-        .onChange(of: model.total) {
-            if reachedLimit {
-                showPaywall = true
-                Track.event("trial_limit", ["mode": screenName, "lesson": lessonNumber])
-            }
-        }
-        .sheet(isPresented: $showPaywall) { PaywallView(source: "quiz_trial_limit") }
         // A popup ad on the way out of the quiz — non-premium only, throttled.
         .onDisappear { if !store.isPremium && model.total > 0 { Ads.showInterstitialIfReady() } }
     }

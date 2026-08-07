@@ -54,8 +54,6 @@ final class LearnModel {
 struct LearnView: View {
     @State private var model: LearnModel
     @State private var fling: Int? = nil   // programmatic CardPager trigger (Random button)
-    @State private var viewed = 1          // cards seen so far (first card is showing)
-    @State private var showPaywall = false
     // Read the visibility flags directly so the current card updates the instant a toggle flips.
     @AppStorage(Pref.kanjiShown)       private var showKanji = true
     @AppStorage(Pref.kanaShown)        private var showKana = true
@@ -64,7 +62,6 @@ struct LearnView: View {
     @AppStorage(Pref.ordered) private var ordered = true
     @AppStorage(Pref.soundOn) private var soundOn = true
     @Environment(\.pronouncer) private var pronouncer
-    @Environment(Store.self) private var store
     @State private var tileGridWidth: CGFloat = 0
 
     private let lessonNumber: Int
@@ -74,12 +71,6 @@ struct LearnView: View {
     init(lesson: Lesson) {
         lessonNumber = lesson.number
         _model = State(initialValue: LearnModel(vocab: lesson.entries))
-    }
-
-    /// Locked lessons let you page through `freeTrialCards` cards before the paywall.
-    private var reachedLimit: Bool {
-        Gating.trialLimit(lesson: lessonNumber, isPremium: store.isPremium)
-            .map { viewed >= $0 } ?? false
     }
 
     var body: some View {
@@ -117,7 +108,6 @@ struct LearnView: View {
             if model.state == .correct { Track.event("learn_answer", ["correct": true]) }
             else if model.state == .wrong { Track.event("learn_answer", ["correct": false]) }
         }
-        .sheet(isPresented: $showPaywall) { PaywallView(source: "learn_trial_limit") }
     }
 
     private func autoPlay() {
@@ -127,26 +117,33 @@ struct LearnView: View {
     /// Swipe/fling handler: next/prev (ordered) or shuffle (random).
     private func turnPage(_ dir: Int) {
         if ordered { dir > 0 ? model.next() : model.prev() } else { model.random() }
-        viewed += 1
         autoPlay()   // explicit: every completed page-turn speaks the new word
     }
 
     private var card: some View {
         VStack(spacing: 10) {
-            // assembled reading (the task)
-            HStack(spacing: 4) {
+            // assembled reading (the task) — the focus of the card, so it gets the
+            // space. Scales down instead of wrapping: entries run up to 15 characters
+            // and a fixed size that fits those would be tiny for the common short ones.
+            HStack(spacing: 6) {
                 Text(model.answer.joined())
-                    .font(Theme.jp(32))
+                    .font(Theme.jp(52))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.35)
                 Image(systemName: stateIcon).foregroundStyle(stateColor)
                     .opacity(model.state == .inProgress ? 0 : 1)
             }
-            .frame(height: 46)
+            .frame(height: 70)
 
             if showKana {
-                Text(model.target).font(Theme.jp(20))   // the reading (hint / reveal)
+                Text(model.target)                      // the reading (hint / reveal)
+                    .font(Theme.jp(30))
+                    .lineLimit(1).minimumScaleFactor(0.4)
             }
             if showKanji && model.current.displaysKanji {
-                Text(model.current.kanji).font(Theme.jp(20))
+                Text(model.current.kanji)
+                    .font(Theme.jp(30))
+                    .lineLimit(1).minimumScaleFactor(0.4)
             }
             if showRomaji {
                 Text(model.current.romaji).foregroundStyle(.secondary)
@@ -171,13 +168,7 @@ struct LearnView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture { pronouncer.speak(model.current) }
-        .cardPager(fling: $fling,
-                   canPage: { !reachedLimit },
-                   onBlocked: {
-                       showPaywall = true
-                       Track.event("trial_limit", ["mode": "learn", "lesson": lessonNumber])
-                   },
-                   page: turnPage)
+        .cardPager(fling: $fling, page: turnPage)
     }
 
     /// Explicit square size, computed from the measured grid width — matches the
@@ -208,26 +199,17 @@ struct LearnView: View {
         .disabled(model.state != .inProgress)
     }
 
-    @ViewBuilder private var controls: some View {
-        if reachedLimit {
-            Button { showPaywall = true } label: {
-                Label(L.t("Unlock to continue"), systemImage: "lock.open.fill")
-                    .frame(maxWidth: .infinity)
+    private var controls: some View {
+        HStack {
+            if model.state == .wrong {
+                Button(L.t("Clear")) { model.clearAnswer() }.buttonStyle(.bordered)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-        } else {
-            HStack {
-                if model.state == .wrong {
-                    Button(L.t("Clear")) { model.clearAnswer() }.buttonStyle(.bordered)
+            Spacer()
+            if !ordered {
+                Button { fling = 1 } label: {
+                    Label(L.t("Random"), systemImage: "shuffle")
                 }
-                Spacer()
-                if !ordered {
-                    Button { fling = 1 } label: {
-                        Label(L.t("Random"), systemImage: "shuffle")
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
+                .buttonStyle(.borderedProminent)
             }
         }
     }

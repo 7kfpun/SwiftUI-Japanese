@@ -4,12 +4,12 @@ import SwiftUI
 /// fling off-screen, then the next card re-enters from the opposite side.
 ///
 /// `page` receives +1 (forward / swipe left) or -1 (back / swipe right). `canPage`
-/// gates paging (e.g. trial limits) — when it refuses, `onBlocked` fires instead.
-/// Set `fling` to page programmatically with the same animation (e.g. a shuffle
-/// button). Re-entrancy is guarded: a swipe mid-animation is ignored.
+/// gates paging (e.g. a single-card deck has nowhere to go) — when it refuses, the
+/// card springs back instead. Set `fling` to page programmatically with the same
+/// animation (e.g. a shuffle button). Re-entrancy is guarded: a swipe mid-animation
+/// is ignored.
 struct CardPager: ViewModifier {
     var canPage: () -> Bool = { true }
-    var onBlocked: () -> Void = {}
     let page: (Int) -> Void
     @Binding var fling: Int?
 
@@ -38,11 +38,7 @@ struct CardPager: ViewModifier {
 
     private func commit(_ dir: Int) {
         guard !animating else { return }
-        guard canPage() else {
-            withAnimation(.spring) { drag = 0 }
-            onBlocked()
-            return
-        }
+        guard canPage() else { withAnimation(.spring) { drag = 0 }; return }
         animating = true
         let out: CGFloat = dir > 0 ? -500 : 500      // forward flings left, like a page turn
         withAnimation(.easeOut(duration: 0.18)) { drag = out }
@@ -59,8 +55,7 @@ extension View {
     /// Attach card-paging swipe behavior. See `CardPager`.
     func cardPager(fling: Binding<Int?> = .constant(nil),
                    canPage: @escaping () -> Bool = { true },
-                   onBlocked: @escaping () -> Void = {},
                    page: @escaping (Int) -> Void) -> some View {
-        modifier(CardPager(canPage: canPage, onBlocked: onBlocked, page: page, fling: fling))
+        modifier(CardPager(canPage: canPage, page: page, fling: fling))
     }
 }
