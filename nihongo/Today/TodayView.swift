@@ -19,7 +19,6 @@ enum DailyPicker {
 /// top-right menu; locked lessons open the paywall.
 struct TodayView: View {
     @AppStorage(Pref.translationLanguage) private var language = VocabStore.defaultLanguage
-    @AppStorage(Pref.todayLesson) private var lessonNumber = 1
     @AppStorage(Pref.todaySelection) private var selectionJSON = ""   // {lesson, romaji:[...]}
     @AppStorage(Pref.kanjiShown)       private var showKanji = true
     @AppStorage(Pref.kanaShown)        private var showKana = true
@@ -32,7 +31,8 @@ struct TodayView: View {
 
     @State private var picks: [Vocab] = []
     @State private var index = 0
-    @State private var showPaywall = false
+    /// Where the learner is, derived from progress rather than picked — see `studyLesson`.
+    @State private var lessonNumber = 1
     /// The rung these cards prepare for — nil once the lesson's ladder is cleared.
     @State private var upNext: Int?
     /// Furthest card reached in this deck, so `today_swipe` reports depth rather than
@@ -47,53 +47,37 @@ struct TodayView: View {
         NavigationStack {
             VStack(spacing: 16) {
                 CardOptionsBar()
-                // Why these words: they're the next test's material. Goal-framed on
-                // purpose — studying Today IS preparing for that rung.
-                if let upNext {
-                    Label(L.t("Get ready for Challenge %@", "\(upNext)"), systemImage: "flag.checkered")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Theme.accent)
-                        .padding(.horizontal, 12).padding(.vertical, 5)
-                        .background(Theme.accent.opacity(0.12), in: Capsule())
-                }
+                // Where you are and what's next. This carries the lesson number that
+                // used to live in the toolbar picker — the picker itself is gone,
+                // because Today no longer studies a lesson you choose, it studies the
+                // one you're actually on.
+                whereYouAre
                 if let word = current { cardStack(word) } else { ProgressView().frame(maxHeight: .infinity) }
             }
             .padding()
             .background(Theme.canvas)
             .navigationTitle(L.t("Today"))
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { lessonMenu } }
-            .sheet(isPresented: $showPaywall) { PaywallView(source: "today_lock") }
-            .onAppear { clampIfLocked(); loadPicks(); autoPlay(); Track.screen("today", ["lesson": lessonNumber]) }
-            .onChange(of: lessonNumber) {
-                loadPicks(reshuffle: true); autoPlay()
-                Track.event("today_lesson", ["lesson": lessonNumber])
-            }
+            .onAppear { loadPicks(); autoPlay(); Track.screen("today", ["lesson": lessonNumber]) }
             .onChange(of: language) { loadPicks() }
-            .onChange(of: store.isPremium) { clampIfLocked() }
+            // Premium changes the ceiling on how far progress may run.
+            .onChange(of: store.isPremium) { loadPicks() }
         }
     }
 
-    /// Text label (no icon). Free users can pick the free lessons; locked ones open the paywall.
-    private var lessonMenu: some View {
-        Menu {
-            ForEach(1...50, id: \.self) { n in
-                Button {
-                    if Gating.isLocked(lesson: n, isPremium: store.isPremium) { showPaywall = true }
-                    else { lessonNumber = n }
-                } label: {
-                    if n == lessonNumber {
-                        Label(L.t("Lesson %@", "\(n)"), systemImage: "checkmark")
-                    } else if Gating.isLocked(lesson: n, isPremium: store.isPremium) {
-                        Label(L.t("Lesson %@", "\(n)"), systemImage: "lock.fill")
-                    } else {
-                        Text(L.t("Lesson %@", "\(n)"))
-                    }
-                }
+    private var whereYouAre: some View {
+        HStack(spacing: 6) {
+            Image(systemName: upNext == nil ? "checkmark.seal.fill" : "flag.checkered")
+            Text(L.t("Lesson %@", "\(lessonNumber)"))
+            if let upNext {
+                Text("·")
+                Text(L.t("Challenge %@", "\(upNext)"))
             }
-        } label: {
-            Text(L.t("Lesson %@", "\(lessonNumber)")).fontWeight(.semibold)
         }
+        .font(.footnote.weight(.semibold))
+        .foregroundStyle(Theme.accent)
+        .padding(.horizontal, 12).padding(.vertical, 5)
+        .background(Theme.accent.opacity(0.12), in: Capsule())
     }
 
     /// A peek stack behind the card — the same deck look as Flashcards/Kana swipe,
@@ -107,34 +91,29 @@ struct TodayView: View {
     }
 
     private func card(_ word: Vocab) -> some View {
-        VStack(spacing: 12) {
-            if showKanji && word.displaysKanji {
-                Text(word.kanji).font(Theme.jp(22)).foregroundStyle(.secondary)
+        // No stamps: here a swipe only turns the page, it doesn't decide anything.
+        // Movement comes from `cardPager` below rather than a drag binding, so this
+        // passes no `drag` — the modifier applies the offset itself.
+        SwipeCard(showsHint: picks.count > 1) {
+            VStack(spacing: 12) {
+                if showKanji && word.displaysKanji {
+                    Text(word.kanji).font(Theme.jp(22)).foregroundStyle(.secondary)
+                }
+                if showKana {
+                    Text(word.kana).font(Theme.jp(46))
+                        .minimumScaleFactor(0.4).multilineTextAlignment(.center)
+                }
+                if showRomaji {
+                    Text(word.romaji).font(.title3).foregroundStyle(.secondary)
+                }
+                if showTranslation {
+                    Text(word.translation).font(.title3).foregroundStyle(Theme.accent)
+                        .multilineTextAlignment(.center)
+                }
             }
-            if showKana {
-                Text(word.kana).font(Theme.jp(46))
-                    .minimumScaleFactor(0.4).multilineTextAlignment(.center)
-            }
-            if showRomaji {
-                Text(word.romaji).font(.title3).foregroundStyle(.secondary)
-            }
-            if showTranslation {
-                Text(word.translation).font(.title3).foregroundStyle(Theme.accent)
-                    .multilineTextAlignment(.center)
-            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(24)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(24)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(alignment: .bottom) {
-            HStack(spacing: 10) {
-                Image(systemName: "chevron.compact.left")
-                Text(L.t("Swipe"))
-                Image(systemName: "chevron.compact.right")
-            }
-            .font(.caption).foregroundStyle(.tertiary).padding(.bottom, 8)
-        }
-        .contentShape(Rectangle())
         .onTapGesture { pronouncer.speak(word) }
         .cardPager(canPage: { picks.count > 1 }) { dir in
             let count = picks.count
@@ -157,6 +136,7 @@ struct TodayView: View {
     /// advances by itself the moment the challenge is passed. Only a fully-cleared
     /// ladder falls back to the random daily 7, kept stable via `todaySelection`.
     private func loadPicks(reshuffle: Bool = false) {
+        lessonNumber = studyLesson()
         let all = VocabStore.lesson(lessonNumber, language).entries
         let results = ChallengeResult.byIndex(lesson: lessonNumber, context: context)
         let next = ChallengeResult.firstUnpassed(total: Challenge.count(wordCount: all.count),
@@ -187,11 +167,27 @@ struct TodayView: View {
         publishWidget()
     }
 
-    /// Free users can't stay on a locked lesson — snap back to lesson 1.
-    private func clampIfLocked() {
-        if Gating.isLocked(lesson: lessonNumber, isPremium: store.isPremium) {
-            lessonNumber = 1; index = 0
+    /// The lesson Today studies: the first one still holding an unpassed challenge —
+    /// i.e. where the learner actually is.
+    ///
+    /// Derived, not chosen. The toolbar used to carry a 1–50 picker, but once the deck
+    /// became "the next challenge's words" the picker only offered ways to point Today
+    /// at something that *isn't* next. Deriving it also retires `clampIfLocked`: a free
+    /// user can't land on a locked lesson because the search stops at the free ceiling.
+    ///
+    /// One fetch for all 50 lessons rather than one per lesson — this runs on every
+    /// appear.
+    private func studyLesson() -> Int {
+        let ceiling = store.isPremium ? 50 : Gating.freeLessonLimit
+        let rows = (try? context.fetch(FetchDescriptor<ChallengeResult>())) ?? []
+        var passed: [Int: Set<Int>] = [:]
+        for row in rows where row.isPassed { passed[row.lesson, default: []].insert(row.index) }
+
+        for n in 1...ceiling {
+            let total = Challenge.count(wordCount: VocabStore.lesson(n, language).entries.count)
+            if (passed[n]?.count ?? 0) < total { return n }
         }
+        return ceiling   // everything unlocked is finished — keep reviewing the last one
     }
 
     /// Publish today's 7 words to the App Group so the widget cycles them.

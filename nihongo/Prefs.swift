@@ -11,7 +11,6 @@ enum Pref {
     static let kanaShown           = "isKanaShown"
     static let romajiShown         = "isRomajiShown"
     static let translationShown    = "isTranslationShown"
-    static let todayLesson         = "todayLesson"
     static let kanaTileScript      = "kanaTileScript"
     /// Train's word order — false (random) by default; Learn's `ordered` key defaults
     /// the other way, so the two modes deliberately don't share a switch.

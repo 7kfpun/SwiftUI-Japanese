@@ -125,12 +125,11 @@ struct FlashcardScreen<Element, Face: View>: View {
     }
 
     private func topCard(_ element: Element) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Theme.surface)
-                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.line, lineWidth: 1))
-                .shadow(color: Theme.shadow, radius: 8, y: 4)
-
+        // Here a swipe is a self-assessment: right means "knew it".
+        SwipeCard(drag: drag,
+                  threshold: threshold,
+                  leftStamp: ("xmark", Theme.wrong),
+                  rightStamp: ("checkmark", Theme.correct)) {
             VStack(spacing: 14) {
                 face(element, revealed)
                 if !revealed {
@@ -143,27 +142,6 @@ struct FlashcardScreen<Element, Face: View>: View {
             }
             .padding(24)
         }
-        .overlay(alignment: .topTrailing) {
-            SwipeStamp(systemImage: "checkmark", color: Theme.correct, rotation: 8)
-                .opacity(drag.width > 0 ? min(drag.width / threshold, 1) : 0)
-                .padding(16)
-        }
-        .overlay(alignment: .topLeading) {
-            SwipeStamp(systemImage: "xmark", color: Theme.wrong, rotation: -8)
-                .opacity(drag.width < 0 ? min(-drag.width / threshold, 1) : 0)
-                .padding(16)
-        }
-        .overlay(alignment: .bottom) {
-            HStack(spacing: 10) {
-                Image(systemName: "chevron.compact.left")
-                Text(L.t("Swipe"))
-                Image(systemName: "chevron.compact.right")
-            }
-            .font(.caption).foregroundStyle(.tertiary).padding(.bottom, 8)
-        }
-        .offset(x: drag.width, y: drag.height / 10)
-        .rotationEffect(.degrees(Double(drag.width / 22)))
-        .contentShape(Rectangle())
         .onTapGesture { speak(element) }
         .gesture(
             DragGesture()

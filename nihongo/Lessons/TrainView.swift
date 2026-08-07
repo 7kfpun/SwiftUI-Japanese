@@ -225,12 +225,12 @@ struct TrainView: View {
     }
 
     private var promptCard: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Theme.surface)
-                .overlay(RoundedRectangle(cornerRadius: 20).stroke(cardBorder, lineWidth: 3))
-                .shadow(color: Theme.shadow, radius: 8, y: 4)
-
+        // Here a swipe picks a side: the arrows point at the two option chips.
+        SwipeCard(drag: drag,
+                  threshold: threshold,
+                  leftStamp: ("arrow.left", Theme.accent),
+                  rightStamp: ("arrow.right", Theme.accent),
+                  showsStamps: model.picked == nil) {
             if model.from.isAudio {
                 VStack(spacing: 12) {
                     Image(systemName: "speaker.wave.3.fill").font(.system(size: 64))
@@ -246,27 +246,6 @@ struct TrainView: View {
                     .padding(20)
             }
         }
-        .overlay(alignment: .topTrailing) {
-            SwipeStamp(systemImage: "arrow.right", color: Theme.accent, rotation: 8)
-                .opacity(model.picked == nil && drag.width > 0 ? min(drag.width / threshold, 1) : 0)
-                .padding(16)
-        }
-        .overlay(alignment: .topLeading) {
-            SwipeStamp(systemImage: "arrow.left", color: Theme.accent, rotation: -8)
-                .opacity(model.picked == nil && drag.width < 0 ? min(-drag.width / threshold, 1) : 0)
-                .padding(16)
-        }
-        .overlay(alignment: .bottom) {
-            HStack(spacing: 10) {
-                Image(systemName: "chevron.compact.left")
-                Text(L.t("Swipe"))
-                Image(systemName: "chevron.compact.right")
-            }
-            .font(.caption).foregroundStyle(.tertiary).padding(.bottom, 8)
-        }
-        .offset(x: drag.width, y: drag.height / 8)
-        .rotationEffect(.degrees(Double(drag.width / 22)))
-        .contentShape(Rectangle())
         .onTapGesture { pronouncer.speak(model.answer) }
         .gesture(
             DragGesture()
@@ -283,7 +262,7 @@ struct TrainView: View {
         SwipeOptionChip(text: opt.map { model.to.value($0) } ?? "",
                         side: side,
                         picked: model.picked,
-                        isAnswer: opt?.id == model.answer.id)
+                        isAnswer: opt?.id == model.answer.id) { decide(side) }
     }
 
     private func resultBadge(_ ok: Bool) -> some View {
@@ -299,10 +278,6 @@ struct TrainView: View {
         .allowsHitTesting(false)
     }
 
-    private var cardBorder: Color {
-        if let lastCorrect { return lastCorrect ? Theme.correct : Theme.wrong }
-        return Theme.line
-    }
 
     private func decide(_ side: Int) {
         guard model.picked == nil, model.options.count > side else { return }

@@ -63,38 +63,17 @@ struct KanaSwipeQuizView: View {
     }
 
     private var promptCard: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Theme.surface)
-                .overlay(RoundedRectangle(cornerRadius: 20).stroke(cardBorder, lineWidth: 3))
-                .shadow(color: Theme.shadow, radius: 8, y: 4)
+        SwipeCard(drag: drag,
+                  threshold: threshold,
+                  leftStamp: ("arrow.left", Theme.accent),
+                  rightStamp: ("arrow.right", Theme.accent),
+                  showsStamps: model.picked == nil) {
             Text(model.from.value(model.answer))
                 .font(Theme.jpStrokes(150))
                 .lineLimit(1)
                 .minimumScaleFactor(0.3)
                 .padding(.horizontal, 16)
         }
-        .overlay(alignment: .topTrailing) {
-            SwipeStamp(systemImage: "arrow.right", color: Theme.accent, rotation: 8)
-                .opacity(model.picked == nil && drag.width > 0 ? min(drag.width / threshold, 1) : 0)
-                .padding(16)
-        }
-        .overlay(alignment: .topLeading) {
-            SwipeStamp(systemImage: "arrow.left", color: Theme.accent, rotation: -8)
-                .opacity(model.picked == nil && drag.width < 0 ? min(-drag.width / threshold, 1) : 0)
-                .padding(16)
-        }
-        .overlay(alignment: .bottom) {
-            HStack(spacing: 10) {
-                Image(systemName: "chevron.compact.left")
-                Text(L.t("Swipe"))
-                Image(systemName: "chevron.compact.right")
-            }
-            .font(.caption).foregroundStyle(.tertiary).padding(.bottom, 8)
-        }
-        .offset(x: drag.width, y: drag.height / 8)
-        .rotationEffect(.degrees(Double(drag.width / 22)))
-        .contentShape(Rectangle())
         .onTapGesture { pronouncer.speak(kana: model.answer) }
         .gesture(
             DragGesture()
@@ -114,7 +93,7 @@ struct KanaSwipeQuizView: View {
                         side: side,
                         picked: model.picked,
                         isAnswer: opt.romaji == model.answer.romaji,
-                        font: .system(size: 30, weight: .semibold))
+                        font: .system(size: 30, weight: .semibold)) { decide(side) }
     }
 
     private func resultBadge(_ ok: Bool) -> some View {
@@ -130,10 +109,6 @@ struct KanaSwipeQuizView: View {
         .allowsHitTesting(false)
     }
 
-    private var cardBorder: Color {
-        if let lastCorrect { return lastCorrect ? Theme.correct : Theme.wrong }
-        return Theme.line
-    }
 
     private func decide(_ side: Int) {
         guard model.picked == nil, model.options.count > side else { return }

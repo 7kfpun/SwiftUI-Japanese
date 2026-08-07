@@ -92,7 +92,16 @@ struct QuizOptionButton: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .choiceChip(color)
+        // Raised card, not an outlined box: depth carries "tappable" while the
+        // question is open, so no colour has to. A tinted fill on four large targets
+        // read as a slab competing with the prompt, and an accent outline on all four
+        // wasn't much quieter — both spent the palette on the resting state. Colour
+        // now appears only with the verdict, which is the moment it means something.
+        .background(answered ? color.opacity(0.12) : Theme.surface,
+                    in: RoundedRectangle(cornerRadius: 16))
+        .shadow(color: answered ? .clear : Theme.shadow, radius: 5, y: 2)
+        .overlay(RoundedRectangle(cornerRadius: 16)
+            .stroke(answered ? color : .clear, lineWidth: 2))
         // Corner badge rather than inline, so revealing the verdict doesn't reflow
         // the label. Colour alone would exclude red/green colourblind users.
         .overlay(alignment: .topTrailing) {
@@ -140,6 +149,10 @@ struct SwipeOptionChip: View {
     let isAnswer: Bool
     /// Kana readings are short and want to be large; vocab glosses run long and don't.
     var font: Font = .title3.weight(.semibold)
+    /// Choosing this option. Swiping the card is the headline gesture, but tapping the
+    /// chip has to work too — it's the obvious thing to try, and these looked tappable
+    /// long before they were.
+    let action: () -> Void
 
     private var answered: Bool { picked != nil }
     private var isPicked: Bool { picked == side }
@@ -151,21 +164,26 @@ struct SwipeOptionChip: View {
     }
 
     var body: some View {
-        HStack(spacing: 6) {
-            if side == 0 { marker }
-            Text(text)
-                .font(font)
-                .foregroundStyle(answered ? color : .primary)   // reads as text, not a link
-                .minimumScaleFactor(0.4)
-                .lineLimit(3)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
-            if side == 1 { marker }
+        Button(action: action) {
+            HStack(spacing: 6) {
+                if side == 0 { marker }
+                Text(text)
+                    .font(font)
+                    .foregroundStyle(answered ? color : .primary)   // reads as text, not a link
+                    .minimumScaleFactor(0.4)
+                    .lineLimit(3)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                if side == 1 { marker }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity, minHeight: 96)   // min, not fixed: long glosses need room
+            .contentShape(Rectangle())                   // the whole chip is the target
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 14)
-        .frame(maxWidth: .infinity, minHeight: 96)   // min, not fixed: long glosses need room
+        .buttonStyle(.plain)
         .choiceChip(color)
+        .disabled(answered)
     }
 
     /// Direction chevron before answering, verdict icon after. The unpicked wrong chip
@@ -183,6 +201,73 @@ struct SwipeOptionChip: View {
         }
         .font(.subheadline)
         .frame(width: 18)
+    }
+}
+
+/// The card face every swipeable screen draws: surface, hairline border, shadow, the
+/// ⟨ Swipe ⟩ hint, the corner stamps, and the tilt-and-slide that follows a drag.
+///
+/// Shared by all four — Today, Flashcards, Train, the kana swipe quiz — which had
+/// drifted into four copies of the same chrome with four different corner radii and
+/// three separate copies of the stamp-opacity arithmetic. What stays with each caller
+/// is the part that genuinely differs: the *meaning* of a swipe. Flashcards grade
+/// yourself, Train and the kana quiz pick an answer, Today just turns the page. Same
+/// gesture, different verbs — so this owns the looks and the callers own the logic.
+///
+/// The peek stack stays outside on purpose: it must not move with the card, and
+/// Today drives movement through `cardPager` rather than a drag binding.
+struct SwipeCard<Content: View>: View {
+    /// Live drag translation. Leave at zero when something else (e.g. `cardPager`)
+    /// is doing the moving.
+    var drag: CGSize = .zero
+    /// Distance at which a swipe counts — also what the stamps fade in against.
+    var threshold: CGFloat = 100
+    /// Corner stamps for a leftward / rightward swipe; nil for screens where a swipe
+    /// carries no verdict, like Today's paging.
+    var leftStamp: (name: String, color: Color)? = nil
+    var rightStamp: (name: String, color: Color)? = nil
+    /// Suppress the stamps once the answer is in, so they don't flash on the way out.
+    var showsStamps = true
+    /// Hidden when there's nowhere to swipe to (a single-card deck).
+    var showsHint = true
+    @ViewBuilder var content: () -> Content
+
+    private static var radius: CGFloat { 20 }
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: Self.radius)
+                .fill(Theme.surface)
+                .overlay(RoundedRectangle(cornerRadius: Self.radius).stroke(Theme.line, lineWidth: 1))
+                .shadow(color: Theme.shadow, radius: 8, y: 4)
+            content()
+        }
+        .overlay(alignment: .topTrailing) { stamp(rightStamp, rotation: 8, active: drag.width > 0) }
+        .overlay(alignment: .topLeading) { stamp(leftStamp, rotation: -8, active: drag.width < 0) }
+        .overlay(alignment: .bottom) {
+            if showsHint {
+                HStack(spacing: 10) {
+                    Image(systemName: "chevron.compact.left")
+                    Text(L.t("Swipe"))
+                    Image(systemName: "chevron.compact.right")
+                }
+                .font(.caption).foregroundStyle(.tertiary).padding(.bottom, 8)
+            }
+        }
+        .offset(x: drag.width, y: drag.height / 10)
+        .rotationEffect(.degrees(Double(drag.width / 22)))
+        .contentShape(Rectangle())
+    }
+
+    /// Fades in with the drag, so the stamp reaches full strength exactly where the
+    /// swipe would commit — the feedback that tells you you've pulled far enough.
+    @ViewBuilder
+    private func stamp(_ spec: (name: String, color: Color)?, rotation: Double, active: Bool) -> some View {
+        if let spec {
+            SwipeStamp(systemImage: spec.name, color: spec.color, rotation: rotation)
+                .opacity(showsStamps && active ? min(abs(drag.width) / threshold, 1) : 0)
+                .padding(16)
+        }
     }
 }
 
@@ -227,8 +312,14 @@ struct CardStackPeek: View {
 }
 
 /// 2×2 grid of quiz options that expands to fill the available height.
+/// 2×2 grid of quiz options.
+///
+/// Rows have a set height rather than expanding to fill. Letting them grow made the
+/// answers as large as the prompt above them — and on a quiz the question should be
+/// the thing that dominates; the options only need to be comfortably tappable.
 struct OptionGrid<Cell: View>: View {
     let count: Int
+    var rowHeight: CGFloat = 74
     let cell: (Int) -> Cell
 
     var body: some View {
@@ -240,8 +331,8 @@ struct OptionGrid<Cell: View>: View {
                         if i < count { cell(i) } else { Color.clear }
                     }
                 }
+                .frame(height: rowHeight)
             }
         }
-        .frame(maxHeight: .infinity)
     }
 }
