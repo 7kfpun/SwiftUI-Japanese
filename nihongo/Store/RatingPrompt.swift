@@ -32,17 +32,21 @@ enum RatingPrompt {
     static var hasAsked: Bool { UserDefaults.standard.bool(forKey: Pref.ratingAsked) }
     static func markAsked() { UserDefaults.standard.set(true, forKey: Pref.ratingAsked) }
 
+    /// Rungs that must be passed before the app asks anything. Roughly a lesson or two
+    /// of real use — enough that there's something to rate.
+    static let challengesRequired = 15
+
     /// Whether to ask after this challenge.
     ///
     /// Subscribers only — they've already said the app is worth paying for, and the
     /// question is "would you say so publicly" rather than a cold ask. A free user's
     /// most likely rating is about the paywall, which the star row can't fix.
     ///
-    /// The other two conditions pick the moment: a *passed* rung (asking after a fail
-    /// asks how they feel about failing) that isn't their first (someone one challenge
-    /// in has nothing to rate yet).
+    /// The other two conditions pick the moment: enough rungs cleared to have an
+    /// opinion, and a rung they just *passed* — asking straight after a failure asks
+    /// how they feel about failing, which is a different question.
     static func shouldAsk(isPremium: Bool, passed: Bool, passedCount: Int) -> Bool {
-        isPremium && passed && passedCount >= 3 && !hasAsked
+        isPremium && passed && passedCount >= challengesRequired && !hasAsked
     }
 
     /// 4★ and up → Apple's review sheet. Apple decides whether it actually appears;
@@ -100,10 +104,9 @@ struct RatingSheet: View {
             }
             .padding(.vertical, 4)
 
-            Button(L.t("Not now")) {
-                dismiss()
-                Track.event("rating_dismissed")
-            }
+            // Leaves `onRate` uncalled, which is how the caller tells "no answer" from
+            // a low one — the two mean different things and only one wants a follow-up.
+            Button(L.t("Not now")) { dismiss() }
             .font(.subheadline)
             .foregroundStyle(.secondary)
         }

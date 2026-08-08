@@ -99,9 +99,11 @@ final class ChallengeResult {
         results.values.filter(\.isPassed).count
     }
 
-    /// Rungs passed across every lesson — how far in the app someone actually is,
+    /// Rungs passed across every lesson — how far into the app someone actually is,
     /// used to decide whether they've done enough to be worth asking for a rating.
-    /// Deduped by `key` first, since a sync merge can leave two rows for one rung.
+    ///
+    /// Deduped by `id` first: a sync merge can leave two rows for one rung, which would
+    /// otherwise inflate the count and let the prompt fire early.
     static func totalPassed(context: ModelContext) -> Int {
         let rows = (try? context.fetch(FetchDescriptor<ChallengeResult>())) ?? []
         return Set(rows.filter(\.isPassed).map(\.id)).count

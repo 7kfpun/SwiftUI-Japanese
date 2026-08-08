@@ -16,6 +16,8 @@ struct ChallengeView: View {
     @State private var recorded = false
     @State private var showRating = false
     @State private var showFeedback = false
+    /// What the star row returned, or nil if it was dismissed without an answer.
+    @State private var ratedStars: Int?
 
     private let lesson: Lesson
     private let index: Int
@@ -96,19 +98,12 @@ struct ChallengeView: View {
             // A popup ad on the way out — non-premium only, throttled. Never mid-run.
             if !store.isPremium && model.isDone { Ads.showInterstitialIfReady() }
         }
-        .sheet(isPresented: $showRating) {
-            RatingSheet { stars in
-                Track.event("rating_given", ["stars": stars,
-                                             "lesson": lesson.number,
-                                             "index": index])
-                // 4★+ goes to Apple; anything lower goes somewhere a reply can come
-                // back from. Both are a real destination — neither answer dead-ends.
-                if stars >= 4 {
-                    RatingPrompt.requestAppStoreReview()
-                } else {
-                    showFeedback = true
-                }
-            }
+        // Routed from `onDismiss`, not from the star tap. Both destinations replace the
+        // star row — Apple's review sheet and the feedback form each need the screen to
+        // themselves — and asking to present either while this one is still animating
+        // away is silently dropped. `onDismiss` runs once it's actually gone.
+        .sheet(isPresented: $showRating, onDismiss: routeRating) {
+            RatingSheet { ratedStars = $0 }
         }
         .sheet(isPresented: $showFeedback) {
             SafariView(url: Feedback.url(source: "rating")).ignoresSafeArea()
@@ -141,6 +136,26 @@ struct ChallengeView: View {
         RatingPrompt.markAsked()
         Track.event("rating_shown", ["lesson": lesson.number, "passed_total": passedCount])
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { showRating = true }
+    }
+
+    /// Where the stars lead, run once the star row has finished dismissing.
+    ///
+    /// 4★ and up hands off to Apple's native review sheet. Anything lower opens the
+    /// feedback form, where the complaint reaches someone who can answer it instead of
+    /// becoming a public one-liner. Dismissing without picking leads nowhere, which is
+    /// the point of offering "Not now" at all.
+    private func routeRating() {
+        guard let stars = ratedStars else {
+            Track.event("rating_dismissed", ["lesson": lesson.number])
+            return
+        }
+        ratedStars = nil
+        Track.event("rating_given", ["stars": stars, "lesson": lesson.number, "index": index])
+        if stars >= 4 {
+            RatingPrompt.requestAppStoreReview()
+        } else {
+            showFeedback = true
+        }
     }
 
     private var progressBar: some View {
