@@ -35,15 +35,13 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
         guard isPlaying, i < entries.count else { stop(); return }
         currentIndex = i
         let v = entries[i]
-        if let url = VocabStore.audioURL(for: v), let p = try? AVAudioPlayer(contentsOf: url) {
-            player = p; p.delegate = self; p.volume = 1; p.prepareToPlay(); p.play()
+        // Same clip-or-speak policy as `AudioPronouncer`, via `Speech` — this player
+        // only adds the delegate it needs to know when to advance.
+        if let p = Speech.clipPlayer(for: v) {
+            player = p; p.delegate = self; p.play()
         } else {
             Track.audioMissing(v.id)
-            let u = AVSpeechUtterance(string: cleanWord(v.kana))
-            u.voice = AVSpeechSynthesisVoice(language: "ja-JP")
-                ?? AVSpeechSynthesisVoice.speechVoices().first { $0.language.hasPrefix("ja") }
-            u.rate = 0.4
-            synth.speak(u)
+            synth.speak(Speech.utterance(v.kana))
         }
     }
 

@@ -33,8 +33,43 @@ enum PlaybackSession {
     }
 }
 
+/// How a word gets played, in one place: which bundled clip, and — when there isn't
+/// one — what voice says it and how fast.
+///
+/// Two paths play audio and they can't share a class: `AudioPronouncer` is fire-and-
+/// forget, while `LessonPlayer` sequences a whole lesson and needs delegate callbacks
+/// to advance. They *can* share the policy, which is what kept drifting: both carried
+/// their own copy of the voice lookup, the 0.4 rate and the `cleanWord` call, and
+/// nothing made them agree.
+enum Speech {
+    /// The course's language. The `hasPrefix` fallback catches devices where the exact
+    /// region tag isn't installed but some voice for the language is.
+    static let locale = "ja-JP"
+    private static var languageCode: String { String(locale.prefix(2)) }
+
+    /// A spoken utterance for `text` — annotations stripped, voice resolved, rate set.
+    static func utterance(_ text: String) -> AVSpeechUtterance {
+        let u = AVSpeechUtterance(string: cleanWord(text))
+        u.voice = AVSpeechSynthesisVoice(language: locale)
+            ?? AVSpeechSynthesisVoice.speechVoices().first { $0.language.hasPrefix(languageCode) }
+        u.rate = 0.4
+        return u
+    }
+
+    /// A player primed for the word's bundled clip, or nil when it has none (2 of the
+    /// 2089 words) — the caller then falls back to `utterance(_:)`. Callers that need
+    /// completion callbacks set `delegate` on the result themselves.
+    static func clipPlayer(for vocab: Vocab) -> AVAudioPlayer? {
+        guard let url = VocabStore.audioURL(for: vocab),
+              let p = try? AVAudioPlayer(contentsOf: url) else { return nil }
+        p.volume = 1
+        p.prepareToPlay()
+        return p
+    }
+}
+
 /// Plays the bundled Kyoko clip for a vocab word; falls back to live
-/// `AVSpeechSynthesizer` (ja-JP) for the 2 clip-less words and for bare kana tiles.
+/// `AVSpeechSynthesizer` for the 2 clip-less words and for bare kana tiles.
 final class AudioPronouncer: Pronouncer {
     private let synth = AVSpeechSynthesizer()
     private var player: AVAudioPlayer?
@@ -42,11 +77,8 @@ final class AudioPronouncer: Pronouncer {
     func speak(_ vocab: Vocab) {
         stop()
         PlaybackSession.activate()
-        if let url = VocabStore.audioURL(for: vocab),
-           let p = try? AVAudioPlayer(contentsOf: url) {
+        if let p = Speech.clipPlayer(for: vocab) {
             player = p
-            p.volume = 1
-            p.prepareToPlay()
             p.play()
         } else {
             Track.audioMissing(vocab.id)
@@ -75,14 +107,7 @@ final class AudioPronouncer: Pronouncer {
         if synth.isSpeaking { synth.stopSpeaking(at: .immediate) }
     }
 
-    private func speakLive(_ text: String) {
-        let u = AVSpeechUtterance(string: cleanWord(text))
-        // Prefer an installed Japanese voice; falls back to the language default.
-        u.voice = AVSpeechSynthesisVoice(language: "ja-JP")
-            ?? AVSpeechSynthesisVoice.speechVoices().first { $0.language.hasPrefix("ja") }
-        u.rate = 0.4
-        synth.speak(u)
-    }
+    private func speakLive(_ text: String) { synth.speak(Speech.utterance(text)) }
 }
 
 private struct PronouncerKey: EnvironmentKey {
