@@ -71,9 +71,6 @@
     "Done": "Done",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.",
     "Today": "Today",
-    "Basic": "Basic",
-    "Voiced": "Voiced",
-    "Combos": "Combos",
     "Write": "Write",
     "Hear it, draw it": "Hear it, draw it",
     "Licenses": "Licenses",
@@ -108,7 +105,10 @@
     "Enjoying Japanese Daily?": "Enjoying Japanese Daily?",
     "Tap a star to tell us how it's going.": "Tap a star to tell us how it's going.",
     "%@ stars": "%@ stars",
-    "Not now": "Not now"
+    "Not now": "Not now",
+    "Seion": "Seion",
+    "Dakuon": "Dakuon",
+    "Youon": "Youon"
   },
   "zh": {
     "Kana": "假名",
@@ -182,9 +182,6 @@
     "Done": "完成",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "自动续订订阅会在当前周期结束前至少 24 小时未取消时自动续订。费用将向您的 Apple ID 收取；可在“设置”中管理。",
     "Today": "今天",
-    "Basic": "清音",
-    "Voiced": "濁音",
-    "Combos": "拗音",
     "Write": "书写",
     "Hear it, draw it": "听音写字",
     "Licenses": "许可证",
@@ -219,7 +216,10 @@
     "Enjoying Japanese Daily?": "喜欢每日日语吗？",
     "Tap a star to tell us how it's going.": "点一颗星，告诉我们你的感受。",
     "%@ stars": "%@ 星",
-    "Not now": "暂不"
+    "Not now": "暂不",
+    "Seion": "清音",
+    "Dakuon": "濁音",
+    "Youon": "拗音"
   },
   "zh-Hant": {
     "Kana": "假名",
@@ -293,9 +293,6 @@
     "Done": "完成",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "自動續訂訂閱會在目前週期結束前至少 24 小時未取消時自動續訂。費用將向您的 Apple ID 收取；可在「設定」中管理。",
     "Today": "今天",
-    "Basic": "清音",
-    "Voiced": "濁音",
-    "Combos": "拗音",
     "Write": "書寫",
     "Hear it, draw it": "聽音寫字",
     "Licenses": "授權條款",
@@ -330,7 +327,10 @@
     "Enjoying Japanese Daily?": "喜歡每日日語嗎？",
     "Tap a star to tell us how it's going.": "點一顆星，告訴我們你的感受。",
     "%@ stars": "%@ 星",
-    "Not now": "暫不"
+    "Not now": "暫不",
+    "Seion": "清音",
+    "Dakuon": "濁音",
+    "Youon": "拗音"
   },
   "vi": {
     "Kana": "Kana",
@@ -404,9 +404,6 @@
     "Done": "Xong",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Gói đăng ký tự động gia hạn sẽ gia hạn nếu không hủy ít nhất 24 giờ trước khi kỳ hạn kết thúc. Thanh toán được tính vào Apple ID của bạn; quản lý trong Cài đặt.",
     "Today": "Hôm nay",
-    "Basic": "Cơ bản",
-    "Voiced": "Hữu thanh",
-    "Combos": "Âm ghép",
     "Write": "Viết",
     "Hear it, draw it": "Nghe rồi viết",
     "Licenses": "Giấy phép",
@@ -441,7 +438,10 @@
     "Enjoying Japanese Daily?": "Bạn thấy Japanese Daily thế nào?",
     "Tap a star to tell us how it's going.": "Chạm vào một ngôi sao để cho chúng tôi biết.",
     "%@ stars": "%@ sao",
-    "Not now": "Để sau"
+    "Not now": "Để sau",
+    "Seion": "Seion",
+    "Dakuon": "Dakuon",
+    "Youon": "Youon"
   },
   "de": {
     "Kana": "Kana",
@@ -515,9 +515,6 @@
     "Done": "Fertig",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Automatisch verlängerbare Abos verlängern sich, sofern sie nicht mindestens 24 Stunden vor Ablauf gekündigt werden. Die Zahlung erfolgt über deine Apple-ID; verwalte sie in den Einstellungen.",
     "Today": "Heute",
-    "Basic": "Basis",
-    "Voiced": "Stimmhaft",
-    "Combos": "Kombis",
     "Write": "Schreiben",
     "Hear it, draw it": "Hören und schreiben",
     "Licenses": "Lizenzen",
@@ -552,7 +549,10 @@
     "Enjoying Japanese Daily?": "Gefällt dir Japanese Daily?",
     "Tap a star to tell us how it's going.": "Tippe auf einen Stern und sag uns, wie es läuft.",
     "%@ stars": "%@ Sterne",
-    "Not now": "Später"
+    "Not now": "Später",
+    "Seion": "Seion",
+    "Dakuon": "Dakuon",
+    "Youon": "Youon"
   },
   "th": {
     "Kana": "คานะ",
@@ -626,9 +626,6 @@
     "Done": "เสร็จ",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "การสมัครสมาชิกแบบต่ออายุอัตโนมัติจะต่ออายุหากไม่ยกเลิกอย่างน้อย 24 ชั่วโมงก่อนสิ้นสุดรอบ ระบบจะเรียกเก็บเงินผ่าน Apple ID ของคุณ จัดการได้ในการตั้งค่า",
     "Today": "วันนี้",
-    "Basic": "พื้นฐาน",
-    "Voiced": "เสียงขุ่น",
-    "Combos": "เสียงควบ",
     "Write": "เขียน",
     "Hear it, draw it": "ฟังแล้วเขียน",
     "Licenses": "สัญญาอนุญาต",
@@ -663,7 +660,10 @@
     "Enjoying Japanese Daily?": "ชอบ Japanese Daily ไหม",
     "Tap a star to tell us how it's going.": "แตะดาวเพื่อบอกเราว่าเป็นอย่างไรบ้าง",
     "%@ stars": "%@ ดาว",
-    "Not now": "ไว้ก่อน"
+    "Not now": "ไว้ก่อน",
+    "Seion": "เซอง",
+    "Dakuon": "ดากุอง",
+    "Youon": "โยอง"
   },
   "my": {
     "Kana": "ကာနာ",
@@ -737,9 +737,6 @@
     "Done": "ပြီးပါပြီ",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "အလိုအလျောက်သက်တမ်းတိုးသည့် စာရင်းသွင်းမှုများသည် သက်တမ်းမကုန်ဆုံးမီ အနည်းဆုံး ၂၄ နာရီအလိုတွင် မဖျက်သိမ်းပါက အလိုအလျောက်သက်တမ်းတိုးပါမည်။ ငွေပေးချေမှုကို သင့် Apple ID မှ ကောက်ခံပါမည်။ ဆက်တင်များတွင် စီမံပါ။",
     "Today": "ယနေ့",
-    "Basic": "အခြေခံ",
-    "Voiced": "အသံပြောင်း",
-    "Combos": "ပေါင်းစပ်",
     "Write": "ရေးရန်",
     "Hear it, draw it": "နားထောင်ပြီး ရေးပါ",
     "Licenses": "လိုင်စင်များ",
@@ -774,7 +771,10 @@
     "Enjoying Japanese Daily?": "Japanese Daily ကို နှစ်သက်ပါသလား",
     "Tap a star to tell us how it's going.": "ဘယ်လိုရှိလဲ ပြောပြရန် ကြယ်တစ်ပွင့်ကို နှိပ်ပါ။",
     "%@ stars": "ကြယ် %@ ပွင့်",
-    "Not now": "အခုမဟုတ်ပါ"
+    "Not now": "အခုမဟုတ်ပါ",
+    "Seion": "ဆေအွန်",
+    "Dakuon": "ဒါကုအွန်",
+    "Youon": "ယိုအွန်"
   },
   "es": {
     "Kana": "Kana",
@@ -848,9 +848,6 @@
     "Done": "Hecho",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Las suscripciones de renovación automática se renuevan si no se cancelan al menos 24 horas antes de que finalice el periodo. El pago se cobra a tu Apple ID; gestiónalas en Ajustes.",
     "Today": "Hoy",
-    "Basic": "Básico",
-    "Voiced": "Sonoro",
-    "Combos": "Combinadas",
     "Write": "Escribir",
     "Hear it, draw it": "Escúchalo y escríbelo",
     "Licenses": "Licencias",
@@ -885,7 +882,10 @@
     "Enjoying Japanese Daily?": "¿Te gusta Japanese Daily?",
     "Tap a star to tell us how it's going.": "Toca una estrella para contarnos qué tal.",
     "%@ stars": "%@ estrellas",
-    "Not now": "Ahora no"
+    "Not now": "Ahora no",
+    "Seion": "Seion",
+    "Dakuon": "Dakuon",
+    "Youon": "Youon"
   },
   "fr": {
     "Kana": "Kana",
@@ -959,9 +959,6 @@
     "Done": "Terminé",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Les abonnements à renouvellement automatique se renouvellent sauf annulation au moins 24 heures avant la fin de la période. Le paiement est débité de votre identifiant Apple ; gérez-les dans Réglages.",
     "Today": "Aujourd'hui",
-    "Basic": "De base",
-    "Voiced": "Voisé",
-    "Combos": "Combinés",
     "Write": "Écrire",
     "Hear it, draw it": "Écoutez et écrivez",
     "Licenses": "Licences",
@@ -996,7 +993,10 @@
     "Enjoying Japanese Daily?": "Vous aimez Japanese Daily ?",
     "Tap a star to tell us how it's going.": "Touchez une étoile pour nous dire ce que vous en pensez.",
     "%@ stars": "%@ étoiles",
-    "Not now": "Plus tard"
+    "Not now": "Plus tard",
+    "Seion": "Seion",
+    "Dakuon": "Dakuon",
+    "Youon": "Youon"
   },
   "ru": {
     "Kana": "Кана",
@@ -1070,9 +1070,6 @@
     "Done": "Готово",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Подписки с автопродлением продлеваются, если не отменить их не позднее чем за 24 часа до конца периода. Оплата списывается с вашего Apple ID; управление — в Настройках.",
     "Today": "Сегодня",
-    "Basic": "Базовые",
-    "Voiced": "Звонкие",
-    "Combos": "Сочетания",
     "Write": "Письмо",
     "Hear it, draw it": "Послушай и напиши",
     "Licenses": "Лицензии",
@@ -1107,7 +1104,10 @@
     "Enjoying Japanese Daily?": "Нравится Japanese Daily?",
     "Tap a star to tell us how it's going.": "Нажмите на звезду и расскажите, как вам.",
     "%@ stars": "%@ звёзд",
-    "Not now": "Не сейчас"
+    "Not now": "Не сейчас",
+    "Seion": "Сэйон",
+    "Dakuon": "Дакуон",
+    "Youon": "Ёон"
   },
   "bn": {
     "Kana": "কানা",
@@ -1181,9 +1181,6 @@
     "Done": "সম্পন্ন",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "স্বয়ংক্রিয়ভাবে নবায়নযোগ্য সাবস্ক্রিপশন মেয়াদ শেষ হওয়ার অন্তত ২৪ ঘণ্টা আগে বাতিল না করলে নবায়ন হয়। পেমেন্ট আপনার Apple ID থেকে নেওয়া হয়; সেটিংসে পরিচালনা করুন।",
     "Today": "আজ",
-    "Basic": "মৌলিক",
-    "Voiced": "ঘোষ",
-    "Combos": "যুক্ত",
     "Write": "লেখা",
     "Hear it, draw it": "শুনে লিখুন",
     "Licenses": "লাইসেন্স",
@@ -1218,7 +1215,10 @@
     "Enjoying Japanese Daily?": "Japanese Daily ভালো লাগছে?",
     "Tap a star to tell us how it's going.": "কেমন লাগছে জানাতে একটি তারায় ট্যাপ করুন।",
     "%@ stars": "%@ তারা",
-    "Not now": "এখন নয়"
+    "Not now": "এখন নয়",
+    "Seion": "সেইওন",
+    "Dakuon": "দাকুওন",
+    "Youon": "ইয়োওন"
   },
   "hi": {
     "Kana": "काना",
@@ -1292,9 +1292,6 @@
     "Done": "हो गया",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "ऑटो-रिन्यू सदस्यताएँ अवधि समाप्त होने से कम से कम 24 घंटे पहले रद्द न करने पर नवीनीकृत हो जाती हैं। भुगतान आपकी Apple ID से लिया जाता है; सेटिंग्स में प्रबंधित करें।",
     "Today": "आज",
-    "Basic": "मूल",
-    "Voiced": "सघोष",
-    "Combos": "संयुक्त",
     "Write": "लिखें",
     "Hear it, draw it": "सुनें और लिखें",
     "Licenses": "लाइसेंस",
@@ -1329,7 +1326,10 @@
     "Enjoying Japanese Daily?": "Japanese Daily पसंद आ रहा है?",
     "Tap a star to tell us how it's going.": "कैसा लग रहा है, बताने के लिए एक तारे पर टैप करें।",
     "%@ stars": "%@ सितारे",
-    "Not now": "अभी नहीं"
+    "Not now": "अभी नहीं",
+    "Seion": "सेइओन",
+    "Dakuon": "दाकुओन",
+    "Youon": "योओन"
   },
   "ta": {
     "Kana": "கானா",
@@ -1403,9 +1403,6 @@
     "Done": "முடிந்தது",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "தானாக புதுப்பிக்கும் சந்தாக்கள் காலம் முடிவதற்கு குறைந்தது 24 மணி நேரத்திற்கு முன் ரத்து செய்யாவிட்டால் புதுப்பிக்கப்படும். கட்டணம் உங்கள் Apple ID-யில் வசூலிக்கப்படும்; அமைப்புகளில் நிர்வகிக்கவும்.",
     "Today": "இன்று",
-    "Basic": "அடிப்படை",
-    "Voiced": "ஒலிப்பு",
-    "Combos": "கூட்டு",
     "Write": "எழுது",
     "Hear it, draw it": "கேட்டு எழுதுங்கள்",
     "Licenses": "உரிமங்கள்",
@@ -1440,7 +1437,10 @@
     "Enjoying Japanese Daily?": "Japanese Daily பிடித்திருக்கிறதா?",
     "Tap a star to tell us how it's going.": "எப்படி இருக்கிறது என்று சொல்ல ஒரு நட்சத்திரத்தைத் தட்டவும்.",
     "%@ stars": "%@ நட்சத்திரங்கள்",
-    "Not now": "இப்போது வேண்டாம்"
+    "Not now": "இப்போது வேண்டாம்",
+    "Seion": "செயோன்",
+    "Dakuon": "தகுயோன்",
+    "Youon": "யோஒன்"
   },
   "te": {
     "Kana": "కానా",
@@ -1514,9 +1514,6 @@
     "Done": "పూర్తయింది",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "ఆటో-రెన్యూ సబ్‌స్క్రిప్షన్లు వ్యవధి ముగియడానికి కనీసం 24 గంటల ముందు రద్దు చేయకపోతే పునరుద్ధరించబడతాయి. చెల్లింపు మీ Apple ID నుండి వసూలు చేయబడుతుంది; సెట్టింగ్‌లలో నిర్వహించండి.",
     "Today": "నేడు",
-    "Basic": "ప్రాథమిక",
-    "Voiced": "ఘోష",
-    "Combos": "సంయుక్త",
     "Write": "రాయి",
     "Hear it, draw it": "విని రాయండి",
     "Licenses": "లైసెన్సులు",
@@ -1551,7 +1548,10 @@
     "Enjoying Japanese Daily?": "Japanese Daily నచ్చిందా?",
     "Tap a star to tell us how it's going.": "ఎలా ఉందో చెప్పడానికి ఒక నక్షత్రాన్ని నొక్కండి.",
     "%@ stars": "%@ నక్షత్రాలు",
-    "Not now": "ఇప్పుడు కాదు"
+    "Not now": "ఇప్పుడు కాదు",
+    "Seion": "సెయోన్",
+    "Dakuon": "దాకుఒన్",
+    "Youon": "యోఒన్"
   },
   "fil": {
     "Kana": "Kana",
@@ -1625,9 +1625,6 @@
     "Done": "Tapos na",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Awtomatikong nire-renew ang mga subscription maliban kung kanselahin nang hindi bababa sa 24 oras bago matapos ang panahon. Sinisingil ang bayad sa iyong Apple ID; pamahalaan sa Mga Setting.",
     "Today": "Ngayon",
-    "Basic": "Batayan",
-    "Voiced": "May tinig",
-    "Combos": "Kombinasyon",
     "Write": "Sulat",
     "Hear it, draw it": "Pakinggan at isulat",
     "Licenses": "Mga Lisensya",
@@ -1662,7 +1659,10 @@
     "Enjoying Japanese Daily?": "Nage-enjoy sa Japanese Daily?",
     "Tap a star to tell us how it's going.": "I-tap ang isang bituin para sabihin sa amin.",
     "%@ stars": "%@ bituin",
-    "Not now": "Hindi ngayon"
+    "Not now": "Hindi ngayon",
+    "Seion": "Seion",
+    "Dakuon": "Dakuon",
+    "Youon": "Youon"
   },
   "id": {
     "Kana": "Kana",
@@ -1736,9 +1736,6 @@
     "Done": "Selesai",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "Langganan perpanjangan otomatis akan diperpanjang kecuali dibatalkan setidaknya 24 jam sebelum periode berakhir. Pembayaran ditagihkan ke Apple ID Anda; kelola di Pengaturan.",
     "Today": "Hari ini",
-    "Basic": "Dasar",
-    "Voiced": "Bersuara",
-    "Combos": "Gabungan",
     "Write": "Menulis",
     "Hear it, draw it": "Dengar lalu tulis",
     "Licenses": "Lisensi",
@@ -1773,7 +1770,10 @@
     "Enjoying Japanese Daily?": "Menikmati Japanese Daily?",
     "Tap a star to tell us how it's going.": "Ketuk bintang untuk memberi tahu kami.",
     "%@ stars": "%@ bintang",
-    "Not now": "Nanti saja"
+    "Not now": "Nanti saja",
+    "Seion": "Seion",
+    "Dakuon": "Dakuon",
+    "Youon": "Youon"
   },
   "ko": {
     "Kana": "가나",
@@ -1847,9 +1847,6 @@
     "Done": "완료",
     "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings.": "자동 갱신 구독은 기간 종료 최소 24시간 전에 취소하지 않으면 갱신됩니다. 결제는 Apple ID로 청구되며 설정에서 관리할 수 있습니다.",
     "Today": "오늘",
-    "Basic": "기본",
-    "Voiced": "탁음",
-    "Combos": "요음",
     "Write": "쓰기",
     "Hear it, draw it": "듣고 쓰기",
     "Licenses": "라이선스",
@@ -1884,6 +1881,9 @@
     "Enjoying Japanese Daily?": "Japanese Daily가 마음에 드시나요?",
     "Tap a star to tell us how it's going.": "별을 눌러 어떤지 알려주세요.",
     "%@ stars": "별 %@개",
-    "Not now": "나중에"
+    "Not now": "나중에",
+    "Seion": "청음",
+    "Dakuon": "탁음",
+    "Youon": "요음"
   }
 }

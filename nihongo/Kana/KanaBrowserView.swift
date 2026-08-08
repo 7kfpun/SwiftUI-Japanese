@@ -4,11 +4,16 @@ import SwiftData
 enum KanaTable: String, CaseIterable, Identifiable {
     case seion, dakuon, youon
     var id: String { rawValue }
+    /// The Japanese terms rather than English glosses ("Basic"/"Voiced"/"Combos"),
+    /// same treatment as Hiragana/Katakana elsewhere: romanized in Latin scripts,
+    /// transliterated or given the native term otherwise. A learner meets these words
+    /// in every other kana resource, so naming the tabs after them teaches something —
+    /// "Combos" doesn't survive contact with a textbook.
     var title: String {
         switch self {
-        case .seion:  return L.t("Basic")    // 清音
-        case .dakuon: return L.t("Voiced")   // 濁音
-        case .youon:  return L.t("Combos")   // 拗音
+        case .seion:  return L.t("Seion")     // 清音
+        case .dakuon: return L.t("Dakuon")    // 濁音
+        case .youon:  return L.t("Youon")     // 拗音
         }
     }
     var rows: [[K]] {
