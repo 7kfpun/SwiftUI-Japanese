@@ -1,10 +1,14 @@
-// NOTE: intentionally duplicated in nihongo/Today/, TodayWidget/, WatchApp/ and
-// WatchWidget/ (synchronized groups scope files per target) — KEEP ALL COPIES IDENTICAL.
+// `Shared/` is a synchronized group listed by every target that shows Today's words —
+// app, TodayWidget, WatchApp, WatchWidget. One file, four memberships.
+//
+// This was four hand-copied files carrying a "KEEP ALL COPIES IDENTICAL" warning, which
+// is a rule nothing enforced. Put anything genuinely shared here; anything
+// target-specific stays in its own folder.
 import Foundation
 
 /// A small snapshot of the current "Today" lesson, shared with the home-screen widget
-/// through an App Group. Kept to plain strings so the widget target needs no app code
-/// beyond this one file (add it to every target that shows Today's words).
+/// through an App Group. Kept to plain strings so the widget targets need no app code
+/// beyond this one file.
 ///
 /// App Group containers are per-platform: watchOS gets its *own* container under the
 /// same identifier, so nothing the phone writes here is visible on the wrist. The watch

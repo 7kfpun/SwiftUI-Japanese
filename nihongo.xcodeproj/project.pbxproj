@@ -120,6 +120,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		AA5HA2ED30250002001F7D2E /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		AADA49673023578E006010F5 /* nihongo */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = nihongo;
@@ -212,6 +217,7 @@
 		AADA495C3023578E006010F5 = {
 			isa = PBXGroup;
 			children = (
+				AA5HA2ED30250002001F7D2E /* Shared */,
 				AADA49673023578E006010F5 /* nihongo */,
 				AADA497730235791006010F5 /* nihongoTests */,
 				AADA498130235791006010F5 /* nihongoUITests */,
@@ -266,6 +272,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				AADA49673023578E006010F5 /* nihongo */,
+				AA5HA2ED30250002001F7D2E /* Shared */,
 			);
 			name = nihongo;
 			packageProductDependencies = (
@@ -337,6 +344,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				AAF4D4BD30247E5E001F7D2E /* TodayWidget */,
+				AA5HA2ED30250002001F7D2E /* Shared */,
 			);
 			name = TodayWidgetExtension;
 			packageProductDependencies = (
@@ -361,6 +369,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				AAF4E00330250001001F7D2E /* WatchApp */,
+				AA5HA2ED30250002001F7D2E /* Shared */,
 			);
 			name = WatchApp;
 			packageProductDependencies = (
@@ -383,6 +392,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				AAF4E01330250001001F7D2E /* WatchWidget */,
+				AA5HA2ED30250002001F7D2E /* Shared */,
 			);
 			name = WatchWidgetExtension;
 			packageProductDependencies = (
