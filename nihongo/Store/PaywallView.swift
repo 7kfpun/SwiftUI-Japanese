@@ -133,7 +133,7 @@ struct PaywallView: View {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
-                        Text(product.displayName).font(.headline)
+                        Text(periodLabel(product)).font(.headline)
                         if isBest {
                             Text(L.t("Best value"))
                                 .font(.caption2.weight(.bold))
@@ -142,7 +142,6 @@ struct PaywallView: View {
                                 .foregroundStyle(.white)
                         }
                     }
-                    Text(product.description).font(.caption).foregroundStyle(.secondary)
                     if let saved = savingsPercent(product) {
                         Text(L.t("Save %@%", "\(saved)"))
                             .font(.caption).foregroundStyle(Theme.correct)
@@ -189,8 +188,9 @@ struct PaywallView: View {
             } label: {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(product.displayName).font(.headline)
-                        Text(product.description).font(.caption).foregroundStyle(.secondary)
+                        Text(L.t("Lifetime")).font(.headline)
+                        Text(L.t("Pay once, yours forever"))
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
                     if store.purchasingID == product.id {
@@ -209,14 +209,29 @@ struct PaywallView: View {
         }
     }
 
-    // MARK: - Price maths
+    // MARK: - Naming and price maths
     //
-    // The split: **names and descriptions come from App Store Connect**
-    // (`displayName` / `description`, already localized there for 14 storefronts), so
-    // wording changes need no app update and no entry in UIStrings.json. Only the
-    // arithmetic lives here — per-month and savings *must* be computed, because static
-    // text can't render ¥/€/₩ per storefront and would turn misleading the moment a
-    // price changes in ASC.
+    // Plan names are built here from `subscriptionPeriod`, *not* taken from App Store
+    // Connect's `displayName`. ASC localizations resolve by App Store **storefront**
+    // (the Apple ID's region), while this app has its own in-app language picker — so
+    // ASC text can't follow it. Reading it produced "6 Months / Premium, billed every
+    // 6 months." in English sitting beside a Chinese "最超值" on the same row. StoreKit
+    // hands back one localization, not all of them, so there's no hybrid that works:
+    // anything that must match the in-app language has to come from UIStrings.json.
+    //
+    // Prices are the exception and stay with StoreKit: `displayPrice` and
+    // `priceFormatStyle` render ¥/€/₩ correctly per storefront, which is right —
+    // currency follows where you *pay*, not what language you read.
+    //
+    // Products arrive sorted by price ascending (`Store.load`), so the rows read
+    // cheapest-first and `periodLabel` just names each one.
+
+    /// Subscription length, in the app's own language.
+    private func periodLabel(_ product: Product) -> String {
+        let n = months(product)
+        guard n > 0 else { return L.t("Lifetime") }
+        return n == 1 ? L.t("1 month") : L.t("%@ months", "\(n)")
+    }
 
     private func months(_ product: Product) -> Int {
         guard let period = product.subscription?.subscriptionPeriod else { return 0 }

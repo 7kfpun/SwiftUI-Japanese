@@ -10,6 +10,9 @@ struct LessonListView: View {
     /// challenges passed, keyed by lesson — one fetch for the whole list rather than
     /// a query per visible row.
     @State private var passed: [Int: Int] = [:]
+    /// The stack lives on the router so the widget's "Ready for Challenge N?" link can
+    /// push lesson + rung directly. Row taps append to the same path.
+    @Environment(Router.self) private var router
 
     private static let groups: [(String, ClosedRange<Int>)] = [
         ("Beginning 1", 1...13),
@@ -21,7 +24,8 @@ struct LessonListView: View {
     private var results: [Vocab] { searchVocab(query, in: VocabStore.allVocab(language)) }
 
     var body: some View {
-        NavigationStack {
+        @Bindable var router = router
+        NavigationStack(path: $router.lessonPath) {
             VStack(spacing: 0) {
                 if query.isEmpty {
                     Picker("", selection: $group) {

@@ -54,9 +54,16 @@ final class TrainModel {
     }
     private var cursor = -1
 
-    init(vocab: [Vocab], from: VForm = .kana) {
+    /// `ordered` is an init parameter, not something the view applies afterwards: the
+    /// first `next()` happens right here, so a value assigned later would arrive after
+    /// a word had already been drawn at random — and `didSet` would then anchor the
+    /// walk to *that* word, meaning an ordered run never started at word 1.
+    /// (Setting it here deliberately skips `didSet`, which is what leaves `cursor` at
+    /// -1 so the first step lands on index 0.)
+    init(vocab: [Vocab], from: VForm = .kana, ordered: Bool = false) {
         self.vocab = vocab
         self.from = from
+        self.ordered = ordered
         // Audio/translation prompts pair with the written word; else default to meaning.
         self.to = (from == .translation || from == .audio) ? .kana : .translation
         // Degrade gracefully on empty data (bad regen) instead of crashing at launch.
@@ -148,7 +155,11 @@ struct TrainView: View {
         } else {
             pool = lesson.entries
         }
-        _model = State(initialValue: TrainModel(vocab: pool, from: from))
+        // Read the preference straight from UserDefaults: @AppStorage isn't available
+        // this early, and the model needs it before it draws its first word.
+        _model = State(initialValue: TrainModel(
+            vocab: pool, from: from,
+            ordered: UserDefaults.standard.bool(forKey: Pref.trainOrdered)))
     }
 
     private var leftOption: Vocab? { model.options.first }
@@ -202,7 +213,9 @@ struct TrainView: View {
             ToolbarItem(placement: .topBarTrailing) { SoundToggle() }
         }
         .onAppear {
-            model.ordered = ordered   // apply the persisted preference to this run
+            // Only on a real change: the model already took the preference at init, and
+            // a redundant assignment would re-anchor the ordered cursor via `didSet`.
+            if model.ordered != ordered { model.ordered = ordered }
             autoPlay()
             Track.screen("train", ["lesson": lessonNumber])
             if !store.isPremium { Ads.preloadInterstitial() }

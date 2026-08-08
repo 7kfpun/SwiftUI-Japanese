@@ -235,6 +235,21 @@ struct TrainTests {
         }
     }
 
+    /// Starting ordered means starting at word 1. The preference has to reach the
+    /// model's initialiser, because `init` draws the first word immediately — applying
+    /// it afterwards anchored the walk to whatever random word had already been picked,
+    /// so a "front to back" sweep began in the middle of the lesson.
+    @Test func orderedModeStartsAtTheFirstWord() {
+        let vocab = VocabStore.lesson(1).entries
+        for _ in 0..<20 {                       // would pass ~1-in-35 of the time by luck
+            let model = TrainModel(vocab: vocab, ordered: true)
+            #expect(model.answer.id == vocab[0].id)
+        }
+        // Random stays random — it must not silently become an ordered walk.
+        let seen = Set((0..<30).map { _ in TrainModel(vocab: vocab).answer.id })
+        #expect(seen.count > 1)
+    }
+
     /// Ordered mode walks the lesson front to back, wrapping — and switching it on
     /// mid-run resumes from the word on screen rather than snapping to word 1.
     @Test func orderedModeWalksTheLessonAndResumesInPlace() {
@@ -426,39 +441,39 @@ struct KanaSketchTests {
     }
 }
 
-// MARK: - Today daily picker & widget contract
+// MARK: - Today deck & widget contract
 
 struct TodayTests {
     private var lesson: [Vocab] { VocabStore.lesson(2).entries }
 
-    @Test func randomPickReturnsCountUniqueWords() {
-        let picks = DailyPicker.pick(from: lesson, count: 7, savedIDs: [])
-        #expect(picks.count == 7)
-        #expect(Set(picks.map(\.id)).count == 7)
-        #expect(picks.allSatisfy { lesson.contains($0) })
+    /// Today deals the rung's whole pool — new words *and* the review window — because
+    /// the challenge asks about both. Dealing only the new words left every review
+    /// question unprepared for.
+    @Test func deckIsTheChallengePoolNotJustNewWords() {
+        let all = lesson
+        // Rung 2 is the first that can carry review, so it's where the two differ.
+        let pool = Challenge.pool(all, index: 2)
+        let new = Challenge.newWords(all, index: 2)
+        #expect(pool.count > new.count)
+        #expect(new.allSatisfy { w in pool.contains { $0.id == w.id } })
     }
 
-    @Test func savedSelectionRestoresInOrder() {
-        let saved: [String] = lesson.prefix(7).map(\.id).reversed()
-        let picks = DailyPicker.pick(from: lesson, count: 7, savedIDs: saved)
-        #expect(picks.map(\.id) == saved)   // exact words, saved order
-    }
-
-    @Test func staleSavedIDsFallBackToFreshPick() {
-        let picks = DailyPicker.pick(from: lesson, count: 7, savedIDs: ["999/does-not-exist"])
-        #expect(picks.count == 7)
-    }
-
-    /// The snapshot is the app↔widget wire format — it must round-trip stably.
+    /// The snapshot is the app↔widget wire format — it must round-trip stably, and a
+    /// snapshot written before `challenge` existed must still decode.
     @Test func widgetSnapshotRoundTrips() throws {
         let words = lesson.prefix(7).map {
             TodayShared.Word(kana: $0.kana, kanji: $0.kanji, romaji: $0.romaji, meaning: $0.translation)
         }
-        let snap = TodayShared.Snapshot(lesson: 2, words: Array(words))
+        let snap = TodayShared.Snapshot(lesson: 2, words: Array(words), challenge: 3)
         let data = try JSONEncoder().encode(snap)
         let back = try JSONDecoder().decode(TodayShared.Snapshot.self, from: data)
         #expect(back.lesson == 2)
         #expect(back.words == Array(words))
+        #expect(back.challenge == 3)
+
+        let legacy = #"{"lesson":2,"words":[]}"#.data(using: .utf8)!
+        let old = try JSONDecoder().decode(TodayShared.Snapshot.self, from: legacy)
+        #expect(old.challenge == nil)
     }
 }
 

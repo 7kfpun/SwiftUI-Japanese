@@ -99,7 +99,12 @@
     "Save %@%": "Save %@%%",
     "%@ / month": "%@ / month",
     "or": "or",
-    "Plans couldn't load. Check your connection and try again.": "Plans couldn't load. Check your connection and try again."
+    "Plans couldn't load. Check your connection and try again.": "Plans couldn't load. Check your connection and try again.",
+    "Lifetime": "Lifetime",
+    "1 month": "1 month",
+    "%@ months": "%@ months",
+    "Pay once, yours forever": "Pay once, yours forever",
+    "Ready for Challenge %@?": "Ready for Challenge %@?"
   },
   "zh": {
     "Kana": "假名",
@@ -201,7 +206,12 @@
     "Save %@%": "省 %@%%",
     "%@ / month": "%@ / 月",
     "or": "或",
-    "Plans couldn't load. Check your connection and try again.": "方案加载失败，请检查网络后再试一次。"
+    "Plans couldn't load. Check your connection and try again.": "方案加载失败，请检查网络后再试一次。",
+    "Lifetime": "永久",
+    "1 month": "1 个月",
+    "%@ months": "%@ 个月",
+    "Pay once, yours forever": "一次付费，终身使用",
+    "Ready for Challenge %@?": "准备好挑战 %@ 了吗？"
   },
   "zh-Hant": {
     "Kana": "假名",
@@ -303,7 +313,12 @@
     "Save %@%": "省 %@%%",
     "%@ / month": "%@ / 月",
     "or": "或",
-    "Plans couldn't load. Check your connection and try again.": "方案載入失敗，請檢查網路後再試一次。"
+    "Plans couldn't load. Check your connection and try again.": "方案載入失敗，請檢查網路後再試一次。",
+    "Lifetime": "終身",
+    "1 month": "1 個月",
+    "%@ months": "%@ 個月",
+    "Pay once, yours forever": "一次付費，終身使用",
+    "Ready for Challenge %@?": "準備好挑戰 %@ 了嗎？"
   },
   "vi": {
     "Kana": "Kana",
@@ -405,7 +420,12 @@
     "Save %@%": "Tiết kiệm %@%%",
     "%@ / month": "%@ / tháng",
     "or": "hoặc",
-    "Plans couldn't load. Check your connection and try again.": "Không tải được gói. Kiểm tra kết nối và thử lại."
+    "Plans couldn't load. Check your connection and try again.": "Không tải được gói. Kiểm tra kết nối và thử lại.",
+    "Lifetime": "Trọn đời",
+    "1 month": "1 tháng",
+    "%@ months": "%@ tháng",
+    "Pay once, yours forever": "Trả một lần, dùng trọn đời",
+    "Ready for Challenge %@?": "Sẵn sàng cho Thử thách %@?"
   },
   "de": {
     "Kana": "Kana",
@@ -507,7 +527,12 @@
     "Save %@%": "%@ %% sparen",
     "%@ / month": "%@ / Monat",
     "or": "oder",
-    "Plans couldn't load. Check your connection and try again.": "Angebote konnten nicht geladen werden. Prüfe deine Verbindung."
+    "Plans couldn't load. Check your connection and try again.": "Angebote konnten nicht geladen werden. Prüfe deine Verbindung.",
+    "Lifetime": "Lebenslang",
+    "1 month": "1 Monat",
+    "%@ months": "%@ Monate",
+    "Pay once, yours forever": "Einmal zahlen, für immer behalten",
+    "Ready for Challenge %@?": "Bereit für Herausforderung %@?"
   },
   "th": {
     "Kana": "คานะ",
@@ -609,7 +634,12 @@
     "Save %@%": "ประหยัด %@%%",
     "%@ / month": "%@ / เดือน",
     "or": "หรือ",
-    "Plans couldn't load. Check your connection and try again.": "โหลดแพ็กเกจไม่สำเร็จ ตรวจสอบการเชื่อมต่อแล้วลองใหม่"
+    "Plans couldn't load. Check your connection and try again.": "โหลดแพ็กเกจไม่สำเร็จ ตรวจสอบการเชื่อมต่อแล้วลองใหม่",
+    "Lifetime": "ตลอดชีพ",
+    "1 month": "1 เดือน",
+    "%@ months": "%@ เดือน",
+    "Pay once, yours forever": "จ่ายครั้งเดียว ใช้ได้ตลอดชีพ",
+    "Ready for Challenge %@?": "พร้อมสำหรับด่านท้าทาย %@ หรือยัง"
   },
   "my": {
     "Kana": "ကာနာ",
@@ -711,7 +741,12 @@
     "Save %@%": "%@%% ချွေတာ",
     "%@ / month": "%@ / လ",
     "or": "သို့မဟုတ်",
-    "Plans couldn't load. Check your connection and try again.": "အစီအစဉ်များ မဖွင့်နိုင်ပါ။ ချိတ်ဆက်မှုစစ်ပြီး ထပ်ကြိုးစားပါ။"
+    "Plans couldn't load. Check your connection and try again.": "အစီအစဉ်များ မဖွင့်နိုင်ပါ။ ချိတ်ဆက်မှုစစ်ပြီး ထပ်ကြိုးစားပါ။",
+    "Lifetime": "တစ်သက်တာ",
+    "1 month": "၁ လ",
+    "%@ months": "%@ လ",
+    "Pay once, yours forever": "တစ်ကြိမ်ပေးချေ၊ တစ်သက်လုံးသုံးပါ",
+    "Ready for Challenge %@?": "စိန်ခေါ်မှု %@ အတွက် အဆင်သင့်လား"
   },
   "es": {
     "Kana": "Kana",
@@ -813,7 +848,12 @@
     "Save %@%": "Ahorra %@ %%",
     "%@ / month": "%@ / mes",
     "or": "o",
-    "Plans couldn't load. Check your connection and try again.": "No se pudieron cargar los planes. Revisa tu conexión e inténtalo de nuevo."
+    "Plans couldn't load. Check your connection and try again.": "No se pudieron cargar los planes. Revisa tu conexión e inténtalo de nuevo.",
+    "Lifetime": "De por vida",
+    "1 month": "1 mes",
+    "%@ months": "%@ meses",
+    "Pay once, yours forever": "Paga una vez, tuyo para siempre",
+    "Ready for Challenge %@?": "¿Listo para el Reto %@?"
   },
   "fr": {
     "Kana": "Kana",
@@ -915,7 +955,12 @@
     "Save %@%": "Économisez %@ %%",
     "%@ / month": "%@ / mois",
     "or": "ou",
-    "Plans couldn't load. Check your connection and try again.": "Impossible de charger les offres. Vérifiez votre connexion et réessayez."
+    "Plans couldn't load. Check your connection and try again.": "Impossible de charger les offres. Vérifiez votre connexion et réessayez.",
+    "Lifetime": "À vie",
+    "1 month": "1 mois",
+    "%@ months": "%@ mois",
+    "Pay once, yours forever": "Payez une fois, à vous pour toujours",
+    "Ready for Challenge %@?": "Prêt pour le Défi %@ ?"
   },
   "ru": {
     "Kana": "Кана",
@@ -1017,7 +1062,12 @@
     "Save %@%": "Экономия %@ %%",
     "%@ / month": "%@ / мес.",
     "or": "или",
-    "Plans couldn't load. Check your connection and try again.": "Не удалось загрузить тарифы. Проверьте соединение и повторите."
+    "Plans couldn't load. Check your connection and try again.": "Не удалось загрузить тарифы. Проверьте соединение и повторите.",
+    "Lifetime": "Навсегда",
+    "1 month": "1 месяц",
+    "%@ months": "%@ мес.",
+    "Pay once, yours forever": "Один платёж — навсегда",
+    "Ready for Challenge %@?": "Готовы к испытанию %@?"
   },
   "bn": {
     "Kana": "কানা",
@@ -1119,7 +1169,12 @@
     "Save %@%": "%@%% সাশ্রয়",
     "%@ / month": "%@ / মাস",
     "or": "অথবা",
-    "Plans couldn't load. Check your connection and try again.": "প্ল্যান লোড হয়নি। সংযোগ দেখে আবার চেষ্টা করুন।"
+    "Plans couldn't load. Check your connection and try again.": "প্ল্যান লোড হয়নি। সংযোগ দেখে আবার চেষ্টা করুন।",
+    "Lifetime": "আজীবন",
+    "1 month": "১ মাস",
+    "%@ months": "%@ মাস",
+    "Pay once, yours forever": "একবার দিন, চিরকাল আপনার",
+    "Ready for Challenge %@?": "চ্যালেঞ্জ %@ এর জন্য প্রস্তুত?"
   },
   "hi": {
     "Kana": "काना",
@@ -1221,7 +1276,12 @@
     "Save %@%": "%@%% बचाएँ",
     "%@ / month": "%@ / माह",
     "or": "या",
-    "Plans couldn't load. Check your connection and try again.": "प्लान लोड नहीं हुए। कनेक्शन जाँचकर फिर कोशिश करें।"
+    "Plans couldn't load. Check your connection and try again.": "प्लान लोड नहीं हुए। कनेक्शन जाँचकर फिर कोशिश करें।",
+    "Lifetime": "आजीवन",
+    "1 month": "1 माह",
+    "%@ months": "%@ माह",
+    "Pay once, yours forever": "एक बार भुगतान, हमेशा के लिए आपका",
+    "Ready for Challenge %@?": "चुनौती %@ के लिए तैयार हैं?"
   },
   "ta": {
     "Kana": "கானா",
@@ -1323,7 +1383,12 @@
     "Save %@%": "%@%% சேமியுங்கள்",
     "%@ / month": "%@ / மாதம்",
     "or": "அல்லது",
-    "Plans couldn't load. Check your connection and try again.": "திட்டங்களை ஏற்ற முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்."
+    "Plans couldn't load. Check your connection and try again.": "திட்டங்களை ஏற்ற முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.",
+    "Lifetime": "வாழ்நாள்",
+    "1 month": "1 மாதம்",
+    "%@ months": "%@ மாதங்கள்",
+    "Pay once, yours forever": "ஒருமுறை செலுத்து, என்றென்றும் உங்கள்",
+    "Ready for Challenge %@?": "சவால் %@ க்கு தயாரா?"
   },
   "te": {
     "Kana": "కానా",
@@ -1425,7 +1490,12 @@
     "Save %@%": "%@%% ఆదా",
     "%@ / month": "%@ / నెల",
     "or": "లేదా",
-    "Plans couldn't load. Check your connection and try again.": "ప్లాన్‌లు లోడ్ కాలేదు. కనెక్షన్ చూసి మళ్లీ ప్రయత్నించండి."
+    "Plans couldn't load. Check your connection and try again.": "ప్లాన్‌లు లోడ్ కాలేదు. కనెక్షన్ చూసి మళ్లీ ప్రయత్నించండి.",
+    "Lifetime": "జీవితకాలం",
+    "1 month": "1 నెల",
+    "%@ months": "%@ నెలలు",
+    "Pay once, yours forever": "ఒకసారి చెల్లించండి, ఎప్పటికీ మీది",
+    "Ready for Challenge %@?": "సవాలు %@ కు సిద్ధమా?"
   },
   "fil": {
     "Kana": "Kana",
@@ -1527,7 +1597,12 @@
     "Save %@%": "Makatipid ng %@%%",
     "%@ / month": "%@ / buwan",
     "or": "o",
-    "Plans couldn't load. Check your connection and try again.": "Hindi na-load ang mga plano. Suriin ang koneksyon at subukan ulit."
+    "Plans couldn't load. Check your connection and try again.": "Hindi na-load ang mga plano. Suriin ang koneksyon at subukan ulit.",
+    "Lifetime": "Habambuhay",
+    "1 month": "1 buwan",
+    "%@ months": "%@ buwan",
+    "Pay once, yours forever": "Bayad minsan, sa iyo habambuhay",
+    "Ready for Challenge %@?": "Handa na sa Hamon %@?"
   },
   "id": {
     "Kana": "Kana",
@@ -1629,7 +1704,12 @@
     "Save %@%": "Hemat %@%%",
     "%@ / month": "%@ / bulan",
     "or": "atau",
-    "Plans couldn't load. Check your connection and try again.": "Paket gagal dimuat. Periksa koneksi lalu coba lagi."
+    "Plans couldn't load. Check your connection and try again.": "Paket gagal dimuat. Periksa koneksi lalu coba lagi.",
+    "Lifetime": "Seumur hidup",
+    "1 month": "1 bulan",
+    "%@ months": "%@ bulan",
+    "Pay once, yours forever": "Bayar sekali, milikmu selamanya",
+    "Ready for Challenge %@?": "Siap untuk Tantangan %@?"
   },
   "ko": {
     "Kana": "가나",
@@ -1731,6 +1811,11 @@
     "Save %@%": "%@%% 절약",
     "%@ / month": "%@ / 월",
     "or": "또는",
-    "Plans couldn't load. Check your connection and try again.": "요금제를 불러오지 못했어요. 연결을 확인하고 다시 시도하세요."
+    "Plans couldn't load. Check your connection and try again.": "요금제를 불러오지 못했어요. 연결을 확인하고 다시 시도하세요.",
+    "Lifetime": "평생",
+    "1 month": "1개월",
+    "%@ months": "%@개월",
+    "Pay once, yours forever": "한 번 결제, 평생 이용",
+    "Ready for Challenge %@?": "챌린지 %@ 준비됐나요?"
   }
 }
