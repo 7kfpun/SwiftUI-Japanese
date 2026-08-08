@@ -104,7 +104,11 @@
     "1 month": "1 month",
     "%@ months": "%@ months",
     "Pay once, yours forever": "Pay once, yours forever",
-    "Ready for Challenge %@?": "Ready for Challenge %@?"
+    "Ready for Challenge %@?": "Ready for Challenge %@?",
+    "Enjoying Japanese Daily?": "Enjoying Japanese Daily?",
+    "Tap a star to tell us how it's going.": "Tap a star to tell us how it's going.",
+    "%@ stars": "%@ stars",
+    "Not now": "Not now"
   },
   "zh": {
     "Kana": "假名",
@@ -211,7 +215,11 @@
     "1 month": "1 个月",
     "%@ months": "%@ 个月",
     "Pay once, yours forever": "一次付费，终身使用",
-    "Ready for Challenge %@?": "准备好挑战 %@ 了吗？"
+    "Ready for Challenge %@?": "准备好挑战 %@ 了吗？",
+    "Enjoying Japanese Daily?": "喜欢每日日语吗？",
+    "Tap a star to tell us how it's going.": "点一颗星，告诉我们你的感受。",
+    "%@ stars": "%@ 星",
+    "Not now": "暂不"
   },
   "zh-Hant": {
     "Kana": "假名",
@@ -318,7 +326,11 @@
     "1 month": "1 個月",
     "%@ months": "%@ 個月",
     "Pay once, yours forever": "一次付費，終身使用",
-    "Ready for Challenge %@?": "準備好挑戰 %@ 了嗎？"
+    "Ready for Challenge %@?": "準備好挑戰 %@ 了嗎？",
+    "Enjoying Japanese Daily?": "喜歡每日日語嗎？",
+    "Tap a star to tell us how it's going.": "點一顆星，告訴我們你的感受。",
+    "%@ stars": "%@ 星",
+    "Not now": "暫不"
   },
   "vi": {
     "Kana": "Kana",
@@ -425,7 +437,11 @@
     "1 month": "1 tháng",
     "%@ months": "%@ tháng",
     "Pay once, yours forever": "Trả một lần, dùng trọn đời",
-    "Ready for Challenge %@?": "Sẵn sàng cho Thử thách %@?"
+    "Ready for Challenge %@?": "Sẵn sàng cho Thử thách %@?",
+    "Enjoying Japanese Daily?": "Bạn thấy Japanese Daily thế nào?",
+    "Tap a star to tell us how it's going.": "Chạm vào một ngôi sao để cho chúng tôi biết.",
+    "%@ stars": "%@ sao",
+    "Not now": "Để sau"
   },
   "de": {
     "Kana": "Kana",
@@ -532,7 +548,11 @@
     "1 month": "1 Monat",
     "%@ months": "%@ Monate",
     "Pay once, yours forever": "Einmal zahlen, für immer behalten",
-    "Ready for Challenge %@?": "Bereit für Herausforderung %@?"
+    "Ready for Challenge %@?": "Bereit für Herausforderung %@?",
+    "Enjoying Japanese Daily?": "Gefällt dir Japanese Daily?",
+    "Tap a star to tell us how it's going.": "Tippe auf einen Stern und sag uns, wie es läuft.",
+    "%@ stars": "%@ Sterne",
+    "Not now": "Später"
   },
   "th": {
     "Kana": "คานะ",
@@ -639,7 +659,11 @@
     "1 month": "1 เดือน",
     "%@ months": "%@ เดือน",
     "Pay once, yours forever": "จ่ายครั้งเดียว ใช้ได้ตลอดชีพ",
-    "Ready for Challenge %@?": "พร้อมสำหรับด่านท้าทาย %@ หรือยัง"
+    "Ready for Challenge %@?": "พร้อมสำหรับด่านท้าทาย %@ หรือยัง",
+    "Enjoying Japanese Daily?": "ชอบ Japanese Daily ไหม",
+    "Tap a star to tell us how it's going.": "แตะดาวเพื่อบอกเราว่าเป็นอย่างไรบ้าง",
+    "%@ stars": "%@ ดาว",
+    "Not now": "ไว้ก่อน"
   },
   "my": {
     "Kana": "ကာနာ",
@@ -746,7 +770,11 @@
     "1 month": "၁ လ",
     "%@ months": "%@ လ",
     "Pay once, yours forever": "တစ်ကြိမ်ပေးချေ၊ တစ်သက်လုံးသုံးပါ",
-    "Ready for Challenge %@?": "စိန်ခေါ်မှု %@ အတွက် အဆင်သင့်လား"
+    "Ready for Challenge %@?": "စိန်ခေါ်မှု %@ အတွက် အဆင်သင့်လား",
+    "Enjoying Japanese Daily?": "Japanese Daily ကို နှစ်သက်ပါသလား",
+    "Tap a star to tell us how it's going.": "ဘယ်လိုရှိလဲ ပြောပြရန် ကြယ်တစ်ပွင့်ကို နှိပ်ပါ။",
+    "%@ stars": "ကြယ် %@ ပွင့်",
+    "Not now": "အခုမဟုတ်ပါ"
   },
   "es": {
     "Kana": "Kana",
@@ -853,7 +881,11 @@
     "1 month": "1 mes",
     "%@ months": "%@ meses",
     "Pay once, yours forever": "Paga una vez, tuyo para siempre",
-    "Ready for Challenge %@?": "¿Listo para el Reto %@?"
+    "Ready for Challenge %@?": "¿Listo para el Reto %@?",
+    "Enjoying Japanese Daily?": "¿Te gusta Japanese Daily?",
+    "Tap a star to tell us how it's going.": "Toca una estrella para contarnos qué tal.",
+    "%@ stars": "%@ estrellas",
+    "Not now": "Ahora no"
   },
   "fr": {
     "Kana": "Kana",
@@ -960,7 +992,11 @@
     "1 month": "1 mois",
     "%@ months": "%@ mois",
     "Pay once, yours forever": "Payez une fois, à vous pour toujours",
-    "Ready for Challenge %@?": "Prêt pour le Défi %@ ?"
+    "Ready for Challenge %@?": "Prêt pour le Défi %@ ?",
+    "Enjoying Japanese Daily?": "Vous aimez Japanese Daily ?",
+    "Tap a star to tell us how it's going.": "Touchez une étoile pour nous dire ce que vous en pensez.",
+    "%@ stars": "%@ étoiles",
+    "Not now": "Plus tard"
   },
   "ru": {
     "Kana": "Кана",
@@ -1067,7 +1103,11 @@
     "1 month": "1 месяц",
     "%@ months": "%@ мес.",
     "Pay once, yours forever": "Один платёж — навсегда",
-    "Ready for Challenge %@?": "Готовы к испытанию %@?"
+    "Ready for Challenge %@?": "Готовы к испытанию %@?",
+    "Enjoying Japanese Daily?": "Нравится Japanese Daily?",
+    "Tap a star to tell us how it's going.": "Нажмите на звезду и расскажите, как вам.",
+    "%@ stars": "%@ звёзд",
+    "Not now": "Не сейчас"
   },
   "bn": {
     "Kana": "কানা",
@@ -1174,7 +1214,11 @@
     "1 month": "১ মাস",
     "%@ months": "%@ মাস",
     "Pay once, yours forever": "একবার দিন, চিরকাল আপনার",
-    "Ready for Challenge %@?": "চ্যালেঞ্জ %@ এর জন্য প্রস্তুত?"
+    "Ready for Challenge %@?": "চ্যালেঞ্জ %@ এর জন্য প্রস্তুত?",
+    "Enjoying Japanese Daily?": "Japanese Daily ভালো লাগছে?",
+    "Tap a star to tell us how it's going.": "কেমন লাগছে জানাতে একটি তারায় ট্যাপ করুন।",
+    "%@ stars": "%@ তারা",
+    "Not now": "এখন নয়"
   },
   "hi": {
     "Kana": "काना",
@@ -1281,7 +1325,11 @@
     "1 month": "1 माह",
     "%@ months": "%@ माह",
     "Pay once, yours forever": "एक बार भुगतान, हमेशा के लिए आपका",
-    "Ready for Challenge %@?": "चुनौती %@ के लिए तैयार हैं?"
+    "Ready for Challenge %@?": "चुनौती %@ के लिए तैयार हैं?",
+    "Enjoying Japanese Daily?": "Japanese Daily पसंद आ रहा है?",
+    "Tap a star to tell us how it's going.": "कैसा लग रहा है, बताने के लिए एक तारे पर टैप करें।",
+    "%@ stars": "%@ सितारे",
+    "Not now": "अभी नहीं"
   },
   "ta": {
     "Kana": "கானா",
@@ -1388,7 +1436,11 @@
     "1 month": "1 மாதம்",
     "%@ months": "%@ மாதங்கள்",
     "Pay once, yours forever": "ஒருமுறை செலுத்து, என்றென்றும் உங்கள்",
-    "Ready for Challenge %@?": "சவால் %@ க்கு தயாரா?"
+    "Ready for Challenge %@?": "சவால் %@ க்கு தயாரா?",
+    "Enjoying Japanese Daily?": "Japanese Daily பிடித்திருக்கிறதா?",
+    "Tap a star to tell us how it's going.": "எப்படி இருக்கிறது என்று சொல்ல ஒரு நட்சத்திரத்தைத் தட்டவும்.",
+    "%@ stars": "%@ நட்சத்திரங்கள்",
+    "Not now": "இப்போது வேண்டாம்"
   },
   "te": {
     "Kana": "కానా",
@@ -1495,7 +1547,11 @@
     "1 month": "1 నెల",
     "%@ months": "%@ నెలలు",
     "Pay once, yours forever": "ఒకసారి చెల్లించండి, ఎప్పటికీ మీది",
-    "Ready for Challenge %@?": "సవాలు %@ కు సిద్ధమా?"
+    "Ready for Challenge %@?": "సవాలు %@ కు సిద్ధమా?",
+    "Enjoying Japanese Daily?": "Japanese Daily నచ్చిందా?",
+    "Tap a star to tell us how it's going.": "ఎలా ఉందో చెప్పడానికి ఒక నక్షత్రాన్ని నొక్కండి.",
+    "%@ stars": "%@ నక్షత్రాలు",
+    "Not now": "ఇప్పుడు కాదు"
   },
   "fil": {
     "Kana": "Kana",
@@ -1602,7 +1658,11 @@
     "1 month": "1 buwan",
     "%@ months": "%@ buwan",
     "Pay once, yours forever": "Bayad minsan, sa iyo habambuhay",
-    "Ready for Challenge %@?": "Handa na sa Hamon %@?"
+    "Ready for Challenge %@?": "Handa na sa Hamon %@?",
+    "Enjoying Japanese Daily?": "Nage-enjoy sa Japanese Daily?",
+    "Tap a star to tell us how it's going.": "I-tap ang isang bituin para sabihin sa amin.",
+    "%@ stars": "%@ bituin",
+    "Not now": "Hindi ngayon"
   },
   "id": {
     "Kana": "Kana",
@@ -1709,7 +1769,11 @@
     "1 month": "1 bulan",
     "%@ months": "%@ bulan",
     "Pay once, yours forever": "Bayar sekali, milikmu selamanya",
-    "Ready for Challenge %@?": "Siap untuk Tantangan %@?"
+    "Ready for Challenge %@?": "Siap untuk Tantangan %@?",
+    "Enjoying Japanese Daily?": "Menikmati Japanese Daily?",
+    "Tap a star to tell us how it's going.": "Ketuk bintang untuk memberi tahu kami.",
+    "%@ stars": "%@ bintang",
+    "Not now": "Nanti saja"
   },
   "ko": {
     "Kana": "가나",
@@ -1816,6 +1880,10 @@
     "1 month": "1개월",
     "%@ months": "%@개월",
     "Pay once, yours forever": "한 번 결제, 평생 이용",
-    "Ready for Challenge %@?": "챌린지 %@ 준비됐나요?"
+    "Ready for Challenge %@?": "챌린지 %@ 준비됐나요?",
+    "Enjoying Japanese Daily?": "Japanese Daily가 마음에 드시나요?",
+    "Tap a star to tell us how it's going.": "별을 눌러 어떤지 알려주세요.",
+    "%@ stars": "별 %@개",
+    "Not now": "나중에"
   }
 }

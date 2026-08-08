@@ -140,7 +140,7 @@ struct TodayWidgetEntryView: View {
                                 // surfaces, so they shouldn't read as different things.
                                 HStack(spacing: 4) {
                                     Text("Ready for Challenge \(c)?")
-                                    Image(systemName: "chevron.right").font(.system(size: 8))
+                                    Image(systemName: "chevron.right").imageScale(.small)
                                 }
                                 .font(.caption2.weight(.semibold))
                                 .foregroundStyle(accent)

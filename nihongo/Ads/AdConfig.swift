@@ -38,17 +38,20 @@ enum AdConfig {
     static var isProduction: Bool { !productionBanners.isEmpty }
 
     /// The banner unit ID for a slot — production when configured, else the test unit.
-    /// Slots added after the Secrets.plist was written fall back to another production
-    /// unit first, so a missing key never ships test ads in a production build.
+    ///
+    /// `.today` used to borrow the vocab-list unit here, because Secrets.plist predated
+    /// the Today tab and had no key for it. That alias was the only thing keeping
+    /// Google's public test banner off the landing tab in a production build — a config
+    /// gap wearing a code fallback as a disguise. The key exists now, so the alias is
+    /// gone and a missing key fails visibly (test ads) instead of silently.
+    ///
     /// DEBUG always uses Google's test units: dev clicks on real ads violate AdMob
     /// policy, and test units always fill (brand-new real units can no-fill for days).
     static func banner(_ slot: AdSlot) -> String {
         #if DEBUG
         return testBanner
         #else
-        if let id = productionBanners[slot.rawValue] { return id }
-        if slot == .today, let id = productionBanners[AdSlot.vocabList.rawValue] { return id }
-        return testBanner
+        return productionBanners[slot.rawValue] ?? testBanner
         #endif
     }
 

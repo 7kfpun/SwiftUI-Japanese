@@ -14,6 +14,8 @@ struct ChallengeView: View {
     @Environment(Store.self) private var store
     @AppStorage(Pref.soundOn) private var soundOn = true
     @State private var recorded = false
+    @State private var showRating = false
+    @State private var showFeedback = false
 
     private let lesson: Lesson
     private let index: Int
@@ -94,6 +96,23 @@ struct ChallengeView: View {
             // A popup ad on the way out — non-premium only, throttled. Never mid-run.
             if !store.isPremium && model.isDone { Ads.showInterstitialIfReady() }
         }
+        .sheet(isPresented: $showRating) {
+            RatingSheet { stars in
+                Track.event("rating_given", ["stars": stars,
+                                             "lesson": lesson.number,
+                                             "index": index])
+                // 4★+ goes to Apple; anything lower goes somewhere a reply can come
+                // back from. Both are a real destination — neither answer dead-ends.
+                if stars >= 4 {
+                    RatingPrompt.requestAppStoreReview()
+                } else {
+                    showFeedback = true
+                }
+            }
+        }
+        .sheet(isPresented: $showFeedback) {
+            SafariView(url: Feedback.url(source: "rating")).ignoresSafeArea()
+        }
     }
 
     /// Persist the result once. Guarded because `isDone` can re-fire on redraws and a
@@ -108,6 +127,20 @@ struct ChallengeView: View {
                                            "score": model.scorePercent,
                                            "stars": model.stars,
                                            "passed": model.passed])
+        askForRatingIfEarned()
+    }
+
+    /// A just-passed rung is the one moment the app is unambiguously working, so it's
+    /// where the ask goes — subscribers only, and once. Deferred a beat so the result
+    /// screen is on screen behind the sheet rather than appearing under it.
+    private func askForRatingIfEarned() {
+        let passedCount = ChallengeResult.totalPassed(context: context)
+        guard RatingPrompt.shouldAsk(isPremium: store.isPremium,
+                                     passed: model.passed,
+                                     passedCount: passedCount) else { return }
+        RatingPrompt.markAsked()
+        Track.event("rating_shown", ["lesson": lesson.number, "passed_total": passedCount])
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { showRating = true }
     }
 
     private var progressBar: some View {

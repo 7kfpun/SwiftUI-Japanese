@@ -33,13 +33,13 @@ struct WatchTodayView: View {
             // when the source has none (or repeats the kana), same rule as `displaysKanji`.
             if !word.kanji.isEmpty, word.kanji != word.kana {
                 Text(word.kanji)
-                    .font(WatchTheme.jp(17)).foregroundStyle(.secondary)
+                    .font(WatchTheme.jp(17, relativeTo: .body)).foregroundStyle(.secondary)
                     .minimumScaleFactor(0.6).lineLimit(1)
             }
             // The one thing that has to stay readable at 41mm, so it gets the size budget
             // and the most aggressive scale floor.
             Text(word.kana)
-                .font(WatchTheme.jp(30))
+                .font(WatchTheme.jp(30, relativeTo: .largeTitle))
                 .minimumScaleFactor(0.35).lineLimit(2)
             if !word.romaji.isEmpty {
                 Text(word.romaji)

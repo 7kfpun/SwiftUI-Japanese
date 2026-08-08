@@ -17,8 +17,6 @@ struct SettingsView: View {
         return "\(v) (\(b))"
     }
 
-    /// Airtable feedback form (from the RN app), prefilled with the platform.
-    private static let feedbackURL = URL(string: "https://airtable.com/shr7xvYAyInUbJNif?prefill_Platform=iOS")!
 
     var body: some View {
         NavigationStack {
@@ -103,7 +101,7 @@ struct SettingsView: View {
             .onChange(of: vocabLanguage) { Track.event("set_vocab_language", ["code": vocabLanguage]) }
             .sheet(isPresented: $showPaywall) { PaywallView(source: "settings") }
             .sheet(isPresented: $showFeedback) {
-                SafariView(url: Self.feedbackURL).ignoresSafeArea()
+                SafariView(url: Feedback.url(source: "settings")).ignoresSafeArea()
             }
         }
     }

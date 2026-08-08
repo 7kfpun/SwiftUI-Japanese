@@ -44,7 +44,12 @@ struct WatchTodayProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<WatchTodayEntry>) -> Void) {
         let (words, lesson) = currentWords()
         let now = Date()
-        let entries = (0..<min(words.count, 12)).map { i in
+        // One entry per word, so the rotation eventually reaches the whole deck. This
+        // was capped at 12 when a deck was one rung's ~7 new words; a challenge pool
+        // runs to the mid-twenties, and with no cursor to page by hand the cap meant
+        // the tail of the deck was simply unreachable on the wrist. The 30 matches the
+        // iOS widget and is a backstop against a pathological deck, not a design.
+        let entries = (0..<min(words.count, 30)).map { i in
             WatchTodayEntry(date: Calendar.current.date(byAdding: .hour, value: i, to: now) ?? now,
                             word: words[i % words.count], lesson: lesson)
         }
@@ -71,8 +76,10 @@ struct WatchTodayWidgetEntryView: View {
             case .accessoryCircular:
                 // A circle fits the word and nothing else, so the kana carries it alone —
                 // the meaning is one tap away in the app.
+                // A text style rather than a fixed 17pt: complications have to honour
+                // the watch's text-size setting, and a hard size just ignores it.
                 Text(entry.word?.kana ?? "日本")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.headline.weight(.semibold))
                     .minimumScaleFactor(0.35).lineLimit(2)
                     .multilineTextAlignment(.center)
                     .padding(2)

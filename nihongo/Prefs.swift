@@ -19,4 +19,6 @@ enum Pref {
     /// toggled via a long-press on the version footer in Settings. Lets the
     /// developer exclude their own TestFlight/Release usage without a rebuild.
     static let analyticsExcluded   = "analyticsExcluded"
+    /// Set once the rating star row has been shown, so it never asks twice.
+    static let ratingAsked         = "ratingAsked"
 }

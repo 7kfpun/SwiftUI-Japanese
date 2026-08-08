@@ -99,6 +99,14 @@ final class ChallengeResult {
         results.values.filter(\.isPassed).count
     }
 
+    /// Rungs passed across every lesson — how far in the app someone actually is,
+    /// used to decide whether they've done enough to be worth asking for a rating.
+    /// Deduped by `key` first, since a sync merge can leave two rows for one rung.
+    static func totalPassed(context: ModelContext) -> Int {
+        let rows = (try? context.fetch(FetchDescriptor<ChallengeResult>())) ?? []
+        return Set(rows.filter(\.isPassed).map(\.id)).count
+    }
+
     /// The lowest rung not yet passed, or nil once the whole ladder is cleared —
     /// where the Today deck points its study cards.
     static func firstUnpassed(total: Int, results: [Int: ChallengeResult]) -> Int? {
