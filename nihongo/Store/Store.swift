@@ -50,7 +50,8 @@ enum Gating {
 final class Store {
     private(set) var products: [Product] = []
     private(set) var isPremium = false
-    private(set) var tier = "none"          // lifetime / 3m / 6m / 12m / none
+    // Sold: lifetime / 1m / 3m / 6m. Also reachable by restore only: 12m (see `legacy`).
+    private(set) var tier = "none"
     private(set) var purchasingID: String?
 
     init() {
@@ -135,7 +136,7 @@ final class Store {
         Track.event("restore", ["premium": isPremium])
     }
 
-    /// Apple's native manage-subscriptions sheet — where users switch tier (3m↔6m↔12m
+    /// Apple's native manage-subscriptions sheet — where users switch tier (1m↔3m↔6m
     /// within the same group) or cancel. Refreshes entitlement on return.
     func manageSubscriptions() async {
         guard let scene = UIApplication.shared.connectedScenes

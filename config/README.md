@@ -51,9 +51,12 @@ One-time setup:
 1. Target → *Signing & Capabilities* → **+ In-App Purchase**.
 2. To test in the **simulator**: scheme → *Run ▸ Options ▸ StoreKit Configuration* →
    select `nihongo/Store/Products.storekit`.
-3. For production: create the subscription group `premium` (`…premium.3m/6m/12m`) and the
-   non-consumable `…premium.lifetime` in App Store Connect (see `PremiumProduct` in
-   `nihongo/Store/Store.swift`).
+3. For production: create the subscription group `premium` — `…premium.1m`, `…premium.3M`,
+   `…premium.6M` (**note the uppercase M** on the last two: the lowercase 2019 IDs are
+   reserved forever, so the current products had to differ) — and the non-consumable
+   `…premium.lifetime` in App Store Connect. The lowercase `3m`/`6m`/`12m` IDs are RN-era
+   subscriptions that are no longer sold and exist only so old buyers restore; don't
+   recreate them. See `PremiumProduct` in `nihongo/Store/Store.swift`.
 
 Code: `nihongo/Store/Store.swift` (entitlement + gating), `PaywallView.swift`,
 `Products.storekit`. Gating is `Gating.isLocked(lesson:isPremium:)`; ads hide via

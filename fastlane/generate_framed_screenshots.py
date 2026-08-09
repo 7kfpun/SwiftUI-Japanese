@@ -23,9 +23,16 @@ the raw captures sit in their own top-level directory rather than beneath it.
 
 Usage:
     arch -x86_64 python3 fastlane/generate_framed_screenshots.py [filter]
+    arch -x86_64 python3 fastlane/generate_framed_screenshots.py --check [locale]
 
 Run from the repo root. Pass an optional substring filter (e.g. "01-today")
 to render just one screenshot while iterating on copy/layout.
+
+`--check` renders nothing; it audits the copy in LOCALES against the fonts in
+LOCALE_TYPOGRAPHY — every character must have a real glyph, and every wrapped
+line must fit the canvas width on every device. Run it after any copy or font
+edit; a missing glyph or an overflowing line is silent at render time and only
+shows up as tofu boxes / clipped text in the uploaded screenshot.
 
 NOTE on architecture: the Pillow wheel installed on this machine is x86_64
 only; plain `python3` on Apple Silicon resolves to the arm64 slice and can't
@@ -68,8 +75,14 @@ FRAMES_DIR = os.path.join(ROOT, "fastlane/screenshot_frames")
 OUT_DIR = os.path.join(ROOT, "fastlane/screenshots")
 FRAMES_CDN = "https://fastlane.github.io/frameit-frames/latest"
 
-FONT_BOLD = "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf"
-FONT_SUB = "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf"
+# Display faces, one per script. The house style is *rounded* — it matches the
+# app's own visual identity (Theme.jp is a rounded face; see context/07-ux-ui.md)
+# — so every entry below is the roundest face on macOS that actually has the
+# script's glyphs. Which font each locale gets is LOCALE_TYPOGRAPHY, below.
+FONT_ARIAL_ROUNDED = "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf"
+FONT_SF_ROUNDED = "/System/Library/Fonts/SFNSRounded.ttf"
+FONT_HEITI = "/System/Library/Fonts/STHeiti Medium.ttc"
+FONT_SUKHUMVIT = "/System/Library/Fonts/Supplemental/SukhumvitSet.ttc"
 
 # Brand colors: BLUE sampled from nihongo/Assets.xcassets/AppIcon.appiconset/AppIcon.png,
 # TEAL read from nihongo/Assets.xcassets/AccentColor.colorset/Contents.json (also
@@ -131,7 +144,11 @@ LOCALES = {
         "04-kana-quiz-classic": ("Kana-Quiz", "Teste dich, Kana für Kana"),
         "06-kana-listening": ("Hörverständnis", "Trainiere dein Ohr mit Originalaudio"),
         "07-kana-write": ("Schreibübung", "Echte Strichfolge, echtes Gedächtnis"),
-        "08-lessons": ("50 Minna-no-Nihongo-Lektionen", "Jede Lektion direkt auf deinem Handy"),
+        # Not "50 Minna-no-Nihongo-Lektionen": German compounding makes that one
+        # unbreakable 26-character token, 140% of the text column, and word wrapping has
+        # nowhere to break it — it shipped clipped at both edges. Keeping the title as a
+        # separate phrase after a colon lets it wrap at real spaces.
+        "08-lessons": ("Minna no Nihongo: 50 Lektionen", "Jede Lektion direkt auf deinem Handy"),
         "09-vocab-list": ("Wir sprechen deine Sprache", "Jedes Wort erklärt in 17 Sprachen"),
         "11-lesson-learn": ("Lernmodus", "Neue Wörter mit Audio durchblättern"),
         "12-lesson-quiz": ("Lektionsquiz", "Prüfe, was du wirklich gelernt hast"),
@@ -148,6 +165,50 @@ LOCALES = {
         "11-lesson-learn": ("學習模式", "滑動瀏覽新單字並聽發音"),
         "12-lesson-quiz": ("課程測驗", "檢查你真正學到了什麼"),
     },
+    "ru": {
+        "01-today": ("Следи за прогрессом", "Каждый день — как на ладони"),
+        "02-kana-table": ("Хирагана и катакана", "Полные таблицы каны"),
+        "03-kana-flashcards": ("Карточки каны", "Переверни, послушай, запомни"),
+        "04-kana-quiz-classic": ("Тесты по кане", "Проверь себя знак за знаком"),
+        "06-kana-listening": ("Тренировка слуха", "Живые записи носителей языка"),
+        "07-kana-write": ("Учись писать", "Настоящий порядок черт"),
+        "08-lessons": ("50 уроков Minna no Nihongo", "Каждый урок — в твоём телефоне"),
+        "09-vocab-list": ("Говорим на твоём языке", "Каждое слово — на 17 языках"),
+        "11-lesson-learn": ("Режим изучения", "Новые слова с озвучкой"),
+        "12-lesson-quiz": ("Тесты по уроку", "Проверь, что ты правда выучил"),
+    },
+    # Vietnamese literals here must stay in NFC (precomposed ế ộ ữ ằ ọ, one
+    # codepoint each). Pillow is built without libraqm on this machine, so it
+    # does no complex-script shaping: NFD sequences (base + combining acute)
+    # would be drawn as two separate advancing glyphs and come out mangled,
+    # whereas the precomposed forms are single glyphs that need no shaping.
+    "vi": {
+        "01-today": ("Theo dõi tiến độ", "Mỗi ngày, chỉ một cái nhìn"),
+        "02-kana-table": ("Hiragana & Katakana", "Bảng chữ kana đầy đủ"),
+        "03-kana-flashcards": ("Thẻ ghi nhớ kana", "Lật, nghe, ghi nhớ"),
+        "04-kana-quiz-classic": ("Trắc nghiệm kana", "Tự kiểm tra từng chữ kana"),
+        "06-kana-listening": ("Luyện nghe", "Rèn tai với giọng đọc thật"),
+        "07-kana-write": ("Luyện viết", "Thứ tự nét đúng, nhớ lâu hơn"),
+        "08-lessons": ("50 bài Minna no Nihongo", "Trọn bộ bài học trong túi bạn"),
+        "09-vocab-list": ("Nói đúng tiếng của bạn", "Mỗi từ giải nghĩa bằng 17 thứ tiếng"),
+        "11-lesson-learn": ("Chế độ học", "Lướt qua từ mới kèm âm thanh"),
+        "12-lesson-quiz": ("Trắc nghiệm bài học", "Kiểm tra bạn thật sự nhớ gì"),
+    },
+    # Thai is deliberately written short enough that every line below fits the
+    # canvas on its own — see the wrap="word" note in LOCALE_TYPOGRAPHY for why
+    # that matters, and run `--check` after editing any of it.
+    "th": {
+        "01-today": ("ติดตามความก้าวหน้า", "เห็นทุกวันในหน้าเดียว"),
+        "02-kana-table": ("ฮิรางานะ & คาตาคานะ", "ตารางคานะครบทุกตัว"),
+        "03-kana-flashcards": ("บัตรคำคานะ", "พลิก ฟัง จำได้"),
+        "04-kana-quiz-classic": ("แบบทดสอบคานะ", "ทดสอบตัวเองทีละตัว"),
+        "06-kana-listening": ("ฝึกฟัง", "ฝึกหูกับเสียงเจ้าของภาษา"),
+        "07-kana-write": ("ฝึกเขียน", "ลำดับเส้นถูกต้อง จำได้จริง"),
+        "08-lessons": ("50 บทเรียน Minna no Nihongo", "ครบทุกบทอยู่ในมือคุณ"),
+        "09-vocab-list": ("เราพูดภาษาของคุณ", "ทุกคำแปลครบ 17 ภาษา"),
+        "11-lesson-learn": ("โหมดเรียนรู้", "ปัดดูคำใหม่พร้อมเสียงอ่าน"),
+        "12-lesson-quiz": ("แบบทดสอบบทเรียน", "ตรวจว่าคุณจำได้จริงไหม"),
+    },
 }
 
 # Locales that ship another locale's rendered images verbatim. Simplified Chinese
@@ -155,11 +216,66 @@ LOCALES = {
 # for a real "zh-Hans" block in LOCALES above once the copy is translated.
 LOCALE_ALIASES = {"zh-Hans": "zh-Hant"}
 
-# CJK titles need a font with CJK glyph coverage — Arial Rounded Bold has none.
-# "Heiti TC" (bundled in STHeiti Medium.ttc, a stable base macOS system font)
-# covers Traditional Chinese cleanly at a reasonably bold weight.
-CJK_FONT_BOLD = "/System/Library/Fonts/STHeiti Medium.ttc"
-CJK_LOCALES = {"zh-Hant", "zh-Hans"}
+# Per-locale typography. This used to be a single boolean — "CJK or not" — which
+# picked one of two fonts and one of two wrap modes; that can't express five
+# scripts, so it's a mapping now, with DEFAULT_TYPOGRAPHY for anything unlisted.
+# Keys:
+#   font    path to a .ttf/.ttc
+#   index   face index inside a .ttc collection (ignored for a plain .ttf)
+#   weight  named instance of a *variable* font, or None. SF NS Rounded ships
+#           every weight in one file and defaults to Regular, which looks
+#           anaemic beside the other locales' bold titles — so it must be
+#           pinned to "Bold" explicitly.
+#   wrap    "word" breaks only at spaces; "char" breaks between any two
+#           characters (see draw_centered_text).
+#
+# Font choices are driven by glyph coverage first, roundness second. Arial
+# Rounded MT Bold — the default, and the right face for the app's rounded
+# identity — carries only 241 glyphs: Latin-1 and nothing more. It has *no*
+# Cyrillic whatsoever, no Latin Extended Additional (so none of Vietnamese's
+# stacked-diacritic vowels ế ộ ữ ằ ọ), no Thai, no CJK. Verified, not assumed:
+# `--check` asserts every character of every string has a real glyph.
+DEFAULT_TYPOGRAPHY = dict(font=FONT_ARIAL_ROUNDED, index=0, weight=None, wrap="word")
+LOCALE_TYPOGRAPHY = {
+    # Chinese: "Heiti TC" (face 0 of STHeiti Medium.ttc, a stable base macOS
+    # system font) covers Traditional and Simplified cleanly at a reasonably
+    # bold weight. No rounded CJK face ships with macOS. Chinese puts no spaces
+    # between words, so word-wrapping would leave one unbreakable overflowing
+    # line — hence wrap="char", which is safe here because every Han character
+    # is an independent cluster.
+    "zh-Hant": dict(font=FONT_HEITI, wrap="char"),
+    "zh-Hans": dict(font=FONT_HEITI, wrap="char"),
+    # Russian and Vietnamese: SF NS Rounded (the system rounded face, hidden
+    # behind a dot-prefixed family name but loadable by path) is the only
+    # rounded font on this machine covering both Cyrillic and the precomposed
+    # Vietnamese vowels, so it keeps these two locales visually on-brand
+    # instead of dropping them onto a plain grotesque.
+    "ru": dict(font=FONT_SF_ROUNDED, weight="Bold"),
+    "vi": dict(font=FONT_SF_ROUNDED, weight="Bold"),
+    # Thai: Sukhumvit Set Bold (face 5), soft and geometric enough to sit next
+    # to the rounded faces. Chosen over Thonburi — the older macOS Thai system
+    # face — for a mechanical reason, not a stylistic one: Thonburi's combining
+    # vowels and tone marks each carry a *non-zero* advance width (1300/2560 em)
+    # and their outlines include the dotted-circle placeholder, because Thonburi
+    # expects Apple's AAT shaper to substitute a zero-width variant. Pillow here
+    # is built without libraqm, so it does no shaping at all and renders Thonburi
+    # Thai as a row of dotted circles. Sukhumvit Set's marks are genuinely
+    # zero-advance and sit at their final height with no shaping, so unshaped
+    # Pillow output is correct.
+    "th": dict(font=FONT_SUKHUMVIT, index=5),
+}
+
+
+def typography(locale):
+    return {**DEFAULT_TYPOGRAPHY, **LOCALE_TYPOGRAPHY.get(locale, {})}
+
+
+def load_font(typo, size):
+    font = ImageFont.truetype(typo["font"], size, index=typo["index"])
+    if typo["weight"]:
+        # Variable font: select a named instance from its fvar table.
+        font.set_variation_by_name(typo["weight"])
+    return font
 
 
 def ensure_frame(filename: str) -> str:
@@ -183,9 +299,21 @@ def make_gradient(w, h, top, bottom):
     return Image.composite(bot_a, top_a, mask)
 
 
-def draw_centered_text(draw, cx, top_y, text, font, fill, max_width, line_gap=1.08, wrap="word"):
-    # CJK text has no spaces between words, so word-wrapping leaves it
-    # overflowing the canvas width — wrap by individual character instead.
+def wrap_lines(draw, text, font, max_width, wrap="word"):
+    """Greedy wrap of `text` to `max_width`, breaking at spaces or characters.
+
+    wrap="char" breaks between any two characters. That's correct for Chinese
+    (no spaces between words, every Han character its own cluster) and *wrong*
+    for Thai, which also has no word spaces but does have multi-codepoint
+    clusters: splitting a consonant from its combining vowel or tone mark leaves
+    a visibly broken glyph and a stray floating mark. So Thai uses wrap="word",
+    which breaks only at the spaces Thai puts between phrases, never mid-cluster
+    — and the Thai copy in LOCALES is written short enough that it almost never
+    needs to wrap at all. `--check` is what makes that claim safe: it measures
+    every wrapped line of every locale against max_width on every device, so a
+    Thai line that no longer fits fails the check instead of silently running
+    off the canvas.
+    """
     units = list(text) if wrap == "char" else text.split(" ")
     sep = "" if wrap == "char" else " "
     lines, cur = [], ""
@@ -198,6 +326,11 @@ def draw_centered_text(draw, cx, top_y, text, font, fill, max_width, line_gap=1.
             cur = u
     if cur:
         lines.append(cur)
+    return lines
+
+
+def draw_centered_text(draw, cx, top_y, text, font, fill, max_width, line_gap=1.08, wrap="word"):
+    lines = wrap_lines(draw, text, font, max_width, wrap)
 
     ascent, descent = font.getmetrics()
     line_h = int((ascent + descent) * line_gap)
@@ -247,12 +380,11 @@ def process(locale, key, dev_key, dev):
     draw = ImageDraw.Draw(bg)
 
     title, subtitle = LOCALES[LOCALE_ALIASES.get(locale, locale)][key]
-    font_path = CJK_FONT_BOLD if locale in CJK_LOCALES else FONT_BOLD
-    sub_font_path = CJK_FONT_BOLD if locale in CJK_LOCALES else FONT_SUB
-    title_font = ImageFont.truetype(font_path, round(W * 0.088))
-    sub_font = ImageFont.truetype(sub_font_path, round(W * 0.045))
+    typo = typography(locale)
+    title_font = load_font(typo, round(W * 0.088))
+    sub_font = load_font(typo, round(W * 0.045))
 
-    wrap_mode = "char" if locale in CJK_LOCALES else "word"
+    wrap_mode = typo["wrap"]
     top_y = round(H * 0.065)
     max_text_w = W * 0.88
     bottom_of_title = draw_centered_text(draw, W / 2, top_y, title, title_font,
@@ -283,10 +415,92 @@ def process(locale, key, dev_key, dev):
     return out_path
 
 
+def missing_glyphs(font, text):
+    """The characters of `text` the font has no glyph for.
+
+    A codepoint the font doesn't cover is not an error in Pillow — it silently
+    renders the font's .notdef glyph, which is a tofu box (□) in some faces and
+    blank in others. A whole App Store screenshot set of tofu is exactly the
+    failure this guards against, so coverage gets asserted rather than eyeballed.
+
+    Pillow exposes no cmap API, so this rasterises each character onto its own
+    scratch canvas and compares the pixels against U+FFFF rendered the same way.
+    U+FFFF is a permanently unassigned noncharacter, so it *always* resolves to
+    .notdef; a pixel-identical match means the character resolved to .notdef too,
+    i.e. the font lacks it. Cross-checked against the real `cmap` tables with
+    fontTools while picking the fonts above — identical answers — and this way
+    the script keeps Pillow as its only dependency. Whitespace is skipped: a
+    space is legitimately blank and would otherwise match a blank .notdef.
+    """
+    box = round(font.size * 3)
+
+    def bitmap(ch):
+        img = Image.new("L", (box, box), 0)
+        ImageDraw.Draw(img).text((font.size, font.size), ch, font=font, fill=255)
+        return img.tobytes()
+
+    notdef = bitmap("￿")
+    return [ch for ch in dict.fromkeys(text)
+            if not ch.isspace() and bitmap(ch) == notdef]
+
+
+def check(locale_filter=None):
+    """Audit LOCALES against LOCALE_TYPOGRAPHY. Returns True if everything passes.
+
+    Two failure modes, both invisible at render time:
+      1. a character with no glyph in the locale's font -> tofu/blank
+      2. a wrapped line wider than the text column -> text runs off the canvas
+    Both are checked at the real font sizes for every device, since the font size
+    is a fraction of canvas width and each device rounds it differently.
+    """
+    probe = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+    locales = {**LOCALES, **{a: LOCALES[s] for a, s in LOCALE_ALIASES.items()}}
+    ok = True
+    for locale, copy in sorted(locales.items()):
+        if locale_filter and locale != locale_filter:
+            continue
+        typo = typography(locale)
+        face = os.path.basename(typo["font"])
+        print(f"\n{locale}: {face} index={typo['index']} "
+              f"weight={typo['weight'] or 'static'} wrap={typo['wrap']}")
+        for dev_key, dev in DEVICES.items():
+            W = dev["canvas"][0]
+            max_text_w = W * 0.88
+            fonts = dict(title=load_font(typo, round(W * 0.088)),
+                         sub=load_font(typo, round(W * 0.045)))
+            worst, dev_ok, lines_total = 0.0, True, 0
+            for key, (title, subtitle) in copy.items():
+                for role, text in (("title", title), ("sub", subtitle)):
+                    font = fonts[role]
+                    gaps = missing_glyphs(font, text)
+                    if gaps:
+                        ok = dev_ok = False
+                        print(f"  FAIL {dev_key} {key} {role}: no glyph for "
+                              f"{' '.join(f'{c!r} U+{ord(c):04X}' for c in gaps)}")
+                    for line in wrap_lines(probe, text, font, max_text_w, typo["wrap"]):
+                        lines_total += 1
+                        w = probe.textlength(line, font=font)
+                        worst = max(worst, w / max_text_w)
+                        if w > max_text_w:
+                            ok = dev_ok = False
+                            print(f"  FAIL {dev_key} {key} {role}: line {w:.0f}px "
+                                  f"> {max_text_w:.0f}px column: {line!r}")
+            verdict = "ok" if dev_ok else "PROBLEMS ABOVE"
+            print(f"  {dev_key}: {W}px canvas, 20 strings / {lines_total} rendered lines, "
+                  f"widest {worst:.0%} of the {max_text_w:.0f}px text column - {verdict}")
+    print("\ncheck: PASS" if ok else "\ncheck: FAIL")
+    return ok
+
+
 if __name__ == "__main__":
     # Usage: generate_framed_screenshots.py [locale-or-key-substring-filter]
     # e.g. "de-DE" renders only German, "01-today" renders that screenshot
     # for every locale, "de-DE:01-today" combines both filters.
+    # `--check [locale]` audits fonts/copy and renders nothing.
+    if "--check" in sys.argv[1:]:
+        rest = [a for a in sys.argv[1:] if a != "--check"]
+        sys.exit(0 if check(rest[0] if rest else None) else 1)
+
     arg = sys.argv[1] if len(sys.argv) > 1 else None
     locale_filter, key_filter = (None, None)
     if arg:
