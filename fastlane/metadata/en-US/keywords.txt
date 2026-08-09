@@ -1,1 +1,1 @@
-hiragana,katakana,minna,nihongo,flashcards,quiz,listening,romaji,stroke,handwriting,offline,words
+hiragana,katakana,minna,genki,nihongo,flashcards,quiz,listening,romaji,stroke,handwriting,offline

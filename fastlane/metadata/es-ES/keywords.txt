@@ -1,1 +1,1 @@
-hiragana,katakana,japonés,minna,nihongo,tarjetas,trazos,escritura,escucha,sin conexión,romaji,n4
+hiragana,katakana,japonés,minna,genki,nihongo,tarjetas,trazos,escucha,sin conexión,romaji,n4

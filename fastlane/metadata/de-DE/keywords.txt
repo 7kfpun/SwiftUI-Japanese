@@ -1,1 +1,1 @@
-hiragana,katakana,japanisch,minna,nihongo,karteikarten,strichfolge,schreiben,hören,offline,romaji
+hiragana,katakana,japanisch,minna,genki,nihongo,karteikarten,strichfolge,hören,offline,romaji

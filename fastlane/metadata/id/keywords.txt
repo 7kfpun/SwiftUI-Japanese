@@ -1,1 +1,1 @@
-hiragana,katakana,jepang,minna,nihongo,kartu kilas,urutan coretan,tulis,menyimak,luring,romaji
+hiragana,katakana,jepang,minna,genki,nihongo,kartu kilas,urutan coretan,tulis,menyimak,luring,romaji

@@ -1,1 +1,1 @@
-hiragana,katakana,tiếng nhật,minna,nihongo,thẻ ghi nhớ,nét bút,viết tay,luyện nghe,offline
+hiragana,katakana,tiếng nhật,minna,genki,nihongo,thẻ ghi nhớ,nét bút,viết tay,luyện nghe,offline
