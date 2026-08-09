@@ -1,1 +1,1 @@
-tiếng nhật,kana,hiragana,katakana,từ vựng,jlpt,thẻ ghi nhớ,trắc nghiệm,nghe,học,romaji
+hiragana,katakana,tiếng nhật,minna,nihongo,thẻ ghi nhớ,nét bút,viết tay,luyện nghe,offline

@@ -1,1 +1,1 @@
-hapon,kana,hiragana,katakana,bokabularyo,jlpt,flashcards,pagsusulit,pakikinig,matuto,romaji
+hiragana,katakana,hapon,minna,nihongo,flashcard,stroke order,sulat,pakinggan,offline,romaji,n4

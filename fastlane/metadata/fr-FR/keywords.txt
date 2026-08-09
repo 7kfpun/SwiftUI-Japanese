@@ -1,1 +1,1 @@
-japonais,kana,hiragana,katakana,vocabulaire,jlpt,cartes,quiz,écoute,apprendre,romaji
+hiragana,katakana,japonais,minna,nihongo,cartes,tracé,écriture,écoute,hors ligne,romaji,n4

@@ -1,1 +1,1 @@
-kana,hiragana,katakana,vocabulary,jlpt,nihongo,flashcards,quiz,listening,romaji,learn,study,words
+hiragana,katakana,minna,nihongo,flashcards,quiz,listening,romaji,stroke,handwriting,offline,words
