@@ -2,7 +2,8 @@ import WidgetKit
 import SwiftUI
 import AppIntents   // Button(intent:) — the next-word control
 
-// Cycles through Today's 7 words, read from the App Group snapshot the app writes.
+// Cycles through Today's deck — the words the next unpassed rung can ask — read from
+// the App Group snapshot the app writes.
 
 struct TodayEntry: TimelineEntry {
     let date: Date
@@ -20,17 +21,8 @@ struct TodayEntry: TimelineEntry {
 }
 
 struct TodayProvider: TimelineProvider {
-    /// Built-in fallback deck (lesson 1 classics) — shown in the widget gallery and
-    /// whenever the app hasn't published a snapshot yet, so the widget is never empty.
-    static let sampleWords: [TodayShared.Word] = [
-        .init(kana: "わたし", kanji: "私", romaji: "watashi", meaning: "I"),
-        .init(kana: "せんせい", kanji: "先生", romaji: "sensei", meaning: "teacher"),
-        .init(kana: "がくせい", kanji: "学生", romaji: "gakusei", meaning: "student"),
-        .init(kana: "ほん", kanji: "本", romaji: "hon", meaning: "book"),
-        .init(kana: "とけい", kanji: "時計", romaji: "tokei", meaning: "watch, clock"),
-        .init(kana: "でんわ", kanji: "電話", romaji: "denwa", meaning: "telephone"),
-        .init(kana: "くるま", kanji: "車", romaji: "kuruma", meaning: "car"),
-    ]
+    /// The shared fallback deck — see `TodayShared.sampleWords`.
+    static let sampleWords = TodayShared.sampleWords
 
     /// The published snapshot, or the sample deck when nothing was published yet.
     /// (The sample claims challenge 1, so the gallery preview shows the CTA too.)
@@ -64,12 +56,8 @@ struct TodayProvider: TimelineProvider {
                               deckSize: words.count, wordIndex: idx, challenge: challenge)
         }
 
-        // The word is derived from the *hour* (`TodayShared.rotationIndex`), not counted
-        // forward from this rebuild — which is what makes the rotation actually happen. The
-        // app republishes its snapshot and reloads all timelines on every visit to the Today
-        // tab, and an index counted from the rebuild restarted at the same word every time,
-        // so anyone opening the app more than once an hour never saw it move. Now a reload
-        // mid-hour re-derives the word already on screen.
+        // The word is derived from the *hour*, never counted forward from this rebuild —
+        // `TodayShared.rotationIndex` documents why that distinction is the whole rotation.
         //
         // First entry is *now* so the current hour is covered immediately; the rest land on
         // clock-hour boundaries rather than `now + n hours`, so the rotation stays on the

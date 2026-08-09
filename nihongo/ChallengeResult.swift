@@ -94,7 +94,7 @@ final class ChallengeResult {
         index <= 1 || results[index - 1]?.isPassed == true
     }
 
-    /// Challenges passed in a lesson — the numerator of the lesson progress ring.
+    /// Challenges passed in a lesson — the numerator of the lesson progress bar.
     static func passedCount(results: [Int: ChallengeResult]) -> Int {
         results.values.filter(\.isPassed).count
     }

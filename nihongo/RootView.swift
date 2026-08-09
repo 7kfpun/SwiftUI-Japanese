@@ -42,7 +42,7 @@ struct RootView: View {
                 .tabItem { Label(L.t("Settings"), systemImage: "gearshape") }
                 .tag(Router.Tab.settings)
         }
-        .id(appLanguage)   // rebuild the whole tree when the app language changes
+        .id(appLanguage)
         // Outside the `.id`, so nothing about the tour depends on the tree beneath it
         // being rebuilt. The intro chooses the landing tab (Kana for someone who can't
         // read kana yet, otherwise Today) — see `Intro.landingTab`.
@@ -57,7 +57,7 @@ struct RootView: View {
 
     /// Reserve the banner's space structurally (VStack), not via safeAreaInset —
     /// screens pushed inside a NavigationStack ignore an outer safe-area inset and
-    /// would render underneath the ad (e.g. the Quiz's Next button).
+    /// would render underneath the ad (e.g. a challenge's Next button).
     private func banner(_ content: some View, _ slot: AdSlot) -> some View {
         VStack(spacing: 0) {
             content

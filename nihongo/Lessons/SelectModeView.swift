@@ -173,31 +173,3 @@ private struct ChallengeRow: View {
 
     private var passed: Bool { result?.isPassed == true }
 }
-
-private struct ModeRow: View {
-    let icon: String, title: String, subtitle: String
-    var locked = false
-
-    var body: some View {
-        HStack(spacing: 14) {
-            Image(systemName: icon)
-                .font(.title3)
-                .frame(width: 30)
-                .foregroundStyle(locked ? Color.secondary : Theme.accent)
-            // Row name in the title face, subtitle left on the system font — the mode's
-            // name is a heading, "Swipe right if you know it" is a sentence about it.
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(Theme.title(.headline))
-                Text(subtitle).font(.caption).foregroundStyle(.secondary)
-            }
-            if locked {
-                Spacer()
-                Image(systemName: "lock.fill")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding(.vertical, 4)
-        .foregroundStyle(.primary)   // keep the label neutral inside a plain Button
-    }
-}

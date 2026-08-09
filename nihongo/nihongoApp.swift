@@ -1,10 +1,3 @@
-//
-//  nihongoApp.swift
-//  nihongo
-//
-//  Created by KF PUN on 5/8/26.
-//
-
 import SwiftUI
 import SwiftData
 
@@ -19,9 +12,8 @@ struct nihongoApp: App {
         let schema = Schema([KanaResult.self, ChallengeResult.self])
 
         // CloudKit private database first, so kana mastery and challenge progress
-        // follow the user across devices. Neither model carries `.unique` —
-        // CloudKit-backed SwiftData forbids unique constraints, so uniqueness is
-        // enforced by the models' `record` upserts and merge-tolerant readers.
+        // follow the user across devices. Neither model carries `.unique` — CloudKit
+        // forbids it; see `ChallengeResult` for how uniqueness is enforced instead.
         do {
             return try ModelContainer(
                 for: schema,
@@ -63,7 +55,7 @@ struct nihongoApp: App {
     /// indistinguishable from any other cold start.
     ///
     /// `nihongo://challenge?lesson=N&index=C` — the "Ready for Challenge C?" call to
-    /// action, which lands the user in the rung itself rather than the app's front door.
+    /// action, which lands on that lesson's mode list rather than the app's front door.
     private func handle(_ url: URL) {
         guard url.scheme == "nihongo" else { return }
         let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []

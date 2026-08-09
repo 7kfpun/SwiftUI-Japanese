@@ -27,6 +27,22 @@ enum TodayShared {
     /// only so a snapshot written before this field existed still decodes.
     struct Snapshot: Codable { let lesson: Int; let words: [Word]; var challenge: Int? = nil }
 
+    /// Built-in fallback deck (lesson 1 classics) — what the home-screen widget, the watch
+    /// complications and the watch app show in the gallery and before the phone has ever
+    /// published a snapshot, so nothing is ever blank. Here rather than three times over
+    /// because the three used to be hand-copied and "keep them identical" is not a rule
+    /// anything can enforce; identical is the point, since it's the difference between
+    /// "not synced yet" and "broken".
+    static let sampleWords: [Word] = [
+        .init(kana: "わたし", kanji: "私", romaji: "watashi", meaning: "I"),
+        .init(kana: "せんせい", kanji: "先生", romaji: "sensei", meaning: "teacher"),
+        .init(kana: "がくせい", kanji: "学生", romaji: "gakusei", meaning: "student"),
+        .init(kana: "ほん", kanji: "本", romaji: "hon", meaning: "book"),
+        .init(kana: "とけい", kanji: "時計", romaji: "tokei", meaning: "watch, clock"),
+        .init(kana: "でんわ", kanji: "電話", romaji: "denwa", meaning: "telephone"),
+        .init(kana: "くるま", kanji: "車", romaji: "kuruma", meaning: "car"),
+    ]
+
     private static var store: UserDefaults? { UserDefaults(suiteName: appGroup) }
 
     /// Written by the app whenever the Today lesson/language changes.

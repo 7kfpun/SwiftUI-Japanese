@@ -1,7 +1,3 @@
-//
-//  ScreenshotTests.swift
-//  nihongoUITests
-//
 //  Captures polished screenshots of every feature (as kept XCTest attachments —
 //  export with `xcrun xcresulttool export attachments`). Launches with
 //  "-SCREENSHOTS" so the app hides the ad banner (AdBanner.swift).
@@ -114,14 +110,14 @@ final class ScreenshotTests: XCTestCase {
         shot("11-lesson-learn")
     }
 
-    /// The scored half of a lesson. Named `12-lesson-quiz` because that key is what
-    /// `fastlane/generate_framed_screenshots.py`'s `LOCALES` table carries marketing copy for
-    /// in all seven locales — renaming it would silently drop this shot from every framed set.
+    /// The scored half of a lesson — a rung of the Challenge ladder, which is the lesson
+    /// test the marketing copy describes.
     ///
-    /// It used to open a "Quiz" mode row, which stopped existing when Quiz and Listening
-    /// became the Challenge ladder plus `TrainView`. `openLessonMode("Quiz")` had been
-    /// matching nothing and returning through its guard ever since — passing, capturing
-    /// nothing. A rung is the honest successor: it's the lesson test the copy describes.
+    /// Named `12-lesson-quiz` because that key is what
+    /// `fastlane/generate_framed_screenshots.py`'s `LOCALES` table carries marketing copy
+    /// for in every locale — renaming it would silently drop this shot from every framed
+    /// set. Navigates by tapping "Challenge 1" rather than a mode row, which is also why
+    /// it doesn't use `openLessonMode`.
     @MainActor
     func test12LessonQuiz() throws {
         openTab("Lessons")

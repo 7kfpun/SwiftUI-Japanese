@@ -22,7 +22,6 @@ struct KanaSwipeQuizView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            // Direction toggles
             HStack(spacing: 8) {
                 Button(model.from.label) { model.swapFrom() }
                 Image(systemName: "arrow.right")
@@ -40,7 +39,6 @@ struct KanaSwipeQuizView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // The two options, left and right — large tappable chips.
             HStack(spacing: 12) {
                 optionChip(leftOption, side: 0)
                 optionChip(rightOption, side: 1)
@@ -48,7 +46,7 @@ struct KanaSwipeQuizView: View {
         }
         .padding()
         .background(Theme.canvas)
-        .overlay { if let lastCorrect { resultBadge(lastCorrect) } }
+        .overlay { if let lastCorrect { AnswerBadge(correct: lastCorrect) } }
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { autoPlay(); Track.screen("kana_quiz_swipe") }
         .toolbar {
@@ -96,9 +94,7 @@ struct KanaSwipeQuizView: View {
     /// Train's vocab glosses — the only thing this screen varies on the shared chip.
     ///
     /// The face follows the script too, matching the classic quiz: kana on `jpBold`, romaji
-    /// on the rounded Latin face. This used to be a plain `.system(size:)` for both, which
-    /// left the same two answers looking like different quizzes depending which mode you
-    /// were in.
+    /// on the rounded Latin face — so the same two answers don't look like two quizzes.
     private func optionChip(_ opt: K, side: Int) -> some View {
         SwipeOptionChip(text: opt.romaji.isEmpty ? "" : model.to.value(opt),
                         side: side,
@@ -107,20 +103,6 @@ struct KanaSwipeQuizView: View {
                         font: model.to.isJapanese ? Theme.jpBold(30)
                                                   : Theme.display(30, weight: .semibold)) { decide(side) }
     }
-
-    private func resultBadge(_ ok: Bool) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: ok ? "checkmark.circle.fill" : "xmark.circle.fill")
-                .font(.system(size: 72))
-            Text(ok ? L.t("Correct!") : L.t("Wrong")).font(Theme.title(.title, weight: .bold))
-        }
-        .foregroundStyle(ok ? Theme.correct : Theme.wrong)
-        .padding(28)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
-        .transition(.scale.combined(with: .opacity))
-        .allowsHitTesting(false)
-    }
-
 
     private func decide(_ side: Int) {
         guard model.picked == nil, model.options.count > side else { return }

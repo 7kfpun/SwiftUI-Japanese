@@ -1,10 +1,3 @@
-//
-//  nihongoUITests.swift
-//  nihongoUITests
-//
-//  Created by KF PUN on 5/8/26.
-//
-
 import XCTest
 
 final class nihongoUITests: XCTestCase {
@@ -13,14 +6,22 @@ final class nihongoUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    @MainActor
-    func testKanaBrowserAndQuizFlow() throws {
+    /// A launched app with the first-launch intro already answered.
+    ///
+    /// The intro is a `fullScreenCover` above the whole TabView, so without the argument
+    /// every assertion in every test races a tour it can never dismiss. `UserDefaults`
+    /// parses `-key value` launch arguments into the volatile domain natively, so this
+    /// satisfies `RootView`'s check with no app code knowing that tests exist.
+    @MainActor private func launchApp() -> XCUIApplication {
         let app = XCUIApplication()
-        // Skip the first-launch intro — it's a fullScreenCover above the whole TabView, so
-        // without this every assertion below races a tour it can never dismiss. `UserDefaults`
-        // parses `-key value` launch arguments natively, so no app code needs to know.
         app.launchArguments += ["-introAnswered", "YES"]
         app.launch()
+        return app
+    }
+
+    @MainActor
+    func testKanaBrowserAndQuizFlow() throws {
+        let app = launchApp()
 
         // Kana browser grid loaded (the あ tile).
         XCTAssertTrue(app.staticTexts["あ"].waitForExistence(timeout: 5))
@@ -37,12 +38,7 @@ final class nihongoUITests: XCTestCase {
 
     @MainActor
     func testLessonsToLearnFlow() throws {
-        let app = XCUIApplication()
-        // Skip the first-launch intro — it's a fullScreenCover above the whole TabView, so
-        // without this every assertion below races a tour it can never dismiss. `UserDefaults`
-        // parses `-key value` launch arguments natively, so no app code needs to know.
-        app.launchArguments += ["-introAnswered", "YES"]
-        app.launch()
+        let app = launchApp()
 
         app.buttons["Lessons"].tap()
         XCTAssertTrue(app.staticTexts["Lesson 1"].waitForExistence(timeout: 5))
@@ -66,12 +62,7 @@ final class nihongoUITests: XCTestCase {
 
     @MainActor
     func testSearchFindsVocab() throws {
-        let app = XCUIApplication()
-        // Skip the first-launch intro — it's a fullScreenCover above the whole TabView, so
-        // without this every assertion below races a tour it can never dismiss. `UserDefaults`
-        // parses `-key value` launch arguments natively, so no app code needs to know.
-        app.launchArguments += ["-introAnswered", "YES"]
-        app.launch()
+        let app = launchApp()
 
         app.buttons["Lessons"].tap()
         let search = app.searchFields.firstMatch

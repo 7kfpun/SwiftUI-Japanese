@@ -44,8 +44,10 @@ enum Theme {
     static func jpBold(_ size: CGFloat) -> Font { .custom("HiraginoSans-W6", size: size) }
 
     /// Stroke-order font (KanjiStrokeOrders, bundled): glyphs render with numbered
-    /// stroke-order annotations — used for the quiz prompt so learners absorb stroke
-    /// order while quizzing.
+    /// stroke-order annotations, so a learner absorbs stroke order while quizzing. Used by
+    /// the kana flashcard face and both kana quizzes' prompts — and the same font file is
+    /// Write mode's tracing *and* scoring template (`KanaSketch.strokeOrderFont`), which is
+    /// why it can't be swapped for a prettier face.
     static func jpStrokes(_ size: CGFloat) -> Font { .custom("KanjiStrokeOrders", size: size) }
 
     /// Titles and headings — SF Rounded. **The one place the title face is decided;**

@@ -10,11 +10,10 @@ import WidgetKit
 /// and hold their own place in it.
 ///
 /// A free-running *offset*, not a bounded array index. The displayed word is
-/// `cursor + hourSlot` (see `TodayShared.rotationIndex`) — the buttons move the cursor,
-/// the clock moves the hour, and the two simply add. Readers go through
-/// `TodayShared.rotationIndex`, which floor-modulos, so any cursor value lands on a real
-/// word: it goes negative after paging back, and Swift's `%` is truncating — `-1 % 7` is
-/// `-1`, which fed straight into `words[...]` would trap.
+/// `cursor + hourSlot` — the buttons move the cursor, the clock moves the hour, and the
+/// two simply add. Every reader goes through `TodayShared.rotationIndex`, whose
+/// `floorMod` is what makes any cursor value (including the negatives paging back
+/// produces) land on a real word — see the trap documented there.
 enum WidgetPosition {
     private static let key = "today.widgetOffset"
     private static var store: UserDefaults? { UserDefaults(suiteName: TodayShared.appGroup) }
@@ -22,7 +21,7 @@ enum WidgetPosition {
     static var offset: Int { store?.integer(forKey: key) ?? 0 }
 
     /// Move the cursor by `delta` (negative goes back). `&+` so a cursor parked at the
-    /// extremes wraps rather than traps — `wrapped` lands it on a real word either way.
+    /// extremes wraps rather than traps — `rotationIndex` lands it on a real word anyway.
     static func step(_ delta: Int) { store?.set(offset &+ delta, forKey: key) }
     static func advance() { step(1) }
     static func rewind() { step(-1) }

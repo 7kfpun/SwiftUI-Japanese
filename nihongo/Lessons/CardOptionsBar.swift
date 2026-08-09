@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// The field-visibility + sound toggles for Learn mode, persisted via @AppStorage
-/// (port of the RN CardOptionSelector). Read the same keys directly on the host view
-/// (not via a wrapper struct) so the card re-renders the moment a toggle flips.
+/// The field-visibility + sound toggles above the card in Learn and Today — one bar, one
+/// set of `Pref` keys, so the two screens can't disagree about what a card shows. Hosts read
+/// the same keys directly (not via a wrapper struct) so a card re-renders the moment a
+/// toggle flips.
 struct CardOptionsBar: View {
     @AppStorage(Pref.kanjiShown)       private var showKanji = true
     @AppStorage(Pref.kanaShown)        private var showKana = true

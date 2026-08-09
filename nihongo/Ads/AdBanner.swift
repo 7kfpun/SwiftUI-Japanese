@@ -7,8 +7,9 @@ import SwiftUI
 /// empty (zero-height) view, so the rest of the app builds and runs untouched.
 ///
 /// Height is **dynamic**: it stays 0 until an ad actually loads, then becomes the
-/// ad's real height. Placed in a `.safeAreaInset`, that means the content only gives
-/// up space when (and exactly as much as) an ad is on screen — no blank gap, no overlap.
+/// ad's real height, so the content only gives up space when (and exactly as much as)
+/// an ad is on screen — no blank gap, no overlap. The space is reserved structurally by
+/// `RootView.banner(_:_:)`'s `VStack`, deliberately *not* a `.safeAreaInset` — see there.
 struct BannerAd: View {
     let slot: AdSlot
     @Environment(Store.self) private var store
@@ -66,11 +67,7 @@ private struct AdBannerRepresentable: UIViewRepresentable {
     /// The adaptive ad size for the current window (clamped so it's always valid),
     /// falling back to the classic 320×50 if the adaptive lookup degenerates.
     static var adSize: AdSize {
-        let window = UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap { $0.windows }
-            .first { $0.isKeyWindow }
-        let width = max(320, window?.bounds.width ?? 375)
+        let width = max(320, UIApplication.shared.activeKeyWindow?.bounds.width ?? 375)
         let adaptive = currentOrientationAnchoredAdaptiveBanner(width: width)
         return adaptive.size.height > 0 ? adaptive : AdSizeBanner
     }
@@ -106,11 +103,7 @@ private struct AdBannerRepresentable: UIViewRepresentable {
 
         /// The key window's root VC, which AdMob needs to present click-through UI.
         static var rootViewController: UIViewController? {
-            UIApplication.shared.connectedScenes
-                .compactMap { $0 as? UIWindowScene }
-                .flatMap { $0.windows }
-                .first { $0.isKeyWindow }?
-                .rootViewController
+            UIApplication.shared.activeKeyWindow?.rootViewController
         }
     }
 }

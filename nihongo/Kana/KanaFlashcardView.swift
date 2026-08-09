@@ -14,6 +14,12 @@ struct KanaFlashcardView: View {
             summary: { L.t("You reviewed %@ kana", "\($0)") },
             trackName: "kana_flashcard",
             speak: { pronouncer.speak(kana: $0) },
+            // Offered here too, and the kana case is why `Feedback.Item.lesson` accepts 0: a
+            // syllable belongs to no lesson, so the romaji alone identifies it and
+            // `last_screen` ("kana_flashcard") says which chart it came from. Worth having —
+            // a mis-cut clip or a wrong reading in `KanaChart.json` is the same kind of data
+            // error as a wrong translation, and it goes to the same regeneration.
+            report: { Feedback.Item(lesson: 0, romaji: $0.romaji) },
             face: { kana, revealed in KanaFace(kana: kana, revealed: revealed) }
         )
         .onAppear { Track.screen("kana_flashcard") }

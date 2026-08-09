@@ -3,7 +3,7 @@
 Source of truth = ./minna/ (git submodule). Re-run after `git submodule update`.
 
 Outputs under nihongo/Resources/ (audio git-ignored, MinnaData.json tracked):
-  - MinnaData.json               one file: 50 lessons + 7 languages; each entry's
+  - MinnaData.json               one file: 50 lessons + 17 languages; each entry's
                                  `audio` = bundled clip basename (no extension).
   - audio/<lesson>-<slug>.m4a    Kyoko clips, flat + unique so the synchronized
                                  group bundles them as individual (incrementally

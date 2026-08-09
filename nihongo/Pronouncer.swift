@@ -1,10 +1,10 @@
 import SwiftUI
 import AVFoundation
 
-/// Word-pronunciation seam. Audio is deferred (v1), so the default implementation
-/// does nothing. Every "tap to hear" path calls this, so audio can be added later
-/// (planned: macOS `say -v Kyoko` pre-generated clips, or live `AVSpeechSynthesizer`)
-/// without touching any view.
+/// Word-pronunciation seam: every "tap to hear" path goes through it, so no view knows
+/// how a word is played. `AudioPronouncer` (below) is the real one — bundled `say -v
+/// Kyoko` clips with live `AVSpeechSynthesizer` as the fallback; `SilentPronouncer` is
+/// the environment default, so previews and tests make no sound.
 protocol Pronouncer {
     func speak(_ vocab: Vocab)
     func speak(kana: K)

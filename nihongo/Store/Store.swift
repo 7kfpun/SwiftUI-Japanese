@@ -31,7 +31,7 @@ enum PremiumProduct {
 /// on every lesson, so browsing and search stay open.
 ///
 /// Deliberately one rule with no partial trial. A free user can *finish* the early
-/// lessons — fill the progress ring, earn the stars — and meets the paywall carrying
+/// lessons — fill the progress bar, earn the stars — and meets the paywall carrying
 /// that momentum, rather than being cut off mid-practice by a card quota.
 enum Gating {
     static let freeLessonLimit = 3
@@ -91,7 +91,7 @@ final class Store {
     var lifetime: Product? { products.first { $0.subscription == nil } }
 
     /// Premium if any premium product is currently entitled — an active subscription or
-    /// the owned lifetime unlock (`currentEntitlements` only yields non-expired ones).
+    /// the owned lifetime unlock.
     func refreshEntitlement() async {
         var premium = false
         var tier = "none"
@@ -139,9 +139,7 @@ final class Store {
     /// Apple's native manage-subscriptions sheet — where users switch tier (1m↔3m↔6m
     /// within the same group) or cancel. Refreshes entitlement on return.
     func manageSubscriptions() async {
-        guard let scene = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene })
-            .first(where: { $0.activationState == .foregroundActive }) else { return }
+        guard let scene = UIApplication.shared.foregroundScene else { return }
         try? await AppStore.showManageSubscriptions(in: scene)
         await refreshEntitlement()
     }

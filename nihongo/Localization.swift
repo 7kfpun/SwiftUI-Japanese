@@ -5,7 +5,7 @@ import Foundation
 /// `UIStrings.json` (one map per language). RootView applies `.id(appLanguage)` so a
 /// language change rebuilds the tree and every `L.t(...)` re-reads instantly.
 enum L {
-    /// The 7 languages we ship (same set as the vocab translations).
+    /// The 17 languages we ship (same set as the vocab translations).
     static let availableLanguages = VocabStore.availableLanguages
 
     private static let table: [String: [String: String]] = {

@@ -45,6 +45,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         NavigationBarTitle.install()
+        // Retires the old boolean rating flag in favour of a timestamp, before anything can
+        // read it — see `RatingPrompt.migrateLegacyFlagIfNeeded`.
+        RatingPrompt.migrateLegacyFlagIfNeeded()
 
         #if canImport(FirebaseCore)
         if Bundle.main.url(forResource: "GoogleService-Info", withExtension: "plist") != nil {
@@ -54,7 +57,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             // unattested.
             AppCheck.setAppCheckProviderFactory(SurveyAppCheckFactory())
             #endif
-            FirebaseApp.configure()   // enables Analytics + Crashlytics
+            FirebaseApp.configure()
             // Developer/Xcode runs (DEBUG) never pollute production counts. A
             // Release/TestFlight build on the developer's own device can opt out
             // too, via the hidden toggle in Settings (Track.setExcluded).
@@ -85,8 +88,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     }
 }
 
-/// Puts navigation bar titles in the rounded title face (`Theme.titleUIFont`), so the 12
-/// `.navigationTitle` call sites match every other heading in the app instead of being the
+/// Puts navigation bar titles in the rounded title face (`Theme.titleUIFont`), so every
+/// `.navigationTitle` call site matches the rest of the app's headings instead of being the
 /// last SF Pro text on screen.
 ///
 /// It lives in UIKit because SwiftUI has no way to font a nav title — there is no
@@ -134,6 +137,30 @@ enum NavigationBarTitle {
     }
 }
 
+/// The two UIKit lookups a SwiftUI app keeps needing and has no API for: the window that
+/// is actually on screen (its size, its root view controller) and the scene something modal
+/// can be presented in. Both were spelled out at five call sites across the ads, StoreKit
+/// and rating code; a chain repeated that often drifts one `first(where:)` at a time.
+extension UIApplication {
+    /// The key window — deliberately not named `keyWindow`, which is the deprecated
+    /// pre-scene API. For anything that needs the on-screen window itself: its bounds
+    /// (the adaptive banner width) or its root view controller (ad presentation).
+    var activeKeyWindow: UIWindow? {
+        connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first { $0.isKeyWindow }
+    }
+
+    /// The foreground-active window scene, which is what Apple's own modal sheets
+    /// (`showManageSubscriptions`, `requestReview`) are presented *in* rather than over.
+    var foregroundScene: UIWindowScene? {
+        connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive }
+    }
+}
+
 /// Thin analytics seam — logs only when the Firebase SDKs are linked and configured.
 /// Every event name is prefixed with `nihongo_2026_`.
 enum Track {
@@ -157,6 +184,13 @@ enum Track {
 
     /// A screen was shown.
     static func screen(_ name: String, _ params: [String: Any] = [:]) {
+        // Also remembered for the survey context, which is why this is the one place worth
+        // routing every screen through: `last_screen` is what turns "the audio is broken"
+        // into "the audio is broken on Kana Write". Recorded here rather than at the 16 call
+        // sites so it can't fall out of step with what analytics saw, and deliberately
+        // *outside* the analytics opt-out — a feedback report needs its own context even
+        // from a device excluded from tracking.
+        Survey.recordScreen(name)
         event("screen", params.merging(["name": name]) { a, _ in a })
     }
 

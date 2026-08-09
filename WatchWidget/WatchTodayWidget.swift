@@ -13,17 +13,8 @@ struct WatchTodayEntry: TimelineEntry {
 }
 
 struct WatchTodayProvider: TimelineProvider {
-    /// Built-in fallback deck (lesson 1 classics) — shown in the complication gallery and
-    /// whenever nothing has synced from the phone yet, so a face is never blank.
-    static let sampleWords: [TodayShared.Word] = [
-        .init(kana: "わたし", kanji: "私", romaji: "watashi", meaning: "I"),
-        .init(kana: "せんせい", kanji: "先生", romaji: "sensei", meaning: "teacher"),
-        .init(kana: "がくせい", kanji: "学生", romaji: "gakusei", meaning: "student"),
-        .init(kana: "ほん", kanji: "本", romaji: "hon", meaning: "book"),
-        .init(kana: "とけい", kanji: "時計", romaji: "tokei", meaning: "watch, clock"),
-        .init(kana: "でんわ", kanji: "電話", romaji: "denwa", meaning: "telephone"),
-        .init(kana: "くるま", kanji: "車", romaji: "kuruma", meaning: "car"),
-    ]
+    /// The shared fallback deck — see `TodayShared.sampleWords`.
+    static let sampleWords = TodayShared.sampleWords
 
     /// The synced snapshot, or the sample deck when nothing has arrived yet.
     private func currentWords() -> (words: [TodayShared.Word], lesson: Int) {
@@ -53,9 +44,8 @@ struct WatchTodayProvider: TimelineProvider {
         }
 
         // Clock-derived, same as the iOS widget and for the same reason — see
-        // `TodayShared.rotationIndex`. The watch app rewrites its container every time a
-        // snapshot arrives over WatchConnectivity, and an index counted forward from that
-        // rebuild restarted at word 0 each time, so the wrist sat on the first word.
+        // `TodayShared.rotationIndex`. Here the rebuild that would have reset a counted
+        // index is every WatchConnectivity snapshot arriving.
         //
         // First entry is *now* to cover the current hour; the rest land on clock-hour
         // boundaries. One entry per word, 30 as a backstop against a pathological deck.

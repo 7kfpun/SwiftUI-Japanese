@@ -195,7 +195,7 @@ struct VocabRow: View {
 }
 
 #Preview {
-    // Needs the container: the rows read challenge progress for their rings.
+    // Needs the container: the rows read challenge progress for their bars.
     LessonListView()
         .tint(Theme.accent)
         .modelContainer(for: ChallengeResult.self, inMemory: true)

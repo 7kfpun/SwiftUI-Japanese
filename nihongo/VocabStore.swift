@@ -48,8 +48,8 @@ enum VocabStore {
         }
     }
 
-    // Per-language cache, built lazily (only the language actually shown — not all 7)
-    // so launch doesn't decode 7×2089 entries. Guarded by a lock because Swift
+    // Per-language cache, built lazily (only the language actually shown — not all 17)
+    // so launch doesn't decode 17×2089 entries. Guarded by a lock because Swift
     // Testing runs cases in parallel; an unlocked mutable static would data-race.
     private static let lock = NSLock()
     private nonisolated(unsafe) static var cache: [String: [Lesson]] = [:]
@@ -85,7 +85,16 @@ enum VocabStore {
 
     /// Localized display name for a language code, e.g. "zh-Hant" → "Chinese, Traditional".
     static func displayName(_ code: String) -> String {
-        Locale.current.localizedString(forIdentifier: code) ?? code
+        // `zh` is Simplified in this data set, but the system localizes the bare code as just
+        // "Chinese" / 中文 — which sits in the picker directly above `zh-Hant`'s "Chinese,
+        // Traditional" / 繁体中文 and reads as though the first one were the generic choice.
+        // Ask for `zh-Hans` instead so it names itself: "Chinese, Simplified" / 简体中文.
+        //
+        // The *label* only. The stored value stays `zh`, because that's the key in
+        // `MinnaData.json`'s translation map and in `UIStrings.json` — renaming it would
+        // orphan every existing user's setting and both bundled data files.
+        let identifier = code == "zh" ? "zh-Hans" : code
+        return Locale.current.localizedString(forIdentifier: identifier) ?? code
     }
 }
 

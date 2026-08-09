@@ -12,18 +12,8 @@ import WidgetKit
 /// this session, so the App Group is how they get the same words.
 @Observable
 final class WatchToday: NSObject, WCSessionDelegate {
-    /// Built-in fallback deck (lesson 1 classics) — kept identical to the widget's, so a
-    /// watch that has never heard from the phone still shows real vocabulary rather than
-    /// an empty face. This is the difference between "not synced yet" and "broken".
-    static let sampleWords: [TodayShared.Word] = [
-        .init(kana: "わたし", kanji: "私", romaji: "watashi", meaning: "I"),
-        .init(kana: "せんせい", kanji: "先生", romaji: "sensei", meaning: "teacher"),
-        .init(kana: "がくせい", kanji: "学生", romaji: "gakusei", meaning: "student"),
-        .init(kana: "ほん", kanji: "本", romaji: "hon", meaning: "book"),
-        .init(kana: "とけい", kanji: "時計", romaji: "tokei", meaning: "watch, clock"),
-        .init(kana: "でんわ", kanji: "電話", romaji: "denwa", meaning: "telephone"),
-        .init(kana: "くるま", kanji: "車", romaji: "kuruma", meaning: "car"),
-    ]
+    /// The shared fallback deck — see `TodayShared.sampleWords`.
+    static let sampleWords = TodayShared.sampleWords
 
     private(set) var words: [TodayShared.Word] = WatchToday.sampleWords
     private(set) var lesson = 1
