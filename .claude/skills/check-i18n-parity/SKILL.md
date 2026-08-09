@@ -1,28 +1,52 @@
 ---
 name: check-i18n-parity
-description: Verify every language in nihongo/UIStrings.json has exactly the same set of keys as English after adding, renaming, or removing a localized string. Use after any edit that adds a new UI string, adds a new key to CardOptionsBar/KanaBrowserView/etc., or touches nihongo/UIStrings.json directly — a missing key in one language silently falls back to English (or the raw key) at runtime instead of erroring, so this only gets caught by checking, not by the compiler.
-when_to_use: check translations, verify UIStrings, i18n parity, localization check, add a new UI string, missing translation key
-allowed-tools: Bash
+description: Add, rename or remove a localized UI string end to end — L.t(...) at the call site, an entry in all 17 language maps of nihongo/UIStrings.json, the %@ placeholder and %% percent-escaping rules — then verify parity. Use for any user-facing text change in nihongo/*.swift, any direct edit to nihongo/UIStrings.json, and whenever LocalizationTests fails. A missing key never crashes and never looks obviously broken; it quietly under-translates one language, so only checking catches it.
+when_to_use: add a new UI string, add a localized string, new button label, change UI text, check translations, verify UIStrings, i18n parity, localization check, missing translation key, LocalizationTests failing, unescaped percent, placeholder mismatch, translate this string
+allowed-tools: Bash, Read, Edit
 ---
 
-# Check `UIStrings.json` translation parity
+# Adding and checking a localized UI string
 
-`nihongo/Localization.swift` (`L.t`) falls back English → the raw key string
-whenever a language is missing a key — which means a missing translation
-**never crashes and never shows an obviously-broken string**, it just quietly
-under-translates one language. The only way to catch that is to explicitly
-diff every language's key set against English, every time a string is added,
-renamed, or removed.
+`nihongo/UIStrings.json` is the app's own UI text — buttons, titles, toggles —
+one map per language, **17 languages, currently 150 keys each**. It is a
+**different file** from the vocabulary translations (`minna/<lang>/{1..50}.json`,
+compiled into `MinnaData.json`'s `translations` map — see
+`context/01-data-model.md`). Don't confuse the two when someone says "check
+translations".
 
-This is a **different file** from the vocabulary translations
-(`minna/<lang>/{1..50}.json`, compiled into `MinnaData.json`'s `translations`
-map — see `context/01-data-model.md`). `UIStrings.json` is the app's own UI
-text (buttons, titles, toggles); don't confuse the two when someone says
-"check translations."
+`L.t` (`nihongo/Localization.swift`) falls back current language → English → the
+raw key. So a missing translation **never crashes and never renders an obviously
+broken string** — it silently under-translates one language, on one screen, for
+users you'll never hear from. Checking is the only detector.
+
+## The five rules
+
+1. **`L.t(...)` only**, never a literal. `CLAUDE.md`'s strings seam. The one
+   documented exception is developer-only surfaces (Diagnostics), which are
+   deliberately unlocalised.
+2. **The key is the English text**, verbatim, in its unescaped form —
+   `"Save %@%"`, `"Lesson %@"`, `"Beat Challenge %@ to unlock"`. There is no
+   separate identifier scheme, and `en`'s value is normally the key again (the
+   two differ only where escaping applies, rule 4).
+3. **All 17 maps, in the same edit**: `en`, `zh`, `zh-Hant`, `vi`, `de`, `th`,
+   `my`, `es`, `fr`, `ru`, `bn`, `hi`, `ta`, `te`, `fil`, `id`, `ko` — exactly
+   `VocabStore.availableLanguages`. Write a **real translation** for each; a copy
+   of the English text passes every check and is the failure this whole workflow
+   exists to prevent. English-only additions fail the suite.
+4. **A literal `%` must be written `%%` in the value.** `L.t(_:_:)` (the varargs
+   overload) runs the string through `String(format:)`. A trailing bare `%` is
+   eaten, so the sign vanishes; a `%` before a letter parses as a specifier
+   (`% s`) applied to something that isn't one. Both are visible only by eye, in
+   one language, on one screen. Hence the split: key `"Save %@%"`, value
+   `"Save %@%%"`. `LocalizationTests.literalPercentSignsAreEscaped` enforces this
+   for **every** value, not only format strings.
+5. **`%@` counts must match English exactly** in every language — same number,
+   and in an order that makes sense for that language's grammar. There are 20
+   format keys today.
 
 ## The check
 
-Run from the repo root after any `UIStrings.json` edit:
+From the repo root after any `UIStrings.json` edit:
 
 ```sh
 python3 -c "
@@ -34,34 +58,42 @@ print('langs', len(d), '| keys', len(base), '|',
 "
 ```
 
-`langs` should be **17** (en, zh, zh-Hant, vi, de, th, my, es, fr, ru, bn, hi,
-ta, te, fil, id, ko — the same set as `VocabStore.availableLanguages`). If it
-prints `PARITY FAIL`, find exactly which language/key diverges:
+Expect `langs 17`. On `PARITY FAIL`, find exactly which language/key diverges,
+and catch the three failures the suite checks separately in one pass:
 
 ```sh
 python3 -c "
 import json
 d = json.load(open('nihongo/UIStrings.json'))
-base = set(d['en'])
-for lang in d:
-    missing = base - set(d[lang])
-    extra = set(d[lang]) - base
+en = d['en']; base = set(en)
+fmt = {k: en[k].count('%@') for k in base if '%@' in k}
+for lang, dict_ in sorted(d.items()):
+    missing, extra = base - set(dict_), set(dict_) - base
     if missing or extra:
         print(lang, 'missing:', sorted(missing), 'extra:', sorted(extra))
+    for k, n in fmt.items():
+        if k in dict_ and dict_[k].count('%@') != n:
+            print(lang, repr(k), 'has', dict_[k].count('%@'), 'placeholders, wants', n)
+    for k, v in dict_.items():
+        if v.replace('%@', '').replace('%%', '').count('%'):
+            print(lang, repr(k), 'unescaped % ->', repr(v))
+        if not v.strip():
+            print(lang, repr(k), 'blank')
+print('done')
 "
 ```
 
-## Fixing a gap
+## Then let the suite agree
 
-Add the missing key with a real translation for **every** language in the
-file, not just a placeholder copy of the English text — dropping in an
-English string for `zh`/`th`/`my`/etc. defeats the point and is easy to forget
-to revisit later. When adding a brand-new UI string, add it to all 17
-language blocks in the same edit.
+`LocalizationTests` spends **four of its five tests** on this file, each catching
+a different mistake — a green parity script is not a green suite:
 
-After fixing, re-run the parity check above, then confirm the test suite
-agrees — `nihongoTests` has a standing test for exactly this
-(`LocalizationTests.uiStringsCoverEveryLanguageAndKey`):
+| Test | Catches |
+|---|---|
+| `uiStringsCoverEveryLanguageAndKey` | key-set drift, a language not in `VocabStore.availableLanguages`, a blank value |
+| `formatPlaceholdersSurviveTranslation` | a translation that lost or gained a `%@` |
+| `literalPercentSignsAreEscaped` | a bare `%` anywhere in any value |
+| `formattedPercentStringsRenderTheSign` | `%%` that doesn't round-trip — formats every `%@%` key with `"42"` and requires exactly one visible `%` |
 
 ```sh
 xcodebuild test -scheme nihongo -project nihongo.xcodeproj \
@@ -69,5 +101,17 @@ xcodebuild test -scheme nihongo -project nihongo.xcodeproj \
   -only-testing:nihongoTests/LocalizationTests
 ```
 
-See the `run-tests` skill for the general test-invocation conventions
-(exact destination id, never build/launch the app, Mach error retry).
+See the `run-tests` skill for the general conventions (that exact destination id,
+never build or launch the app, the Mach error -308 retry).
+
+## Two knock-on effects worth remembering
+
+- **The website borrows some of these strings.** `scripts/build-web.py`'s
+  `load_app_strings()` reads `UIStrings.json` directly for `Correct!`, `Wrong`,
+  `Next`, `Restart`, `Privacy Policy`, `Terms of Use`. Renaming or removing one of
+  those keys silently degrades the promo page to its English fallback — see the
+  `build-and-deploy-web` skill.
+- **Dynamic Type and long languages.** A new string is also a layout change:
+  German, Vietnamese and Burmese run long, and `CLAUDE.md` forbids fixed-height
+  frames and fixed point sizes for exactly this reason. Prefer the shortest
+  faithful translation over a literal one.

@@ -47,6 +47,9 @@ area you touched isn't buried.
 
 ## Hard rule: never build or launch the app itself
 
+This is `CLAUDE.md`'s first hard rule, repeated here because this is the skill
+where it gets broken.
+
 **Never** run `xcodebuild build` (or `test` without `-only-testing:...`
 narrowed to `nihongoTests`) on the full `nihongo` app scheme, and **never**
 `xcrun simctl install`/`launch` it. This project's standing rule is that the
@@ -73,12 +76,44 @@ xcrun simctl bootstatus 5250BD7F-D8E3-484D-A209-23CCD0523399 -b
 # then re-run the xcodebuild test command above
 ```
 
-## Expected baseline
+## Expected baseline: all green, and no total quoted on purpose
 
-At last count: 21 unit tests across `DataTests`, `TextTests`, `KanaTests`,
-`SearchTests`, `LearnTests`, `FlashcardTests`, `QuizTests`, `PremiumTests`,
-`AdConfigTests`, `KanaSketchTests`, `TodayTests`, `LegalTests`,
-`LocalizationTests`, `PersistenceTests` (see `nihongoTests/nihongoTests.swift`).
-All green is the bar — a new failure after your change means something in
-that area regressed, not that the test is wrong (double-check before editing
-a test's expectation).
+**The bar is "every test passes", not a number.** This section used to quote a
+test count, and by the time anyone read it the suite had roughly quadrupled —
+`context/README.md` says a stale number is the common documentation failure, and
+a wrong baseline is worse than none because it invites "close enough, must be
+fine". If you want the count, measure it:
+
+```sh
+grep -c '@Test' nihongoTests/nihongoTests.swift
+grep -nE '^struct |^@MainActor$|^final class ' nihongoTests/nihongoTests.swift
+```
+
+Everything lives in the single file `nihongoTests/nihongoTests.swift`, as one
+`struct` per suite. The suites, in file order:
+
+`DataTests`, `TextTests`, `KanaTests`, `SearchTests`, `LearnTests`,
+`FlashcardTests`, `TrainTests`, `PremiumTests`, `AdConfigTests`,
+`KanaSketchTests`, `TodayTests`, `SurveyTests`, `FeedbackTests`, `LegalTests`,
+`LocalizationTests`, `PersistenceTests`, `ChallengeTests`,
+`ChallengeResultTests`, `IntroTests`.
+
+There is **no `QuizTests`** — Quiz and Listening became the Challenge ladder and
+`TrainModel` (see `CLAUDE.md`, "Product facts"). Grep the suite name out of the
+file before you scope to it: a `-only-testing:` filter naming a suite that doesn't
+exist can pass vacuously, which reads as "my change is fine" when nothing ran.
+
+A new failure after your change means something in that area regressed, not that
+the test is wrong — several of these suites are deliberate canaries and are
+supposed to be annoying:
+
+- `DataTests.generatedDataShape` pins 2089 entries / 2087 audio clips. If it
+  fails, the bundled data changed — see the `refresh-data` skill, and update the
+  numbers deliberately rather than relaxing the assertion.
+- `LocalizationTests` fails on an English-only string, a lost `%@`, or an
+  unescaped `%` — four of its five tests are that check — see the
+  `check-i18n-parity` skill.
+- `SurveyTests.contextKeysMatchThePublishedRules` fails when `Survey.Context`
+  and `firestore.rules` disagree. That is not a test to edit alone: it means the
+  rules must be republished with the build — see the `deploy-firestore-rules`
+  skill.

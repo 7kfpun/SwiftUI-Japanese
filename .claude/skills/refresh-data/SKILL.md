@@ -1,7 +1,7 @@
 ---
 name: refresh-data
 description: Pull the latest vocab/kana/audio data from the `minna` git submodule, regenerate the bundled MinnaData.json/KanaChart.json/audio resources, and run the unit tests to confirm nothing broke. Use when the `minna` submodule has upstream changes to bring in, or after any edit to `scripts/build-minna-data.py`, or whenever bundled data (vocab, translations, kana chart, audio clips) looks stale.
-when_to_use: refresh data, update minna, pull minna, regenerate MinnaData, rebuild bundled data, sync submodule, update vocab data
+when_to_use: refresh data, update minna, pull minna, regenerate MinnaData, rebuild bundled data, sync submodule, update vocab data, make data, make refresh, missing audio clip, DataTests failing, entry count changed
 allowed-tools: Bash
 ---
 
@@ -30,37 +30,87 @@ version control, not a moving pointer.
 inside `minna/`):
 
 ```sh
-python3 scripts/build-minna-data.py
+make data          # == python3 scripts/build-minna-data.py
 ```
 
-This writes `nihongo/Resources/MinnaData.json`, `nihongo/Resources/KanaChart.json`,
-and the flat `nihongo/Resources/audio/*.m4a` clips (git-ignored — regenerated
-every run, never committed). Watch the script's own summary line for
-`MISSING kana (...)` — that means a kana romaji has no bundled audio source in
-`minna/vocab/kana.json` and needs attention upstream, not just a re-run.
+`make data` is the name the code refers to (`DataTests.generatedDataShape`'s own
+comment says "update together with `make data`"), so prefer it. There is also a
+`make refresh`, which does step 1 as `git submodule update --init --remote minna`
+and then `make data` — **that is not the same as step 1 above**: `--remote`
+moves the pin to the upstream branch tip whatever its shape, where the `--ff-only`
+merge refuses a diverged history. Use `make refresh` only when you already know
+the submodule is a clean fast-forward.
 
-**3. Run the unit tests** to confirm the new data still satisfies every
-invariant the app assumes (entry counts, audio-clip coverage, per-language
-translation completeness, etc. — see `nihongoTests/nihongoTests.swift`'s
-`DataTests`/`KanaTests`):
+This writes:
+
+| Output | Tracked? |
+|---|---|
+| `nihongo/Resources/MinnaData.json` | yes — 50 lessons + 17 languages, one file |
+| `nihongo/Resources/KanaChart.json` | yes — `minna/vocab/kana.json` copied verbatim |
+| `nihongo/Resources/audio/*.m4a` | **no**, git-ignored — regenerated every run |
+
+(The script's own docstring says "7 languages". It's stale — `LANGS` in the same
+file lists 17. Don't propagate the 7.)
+
+Watch the script's one summary line. It looks like
+
+```
+MinnaData.json 1618KB | entries=2089 | vocab clips=2087 | kana clips=…
+```
+
+and it grows a ` | MISSING kana (n): …` suffix when a kana romaji in
+`minna/vocab/kana.json` has no `audio.kyoko` source. That is an upstream data
+problem, not a re-run problem: `DataTests.everyKanaHasABundledClip` asserts a
+clip for **every** cell of `seion` + `dakuon` + `youon`, so a missing one fails
+the suite. Note that じ/ぢ and ず/づ share a romaji and therefore a clip (first
+one wins), which is why the kana clip count is lower than the cell count.
+
+**3. Run the unit tests.** `DataTests` and `KanaTests` exist as canaries for
+exactly this script, so they are the verification step, not an afterthought:
 
 ```sh
 xcodebuild test -scheme nihongo -project nihongo.xcodeproj \
   -destination "id=5250BD7F-D8E3-484D-A209-23CCD0523399" \
-  -only-testing:nihongoTests
+  -only-testing:nihongoTests/DataTests -only-testing:nihongoTests/KanaTests
 ```
 
-If a count assertion fails (e.g. `VocabStore.allVocab().count == 2089`), that's
-usually the data actually having changed — update the assertion deliberately,
-don't just relax it, and note in the commit/PR what changed upstream.
+then the whole target (`-only-testing:nihongoTests`) before you call it done —
+`SearchTests`, `LearnTests`, `TrainTests`, `ChallengeTests` and `TodayTests` all
+read the bundled data too.
 
-## Hard rule: never build or launch the full app
+What each canary is actually protecting, in `DataTests`:
 
-This project's standing rule is **tests only** — never `xcodebuild build` the
-`nihongo` app target and never launch it in a simulator. The user builds and
-runs the app themselves in Xcode. If you need to sanity-check something beyond
-what a unit test can express, ask the user to check it in Xcode rather than
-launching the app yourself.
+- **`generatedDataShape`** — `allVocab().count == 2089`,
+  `filter { $0.audio != nil }.count == 2087` (2 words legitimately have no clip
+  and fall back to live synthesis — `CLAUDE.md` states this as a product fact, so
+  the 2087 is copy-relevant, not just a test number), and
+  `lessons().map(\.number) == Array(1...50)`.
+- **`idsAreGloballyUnique`** — romaji repeat across lessons, so `Vocab.id` must
+  keep its lesson prefix.
+- **`everyLessonSupportsGameplay`** — every lesson needs ≥7 entries (Today picks
+  7) and ≥4 distinct kana (the quiz needs 4 options). A trimmed lesson upstream
+  breaks screens, not just counts.
+- **`vocabClipIsNamedAndDecodes`** — the flat `<lesson>-<slug>` naming scheme
+  (`1-watashi`), and that the file actually decodes as audio.
+- **`translationsSwitchWithLanguage`** — every one of the 17 languages resolves a
+  non-empty translation for every entry of lesson 1.
+
+If a count assertion fails, that is usually the data genuinely having changed.
+**Update the assertion deliberately and change all its readers together** —
+2089/2087 are quoted in `CLAUDE.md`, in the website's `T` dict copy
+(`scripts/build-web.py`) and in `context/01-data-model.md`. Never relax an
+assertion to `>=` to make a red suite green.
+
+## Hard rules and flakes
+
+Data looks right in the app or it doesn't, and it is tempting to go and look —
+don't. `CLAUDE.md`'s first hard rule holds here: **tests only**, never
+`xcodebuild build` and never a simulator launch. Ask the user to check in Xcode
+instead.
+
+Never commit the regenerated files either — `MinnaData.json` and `KanaChart.json`
+are tracked and *will* show up in `git status` after every run, which makes
+"just commit the data" a very natural mistake. Stage if asked; the user commits.
 
 ## If `xcodebuild test` flakes
 
