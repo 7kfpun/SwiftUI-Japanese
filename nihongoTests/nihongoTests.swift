@@ -475,6 +475,52 @@ struct TodayTests {
         let old = try JSONDecoder().decode(TodayShared.Snapshot.self, from: legacy)
         #expect(old.challenge == nil)
     }
+
+    /// The whole point of deriving the rotation from the clock: the widget's timeline is
+    /// rebuilt on every visit to the Today tab, and the word shown must not depend on *when*
+    /// that rebuild happened. Two rebuilds inside one hour have to agree.
+    @Test func rotationIsStableWithinAnHour() {
+        // Written as a multiple of 3600 on purpose: the whole assertion is "same hour", so
+        // the fixture has to start *on* a boundary. An arbitrary-looking epoch (1_700_000_000
+        // is 800s past one) puts `late` in the next hour and fails for the wrong reason.
+        let hour = Date(timeIntervalSince1970: 472_222 * 3600)
+        let early = hour.addingTimeInterval(60)
+        let late = hour.addingTimeInterval(59 * 60)
+        #expect(TodayShared.rotationIndex(count: 7, at: early)
+                == TodayShared.rotationIndex(count: 7, at: late))
+    }
+
+    /// ...and it must actually move on the hour, or nothing rotates at all.
+    @Test func rotationAdvancesEveryHour() {
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        let indices = (0..<7).map {
+            TodayShared.rotationIndex(count: 7, at: base.addingTimeInterval(Double($0) * 3600))
+        }
+        #expect(Set(indices).count == 7)          // a full deck in 7 hours, no repeats
+        #expect(TodayShared.rotationIndex(count: 7, at: base.addingTimeInterval(7 * 3600))
+                == indices[0])                    // then wraps
+    }
+
+    /// A negative cursor is reachable by paging back on the widget, and Swift's `%` keeps
+    /// the dividend's sign — an unguarded index would trap on `words[-1]`.
+    @Test func rotationHandlesNegativeCursors() {
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        for cursor in -20...20 {
+            let idx = TodayShared.rotationIndex(count: 7, cursor: cursor, at: base)
+            #expect((0..<7).contains(idx))
+        }
+        #expect(TodayShared.rotationIndex(count: 0, cursor: -3, at: base) == 0)   // empty deck
+    }
+
+    /// Entry dates have to land on clock hours, not on `now + n`, or every rebuild shifts
+    /// the schedule and the rotation drifts.
+    @Test func nextHourLandsOnAClockBoundary() {
+        let mid = Date(timeIntervalSince1970: 1_700_001_234)      // mid-hour
+        let next = TodayShared.nextHour(after: mid)
+        #expect(next > mid)
+        #expect(next.timeIntervalSince1970.truncatingRemainder(dividingBy: 3600) == 0)
+        #expect(next.timeIntervalSince(mid) <= 3600)
+    }
 }
 
 // MARK: - Legal documents
@@ -966,5 +1012,163 @@ struct ChallengeResultTests {
         let other = ChallengeResult.byIndex(lesson: 5, context: ctx)
         #expect(other.isEmpty)
         #expect(!ChallengeResult.isUnlocked(index: 2, results: other))
+    }
+}
+
+// MARK: - First-launch intro
+
+struct IntroTests {
+    /// An isolated defaults domain per test — the real one belongs to the simulator's app
+    /// and Swift Testing runs cases in parallel.
+    private func makeDefaults() -> (UserDefaults, String) {
+        let suite = "IntroTests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        return (defaults, suite)
+    }
+
+    /// Five cards, numbered 1…5 in paging order — the raw values are what `intro_card`
+    /// and `intro_skip` report, so they double as the analytics contract.
+    @Test func fiveCardsNumberedInPagingOrder() {
+        #expect(Intro.Card.allCases.count == 5)
+        #expect(Intro.Card.allCases.map(\.rawValue) == [1, 2, 3, 4, 5])
+        #expect(Intro.Card.allCases == [.meanings, .kana, .modes, .challenge, .today])
+    }
+
+    /// The one answer with a behavioural consumer. Only "not yet" diverts the landing
+    /// tab; an unanswered question is not a "no".
+    @Test func onlyNoKanaDivertsTheLandingTab() {
+        #expect(Intro.landingTab(kana: .notYet) == .kana)
+        #expect(Intro.landingTab(kana: .hiragana) == .today)
+        #expect(Intro.landingTab(kana: .both) == .today)
+        #expect(Intro.landingTab(kana: nil) == .today)
+        // The raw values are the stored/reported wire format, not display text.
+        #expect(Intro.KanaLevel.notYet.rawValue == "none")
+        #expect(Intro.KanaLevel.allCases.map(\.rawValue) == ["none", "hiragana", "both"])
+    }
+
+    @Test func answersMapOntoPreferences() {
+        let (defaults, suite) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        IntroAnswers(kana: .both, textbookLesson: 12, goal: .jlpt).save(to: defaults)
+        #expect(defaults.bool(forKey: Pref.introAnswered))
+        #expect(defaults.string(forKey: Pref.knowsKana) == "both")
+        #expect(defaults.integer(forKey: Pref.textbookLesson) == 12)
+        #expect(defaults.string(forKey: Pref.goal) == "jlpt")
+    }
+
+    /// "Never studied it" is the answer 0, not the absence of one — it has to be written,
+    /// or a fresh beginner is indistinguishable from someone who skipped the card.
+    @Test func startingFreshIsStoredAsZero() {
+        let (defaults, suite) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        IntroAnswers(textbookLesson: 0).save(to: defaults)
+        #expect(defaults.object(forKey: Pref.textbookLesson) as? Int == 0)
+    }
+
+    /// A skipped question writes no preference at all — the app keeps its own defaults
+    /// rather than a guess. But the intro is still marked seen, or the tour reopens.
+    @Test func skippedQuestionsWriteNothingButStillCloseTheIntro() {
+        let (defaults, suite) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        IntroAnswers().save(to: defaults)
+        #expect(defaults.bool(forKey: Pref.introAnswered))
+        #expect(defaults.object(forKey: Pref.knowsKana) == nil)
+        #expect(defaults.object(forKey: Pref.textbookLesson) == nil)
+        #expect(defaults.object(forKey: Pref.goal) == nil)
+    }
+
+    /// `intro_done` always carries the same three params, answered or not, so a funnel can
+    /// count "asked but not answered" instead of finding a param missing.
+    @Test func trackParamsAlwaysCarryTheSameThreeKeys() {
+        let empty = IntroAnswers().trackParams
+        #expect(Set(empty.keys) == ["knows_kana", "textbook_lesson", "goal"])
+        #expect(empty["knows_kana"] as? String == IntroAnswers.unanswered)
+        #expect(empty["goal"] as? String == IntroAnswers.unanswered)
+        #expect(empty["textbook_lesson"] as? Int == IntroAnswers.unansweredLesson)
+
+        let full = IntroAnswers(kana: .hiragana, textbookLesson: 0, goal: .travel)
+        #expect(Set(full.trackParams.keys) == Set(empty.keys))
+        #expect(full.trackParams["knows_kana"] as? String == "hiragana")
+        #expect(full.trackParams["textbook_lesson"] as? Int == 0)
+        #expect(full.trackParams["goal"] as? String == "travel")
+
+        #expect(full.isComplete)
+        #expect(!IntroAnswers(kana: .hiragana, goal: .travel).isComplete)
+    }
+
+    /// Card 3's chips are the real mode rows: `SelectModeView`'s order, its titles, its
+    /// subtitles, its SF Symbols. If any of those strings is renamed there, this fails
+    /// here rather than silently falling back to the raw key on the intro card.
+    @Test func modeChipsReuseSelectModeStrings() throws {
+        #expect(Intro.Mode.allCases == [.vocabList, .flashcards, .train, .learn])
+        #expect(Intro.Mode.allCases.map(\.titleKey)
+                == ["Vocab List", "Flashcards", "Train", "Learn"])
+        #expect(Intro.Mode.allCases.map(\.subtitleKey)
+                == ["Browse & hear all words", "Swipe right if you know it",
+                    "Swipe to the right answer", "Rebuild the reading from tiles"])
+        #expect(Intro.Mode.allCases.map(\.icon)
+                == ["list.bullet", "rectangle.on.rectangle.angled",
+                    "arrow.left.arrow.right", "square.grid.2x2"])
+        for mode in Intro.Mode.allCases {
+            #expect(UIImage(systemName: mode.icon) != nil, "missing SF Symbol \(mode.icon)")
+        }
+    }
+
+    /// Every string the intro asks for resolves to a real English entry. `L.t` falls back
+    /// to the key itself, so a typo shows up as English-looking text that no translation
+    /// pass will ever cover — invisible without this check.
+    @Test func introStringsHaveEnglishEntries() throws {
+        let url = try #require(Bundle.main.url(forResource: "UIStrings", withExtension: "json"))
+        let table = try JSONDecoder().decode([String: [String: String]].self,
+                                             from: Data(contentsOf: url))
+        let en = try #require(table["en"])
+
+        var keys = Intro.Mode.allCases.flatMap { [$0.titleKey, $0.subtitleKey] }
+        keys += Intro.KanaLevel.allCases.map(\.titleKey)
+        keys += Intro.Goal.allCases.map(\.titleKey)
+        keys += ["Skip", "Start learning", "Next",
+                 "Meanings in %@", "Tap any word to hear it.", "Change language",
+                 "All of Kana is free.",
+                 "The chart, the quizzes, and drawing a kana to have your strokes scored.",
+                 "Do you read kana already?",
+                 "Four ways through a lesson.", "Many ways to learn. All of them fun.",
+                 "Challenge", "Challenge %@", "Best %@%", "Beat Challenge %@ to unlock",
+                 "%@ questions a rung", "%@% to pass, up to three stars",
+                 "Pass one and the next opens.",
+                 "Studied Minna no Nihongo before?", "No, starting fresh",
+                 "Yes — up to lesson %@", "Lesson %@", "Ready for Challenge %@?",
+                 "Today deals exactly the words your next challenge will ask.",
+                 "The same deck sits on your Lock Screen, Home Screen and Watch.",
+                 "Why are you learning?"]
+        for key in keys {
+            #expect(en[key] != nil, "UIStrings.en is missing '\(key)'")
+        }
+    }
+
+    @Test func goalsAreFiveWithStableRawValues() {
+        #expect(Intro.Goal.allCases.map(\.rawValue)
+                == ["travel", "jlpt", "work", "culture", "other"])
+        for goal in Intro.Goal.allCases {
+            #expect(UIImage(systemName: goal.icon) != nil, "missing SF Symbol \(goal.icon)")
+        }
+    }
+
+    /// The intro records the textbook answer and nothing else: no lesson floor, no seeded
+    /// ladder rows. Seeding would sync invented history to every device and inflate the
+    /// count that gates the rating prompt, so this pins the *absence* of that behaviour.
+    @MainActor @Test func textbookAnswerIsRecordedOnly() throws {
+        let (defaults, suite) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suite) }
+        IntroAnswers(kana: .both, textbookLesson: 30, goal: .work).save(to: defaults)
+
+        let container = try ModelContainer(
+            for: ChallengeResult.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let ctx = ModelContext(container)
+        #expect(try ctx.fetch(FetchDescriptor<ChallengeResult>()).isEmpty)
+        #expect(ChallengeResult.totalPassed(context: ctx) == 0)
     }
 }

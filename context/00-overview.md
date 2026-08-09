@@ -17,7 +17,8 @@ This folder documents the app **as it exists today** — not a porting plan.
 TabView
 ├─ Today     → TodayView            (daily 7-word card browser + widget)
 ├─ Kana      → KanaBrowserView      → KanaQuizModeView → {Flashcards|Classic|Swipe|Listening|Write}
-├─ Lessons   → LessonListView       → SelectModeView    → {Vocab List|Flashcards|Learn|Quiz|Listening}
+├─ Lessons   → LessonListView       → SelectModeView    → {Vocab List|Flashcards|Train|Learn}
+│                                                       + Challenge ladder (rungs 1…N)
 └─ Settings  → SettingsView         (languages, premium, legal, feedback)
 ```
 
@@ -43,16 +44,21 @@ chart — is compiled ahead of time by `scripts/build-minna-data.py` from the
 
 Defined in `nihongo/Store/Store.swift` (`Gating` enum):
 
-- **Lessons 1–5 are free forever.** Lessons 6–50 are premium.
+- **Lessons 1–3 are free forever** (`Gating.freeLessonLimit = 3`). Lessons 4–50
+  are premium.
 - **Kana (all of it — browser + every quiz mode) is always free.** There is no
   Kana gating anywhere in the code.
-- On a locked lesson, the practice modes (Flashcards, Learn, Quiz, Listening)
-  give a **5-card free trial** (`Gating.freeTrialCards`) before a paywall sheet
-  appears. **Vocab List stays free on every lesson** — you can always read a
-  locked lesson's word list, just not drill it past 5 cards without buying in.
-- **Today** can only select lessons 1–5 without premium; picking a locked lesson
-  from its menu opens the paywall and the view snaps back to lesson 1
-  (`TodayView.clampIfLocked()`).
+- **One rule, no partial trial.** A locked lesson's practice modes and challenges
+  are simply locked; the row opens the paywall instead of navigating
+  (`SelectModeView` is the single place gating is enforced). The earlier
+  5-card-trial design is gone: a free user can *finish* lessons 1–3 — fill the
+  progress ring, earn the stars — and meets the paywall carrying that momentum,
+  rather than being cut off mid-practice by a card quota.
+- **Vocab List stays free on every lesson**, so browsing and search never lock.
+- **Today is never paywalled.** Its deck is derived from progress and walks all
+  50 lessons whatever the subscription says — meeting the words is free, being
+  *tested* on them is what premium buys. Its "Ready for Challenge N?" capsule
+  stops at the Lessons list when the lesson is locked.
 
 Purchases are **StoreKit 2**, on-device only — no server, no shared secret.
 `PremiumProduct` in `Store.swift` lists a lifetime non-consumable
@@ -91,21 +97,36 @@ changed. See `build-and-deploy-web` skill.
 
 ## Shipped feature state (current)
 
-- **Kana**: segmented Basic/Voiced/Combos browser with green/red mastery tiles,
-  5 quiz modes (Flashcards, Classic 4-option, Swipe 2-option Tinder-style,
-  Listening, Write-with-scoring), all free.
-- **Lessons**: 50 lessons in 4 groups + debounced fuzzy-ish search, 5 modes per
-  lesson (Vocab List, Flashcards, Learn tile-reconstruction, Quiz, Listening).
-- **Today**: daily 7-word card browser feeding a Lock-Screen/Home-Screen widget
-  via an App Group.
+- **Kana**: segmented Basic/Voiced/Combos browser with green/red mastery tiles.
+  The tile script rotates hiragana → katakana → romaji on one toolbar tap. 5 quiz
+  modes (Flashcards, Classic 4-option, Swipe 2-option, Listening,
+  Write-with-scoring), all free.
+- **Lessons**: 50 lessons in 4 groups + debounced `contains` search. **Four**
+  untested practice modes per lesson (Vocab List, Flashcards, Train, Learn
+  tile-reconstruction) **plus a scored Challenge ladder** — 10 questions a rung,
+  80% to pass, up to 3 stars, each rung unlocked by passing the one below. Quiz
+  and Listening are no longer per-lesson modes: Listening became a question form
+  inside the ladder, and the old shared model is now `TrainModel`.
+- **Today**: card browser dealing the next unpassed rung's pool (its new words
+  plus the review window) — derived from progress, never chosen. Feeds the
+  Lock-Screen/Home-Screen widget via an App Group and the watch over
+  WatchConnectivity; both rotate hourly off the wall clock
+  (`TodayShared.rotationIndex`).
+- **First launch**: a five-card intro tour that also asks three questions —
+  see `09-intro-and-survey.md`.
 - **Settings**: separate app-UI language vs. vocabulary-translation language
-  (17 languages each), premium management, legal docs, feedback link.
-- **Audio**: ~2087 pre-generated Kyoko (`say -v Kyoko`) clips bundled in the
-  app, with a live `AVSpeechSynthesizer` fallback for the ~2 clip-less words
-  and for bare kana tiles.
-- 21 unit tests (`nihongoTests`) + UI smoke/screenshot tests (`nihongoUITests`)
-  pass. Deployment target iOS 26.5; developed against the iPhone 17 Pro (iOS
-  26.5) simulator.
+  (17 languages each), premium management, legal docs, feedback link. Two hidden
+  developer affordances on the version footer: 7 taps toggles analytics
+  exclusion, long-press replays the intro.
+- **Audio**: 2087 of 2089 words have a pre-generated Kyoko (`say -v Kyoko`) clip
+  bundled, with a live `AVSpeechSynthesizer` fallback for the 2 clip-less words
+  and for bare kana tiles. These are TTS, **not native-speaker recordings** —
+  marketing copy must not claim otherwise.
+- **Sync**: kana mastery and challenge progress live in CloudKit-backed SwiftData
+  (`iCloud.com.kfpun.nihongo`), so they follow the user across devices.
+- ~80 unit tests (`nihongoTests`) + UI smoke/screenshot tests (`nihongoUITests`)
+  pass — re-count before quoting the number. Deployment target iOS 26.5;
+  developed against the iPhone 17 Pro (iOS 26.5) simulator.
 
 ## Where to go next
 

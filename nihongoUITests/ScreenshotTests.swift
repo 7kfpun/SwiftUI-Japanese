@@ -20,6 +20,14 @@ final class ScreenshotTests: XCTestCase {
         continueAfterFailure = true
         app = XCUIApplication()
         app.launchArguments += ["-SCREENSHOTS"]
+        // Skip the first-launch intro. `UserDefaults` parses `-key value` launch arguments
+        // into the volatile domain natively, so this satisfies `RootView`'s
+        // `!bool(forKey: Pref.introAnswered)` check without a line of app code knowing that
+        // tests exist. Required, not cosmetic: the intro is a `fullScreenCover` above the
+        // whole TabView, so without it every launch lands on intro card 1 — `test01Today`
+        // would save a picture of the tour as `01-today`, and the other tests would fall
+        // through their guards and capture nothing while still reporting success.
+        app.launchArguments += ["-introAnswered", "YES"]
         app.launch()
     }
 
@@ -27,7 +35,13 @@ final class ScreenshotTests: XCTestCase {
 
     @MainActor
     func test01Today() throws {
-        _ = app.staticTexts["Swipe"].waitForExistence(timeout: 8)   // card loaded
+        // Asserted, not discarded like the guarded tests below: Today is the landing tab and
+        // needs no navigation, so if its card never appears the capture is wrong rather than
+        // merely missing — and a wrong `01-today` feeds straight into the App Store framing
+        // script. The other tests tolerate a miss because iPad genuinely can't reach the tab
+        // bar (see `openTab`).
+        XCTAssertTrue(app.staticTexts["Swipe"].waitForExistence(timeout: 8),
+                      "Today's card never appeared — 01-today would capture the wrong screen")
         shot("01-today")
     }
 
@@ -100,9 +114,23 @@ final class ScreenshotTests: XCTestCase {
         shot("11-lesson-learn")
     }
 
+    /// The scored half of a lesson. Named `12-lesson-quiz` because that key is what
+    /// `fastlane/generate_framed_screenshots.py`'s `LOCALES` table carries marketing copy for
+    /// in all seven locales — renaming it would silently drop this shot from every framed set.
+    ///
+    /// It used to open a "Quiz" mode row, which stopped existing when Quiz and Listening
+    /// became the Challenge ladder plus `TrainView`. `openLessonMode("Quiz")` had been
+    /// matching nothing and returning through its guard ever since — passing, capturing
+    /// nothing. A rung is the honest successor: it's the lesson test the copy describes.
     @MainActor
     func test12LessonQuiz() throws {
-        guard openLessonMode("Quiz"), wait(app.buttons["Next"]) else { return }
+        openTab("Lessons")
+        // "Challenge 1", not "Challenge" — the bare word is also the section header, and two
+        // matches make a singular query fail for reasons unrelated to the test.
+        guard tap(app.staticTexts["Lesson 1"]),
+              wait(app.staticTexts["Vocab List"]),
+              tap(app.staticTexts["Challenge 1"]),
+              wait(app.buttons["Next"]) else { return }
         shot("12-lesson-quiz")
     }
 

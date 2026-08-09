@@ -34,7 +34,8 @@ enum Track {
   joining against user-level data.
 - **`Track.setPremium` also sets two Firebase user properties**:
   `user_type` (`"premium"`/`"free"`) and `premium_tier`
-  (`"lifetime"`/`"3m"`/`"6m"`/`"12m"`/`"none"`) — these attach to *every*
+  (`"lifetime"`/`"1m"`/`"3m"`/`"6m"`/`"none"`, plus `"12m"` for a legacy
+  subscriber who restored — that tier is no longer sold) — these attach to *every*
   subsequent event automatically via Firebase's own mechanism, independent of
   the per-event `is_premium` param above.
 - **DEBUG builds never send real analytics** — `AppBootstrap.swift`'s

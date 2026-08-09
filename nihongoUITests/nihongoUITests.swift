@@ -16,6 +16,10 @@ final class nihongoUITests: XCTestCase {
     @MainActor
     func testKanaBrowserAndQuizFlow() throws {
         let app = XCUIApplication()
+        // Skip the first-launch intro — it's a fullScreenCover above the whole TabView, so
+        // without this every assertion below races a tour it can never dismiss. `UserDefaults`
+        // parses `-key value` launch arguments natively, so no app code needs to know.
+        app.launchArguments += ["-introAnswered", "YES"]
         app.launch()
 
         // Kana browser grid loaded (the あ tile).
@@ -34,6 +38,10 @@ final class nihongoUITests: XCTestCase {
     @MainActor
     func testLessonsToLearnFlow() throws {
         let app = XCUIApplication()
+        // Skip the first-launch intro — it's a fullScreenCover above the whole TabView, so
+        // without this every assertion below races a tour it can never dismiss. `UserDefaults`
+        // parses `-key value` launch arguments natively, so no app code needs to know.
+        app.launchArguments += ["-introAnswered", "YES"]
         app.launch()
 
         app.buttons["Lessons"].tap()
@@ -59,6 +67,10 @@ final class nihongoUITests: XCTestCase {
     @MainActor
     func testSearchFindsVocab() throws {
         let app = XCUIApplication()
+        // Skip the first-launch intro — it's a fullScreenCover above the whole TabView, so
+        // without this every assertion below races a tour it can never dismiss. `UserDefaults`
+        // parses `-key value` launch arguments natively, so no app code needs to know.
+        app.launchArguments += ["-introAnswered", "YES"]
         app.launch()
 
         app.buttons["Lessons"].tap()

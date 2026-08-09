@@ -5,8 +5,16 @@ import Foundation
 /// Generated files live in the app's Resources so the synchronized group copies them
 /// incrementally (fast rebuilds), unlike a whole-submodule folder reference.
 enum VocabStore {
-    /// Default translation language; all ship in the bundle.
+    /// Default translation language; all ship in the bundle. Stays "en" on purpose:
+    /// it's the fallback for callers that name no language at all (and for missing
+    /// translation data), not the user-facing first-launch choice.
     static let defaultLanguage = "en"
+
+    /// First-launch default for `Pref.translationLanguage`: the device language, so a
+    /// Vietnamese user gets Vietnamese meanings without first finding Settings →
+    /// Meanings. `L.deviceDefault` already validates against `availableLanguages`
+    /// (same 17 codes as the UI languages), so it needs no second locale rule here.
+    static var deviceDefaultLanguage: String { L.deviceDefault }
 
     private struct LessonDTO: Codable { let number: Int; let entries: [VocabEntry] }
     private struct MinnaData: Codable {

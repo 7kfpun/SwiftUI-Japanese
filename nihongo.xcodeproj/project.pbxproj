@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA7CC4F630279674007DA35F /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = AA7CC4F530279674007DA35F /* FirebaseFirestore */; };
+		AA7CC4F830279680007DA35F /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = AA7CC4F730279680007DA35F /* FirebaseAppCheck */; };
 		AADAA70D3023ACC5006010F5 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = AADAA70C3023ACC5006010F5 /* GoogleMobileAds */; };
 		AAF4B1BD30245931001F7D2E /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = AAF4B1BC30245931001F7D2E /* FirebaseAnalytics */; };
 		AAF4B1BF30245931001F7D2E /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = AAF4B1BE30245931001F7D2E /* FirebaseCrashlytics */; };
@@ -169,7 +171,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				AAF4B1BF30245931001F7D2E /* FirebaseCrashlytics in Frameworks */,
+				AA7CC4F630279674007DA35F /* FirebaseFirestore in Frameworks */,
 				AAF4B1BD30245931001F7D2E /* FirebaseAnalytics in Frameworks */,
+				AA7CC4F830279680007DA35F /* FirebaseAppCheck in Frameworks */,
 				AADAA70D3023ACC5006010F5 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -271,14 +275,16 @@
 				AAF4E02530250001001F7D2E /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				AADA49673023578E006010F5 /* nihongo */,
 				AA5HA2ED30250002001F7D2E /* Shared */,
+				AADA49673023578E006010F5 /* nihongo */,
 			);
 			name = nihongo;
 			packageProductDependencies = (
 				AADAA70C3023ACC5006010F5 /* GoogleMobileAds */,
 				AAF4B1BC30245931001F7D2E /* FirebaseAnalytics */,
 				AAF4B1BE30245931001F7D2E /* FirebaseCrashlytics */,
+				AA7CC4F530279674007DA35F /* FirebaseFirestore */,
+				AA7CC4F730279680007DA35F /* FirebaseAppCheck */,
 			);
 			productName = nihongo;
 			productReference = AADA49653023578E006010F5 /* nihongo.app */;
@@ -343,8 +349,8 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				AAF4D4BD30247E5E001F7D2E /* TodayWidget */,
 				AA5HA2ED30250002001F7D2E /* Shared */,
+				AAF4D4BD30247E5E001F7D2E /* TodayWidget */,
 			);
 			name = TodayWidgetExtension;
 			packageProductDependencies = (
@@ -368,8 +374,8 @@
 				AAF4E02730250001001F7D2E /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				AAF4E00330250001001F7D2E /* WatchApp */,
 				AA5HA2ED30250002001F7D2E /* Shared */,
+				AAF4E00330250001001F7D2E /* WatchApp */,
 			);
 			name = WatchApp;
 			packageProductDependencies = (
@@ -391,8 +397,8 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				AAF4E01330250001001F7D2E /* WatchWidget */,
 				AA5HA2ED30250002001F7D2E /* Shared */,
+				AAF4E01330250001001F7D2E /* WatchWidget */,
 			);
 			name = WatchWidgetExtension;
 			packageProductDependencies = (
@@ -1143,6 +1149,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		AA7CC4F530279674007DA35F /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AAF4B1BB30245931001F7D2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		AA7CC4F730279680007DA35F /* FirebaseAppCheck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AAF4B1BB30245931001F7D2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAppCheck;
+		};
 		AADAA70C3023ACC5006010F5 /* GoogleMobileAds */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = AADAA70B3023ACC5006010F5 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;

@@ -90,7 +90,7 @@ struct nihongoApp: App {
                 // The widget carries no language of its own — it renders whatever the
                 // app last published — so resolve the lesson in the app's current one.
                 let language = UserDefaults.standard.string(forKey: Pref.translationLanguage)
-                    ?? VocabStore.defaultLanguage
+                    ?? VocabStore.deviceDefaultLanguage
                 router.openLesson(VocabStore.lesson(n, language))
             }
 
