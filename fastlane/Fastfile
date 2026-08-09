@@ -1,21 +1,25 @@
 default_platform(:ios)
 
-# `fil` and `ta` are NOT uploaded to App Store Connect, by decision — don't chase it as a
-# bug. Their text under fastlane/metadata/ is written and current; it just has nowhere to go.
+# `ta` is NOT uploaded to App Store Connect, by decision — don't chase it as a bug. Its
+# text under fastlane/metadata/ta is written and current; it just has nowhere to go.
 #
 # Two independent reasons, and the second is the blocking one:
 #
-# 1. `deliver` drops them. `Deliver::Loader` partitions locale folders on `valid?`, which
-#    tests against the hardcoded `Deliver::Languages::ALL_LANGUAGES` list, and that list has
-#    no `fil` or `ta`. `ignore_language_directory_validation: true` only silences the
-#    resulting error — the folders are still discarded, so the text is never even loaded.
-#    Easy to mistake for a successful run: the lane reports success having skipped them.
-# 2. Neither exists as a localization on the App Store version, so there is no destination
-#    to write to even going around fastlane via `Spaceship::ConnectAPI` directly.
+# 1. `deliver` drops it. `Deliver::Loader` partitions locale folders on `valid?`, which
+#    tests against the hardcoded `Deliver::Languages::ALL_LANGUAGES` list, and that list
+#    has no `ta`. `ignore_language_directory_validation: true` only silences the resulting
+#    error — the folder is still discarded, so the text is never even loaded. Easy to
+#    mistake for a successful run: the lane reports success having skipped it.
+# 2. It doesn't exist as a localization on the App Store version, so there is no
+#    destination to write to even going around fastlane via `Spaceship::ConnectAPI`.
 #
-# To actually ship them: add Filipino and Tamil in App Store Connect first, then either
-# upgrade fastlane past its stale language list or push with Spaceship directly. Until
-# someone wants those two markets enough to do that, the folders are inert reference copy.
+# To actually ship it: add Tamil in App Store Connect first, then either upgrade fastlane
+# past its stale language list or push with Spaceship directly. Until someone wants that
+# market enough to do that, the folder is inert reference copy.
+#
+# `fil` was in exactly this state and has been removed outright — metadata and rendered
+# screenshots both. Filipino store copy is recoverable from git history if it's ever
+# wanted; don't reintroduce the folder without adding the localization in ASC first.
 
 # App Store Connect API key. Credentials come from the git-ignored fastlane/.env
 # (copy fastlane/.env.example). The .p8 itself lives outside the repo.
@@ -43,7 +47,7 @@ platform :ios do
     deliver(
       api_key: asc_api_key,
       # Suppresses the *error* for locale folders fastlane doesn't recognise — it does not
-      # make them upload. `fil` and `ta` are deliberately not uploaded: see the note at the
+      # make them upload. `ta` is deliberately not uploaded: see the note at the
       # top of this file.
       ignore_language_directory_validation: true,
       skip_binary_upload: true,
@@ -68,7 +72,7 @@ platform :ios do
     upload_to_app_store(
       api_key: asc_api_key,
       # Suppresses the *error* for locale folders fastlane doesn't recognise — it does not
-      # make them upload. `fil` and `ta` are deliberately not uploaded: see the note at the
+      # make them upload. `ta` is deliberately not uploaded: see the note at the
       # top of this file.
       ignore_language_directory_validation: true,
       skip_metadata: true,
@@ -85,7 +89,7 @@ platform :ios do
       api_key: asc_api_key,
       screenshots_path: "fastlane/screenshots",
       # Suppresses the *error* for locale folders fastlane doesn't recognise — it does not
-      # make them upload. `fil` and `ta` are deliberately not uploaded: see the note at the
+      # make them upload. `ta` is deliberately not uploaded: see the note at the
       # top of this file.
       ignore_language_directory_validation: true,
       skip_binary_upload: true,
