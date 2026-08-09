@@ -9,11 +9,12 @@ import WidgetKit
 /// the app shouldn't yank the widget out from under a glance. They read the same deck
 /// and hold their own place in it.
 ///
-/// A free-running cursor, not a bounded array index — the buttons step it and the
-/// hourly timeline keeps adding to it. Readers go through `wrapped(_:count:)` (floor
-/// modulo, never `%` directly), so any cursor value lands on a real word: it may be
-/// negative after paging back, and Swift's `%` is truncating — `-1 % 7` is `-1`, which
-/// fed straight into `words[...]` would trap.
+/// A free-running *offset*, not a bounded array index. The displayed word is
+/// `cursor + hourSlot` (see `TodayShared.rotationIndex`) — the buttons move the cursor,
+/// the clock moves the hour, and the two simply add. Readers go through
+/// `TodayShared.rotationIndex`, which floor-modulos, so any cursor value lands on a real
+/// word: it goes negative after paging back, and Swift's `%` is truncating — `-1 % 7` is
+/// `-1`, which fed straight into `words[...]` would trap.
 enum WidgetPosition {
     private static let key = "today.widgetOffset"
     private static var store: UserDefaults? { UserDefaults(suiteName: TodayShared.appGroup) }
@@ -26,21 +27,19 @@ enum WidgetPosition {
     static func advance() { step(1) }
     static func rewind() { step(-1) }
 
-    /// Park the cursor on a word directly — what a dot tap does. Absolute rather than
-    /// relative: the tapped dot *is* the destination, so there's nothing to accumulate.
-    static func jump(to index: Int) { store?.set(index, forKey: key) }
+    /// Park the widget on word `index` right now — what a dot tap does.
+    ///
+    /// Stored *relative to the current hour*, which looks like indirection and isn't: the
+    /// displayed word is `cursor + hourSlot`, so writing the tapped index straight into the
+    /// cursor would show that index plus every hour elapsed since 1970. Subtracting the
+    /// current hour slot is what makes "show me this dot" mean this dot.
+    static func jump(to index: Int) {
+        store?.set(index - TodayShared.hourSlot(), forKey: key)
+    }
 
     /// Reset when the deck changes underneath us, so a fresh challenge's words start
     /// at their first entry rather than wherever the last deck had been left.
-    static func reset() { store?.set(0, forKey: key) }
-
-    /// Floor modulo — the only safe way to turn the cursor into an array index, since
-    /// `%` keeps the sign of the dividend and the cursor isn't bounds-checked.
-    static func wrapped(_ value: Int, count: Int) -> Int {
-        guard count > 0 else { return 0 }
-        let r = value % count           // -(count-1) ... count-1
-        return r < 0 ? r + count : r
-    }
+    static func reset() { jump(to: 0) }
 }
 
 /// The widget's "next word" button. WidgetKit reloads the timeline once this returns,

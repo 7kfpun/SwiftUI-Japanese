@@ -40,4 +40,45 @@ enum TodayShared {
         guard let store, let data = store.data(forKey: key) else { return nil }
         return try? JSONDecoder().decode(Snapshot.self, from: data)
     }
+
+    // MARK: - Hourly rotation
+
+    /// Which word of a `count`-word deck to show at `date`, given the widget's manual
+    /// paging `cursor` (0 on the watch, which has no buttons).
+    ///
+    /// A pure function of the wall clock, and that is the whole point. The timeline is
+    /// rebuilt every time the app publishes a snapshot — `TodayView.loadPicks()` calls
+    /// `reloadAllTimelines()`, and that runs on *every* visit to the Today tab — so an
+    /// index counted forward from the moment of the rebuild restarts at the same word each
+    /// time. Anyone who opened the app more than once an hour never saw the widget rotate
+    /// at all. Deriving the index from the hour makes a rebuild idempotent: mid-hour it
+    /// recomputes the word already on screen, and the rotation survives.
+    static func rotationIndex(count: Int, cursor: Int = 0, at date: Date = Date()) -> Int {
+        guard count > 0 else { return 0 }
+        return floorMod(cursor &+ hourSlot(date), count)
+    }
+
+    /// Whole hours since the epoch — the rotation's clock. Deliberately not a calendar
+    /// component: this only has to advance by exactly one every hour and be identical in
+    /// the app, the widget and the watch, which a UTC-anchored count is and a local-time
+    /// one isn't across a DST boundary.
+    static func hourSlot(_ date: Date = Date()) -> Int {
+        Int((date.timeIntervalSince1970 / 3600).rounded(.down))
+    }
+
+    /// The top of the next clock hour after `date`, where the following timeline entry
+    /// belongs. Scheduling on hour boundaries rather than `now + 1h` keeps the rotation on
+    /// the clock instead of drifting to whenever the timeline was last rebuilt.
+    static func nextHour(after date: Date = Date()) -> Date {
+        Date(timeIntervalSince1970: Double(hourSlot(date) + 1) * 3600)
+    }
+
+    /// Floor modulo. Swift's `%` keeps the sign of the dividend and the paging cursor is a
+    /// free-running value that goes negative once someone pages back — `-1 % 7` is `-1`,
+    /// which fed into an array subscript would trap.
+    static func floorMod(_ value: Int, _ count: Int) -> Int {
+        guard count > 0 else { return 0 }
+        let r = value % count
+        return r < 0 ? r + count : r
+    }
 }

@@ -54,21 +54,30 @@ struct TodayProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<TodayEntry>) -> Void) {
         let (words, lesson, challenge) = currentWords()
         let now = Date()
-        // Start wherever the dots left the cursor, then keep cycling hourly from
-        // there. Tapping and waiting move the same cursor, so a tap doesn't fight the
-        // timeline and the widget never jumps back to a word you've already dismissed.
-        let start = WidgetPosition.offset
-        // One entry per word, so an hourly rotation eventually shows the whole deck.
-        // This was capped at 12 when a deck was one rung's ~7 new words; a challenge
-        // pool runs to the mid-twenties, and the cap meant the reload restarted at the
-        // same cursor — the tail of the deck could never come up by waiting, only by
-        // tapping. The 30 is a backstop against a pathological deck, not a design.
-        let entries = (0..<min(words.count, 30)).map { i in
-            let idx = WidgetPosition.wrapped(start &+ i, count: words.count)
-            return TodayEntry(date: Calendar.current.date(byAdding: .hour, value: i, to: now) ?? now,
-                              word: words[idx], lesson: lesson,
+        // Tapping and waiting move the same cursor, so a tap doesn't fight the timeline and
+        // the widget never jumps back to a word already dismissed.
+        let cursor = WidgetPosition.offset
+
+        func entry(at date: Date) -> TodayEntry {
+            let idx = TodayShared.rotationIndex(count: words.count, cursor: cursor, at: date)
+            return TodayEntry(date: date, word: words[idx], lesson: lesson,
                               deckSize: words.count, wordIndex: idx, challenge: challenge)
         }
+
+        // The word is derived from the *hour* (`TodayShared.rotationIndex`), not counted
+        // forward from this rebuild — which is what makes the rotation actually happen. The
+        // app republishes its snapshot and reloads all timelines on every visit to the Today
+        // tab, and an index counted from the rebuild restarted at the same word every time,
+        // so anyone opening the app more than once an hour never saw it move. Now a reload
+        // mid-hour re-derives the word already on screen.
+        //
+        // First entry is *now* so the current hour is covered immediately; the rest land on
+        // clock-hour boundaries rather than `now + n hours`, so the rotation stays on the
+        // clock instead of drifting to whenever it was last rebuilt. One entry per word: the
+        // 30 is a backstop against a pathological deck, not a design.
+        let boundary = TodayShared.nextHour(after: now)
+        let entries = [entry(at: now)]
+            + (0..<min(words.count, 30)).map { entry(at: boundary.addingTimeInterval(Double($0) * 3600)) }
         completion(Timeline(entries: entries, policy: .atEnd))
     }
 }

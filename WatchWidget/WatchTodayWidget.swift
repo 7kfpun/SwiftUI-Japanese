@@ -44,15 +44,24 @@ struct WatchTodayProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<WatchTodayEntry>) -> Void) {
         let (words, lesson) = currentWords()
         let now = Date()
-        // One entry per word, so the rotation eventually reaches the whole deck. This
-        // was capped at 12 when a deck was one rung's ~7 new words; a challenge pool
-        // runs to the mid-twenties, and with no cursor to page by hand the cap meant
-        // the tail of the deck was simply unreachable on the wrist. The 30 matches the
-        // iOS widget and is a backstop against a pathological deck, not a design.
-        let entries = (0..<min(words.count, 30)).map { i in
-            WatchTodayEntry(date: Calendar.current.date(byAdding: .hour, value: i, to: now) ?? now,
-                            word: words[i % words.count], lesson: lesson)
+
+        func entry(at date: Date) -> WatchTodayEntry {
+            // No cursor: complications have no buttons, so the clock is the only thing
+            // moving the deck along.
+            let idx = TodayShared.rotationIndex(count: words.count, at: date)
+            return WatchTodayEntry(date: date, word: words[idx], lesson: lesson)
         }
+
+        // Clock-derived, same as the iOS widget and for the same reason — see
+        // `TodayShared.rotationIndex`. The watch app rewrites its container every time a
+        // snapshot arrives over WatchConnectivity, and an index counted forward from that
+        // rebuild restarted at word 0 each time, so the wrist sat on the first word.
+        //
+        // First entry is *now* to cover the current hour; the rest land on clock-hour
+        // boundaries. One entry per word, 30 as a backstop against a pathological deck.
+        let boundary = TodayShared.nextHour(after: now)
+        let entries = [entry(at: now)]
+            + (0..<min(words.count, 30)).map { entry(at: boundary.addingTimeInterval(Double($0) * 3600)) }
         completion(Timeline(entries: entries, policy: .atEnd))
     }
 }
