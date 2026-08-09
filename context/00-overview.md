@@ -5,9 +5,14 @@ the **Minna no Nihongo** textbook vocabulary (50 lessons, 2089 entries) plus the
 hiragana/katakana kana syllabaries. It replaced an older React Native app of the
 same name; that RN app still exists at `~/Documents/OwnWorkspace/JapaneseBak` if
 anyone ever needs to check original behavior, but nothing from it is vendored into
-this repo anymore. The rebuild is feature-complete and in App Store submission.
+this repo anymore. The SwiftUI rebuild is feature-complete.
 
-This folder documents the app **as it exists today** — not a porting plan.
+This folder documents the app **as it exists today** — not a porting plan. It
+deliberately describes durable structure rather than release status, which rots
+fastest: at the time of writing `MARKETING_VERSION` is 3.0.0, which was rejected once
+for a missing Terms of Use link on the paywall (since fixed — see `06-monetization.md`)
+and is pending resubmission. Check App Store Connect, not this file, for where a build
+actually is.
 
 ## Tab structure
 
@@ -24,10 +29,10 @@ TabView
 
 Every tab is wrapped in `RootView.banner(_:_:)`, which stacks a `BannerAd` below
 the tab's content in a plain `VStack` — **not** `.safeAreaInset`. That's a
-deliberate fix: screens pushed onto a `NavigationStack` (e.g. `QuizView`) don't
-see an ancestor's safe-area inset, so a `.safeAreaInset`-based banner used to
-render *underneath* controls like the Quiz "Next" button. The `VStack` reserves
-real layout space instead.
+deliberate fix: screens pushed onto a `NavigationStack` don't see an ancestor's
+safe-area inset, so a `.safeAreaInset`-based banner used to render *underneath*
+bottom-anchored controls — the "Next" button on `ChallengeView` and `KanaQuizView` is the
+case that surfaced it. The `VStack` reserves real layout space instead.
 
 The whole tab tree is `.id(appLanguage)`-keyed in `RootView`, so switching the
 interface language rebuilds the entire view hierarchy instantly rather than
@@ -52,7 +57,7 @@ Defined in `nihongo/Store/Store.swift` (`Gating` enum):
   are simply locked; the row opens the paywall instead of navigating
   (`SelectModeView` is the single place gating is enforced). The earlier
   5-card-trial design is gone: a free user can *finish* lessons 1–3 — fill the
-  progress ring, earn the stars — and meets the paywall carrying that momentum,
+  progress bar, earn the stars — and meets the paywall carrying that momentum,
   rather than being cut off mid-practice by a card quota.
 - **Vocab List stays free on every lesson**, so browsing and search never lock.
 - **Today is never paywalled.** Its deck is derived from progress and walks all
@@ -67,17 +72,26 @@ Purchases are **StoreKit 2**, on-device only — no server, no shared secret.
 of RN-era subscription IDs (`…premium.3m/6m/12m`) that are no longer sold but
 are still honored so pre-existing buyers restore correctly. `Store.isPremium`
 is derived from `Transaction.currentEntitlements` and drives both lesson
-gating and ad visibility everywhere (`BannerAd`, `Interstitial`).
+gating and ad visibility everywhere (`BannerAd`, `Interstitial`). So four things are
+sellable — 1m, 3M, 6M and lifetime — and 12m exists only for restores. Full detail,
+including the price maths and why plan names never come from App Store Connect, in
+`06-monetization.md`.
 
 ## Monetization
 
-- **AdMob banners** (`nihongo/Ads/AdBanner.swift`) — one per tab/screen slot
-  (`AdSlot`), hidden entirely for premium users. The SDK is wrapped in
-  `#if canImport(GoogleMobileAds)` so the app builds and runs before the
-  package is even added to the project; without it (or without
-  `Secrets.plist`) DEBUG builds render a placeholder label instead of a real ad.
+Detailed in `06-monetization.md`; the shape of it:
+
+- **AdMob banners** (`nihongo/Ads/AdBanner.swift`) — one per tab, four in total
+  (`AdSlot.today/.kana/.lessons/.about`; the enum's other three names are unused
+  leftovers that still key `Secrets.plist`), hidden entirely for premium users. The SDK
+  is wrapped in `#if canImport(GoogleMobileAds)` so the app builds and runs before the
+  package is even added to the project; without it (or without `Secrets.plist`) DEBUG
+  builds render a placeholder label instead of a real ad.
 - **AdMob interstitial** (`nihongo/Ads/Interstitial.swift`) — shown at most once
-  every 3 minutes, on leaving a Quiz/Listening screen, non-premium only.
+  every 3 minutes, non-premium only, on leaving **Train** (if anything was answered) or
+  **a Challenge run** (only if it finished — never mid-run).
+- **A rating ask**, offered once to a subscriber who has just passed their 15th rung:
+  the app's own star row first, and only 4★+ hands off to Apple's review sheet.
 - **Firebase Analytics + Crashlytics** — see `08-analytics.md`.
 - Ships with **no App Tracking Transparency prompt**: AdMob is explicitly
   configured non-personalized (`publisherPrivacyPersonalizationState = .disabled`
@@ -90,14 +104,16 @@ gating and ad visibility everywhere (`BannerAd`, `Interstitial`).
 one big Python template — never hand-edit the generated HTML). It builds
 English by default; `--all` regenerates all 17 language folders. Hosted on
 **Firebase Hosting** (`kf-nihongo` project, `web` as the `public` dir — see
-`firebase.json` / `.firebaserc`) at `kf-nihongo.web.app`. `web/privacy.html`
+`firebase.json` / `.firebaserc`) at `kf-nihongo.web.app`. The same `firebase.json` also
+declares `firestore.rules`, so the survey ruleset (`09-intro-and-survey.md`) deploys from
+this repo rather than only through the console. `web/privacy.html`
 and `web/terms.html` are **not** touched by the generator — they're the live
 App Store Connect privacy/terms URLs and must be edited by hand if ever
 changed. See `build-and-deploy-web` skill.
 
 ## Shipped feature state (current)
 
-- **Kana**: segmented Basic/Voiced/Combos browser with green/red mastery tiles.
+- **Kana**: segmented Seion/Dakuon/Youon browser with green/red mastery tiles.
   The tile script rotates hiragana → katakana → romaji on one toolbar tap. 5 quiz
   modes (Flashcards, Classic 4-option, Swipe 2-option, Listening,
   Write-with-scoring), all free.
@@ -122,14 +138,20 @@ changed. See `build-and-deploy-web` skill.
   bundled, with a live `AVSpeechSynthesizer` fallback for the 2 clip-less words
   and for bare kana tiles. These are TTS, **not native-speaker recordings** —
   marketing copy must not claim otherwise.
-- **Sync**: kana mastery and challenge progress live in CloudKit-backed SwiftData
-  (`iCloud.com.kfpun.nihongo`), so they follow the user across devices.
-- ~80 unit tests (`nihongoTests`) + UI smoke/screenshot tests (`nihongoUITests`)
-  pass — re-count before quoting the number. Deployment target iOS 26.5;
-  developed against the iPhone 17 Pro (iOS 26.5) simulator.
+- **Sync**: kana mastery (`KanaResult`) and challenge progress (`ChallengeResult`) are
+  the app's only two `@Model` types, both in one CloudKit-backed SwiftData container
+  (`iCloud.com.kfpun.nihongo`), so they follow the user across devices — and neither can
+  carry `@Attribute(.unique)`, which is why every reader is merge-tolerant
+  (`01-data-model.md`).
+- **Server**: one write, ever — the intro survey to Firestore, guarded by App Check
+  (`09-intro-and-survey.md`). Purchases, progress and preferences never leave the device
+  or the user's own iCloud.
+- Around 78 unit tests (`nihongoTests`) + UI smoke/screenshot tests (`nihongoUITests`)
+  pass — re-count before quoting the number; the `run-tests` skill's own figure is stale.
+  Deployment target iOS 26.5; developed against the iPhone 17 Pro (iOS 26.5) simulator.
 
 ## Where to go next
 
 See `context/README.md` for the full file index. The short version: data model
-→ `01`, Kana → `03`, Lessons → `04`, shared UI/audio → `05`, visual language →
-`07`, analytics → `08`.
+→ `01`, the Challenge ladder → `02`, Kana → `03`, Lessons → `04`, shared UI/audio →
+`05`, monetization → `06`, visual language → `07`, analytics → `08`, first launch → `09`.

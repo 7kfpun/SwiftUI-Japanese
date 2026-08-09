@@ -143,7 +143,7 @@ here means re-publishing the rules, or every write starts failing.**
 `at` is `FieldValue.serverTimestamp()`: device clocks lie, and Firestore's
 offline queue can land a write hours after the tap that made it.
 
-### Rules (`firestore.rules`, deployed via the console Rules tab)
+### Rules (`firestore.rules`)
 
 Create-only. `allow read, update, delete: if false` — denying update/delete
 matters as much as denying read, since auto-IDs are unguessable but not secret
@@ -151,9 +151,14 @@ and "write-only" must not mean "may overwrite". Reading results is the project
 owner's job via the console or a service account, both of which bypass rules, so
 denying `read` costs nothing operationally.
 
-`hasOnly` + `hasAll` close the field set to exactly those ten keys, and the enum
+`hasOnly` + `hasAll` close the field set to exactly those eleven keys, and the enum
 checks on `knows_kana`/`goal`/`platform` mean a client-side typo can't silently
 invent a sixth `goal` value that splits the data at analysis time.
+
+The file is declared in `firebase.json` (`"firestore": { "rules": "firestore.rules" }`),
+so it deploys from the repo (`firebase deploy --only firestore:rules`) rather than only
+by pasting into the console Rules tab — which matters because the field set is closed and
+a schema change *must* ship with a rules change.
 
 **The Rules Playground can't verify this ruleset.** It makes you supply `at` as a
 literal timestamp, which won't equal the `request.time` it generates, so a

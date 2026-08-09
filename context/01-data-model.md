@@ -1,7 +1,8 @@
 # 01 — Data model
 
 Every screen reads from data compiled ahead of build time. This doc covers what
-gets generated, what's hand-written, and the Swift types that consume it.
+gets generated, what's hand-written, the Swift types that consume it, and where
+mutable state actually lives.
 
 ## Source of truth: the `minna` submodule
 
@@ -19,9 +20,11 @@ minna/
 ```
 
 `romaji` is the join key between a lesson's `vocab/{n}.json` and its translation
-files, but it is only **unique within a lesson** — 111 romaji repeat across
-different lessons, so nothing downstream can key off romaji alone (see
-`Vocab.id` below).
+files, but it is only **unique within a lesson** — romaji repeat across different
+lessons, so nothing downstream can key off romaji alone (see `Vocab.id` below).
+
+**The bundled audio is Apple's `say -v Kyoko` TTS, generated upstream — not
+native-speaker recordings.** Marketing and store copy must not claim otherwise.
 
 ## Why there's a compile step (`scripts/build-minna-data.py`)
 
@@ -39,7 +42,7 @@ python3 scripts/build-minna-data.py
 
 It reads `minna/` and writes into `nihongo/Resources/`:
 
-- **`MinnaData.json`** (tracked in git, ~700 KB) — one JSON file: `languages`
+- **`MinnaData.json`** (tracked in git) — one JSON file: `languages`
   (the 17 codes), `lessons` (50 × `{number, entries}`, each entry has
   `kanji/kana/romaji/dictionary?/useKana?/audio?`), and `translations`
   (`lang → lessonNumber(as string) → romaji → text`).
@@ -49,15 +52,35 @@ It reads `minna/` and writes into `nihongo/Resources/`:
 - **`Resources/audio/<lesson>-<slug>.m4a`** — every vocab word's Kyoko clip,
   renamed flat (`1-watashi.m4a`, …) so the synchronized group can bundle them
   as individually-copied resources with no name collisions. **Git-ignored** —
-  regenerate by re-running the script; it isn't checked in because it's ~75 MB.
+  regenerate by re-running the script; it isn't checked in because of its size.
 - **`Resources/audio/kana-<romaji>.m4a`** — one clip per kana cell, deduped by
   romaji (じ/ぢ and ず/づ share a pronunciation, so the *first* one wins;
   see the comment in the script for exactly which).
 
 Re-run the script whenever `minna/` updates (see the `refresh-data` skill) or
 whenever `nihongo/Resources/MinnaData.json` looks stale relative to the
-submodule. It's also idempotent and safe to run any time — it always
-regenerates all outputs from scratch.
+submodule. It's idempotent and safe to run any time — it always regenerates all
+outputs from scratch.
+
+### What the generated data actually contains, right now
+
+Counted from `MinnaData.json`, not from memory:
+
+| Fact | Value |
+|---|---|
+| Lessons | 50 |
+| Vocab entries | 2089 |
+| Entries with a bundled clip | 2087 (2 fall back to live TTS) |
+| Words per lesson | 17 (min) – 63 (max) |
+| Languages | 17 |
+| Resolved translation strings | 35 513 |
+
+**The `7` in the source comments is wrong.** `Localization.swift:8` says "The 7
+languages we ship" and `VocabStore.swift:51-52` says "not all 7" / "7×2089". The
+shipped set is **17** (`en, zh, zh-Hant, vi, de, th, my, es, fr, ru, bn, hi, ta,
+te, fil, id, ko`), which is what `MinnaData.json`, `UIStrings.json` and
+`LocalizationTests.uiStringsCoverEveryLanguageAndKey` all agree on. The comments
+are stale from an earlier release; the numbers here are the data's.
 
 ## Swift models
 
@@ -93,6 +116,10 @@ struct Lesson: Identifiable, Hashable {
 }
 ```
 
+`displaysKanji` is load-bearing well beyond display: `Challenge.supports` refuses a
+kanji prompt for a kana-only word (the prompt would equal the answer), and the intro's
+first card picks its sample word by it.
+
 `nihongo/KanaData.swift`:
 
 ```swift
@@ -106,9 +133,10 @@ struct K: Hashable, Identifiable {              // one kana chart cell
 `KanaData.seion` / `.dakuon` / `.youon` are `[[K]]` grids built at load time
 from `KanaChart.json` by placing entries at their `row`/`col`, padding gaps
 with empty placeholders, and trimming trailing-empty cells per row (so ん sits
-alone on its row, matching the printed textbook chart). `KanaData.hiraganaPool`
-/ `.katakanaPool` are flat 74-entry arrays (hand-transcribed, not
-data-driven) used as the distractor source for Lessons → Learn's tile game.
+alone on its row, matching the printed textbook chart) — 46 / 25 / 33 non-empty
+cells respectively. `KanaData.hiraganaPool` / `.katakanaPool` are flat 74-entry
+arrays (hand-transcribed, not data-driven) used as the distractor source for
+Lessons → Learn's tile game.
 
 ## `VocabStore` — the bundle loader (`nihongo/VocabStore.swift`)
 
@@ -128,9 +156,18 @@ Key entry points:
   name (`Locale.localizedString(forIdentifier:)`), used in Settings' language
   pickers.
 
+**Two different defaults, and the difference matters.**
+`VocabStore.defaultLanguage` is literally `"en"` and stays that way: it's the
+argument-less fallback for `lessons(_:)`/`allVocab(_:)`/`lesson(_:_:)` and the
+missing-translation fallback, and several tests depend on that meaning.
+`VocabStore.deviceDefaultLanguage` forwards to `L.deviceDefault` and is the
+**first-launch default for `Pref.translationLanguage`**, so a Vietnamese user gets
+Vietnamese meanings without first finding Settings (see `09-intro-and-survey.md`).
+
 `cleanWord(_:)` (also in `VocabStore.swift`) strips display annotations before
 tiling/speaking: `（…）`, `［…］`, `「…」`, `[…]`, `～`, `。`. Used by Learn's
-tile target and by every TTS fallback path.
+tile target, by `Challenge`'s lookalike ranking, and by every TTS path
+(`Speech.utterance`).
 
 `searchVocab(_:in:)` is a simple case-insensitive `contains` across
 kanji/kana/romaji/translation — not fuzzy matching. `LessonListView` debounces
@@ -139,41 +176,107 @@ itself is synchronous and instant.
 
 ## Persistence split
 
+Three storage tiers, and nothing crosses between them:
+
 | Data | Storage | Notes |
 |---|---|---|
-| Vocab/Lesson/kana chart | Bundled JSON, decoded to structs | Immutable reference data — never `@Model` |
-| Field-visibility + sound/order toggles (`isKanjiShown`, `isKanaShown`, `isRomajiShown`, `isTranslationShown`, `isSoundOn`, `isOrdered`) | `@AppStorage` | Keys centralized in `Pref` (`nihongo/Prefs.swift`) — never inline string literals |
-| App-UI language / vocab-translation language | `@AppStorage` (`Pref.appLanguage`, `Pref.translationLanguage`) | Two independent settings — see `07-ux-ui.md` |
-| Kana quiz/write mastery (`KanaResult`) | **SwiftData** `@Model` | One row per romaji, upserted on every answer |
-| Today's daily lesson + saved 7-word selection | `@AppStorage` (`Pref.todayLesson`, `Pref.todaySelection` as JSON) | Also mirrored into an App Group for the widget — see `05-shared-and-audio.md` |
+| Vocab / Lesson / kana chart | Bundled JSON, decoded to structs | Immutable reference data — never `@Model` |
+| Field-visibility, sound, per-mode order, kana tile script | `@AppStorage` | Keys centralized in `Pref` |
+| App-UI language / vocab-translation language | `@AppStorage` | Two independent settings — see `05-shared-and-audio.md` |
+| Intro answers + "intro seen" | `UserDefaults` via `Pref` | Written once by `IntroAnswers.save(to:)` — `09-intro-and-survey.md` |
+| "Rating already asked" | `UserDefaults` via `Pref` | One-shot flag, `06-monetization.md` |
+| Kana mastery (`KanaResult`) | **CloudKit-backed SwiftData** | One row per romaji, upserted on every answer |
+| Challenge progress (`ChallengeResult`) | **CloudKit-backed SwiftData** | One row per rung, best-only — `02-challenge-ladder.md` |
+| Today's deck | **nothing** | Derived from progress on every appear; see below |
+| Today's snapshot for the widget/watch | App Group `UserDefaults` + WatchConnectivity | `Shared/TodayShared.swift` — a cache of a derived value, not state |
 
-`Pref` (`nihongo/Prefs.swift`) is the single registry of `@AppStorage` key
-strings — the file comment explains why: a typo in an inline string literal
-would silently create a brand-new, disconnected setting instead of erroring.
+### `Pref` — the whole key registry (`nihongo/Prefs.swift`)
 
-### `KanaResult` (`nihongo/KanaResult.swift`)
+`Pref` is the single registry of `@AppStorage`/`UserDefaults` key strings; the file
+comment explains why — a typo in an inline string literal would silently create a
+brand-new, disconnected setting instead of erroring. The full set:
+
+| Key constant | Stored key | Read by |
+|---|---|---|
+| `appLanguage` | `appLanguage` | `L.current`, `RootView.id(...)` |
+| `translationLanguage` | `translationLanguage` | every lesson-resolving view |
+| `soundOn` | `isSoundOn` | `SoundToggle`, every auto-play |
+| `ordered` | `isOrdered` | Learn's order picker (defaults **true**) |
+| `trainOrdered` | `trainOrdered` | Train's order picker (defaults **false**) |
+| `kanjiShown` / `kanaShown` / `romajiShown` / `translationShown` | `isKanjiShown` / … | `CardOptionsBar`, Learn, Today |
+| `kanaTileScript` | `kanaTileScript` | `KanaBrowserView` — index into its script table (`03-kana.md`) |
+| `analyticsExcluded` | `analyticsExcluded` | `Track.setExcluded`, `AppBootstrap` |
+| `ratingAsked` | `ratingAsked` | `RatingPrompt.hasAsked` |
+| `introAnswered` | `introAnswered` | `RootView`'s first-launch cover |
+| `knowsKana` | `knowsKana` | `Intro.landingTab` — the only intro answer with a consumer |
+| `textbookLesson` | `textbookLesson` | **nothing — recorded only** |
+| `goal` | `goal` | **nothing — recorded only** |
+
+Note that `ordered` and `trainOrdered` are two keys on purpose: Learn defaults to
+ordered, Train to random, so sharing one switch would force one of them to open in the
+wrong mode.
+
+**There is no `Pref.todayLesson` and no `Pref.todaySelection`.** Earlier releases
+persisted a chosen lesson and a saved 7-word selection; Today now derives its deck from
+challenge progress on every appear (`TodayView.studyLesson()` → the first lesson with an
+unpassed rung, then `Challenge.pool` for that rung) and stores nothing. Being a pure
+function of progress is what lets it advance the instant a rung is passed without a
+migration or a reset path. Orphaned `todayLesson`/`todaySelection` values still sit in
+old simulator plists, which is how the claim survived in this doc for a while — nothing
+in the app reads them.
+
+### The SwiftData layer — two models, one CloudKit container
+
+`nihongoApp.swift:19` registers `Schema([KanaResult.self, ChallengeResult.self])` in a
+**single** `ModelContainer` configured with `cloudKitDatabase: .private("iCloud.com.kfpun.nihongo")`,
+so kana mastery and challenge progress follow the user across devices. It falls back to a
+plain local store when CloudKit refuses — no iCloud entitlement in an open-source clone,
+no signed-in simulator account — because progress still matters locally; only a failure
+of *both* is fatal.
 
 ```swift
-@Model final class KanaResult {
-    @Attribute(.unique) var romaji: String
+@Model final class KanaResult {          // nihongo/KanaResult.swift
+    var romaji: String
     var isCorrect: Bool
     var timestamp: Date
-    static func record(romaji:isCorrect:context:)   // upsert — used by every kana quiz/write mode
+    static func record(romaji:isCorrect:context:)   // upsert
 }
 ```
 
-Registered in the app's single `ModelContainer` (`nihongoApp.swift`, schema
-`[KanaResult.self]`). Drives the green/red tile borders in `KanaBrowserView`
-and is the only SwiftData model in the app — there's no bookmarking, no
-lesson-level progress persistence beyond this.
+**Neither model carries `@Attribute(.unique)`, and that is forced, not sloppy:
+CloudKit-backed SwiftData forbids unique constraints.** So "one row per kana" and "one
+row per rung" are conventions maintained by each model's `record` upsert, and a two-device
+offline merge *can* leave duplicates. Every reader is written to tolerate that, with a
+resolution rule that matches the store's own semantics:
+
+- `KanaResult` — **latest `timestamp` wins**, which is also literally what the store
+  means ("the most recent answer"). `record` updates the newest matching row, and
+  `KanaBrowserView`'s `byRomaji` map merges duplicates by timestamp rather than
+  first-wins.
+- `ChallengeResult` — **the strongest row wins**, via `better(_:_:)`. Detailed in
+  `02-challenge-ladder.md`.
+
+`KanaResult` drives the green/red tile borders in `KanaBrowserView` and the Write mode's
+verdict, and it's the only per-item mastery record in the app: there is no vocab
+equivalent, no bookmarking and no spaced-repetition schedule.
 
 ## Data integrity — what the tests actually pin down
 
-`nihongoTests/nihongoTests.swift` (`DataTests`) is the living contract for the
-generated data and will fail loudly if `build-minna-data.py`'s output shape
-changes: exactly 2089 vocab entries across 50 lessons, 2087 of them with a
-bundled audio clip (2 don't — those fall back to live TTS), globally-unique
-`Vocab.id`, every lesson has ≥7 entries (Today needs 7) and ≥4 distinct kana
-readings (the quiz needs 4 options), every kana cell has a bundled clip, and
-every one of the 17 languages resolves non-empty translations for lesson 1.
-Update these numbers together with a data regeneration, not independently.
+`nihongoTests/nihongoTests.swift` is the living contract for the generated data and will
+fail loudly if `build-minna-data.py`'s output shape changes. `DataTests` pins: exactly
+2089 vocab entries across lessons 1…50, 2087 of them with a bundled audio clip,
+globally-unique `Vocab.id`, at least 4 distinct kana readings per lesson (a quiz needs 4
+options), one named clip that actually decodes, a bundled clip for *every* kana cell, and
+non-empty translations for lesson 1 in all 17 languages. `KanaTests` pins the 46/25/33
+chart counts and the 74-entry pools; `KanaSketchTests.strokeCountsCoverEveryDrawableKana`
+pins a stroke count on every drawable cell.
+
+Two caveats when reading them:
+
+- `everyLessonSupportsGameplay` asserts `entries.count >= 7` with the comment "the Today
+  tab picks 7 words". That comment is stale — Today deals a rung's pool, which is ≥ 10 by
+  construction. The assertion is still a useful floor, just not for the stated reason.
+- These counts must be updated **together with** a data regeneration, not
+  independently — that's the point of them being canaries.
+
+Whole-suite size is around 78 tests (`run-tests` skill); re-count before quoting it.

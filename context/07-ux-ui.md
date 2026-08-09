@@ -118,7 +118,7 @@ that gap from the Latin side, without touching the Japanese faces.
 
 `design: .rounded` rather than a bundled display font, deliberately — a
 Latin-only font file would break both Dynamic Type scaling and the system's
-per-script fallback for the 10 non-Latin UI languages.
+per-script fallback for the nine non-Latin UI languages (see the breakdown below).
 
 **Descriptions stay on the system font.** `.subheadline`, `.footnote`,
 `.caption`, list-row subtitles, explanatory paragraphs — all neutral. The
@@ -226,28 +226,34 @@ and therefore meet all 17 scripts:
 ## The Tinder-like swipe UI — one shared visual language, several screens
 
 The most distinctive interaction pattern in the app, and it's genuinely
-**one implementation** (`FlashcardScreen` in `Flashcards.swift`,
-`CardPager` in `CardPager.swift`) reused across contexts, not four separate
-similar-looking screens:
+**one implementation** — three types in `Components.swift`, `Flashcards.swift` and
+`CardPager.swift` — reused across contexts, not five separate similar-looking screens:
 
+- **`SwipeCard`** owns the card itself: surface, hairline, shadow, the ⟨ Swipe ⟩ hint,
+  the corner stamps and the tilt-and-slide that follows a drag. Every swipeable screen
+  draws one. What stays with each caller is what genuinely differs — the *meaning* of a
+  swipe: Flashcards grade yourself, Train and the kana quiz pick an answer, Today just
+  turns the page (so it passes no stamps at all).
 - **Lessons Flashcards** and **Kana Flashcards** are the literal same
   `FlashcardScreen<Element, Face>` generic, instantiated over `Vocab` and `K`
   respectively.
-- **Kana Swipe quiz** hand-rolls its own drag gesture (2 fixed options instead
-  of a pass/fail grade) but borrows the same `CardStackPeek` backdrop,
-  `SwipeStamp` corner previews, and `choiceChip` chrome so it visually matches
-  the flashcard screens.
+- **Kana Swipe quiz** and **Train** hand-roll their own drag gestures (2 fixed options
+  instead of a pass/fail grade) over the same `SwipeCard`, `CardStackPeek` backdrop and
+  `choiceChip` chrome, so they visually match the flashcard screens.
 - **Today** uses `CardPager` (the ordered-paging half of the pattern, not the
-  swipe-to-grade half) over the same `CardStackPeek` backdrop, so paging
-  through the day's 7 words reads as "a stack of cards" too, consistent with
+  swipe-to-grade half) over the same `SwipeCard` + `CardStackPeek`, so paging
+  through the rung's deck reads as "a stack of cards" too, consistent with
   Flashcards.
-- **Learn** (ordered mode) also uses `CardPager` for its next/prev card swipe.
+- **Learn** (ordered mode) and the **intro tour** also use `CardPager` — the intro with
+  `draggable: false`, so it keeps the fling animation while paging by button only.
 
 Concretely: drag horizontally with a slight rotation proportional to drag
-distance; past a threshold (80–100pt depending on screen), the card flings
-fully off-screen and the next one enters from the opposite side; a corner
-`SwipeStamp` previews the outcome you're dragging toward, scaled by how far
-past the threshold you are.
+distance; past a threshold (80pt in `CardPager`, 90pt in Train and the kana swipe quiz,
+100pt in `FlashcardScreen`), the card flings fully off-screen and the next one enters
+from the opposite side; a corner `SwipeStamp` previews the outcome you're dragging
+toward, fading in so it reaches full strength exactly where the swipe would commit.
+Where a verdict is involved the stamp is paired with an *icon* change, never colour
+alone — red and green are the same colour to roughly 8% of men.
 
 ## Interaction & feedback principles (kept from the original)
 
@@ -282,7 +288,12 @@ Symbol, and VoiceOver-correct without a custom accessibility label).
   ratio approach doesn't reliably divide space into *even* squares across
   sibling cells in this layout shape, so both screens use the same
   measure-then-divide pattern instead.
+- **`OptionGrid` rows are a fixed 74pt rather than expanding to fill.** Letting them
+  grow made the four answers as large as the prompt above them, and on a quiz the
+  question should dominate — the options only need to be comfortably tappable. That fixed
+  height is also what makes `QuizOptionButton`'s scale floor a measurable quantity rather
+  than a guess (above).
 - **Per-tab ad banners live in a `VStack`, not `.safeAreaInset`** — see
   `00-overview.md` for why (a `NavigationStack`-pushed screen doesn't see an
-  ancestor's safe-area inset, so a bottom-anchored control like Quiz's "Next"
-  button used to render under the ad).
+  ancestor's safe-area inset, so a bottom-anchored "Next" button used to render under
+  the ad).
