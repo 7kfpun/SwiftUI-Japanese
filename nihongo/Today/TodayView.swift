@@ -17,7 +17,7 @@ import WidgetKit
 /// the full 1–50 whatever the subscription says: meeting the words is free, being
 /// tested on them is what premium buys.
 struct TodayView: View {
-    @AppStorage(Pref.translationLanguage) private var language = VocabStore.defaultLanguage
+    @AppStorage(Pref.translationLanguage) private var language = VocabStore.deviceDefaultLanguage
     @AppStorage(Pref.kanjiShown)       private var showKanji = true
     @AppStorage(Pref.kanaShown)        private var showKana = true
     @AppStorage(Pref.romajiShown)      private var showRomaji = true

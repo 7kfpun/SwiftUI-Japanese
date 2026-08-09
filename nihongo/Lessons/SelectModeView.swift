@@ -3,7 +3,7 @@ import SwiftData
 
 struct SelectModeView: View {
     let lesson: Lesson
-    @AppStorage(Pref.translationLanguage) private var language = VocabStore.defaultLanguage
+    @AppStorage(Pref.translationLanguage) private var language = VocabStore.deviceDefaultLanguage
     @Environment(Store.self) private var store
     @Environment(\.modelContext) private var context
     @State private var showPaywall = false
@@ -41,18 +41,22 @@ struct SelectModeView: View {
                 mode(icon: "square.grid.2x2", title: L.t("Learn"),
                      subtitle: L.t("Rebuild the reading from tiles")) { LearnView(lesson: current) }
             } header: {
-                Text(L.t("Learn"))
+                Text(L.t("Learn")).font(Theme.title(.footnote))
             }
 
             Section {
                 ForEach(1...challengeCount, id: \.self) { i in challengeRow(i) }
             } header: {
+                // The tally is part of the header, not a row datum, so it takes the header
+                // face too — it just keeps its monospaced digits so it doesn't jitter as
+                // rungs are cleared.
                 HStack {
                     Text(L.t("Challenge"))
                     Spacer()
                     Text("\(ChallengeResult.passedCount(results: results)) / \(challengeCount)")
                         .monospacedDigit()
                 }
+                .font(Theme.title(.footnote))
             } footer: {
                 Text(L.t("Clear every challenge to master the lesson."))
             }
@@ -143,7 +147,7 @@ private struct ChallengeRow: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(L.t("Challenge %@", "\(index)"))
-                    .font(.headline)
+                    .font(Theme.title(.headline))
                     .foregroundStyle(state == .open ? .primary : .secondary)
                 if let result, result.bestScore > 0 {
                     Text(L.t("Best %@%", "\(result.bestScore)"))
@@ -180,8 +184,10 @@ private struct ModeRow: View {
                 .font(.title3)
                 .frame(width: 30)
                 .foregroundStyle(locked ? Color.secondary : Theme.accent)
+            // Row name in the title face, subtitle left on the system font — the mode's
+            // name is a heading, "Swipe right if you know it" is a sentence about it.
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.headline)
+                Text(title).font(Theme.title(.headline))
                 Text(subtitle).font(.caption).foregroundStyle(.secondary)
             }
             if locked {

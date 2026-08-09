@@ -10,6 +10,10 @@ import SwiftUI
 /// is ignored.
 struct CardPager: ViewModifier {
     var canPage: () -> Bool = { true }
+    /// Whether a drag turns the page. Set false for a screen that pages by button only
+    /// and still wants the fling animation — `canPage` can't express that, since it gates
+    /// `commit` and would refuse the programmatic fling along with the gesture.
+    var draggable = true
     let page: (Int) -> Void
     @Binding var fling: Int?
 
@@ -24,7 +28,8 @@ struct CardPager: ViewModifier {
             .gesture(
                 DragGesture()
                     .onChanged { if !animating { drag = $0.translation.width } }
-                    .onEnded { end($0.translation.width) }
+                    .onEnded { end($0.translation.width) },
+                including: draggable ? .all : .none
             )
             .onChange(of: fling) {
                 if let dir = fling { fling = nil; commit(dir) }
@@ -55,7 +60,8 @@ extension View {
     /// Attach card-paging swipe behavior. See `CardPager`.
     func cardPager(fling: Binding<Int?> = .constant(nil),
                    canPage: @escaping () -> Bool = { true },
+                   draggable: Bool = true,
                    page: @escaping (Int) -> Void) -> some View {
-        modifier(CardPager(canPage: canPage, page: page, fling: fling))
+        modifier(CardPager(canPage: canPage, draggable: draggable, page: page, fling: fling))
     }
 }

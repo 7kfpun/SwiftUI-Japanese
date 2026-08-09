@@ -43,7 +43,7 @@ private struct ModeCard: View {
                 .font(.title3).frame(width: 30)
                 .foregroundStyle(Theme.accent)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.headline)
+                Text(title).font(Theme.title(.headline))   // same split as SelectModeView's ModeRow
                 Text(subtitle).font(.caption).foregroundStyle(.secondary)
             }
         }

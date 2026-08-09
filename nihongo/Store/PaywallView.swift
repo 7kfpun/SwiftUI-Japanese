@@ -20,7 +20,7 @@ struct PaywallView: View {
                 VStack(spacing: 20) {
                     Image(systemName: "crown.fill")
                         .font(.system(size: 44)).foregroundStyle(Theme.accent)
-                    Text(L.t("Unlock all lessons")).font(.title.bold())
+                    Text(L.t("Unlock all lessons")).font(Theme.title(.title, weight: .bold))
                     // Interpolated from Gating rather than written out, so the offer on
                     // screen can't drift from the rule the app actually enforces.
                     Text(L.t("Free through lesson %@ — unlock the rest and remove ads.",
@@ -133,7 +133,7 @@ struct PaywallView: View {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
-                        Text(periodLabel(product)).font(.headline)
+                        Text(periodLabel(product)).font(Theme.title(.headline))
                         if isBest {
                             Text(L.t("Best value"))
                                 .font(.caption2.weight(.bold))
@@ -152,7 +152,7 @@ struct PaywallView: View {
                     ProgressView()
                 } else {
                     VStack(alignment: .trailing, spacing: 3) {
-                        Text(product.displayPrice).font(.headline).foregroundStyle(Theme.accent)
+                        Text(product.displayPrice).font(Theme.title(.headline)).foregroundStyle(Theme.accent)
                         if let each = perMonthDisplay(product), months(product) > 1 {
                             Text(L.t("%@ / month", each))
                                 .font(.caption).foregroundStyle(.secondary)
@@ -188,7 +188,7 @@ struct PaywallView: View {
             } label: {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(L.t("Lifetime")).font(.headline)
+                        Text(L.t("Lifetime")).font(Theme.title(.headline))
                         Text(L.t("Pay once, yours forever"))
                             .font(.caption).foregroundStyle(.secondary)
                     }
@@ -196,7 +196,7 @@ struct PaywallView: View {
                     if store.purchasingID == product.id {
                         ProgressView()
                     } else {
-                        Text(product.displayPrice).font(.headline).foregroundStyle(Theme.accent)
+                        Text(product.displayPrice).font(Theme.title(.headline)).foregroundStyle(Theme.accent)
                     }
                 }
                 .padding()

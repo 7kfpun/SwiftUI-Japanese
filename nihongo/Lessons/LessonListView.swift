@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct LessonListView: View {
-    @AppStorage(Pref.translationLanguage) private var language = VocabStore.defaultLanguage
+    @AppStorage(Pref.translationLanguage) private var language = VocabStore.deviceDefaultLanguage
     @State private var query = ""
     @State private var group = 0
     @State private var searchDebounce: Task<Void, Never>?
@@ -49,10 +49,15 @@ struct LessonListView: View {
                             }
                         }
                     } else {
-                        Section(L.t("%@ results", "\(results.count)")) {
+                        Section {
                             ForEach(results) { v in
                                 VocabRow(vocab: v, showLesson: true)
                             }
+                        } header: {
+                            // Spelled out rather than `Section(_ title:)` so the count
+                            // can take the section-header face like every other header.
+                            Text(L.t("%@ results", "\(results.count)"))
+                                .font(Theme.title(.footnote))
                         }
                     }
                 }
@@ -107,7 +112,11 @@ private struct LessonRow: View {
                 .frame(width: 32, height: 32)
                 .background(Theme.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 9))
 
+            // The row's name, so it takes the title face — but at the weight it already
+            // had. `Theme.title`'s default semibold across all fifty rows reads as fifty
+            // headings competing with each other rather than a list.
             Text(L.t("Lesson %@", "\(number)"))
+                .font(Theme.title(.body, weight: .regular))
 
             Spacer(minLength: 12)
 

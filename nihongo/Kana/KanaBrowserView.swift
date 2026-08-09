@@ -33,6 +33,14 @@ struct KanaBrowserView: View {
     @State private var showQuiz = false
     @State private var confirmClear = false
 
+    /// What the toolbar button rotates through, in order. Index is the stored
+    /// `Pref.kanaTileScript` value and `KanaTileView.big`, so the order is a persisted
+    /// contract — appending is safe, reordering would silently rewrite everyone's setting.
+    /// `name` keys the existing localized strings the old menu used.
+    private static let tileScripts: [(glyph: String, name: String)] = [
+        ("あ", "Hiragana"), ("ア", "Katakana"), ("A", "Romaji"),
+    ]
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
@@ -66,19 +74,26 @@ struct KanaBrowserView: View {
                     }
                     .disabled(results.isEmpty)
                 }
-                // What the tiles show big — a compact menu instead of a second
-                // segmented row (two stacked switches looked cluttered).
+                // What the tiles show big. One tap rotates hiragana → katakana → romaji.
+                //
+                // Not a menu and not a second segmented row: there are only three values,
+                // they're mutually exclusive, and the button's own glyph already shows which
+                // one is active — so a dropdown spent two taps and a covered screen saying
+                // what one tap says. (Two stacked segmented controls looked cluttered, which
+                // is why the menu existed in the first place.)
                 ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Picker("", selection: $tileScript) {
-                            Text(L.t("Hiragana")).tag(0)
-                            Text(L.t("Katakana")).tag(1)
-                            Text(L.t("Romaji")).tag(2)
-                        }
+                    Button {
+                        tileScript = (tileScript + 1) % Self.tileScripts.count
                     } label: {
-                        Text(["あ", "ア", "A"][tileScript])
-                            .font(Theme.jpBold(15))
+                        Text(Self.tileScripts[tileScript].glyph)
+                            // Romaji is Latin, so it takes the rounded Latin face rather than
+                            // the Japanese one — same split as the tiles themselves.
+                            .font(tileScript == 2 ? Theme.display(15, weight: .semibold)
+                                                  : Theme.jpBold(15))
                     }
+                    // Sighted users read the state off the glyph; VoiceOver needs the name.
+                    // Reuses the three names the menu used, so this costs no new strings.
+                    .accessibilityLabel(L.t(Self.tileScripts[tileScript].name))
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button(L.t("Quiz")) { showQuiz = true; Track.event("kana_quiz_open") }
@@ -173,6 +188,11 @@ struct KanaTileView: View {
     var big = 0   // 0 hiragana · 1 katakana · 2 romaji
 
     private var bigText: String { [cell.hiragana, cell.katakana, cell.romaji][big] }
+
+    /// Romaji is Latin text and gets the rounded Latin face; kana gets the Japanese one.
+    /// `Theme.jpBold` is Hiragino Sans, which *has* Latin glyphs — so a romaji tile rendered
+    /// with it looked plain rather than broken, which is exactly why it survived unnoticed.
+    private var bigFont: Font { big == 2 ? Theme.display(26, weight: .semibold) : Theme.jpBold(26) }
     private var caption: [String] {
         switch big {
         case 1:  return [cell.hiragana, cell.romaji]
@@ -191,7 +211,7 @@ struct KanaTileView: View {
 
     var body: some View {
         VStack(spacing: 2) {
-            Text(bigText).font(Theme.jpBold(26)).minimumScaleFactor(0.5).lineLimit(1)
+            Text(bigText).font(bigFont).minimumScaleFactor(0.5).lineLimit(1)
             HStack(spacing: 6) {
                 Text(caption[0])
                 Text(caption[1])

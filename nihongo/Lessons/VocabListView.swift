@@ -63,7 +63,7 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
 
 struct VocabListView: View {
     let lesson: Lesson
-    @AppStorage(Pref.translationLanguage) private var language = VocabStore.defaultLanguage
+    @AppStorage(Pref.translationLanguage) private var language = VocabStore.deviceDefaultLanguage
     @State private var player = LessonPlayer()
 
     // Re-resolve by lesson number so meanings update immediately when the language changes.

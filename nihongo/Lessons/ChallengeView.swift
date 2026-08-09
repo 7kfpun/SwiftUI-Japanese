@@ -183,9 +183,13 @@ struct ChallengeView: View {
                 .foregroundStyle(Theme.accent)
             } else {
                 Text(q.from.value(q.answer))
-                    .font(Theme.jp(38))
+                    .font(q.from.promptFont(wordSize: 38, translationStyle: .title))
                     .multilineTextAlignment(.center)
-                    .minimumScaleFactor(0.5)
+                    // Rung 2 onward asks meaning→Japanese, so this slot holds a full
+                    // translation — which needs the inset (a word never reached the card's
+                    // edge, a sentence does) and a floor that stays readable.
+                    .minimumScaleFactor(q.from == .translation ? 0.6 : 0.5)
+                    .padding(.horizontal, 20)
             }
         }
         .frame(maxWidth: .infinity)
@@ -234,18 +238,18 @@ private struct ChallengeResultView: View {
                     .padding(.top, 12)
 
                 Text("\(model.scorePercent)%")
-                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .font(Theme.display(56))
                     .foregroundStyle(model.passed ? Theme.correct : Theme.wrong)
 
                 Text(model.passed
                      ? (model.index >= total ? L.t("Lesson complete!") : L.t("Challenge passed!"))
                      : L.t("%@% needed to pass — try again.", "\(Challenge.passScore)"))
-                    .font(.headline)
+                    .font(Theme.title(.headline))
                     .multilineTextAlignment(.center)
 
                 if !model.missed.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text(L.t("Review these")).font(.subheadline.weight(.semibold))
+                        Text(L.t("Review these")).font(Theme.title(.subheadline))
                         ForEach(uniqueMissed, id: \.id) { word in
                             HStack {
                                 Text(word.kana).font(Theme.jp(20))

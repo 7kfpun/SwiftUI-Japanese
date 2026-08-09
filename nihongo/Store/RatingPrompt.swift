@@ -76,7 +76,7 @@ struct RatingSheet: View {
                 .foregroundStyle(Theme.accent)
 
             Text(L.t("Enjoying Japanese Daily?"))
-                .font(.title3.weight(.semibold))
+                .font(Theme.title(.title3))
                 .multilineTextAlignment(.center)
 
             Text(L.t("Tap a star to tell us how it's going."))

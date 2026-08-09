@@ -62,6 +62,12 @@ struct KanaSwipeQuizView: View {
         if soundOn { pronouncer.speak(kana: model.answer) }
     }
 
+    /// Same content-follows-script rule as the classic quiz — see `KanaQuizView.promptFont`
+    /// for why KanjiStrokeOrders is wrong for romaji even though it renders it cleanly.
+    private var promptFont: Font {
+        model.from.isJapanese ? Theme.jpStrokes(150) : Theme.display(150)
+    }
+
     private var promptCard: some View {
         SwipeCard(drag: drag,
                   threshold: threshold,
@@ -69,7 +75,7 @@ struct KanaSwipeQuizView: View {
                   rightStamp: ("arrow.right", Theme.accent),
                   showsStamps: model.picked == nil) {
             Text(model.from.value(model.answer))
-                .font(Theme.jpStrokes(150))
+                .font(promptFont)
                 .lineLimit(1)
                 .minimumScaleFactor(0.3)
                 .padding(.horizontal, 16)
@@ -88,19 +94,25 @@ struct KanaSwipeQuizView: View {
 
     /// Kana readings are one to three characters, so they take a much larger face than
     /// Train's vocab glosses — the only thing this screen varies on the shared chip.
+    ///
+    /// The face follows the script too, matching the classic quiz: kana on `jpBold`, romaji
+    /// on the rounded Latin face. This used to be a plain `.system(size:)` for both, which
+    /// left the same two answers looking like different quizzes depending which mode you
+    /// were in.
     private func optionChip(_ opt: K, side: Int) -> some View {
         SwipeOptionChip(text: opt.romaji.isEmpty ? "" : model.to.value(opt),
                         side: side,
                         picked: model.picked,
                         isAnswer: opt.romaji == model.answer.romaji,
-                        font: .system(size: 30, weight: .semibold)) { decide(side) }
+                        font: model.to.isJapanese ? Theme.jpBold(30)
+                                                  : Theme.display(30, weight: .semibold)) { decide(side) }
     }
 
     private func resultBadge(_ ok: Bool) -> some View {
         VStack(spacing: 8) {
             Image(systemName: ok ? "checkmark.circle.fill" : "xmark.circle.fill")
                 .font(.system(size: 72))
-            Text(ok ? L.t("Correct!") : L.t("Wrong")).font(.title.bold())
+            Text(ok ? L.t("Correct!") : L.t("Wrong")).font(Theme.title(.title, weight: .bold))
         }
         .foregroundStyle(ok ? Theme.correct : Theme.wrong)
         .padding(28)

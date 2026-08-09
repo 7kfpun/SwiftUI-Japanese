@@ -64,7 +64,7 @@ struct KanaWriteView: View {
             // redundant. Tap to replay the audio; the toolbar SoundToggle is the
             // single on/off control.
             Text(answer.romaji)
-                .font(.system(size: 40, weight: .bold, design: .rounded))
+                .font(Theme.display(40))
                 .contentShape(Rectangle())
                 .onTapGesture { pronouncer.speak(kana: answer) }
 
@@ -166,9 +166,9 @@ struct KanaWriteView: View {
                                      : strokes.count > expectedStrokes ? Theme.wrong : Color.secondary)
                 }
             }
-            .font(.headline)
+            .font(Theme.title(.headline))
         } else {
-            Text(" ").font(.headline)   // keeps the layout stable
+            Text(" ").font(Theme.title(.headline))   // keeps the layout stable
         }
     }
 

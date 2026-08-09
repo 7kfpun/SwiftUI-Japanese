@@ -47,4 +47,80 @@ enum Theme {
     /// stroke-order annotations — used for the quiz prompt so learners absorb stroke
     /// order while quizzing.
     static func jpStrokes(_ size: CGFloat) -> Font { .custom("KanjiStrokeOrders", size: size) }
+
+    /// Titles and headings — SF Rounded. **The one place the title face is decided;**
+    /// nothing outside `Theme` should name a font design.
+    ///
+    /// Rounded because the Latin side was the half that was out of step: Japanese
+    /// headwords already render in `jp` (`HiraMaruProN-W4`, a *rounded* Hiragino Maru
+    /// Gothic) while every Latin heading was plain SF Pro, so a card's title and its
+    /// word were speaking two different dialects. Rounding the headings harmonises the
+    /// two without touching the Japanese faces at all.
+    ///
+    /// Not a bundled display face, deliberately. `design: .rounded` keeps two things a
+    /// Latin-only font file would break for the nine non-Latin UI languages: Dynamic
+    /// Type, and the system's automatic per-script fallback (a heading in Thai, Burmese,
+    /// Tamil or Hangul falls back to that script's own system face rather than to tofu —
+    /// SF Rounded covers Latin, Cyrillic and Greek, and nothing else).
+    ///
+    /// Takes a `Font.TextStyle`, never a point size: `.system(_:design:weight:)` scales
+    /// with Dynamic Type, `.system(size:)` doesn't, and this app supports it everywhere.
+    /// Body text, subtitles and captions stay on the system font — the contrast between
+    /// a rounded heading and a neutral paragraph is what makes it read as a hierarchy
+    /// rather than as a theme.
+    ///
+    /// Two display slots take `display(_:)` below instead, and navigation bar titles come
+    /// through `titleUIFont` — everything else that reads as a heading calls this.
+    static func title(_ style: Font.TextStyle, weight: Font.Weight = .semibold) -> Font {
+        .system(style, design: .rounded, weight: weight)
+    }
+
+    /// The title face at a **fixed** point size — the Latin counterpart to `jp`/`jpBold`/
+    /// `jpStrokes`, for slots that are *sized* like a Japanese glyph rather than styled
+    /// like text.
+    ///
+    /// Two kinds of caller, both deliberately outside `title(_:)`'s Dynamic Type contract:
+    ///
+    /// - **Layouts with no slack.** The Challenge result percentage (56) between a stars
+    ///   row and a verdict line, and Kana Write's romaji prompt (40) directly above a
+    ///   drawing canvas whose height is the thing being drawn on. Through
+    ///   `title(.largeTitle)` both would start at 34pt (a visible shrink) and then grow
+    ///   with the text size until they pushed those neighbours off screen.
+    /// - **The Latin half of a script-switchable slot.** Where the same slot shows kana in
+    ///   a Japanese face at some fixed size *or* romaji depending on a setting — the
+    ///   browser tiles and their toolbar glyph (26/15), both kana quizzes' prompts
+    ///   (120/150) and options (26/30), Train's romaji prompt (44). Those have to take the
+    ///   same point size as the Japanese face they alternate with, or switching script
+    ///   would resize the card. The Japanese faces have full Latin coverage, so a romaji
+    ///   value drawn with one of them looked merely plain rather than broken; this is what
+    ///   the Latin side switches to instead.
+    ///
+    /// Same face as `title(_:)`, so everything matches; it just can't grow.
+    static func display(_ size: CGFloat, weight: Font.Weight = .bold) -> Font {
+        .system(size: size, weight: weight, design: .rounded)
+    }
+
+    /// UIKit twin of `title(_:)`, for the one heading SwiftUI cannot font: a
+    /// `.navigationTitle`. `UINavigationBarAppearance` takes a resolved `UIFont`, so the
+    /// face has to be built here rather than named as a `Font.TextStyle`.
+    ///
+    /// **The `UIFontMetrics` call is load-bearing — do not "simplify" it to
+    /// `UIFont.systemFont(ofSize:)` or add a `compatibleWith:` trait collection.** A font
+    /// that comes out of `scaledFont(for:maximumPointSize:)` with no trait collection is
+    /// *scalable*: the label re-resolves it against its own trait collection every time it
+    /// lays out, so a nav title follows a Dynamic Type change made long after launch, and
+    /// obeys `maxSize` when it does. Resolve it against a trait collection — or hand over a
+    /// plain `systemFont` — and it becomes a fixed size frozen at whatever the text size
+    /// was when this ran, which is the bug this shape exists to avoid. Measured on iOS 26:
+    /// a bar built at the default size renders 17pt, 20pt after the user moves to the
+    /// largest accessibility size, and 17pt again on the way back.
+    static func titleUIFont(size: CGFloat,
+                            weight: UIFont.Weight,
+                            relativeTo style: UIFont.TextStyle,
+                            upTo maxSize: CGFloat) -> UIFont {
+        let system = UIFont.systemFont(ofSize: size, weight: weight)
+        let rounded = system.fontDescriptor.withDesign(.rounded)
+            .map { UIFont(descriptor: $0, size: size) } ?? system
+        return UIFontMetrics(forTextStyle: style).scaledFont(for: rounded, maximumPointSize: maxSize)
+    }
 }

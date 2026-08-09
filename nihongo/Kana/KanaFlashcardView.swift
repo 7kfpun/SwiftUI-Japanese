@@ -33,7 +33,10 @@ private struct KanaFace: View {
                 .minimumScaleFactor(0.4)   // combos (びゃ) shrink to fit instead of truncating
             if revealed {
                 Divider().padding(.horizontal, 40)
-                Text(kana.romaji).font(.title).foregroundStyle(Theme.accent)
+                // The reading is the answer this card exists to give, and it's Latin —
+                // so it takes the rounded Latin face the browser tiles and Write's prompt
+                // use, rather than being the one romaji in the Kana tab set in plain SF.
+                Text(kana.romaji).font(Theme.title(.title)).foregroundStyle(Theme.accent)
                 Text(kana.katakana).font(Theme.jpBold(20)).foregroundStyle(.secondary)
             }
         }

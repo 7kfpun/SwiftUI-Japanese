@@ -162,7 +162,7 @@ struct FlashcardScreen<Element, Face: View>: View {
             Button { grade(right: false) } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.left")
-                    Text(L.t("Again")).fontWeight(.semibold)
+                    Text(L.t("Again"))
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
@@ -172,7 +172,7 @@ struct FlashcardScreen<Element, Face: View>: View {
 
             Button { grade(right: true) } label: {
                 HStack(spacing: 6) {
-                    Text(L.t("Got it")).fontWeight(.semibold)
+                    Text(L.t("Got it"))
                     Image(systemName: "arrow.right")
                 }
                 .frame(maxWidth: .infinity)
@@ -181,7 +181,7 @@ struct FlashcardScreen<Element, Face: View>: View {
             .buttonStyle(.plain)
             .choiceChip(Theme.correct)
         }
-        .font(.headline)
+        .font(Theme.title(.headline))
     }
 
     private var congrats: some View {
@@ -189,7 +189,7 @@ struct FlashcardScreen<Element, Face: View>: View {
             Image(systemName: "party.popper.fill")
                 .font(.system(size: 72))
                 .foregroundStyle(Theme.accent)
-            Text(L.t("All done!")).font(.largeTitle.bold())
+            Text(L.t("All done!")).font(Theme.title(.largeTitle, weight: .bold))
             Text(summary(deck.total)).foregroundStyle(.secondary)
             Button {
                 withAnimation { deck.restart(); revealed = false; drag = .zero }

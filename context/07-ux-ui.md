@@ -42,7 +42,9 @@ Two things worth understanding, not just copying:
 
 ## Typography
 
-Three named fonts, all through `Theme.jp/.jpBold/.jpStrokes(_ size:)`:
+Three Japanese faces plus one title face, all through `Theme` —
+`jp/jpBold/jpStrokes(_ size:)` and `title(_ style:weight:)` /
+`display(_ size:)` / `titleUIFont(...)`:
 
 - **`Theme.jp`** — `HiraMaruProN-W4`, iOS's built-in rounded Hiragino Maru
   Gothic. Used for most Japanese body/headword text (Learn's assembled
@@ -59,9 +61,167 @@ Three named fonts, all through `Theme.jp/.jpBold/.jpStrokes(_ size:)`:
   in Kana Write (`KanaSketch`, see `03-kana.md`), where the baked-in digits are
   stripped before display or scoring.
 
+**All three Japanese faces have full Latin coverage, and that is a trap.**
+Verified with CoreText: `HiraMaruProN-W4` and `HiraginoSans-W6` render Latin,
+Cyrillic and Western European accents from their own glyph tables, and the
+bundled `KanjiStrokeOrders` file has real glyphs for a–z, A–Z and 0–9 too. So
+romaji or a translation drawn with one of them came out *plain*, never as tofu
+— which is why several slots sat on the wrong face unnoticed. The rule is that
+**the face follows the content's script at runtime, not the screen**, and the
+two enums that own a switchable slot say so in one place each: `KForm.isJapanese`
+(hiragana/katakana yes, romaji no) and `VForm.isJapanese` (kana/kanji yes,
+romaji and translation no). Every switchable slot reads one of those:
+
+| Slot | Japanese | Latin |
+|---|---|---|
+| Kana browser tile (26) and its toolbar glyph (15) | `jpBold` | `display` |
+| Kana quiz prompt, Classic (120) / Swipe (150) | `jpStrokes` | `display` |
+| Kana quiz options, Classic (26) / Swipe (30) | `jpBold` | `display` |
+| Train prompt (44) | `jp` | `display` (romaji) · system `.largeTitle` (translation) |
+| Challenge prompt (38) | `jp` | `display` (romaji) · system `.title` (translation) |
+
+A *translation* is the one case that doesn't take `display`: it's prose in the
+UI language, so it takes the plain system font at a Dynamic Type style — the
+same neutral treatment every other translation gets. `KanjiStrokeOrders` is
+never used for romaji: stroke order is the entire reason it's there, and Latin
+letters have none.
+
+- **`Theme.title(_ style:weight:)`** — **SF Rounded** (`design: .rounded`), no
+  bundled file. Every heading in the app: screen and card headings, navigation
+  titles (via `titleUIFont`, below), the intro cards' headlines, result/verdict
+  headlines, section prompts, list section headers, row names, the paywall's
+  price table, the flashcard grade buttons, Kana Write's score row.
+- **`Theme.display(_ size:)`** — the same face at a **fixed** point size: the
+  Latin counterpart to `jp`/`jpBold`/`jpStrokes`, for slots sized like a
+  Japanese glyph rather than styled like text. Two kinds of caller, both
+  deliberately outside the Dynamic Type contract:
+  - *Layouts with no slack* — the Challenge result percentage (56) between a
+    stars row and a verdict line, and Kana Write's romaji prompt (40) directly
+    above a drawing canvas. Through `title(.largeTitle)` they'd shrink to 34pt
+    and then grow until they pushed their neighbours off screen.
+  - *The Latin half of a script-switchable slot* — the table above. Those must
+    take the **same** point size as the Japanese face they alternate with, or
+    switching script would resize the card.
+- **`Theme.titleUIFont(size:weight:relativeTo:upTo:)`** — the UIKit twin, used
+  for navigation bar titles only (see below).
+
 Everything else uses Dynamic Type text styles (`.headline`, `.subheadline`,
 `.caption`, etc.) rather than fixed point sizes, so large-text accessibility
 settings work for free.
+
+### Why the titles are rounded, and where the line is
+
+`Theme.jp` is *already* a rounded face (Hiragino Maru Gothic), so the Latin
+headings were the half that was out of step: a card whose Japanese word was
+soft and whose heading above it was plain SF Pro. Rounding the headings closes
+that gap from the Latin side, without touching the Japanese faces.
+
+`design: .rounded` rather than a bundled display font, deliberately — a
+Latin-only font file would break both Dynamic Type scaling and the system's
+per-script fallback for the 10 non-Latin UI languages.
+
+**Descriptions stay on the system font.** `.subheadline`, `.footnote`,
+`.caption`, list-row subtitles, explanatory paragraphs — all neutral. The
+hierarchy *is* the contrast between a rounded heading and a plain sentence; a
+rounded paragraph would just read as a skin. Answer options (`QuizOptionButton`,
+`SwipeOptionChip`) are content, not headings, and stay neutral too.
+
+**Navigation titles are included, via UIKit.** SwiftUI has no
+`.navigationTitle(_:font:)` and `.font()` on the surrounding view doesn't reach
+the bar, so the only route is `UINavigationBarAppearance` — installed once at
+launch by `NavigationBarTitle.install()` in `AppBootstrap.swift`. The appearance
+proxy *does* reach SwiftUI's bars: `NavigationStack` reads
+`UINavigationBar.appearance()` as it builds one.
+
+Three details there are load-bearing, and all three look arbitrary enough to be
+"cleaned up" into bugs:
+
+- **The `UIFontMetrics` call in `Theme.titleUIFont`.** A font from
+  `scaledFont(for:maximumPointSize:)` with *no* trait collection stays
+  *scalable* — each label re-resolves it against its own trait collection on
+  every layout, so a nav title follows a Dynamic Type change made long after
+  launch and honours the maximum when it does. Resolve it against a trait
+  collection, or hand over a plain `systemFont`, and it freezes at whatever the
+  text size was at launch.
+- **`maximumPointSize` restores a cap the system otherwise loses.** An explicit
+  font opts the bar out of the growth limit it applies to its own title
+  (measured on iOS 26: stock inline runs 17 → 19 → 21pt then holds at 21). The
+  ceilings match where the system itself stops — 21pt inline, 60pt large.
+  Without them, 48pt of title lands in a 44pt bar, straight through the toolbar
+  buttons.
+- **`scrollEdgeAppearance` is deliberately left nil.** Nil means
+  "`standardAppearance` with the background dropped", so the title face carries
+  into the scrolled-to-top state for free. Assigning an appearance there would
+  hand that state a default *background*, turning every transparent-at-the-top
+  bar in the app opaque.
+
+Fresh `UINavigationBarAppearance()` objects are used rather than mutating the
+proxy's own: `UINavigationBar.appearance()` is a recorder, not a live object, so
+reading `.standardAppearance` back off it returns an empty appearance and the
+mutate-and-put-back shape would silently drop the bar's default background.
+
+### What the 17 languages actually get
+
+SF Rounded covers Latin (including Vietnamese's stacked diacritics), Cyrillic
+and Greek — 2785 glyphs, verified with CoreText against every character in
+`nihongo/UIStrings.json`. Fully rounded: **en, de, es, fr, vi, ru, fil, id**.
+The other nine (zh, zh-Hant, th, my, bn, hi, ta, te, ko) render their digits,
+Latin and punctuation rounded and fall back per-script for the rest — to
+PingFang, Thonburi, Myanmar Sangam, SF Bangla / Devanagari / Tamil / Telugu and
+Apple SD Gothic Neo respectively. **Every fallback is the same face those
+scripts already use under the plain system font**, so no non-Latin language
+changes appearance and nothing anywhere renders as tofu.
+
+iOS 26 ships rounded variants for exactly five scripts — Latin/Cyrillic/Greek
+(`SFUIRounded`) plus Arabic, Armenian, Georgian and Hebrew — and none for Thai,
+Myanmar, CJK, Hangul or any Indic script, so there is nothing friendlier to
+switch those nine to without bundling a font. Where a rounded variant *does*
+exist the cascade picks it up automatically (a rounded base resolves Hebrew to
+`SFHebrewRounded`, not `SFHebrew`), so adding Arabic or Hebrew to the 17 later
+would get a rounded heading for free.
+
+### Line heights per script, and what that costs a fixed-height box
+
+Measured with CoreText over every string in `UIStrings.json` and all 35 513
+vocabulary translations in `MinnaData.json`. Line box = ascent + descent +
+leading, which is the baseline-to-baseline distance SwiftUI's `Text` uses.
+
+| Script | Line box @17pt | vs Latin | Headroom to its own ink |
+|---|---|---|---|
+| Latin, Han, Hangul | 20.0–20.5pt | 1.00× | 3.3–4.6pt (fr/vi: **0.06–0.44pt**) |
+| Thai | 23.4pt | 1.17× | **−0.28pt** |
+| Devanagari, Bengali, Tamil, Telugu | 26.1pt | 1.30× | 1.4–5.5pt |
+| Myanmar | 37.1pt | **1.85×** | 11.0pt |
+
+Two results that contradict the obvious guess:
+
+- **Burmese does not clip.** Noto Sans Myanmar reserves 37pt of box for 26pt of
+  ink, so its stacked marks have more room than any other script here. What
+  Burmese breaks is *height budgets*, not leading: one Burmese line costs what
+  two Latin lines cost, so it's the language that decides whether a fixed-height
+  container works.
+- **Thai is the only script whose ink exceeds its own box** — by 0.28pt at 17pt,
+  between the deepest descender (ญ/ฐ) and the tallest tone-over-vowel stack. It's
+  a touch, not a clip, and it only shows where a Thai paragraph runs to several
+  lines (the paywall terms, Settings descriptions, the intro body copy). Nothing
+  in the app sets `lineSpacing`, deliberately: the fix is a root-level
+  `.lineSpacing(2)`, but a global 2pt also costs the 154.5×54pt quiz option box —
+  it takes its tail-truncating share from 0.13% to 0.25% — so it's a trade to
+  make on purpose rather than a bug to patch.
+
+Consequence for the two shrink-to-fit answer controls, which hold *translations*
+and therefore meet all 17 scripts:
+
+- **`QuizOptionButton`** — `OptionGrid` rows are a fixed 74pt, so the text box is
+  154.5×54pt. `minimumScaleFactor` is **0.65**, not 0.5: at 0.5 the worst glosses
+  rendered at 8.5pt (Burmese) and 8.8pt (German, Vietnamese); 0.65 holds every
+  language at ≥11.2pt. The price is 46 glosses that tail-truncate instead of
+  shrinking rather than 14 — 0.13% of the data instead of 0.04%.
+- **`SwipeOptionChip`** — `minHeight`, not a fixed height, so it may grow;
+  `lineLimit(4)` and `minimumScaleFactor(0.6)` let it. At the old `(3, 0.4)` the
+  worst cases in en/fr/de/vi/my all bottomed out on the 8pt floor because three
+  lines was all they were allowed; `(4, 0.6)` never renders below 12pt and moves
+  the tail-truncating share only from 0.08% to 0.16%.
 
 ## The Tinder-like swipe UI — one shared visual language, several screens
 

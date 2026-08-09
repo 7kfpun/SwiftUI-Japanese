@@ -17,6 +17,12 @@ enum KForm: Int, CaseIterable {
         case .romaji:   return k.romaji
         }
     }
+
+    /// Whether this form's value is written in Japanese script — i.e. whether a Japanese
+    /// face is the right one to draw it with. Both quizzes let the learner swap either
+    /// side to romaji, so the face has to follow the content at runtime; `to` even
+    /// *starts* on romaji, so the default state of the classic quiz is the Latin one.
+    var isJapanese: Bool { self != .romaji }
 }
 
 @Observable
@@ -85,6 +91,26 @@ struct KanaQuizView: View {
         if listening || soundOn { pronouncer.speak(kana: model.answer) }
     }
 
+    /// Both faces follow their content's script, the same split as the browser tiles.
+    ///
+    /// `Theme.jpStrokes` is KanjiStrokeOrders, and the whole reason it's here is the
+    /// numbered stroke-order annotations baked into its *kana* glyphs. It also ships a
+    /// complete Latin set (verified with CoreText: a–z, A–Z and 0–9 all resolve to real
+    /// glyphs in the bundled file), so a romaji prompt drew perfectly legible letters in
+    /// a face picked for a reason that doesn't apply to them — which is exactly why this
+    /// went unnoticed. Romaji has no stroke order to teach, so it takes the rounded Latin
+    /// face instead.
+    private var promptFont: Font {
+        model.from.isJapanese ? Theme.jpStrokes(120) : Theme.display(120)
+    }
+
+    /// `to` defaults to romaji, so this is the *usual* state of the option grid, not an
+    /// edge case: without the split every classic quiz opened with four Latin answers
+    /// drawn in Hiragino Sans.
+    private var optionFont: Font {
+        model.to.isJapanese ? Theme.jpBold(26) : Theme.display(26, weight: .semibold)
+    }
+
     var body: some View {
         VStack(spacing: 16) {
             // Direction toggles (in listening mode the prompt side is the audio)
@@ -112,7 +138,7 @@ struct KanaQuizView: View {
                     }
                 } else {
                     Text(model.from.value(model.answer))
-                        .font(Theme.jpStrokes(120))
+                        .font(promptFont)
                         .lineLimit(1)
                         .minimumScaleFactor(0.4)
                 }
@@ -128,7 +154,7 @@ struct KanaQuizView: View {
                                  index: i,
                                  picked: model.picked,
                                  isAnswer: model.isCorrectOption(i),
-                                 font: Theme.jpBold(26)) {
+                                 font: optionFont) {
                     model.choose(i, context: context)
                     Track.event("kana_quiz_answer",
                                ["correct": model.isCorrectOption(i), "mode": listening ? "listening" : "classic"])

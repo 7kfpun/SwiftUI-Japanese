@@ -18,8 +18,34 @@ enum VForm: Int, CaseIterable {
     }
     var isAudio: Bool { self == .audio }
 
+    /// Whether this form's value is written in Japanese script — i.e. whether a Japanese
+    /// face may draw it. Both Train and the Challenge ladder can put a *translation* in
+    /// the prompt slot, so without this a German, Thai or Tamil sentence went through
+    /// `Theme.jp` (Hiragino Maru): plain-looking in the Latin languages, and in the nine
+    /// non-Latin ones a run of Hiragino punctuation and digits spliced into the script's
+    /// own fallback face. `.audio` answers true because its value is the kana — it is
+    /// never displayed anyway.
+    var isJapanese: Bool { self != .romaji && self != .translation }
+
     /// Forms that can appear as answer options (audio can only be the prompt).
     static let answerForms: [VForm] = [.kana, .kanji, .romaji, .translation]
+
+    /// The face a prompt in this form takes — shared by Train and the Challenge ladder,
+    /// which pose the same question at different sizes.
+    ///
+    /// Japanese keeps `Theme.jp` at the screen's own fixed size. Romaji takes the rounded
+    /// Latin face at that *same* size, so switching between the two doesn't resize the
+    /// card. A translation takes the plain system font at a Dynamic Type style instead:
+    /// it's prose in the UI language, which is the one thing here that has no business
+    /// carrying a fixed point size, and neutral is how every other translation in the app
+    /// is set (`SwipeOptionChip`, the card faces, the vocab rows).
+    func promptFont(wordSize: CGFloat, translationStyle: Font.TextStyle) -> Font {
+        switch self {
+        case .kana, .kanji, .audio: return Theme.jp(wordSize)
+        case .romaji:               return Theme.display(wordSize, weight: .semibold)
+        case .translation:          return .system(translationStyle, weight: .semibold)
+        }
+    }
 }
 
 /// Endless practice loop behind the Train mode (the old Quiz + Listening, merged —
@@ -253,9 +279,12 @@ struct TrainView: View {
                 .foregroundStyle(Theme.accent)
             } else {
                 Text(model.from.value(model.answer))
-                    .font(Theme.jp(44))
+                    .font(model.from.promptFont(wordSize: 44, translationStyle: .largeTitle))
                     .multilineTextAlignment(.center)
-                    .minimumScaleFactor(0.35)
+                    // A word — kana, kanji or romaji — is a handful of characters and can
+                    // afford to shrink hard. A translation can run to a sentence with a
+                    // parenthetical gloss, and 0.35 of a `.largeTitle` is 11.9pt.
+                    .minimumScaleFactor(model.from == .translation ? 0.6 : 0.35)
                     .padding(20)
             }
         }
@@ -282,7 +311,7 @@ struct TrainView: View {
         VStack(spacing: 8) {
             Image(systemName: ok ? "checkmark.circle.fill" : "xmark.circle.fill")
                 .font(.system(size: 72))
-            Text(ok ? L.t("Correct!") : L.t("Wrong")).font(.title.bold())
+            Text(ok ? L.t("Correct!") : L.t("Wrong")).font(Theme.title(.title, weight: .bold))
         }
         .foregroundStyle(ok ? Theme.correct : Theme.wrong)
         .padding(28)
