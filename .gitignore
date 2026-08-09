@@ -43,6 +43,11 @@ vendor/
 # frameit-frames CDN (see ensure_frame()).
 fastlane/screenshot_frames/
 scripts/__pycache__/
+fastlane/__pycache__/
 
 # CodeGraph local index
 .codegraph/
+
+# Firebase CLI debug output (written into the repo root by `firebase deploy`)
+firebase-debug.log
+firestore-debug.log

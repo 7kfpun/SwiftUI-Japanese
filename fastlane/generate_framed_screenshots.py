@@ -34,6 +34,11 @@ line must fit the canvas width on every device. Run it after any copy or font
 edit; a missing glyph or an overflowing line is silent at render time and only
 shows up as tofu boxes / clipped text in the uploaded screenshot.
 
+LOCALES covers every App Store localization except `hi` — Devanagari and Tamil
+cannot be rendered correctly without a text shaper, and this Pillow has none.
+That call is argued out in full in the comment below LOCALES; don't add either
+locale back without reading it.
+
 NOTE on architecture: the Pillow wheel installed on this machine is x86_64
 only; plain `python3` on Apple Silicon resolves to the arm64 slice and can't
 load Pillow's compiled extension. Always run this via `arch -x86_64 python3`
@@ -83,6 +88,8 @@ FONT_ARIAL_ROUNDED = "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf"
 FONT_SF_ROUNDED = "/System/Library/Fonts/SFNSRounded.ttf"
 FONT_HEITI = "/System/Library/Fonts/STHeiti Medium.ttc"
 FONT_SUKHUMVIT = "/System/Library/Fonts/Supplemental/SukhumvitSet.ttc"
+FONT_HIRA_MARU = "/System/Library/Fonts/ヒラギノ丸ゴ ProN W4.ttc"
+FONT_APPLE_SD_GOTHIC = "/System/Library/Fonts/AppleSDGothicNeo.ttc"
 
 # Brand colors: BLUE sampled from nihongo/Assets.xcassets/AppIcon.appiconset/AppIcon.png,
 # TEAL read from nihongo/Assets.xcassets/AccentColor.colorset/Contents.json (also
@@ -130,7 +137,12 @@ LOCALES = {
         "02-kana-table": ("Hiragana & Katakana", "The complete kana charts"),
         "03-kana-flashcards": ("Kana flashcards", "Flip, listen, remember"),
         "04-kana-quiz-classic": ("Kana quizzes", "Test yourself, kana by kana"),
-        "06-kana-listening": ("Listening practice", "Train your ear with native audio"),
+        # Not "native audio": the clips are synthesised (`say -v Kyoko`), and two
+        # `~`-placeholder sentence templates have no clip at all. The whole store
+        # listing and the in-app paywall now claim what the audio is *for* rather
+        # than who recorded it, and the screenshots are the most-seen surface of
+        # the three, so they must say the same thing.
+        "06-kana-listening": ("Listening practice", "Every kana spoken, to help it stick"),
         "07-kana-write": ("Write practice", "Real stroke order, real memory"),
         "08-lessons": ("50 Minna no Nihongo lessons", "Every lesson, right on your phone"),
         "09-vocab-list": ("We speak your language", "Every word explained in 17 languages"),
@@ -142,7 +154,7 @@ LOCALES = {
         "02-kana-table": ("Hiragana & Katakana", "Die kompletten Kana-Tabellen"),
         "03-kana-flashcards": ("Kana-Karteikarten", "Umdrehen, hören, merken"),
         "04-kana-quiz-classic": ("Kana-Quiz", "Teste dich, Kana für Kana"),
-        "06-kana-listening": ("Hörverständnis", "Trainiere dein Ohr mit Originalaudio"),
+        "06-kana-listening": ("Hörverständnis", "Jedes Kana vorgelesen, damit es sitzt"),
         "07-kana-write": ("Schreibübung", "Echte Strichfolge, echtes Gedächtnis"),
         # Not "50 Minna-no-Nihongo-Lektionen": German compounding makes that one
         # unbreakable 26-character token, 140% of the text column, and word wrapping has
@@ -158,7 +170,7 @@ LOCALES = {
         "02-kana-table": ("五十音", "完整的平假名與片假名表"),
         "03-kana-flashcards": ("五十音字卡", "翻牌、聆聽、記住"),
         "04-kana-quiz-classic": ("五十音測驗", "一個一個考考自己"),
-        "06-kana-listening": ("聽力練習", "用母語發音訓練耳朵"),
+        "06-kana-listening": ("聽力練習", "每個假名都朗讀，聽了就記住"),
         "07-kana-write": ("書寫練習", "正確筆順，真正記住"),
         "08-lessons": ("50 課大家的日本語課程", "每一課都在你的手機裡"),
         "09-vocab-list": ("我們懂你的語言", "17 種語言，逐字講解"),
@@ -170,7 +182,7 @@ LOCALES = {
         "02-kana-table": ("Хирагана и катакана", "Полные таблицы каны"),
         "03-kana-flashcards": ("Карточки каны", "Переверни, послушай, запомни"),
         "04-kana-quiz-classic": ("Тесты по кане", "Проверь себя знак за знаком"),
-        "06-kana-listening": ("Тренировка слуха", "Живые записи носителей языка"),
+        "06-kana-listening": ("Тренировка слуха", "Каждый знак озвучен — и запомнится"),
         "07-kana-write": ("Учись писать", "Настоящий порядок черт"),
         "08-lessons": ("50 уроков Minna no Nihongo", "Каждый урок — в твоём телефоне"),
         "09-vocab-list": ("Говорим на твоём языке", "Каждое слово — на 17 языках"),
@@ -187,7 +199,7 @@ LOCALES = {
         "02-kana-table": ("Hiragana & Katakana", "Bảng chữ kana đầy đủ"),
         "03-kana-flashcards": ("Thẻ ghi nhớ kana", "Lật, nghe, ghi nhớ"),
         "04-kana-quiz-classic": ("Trắc nghiệm kana", "Tự kiểm tra từng chữ kana"),
-        "06-kana-listening": ("Luyện nghe", "Rèn tai với giọng đọc thật"),
+        "06-kana-listening": ("Luyện nghe", "Kana nào cũng có âm thanh, nhớ lâu"),
         "07-kana-write": ("Luyện viết", "Thứ tự nét đúng, nhớ lâu hơn"),
         "08-lessons": ("50 bài Minna no Nihongo", "Trọn bộ bài học trong túi bạn"),
         "09-vocab-list": ("Nói đúng tiếng của bạn", "Mỗi từ giải nghĩa bằng 17 thứ tiếng"),
@@ -202,14 +214,113 @@ LOCALES = {
         "02-kana-table": ("ฮิรางานะ & คาตาคานะ", "ตารางคานะครบทุกตัว"),
         "03-kana-flashcards": ("บัตรคำคานะ", "พลิก ฟัง จำได้"),
         "04-kana-quiz-classic": ("แบบทดสอบคานะ", "ทดสอบตัวเองทีละตัว"),
-        "06-kana-listening": ("ฝึกฟัง", "ฝึกหูกับเสียงเจ้าของภาษา"),
+        "06-kana-listening": ("ฝึกฟัง", "ทุกตัวคานะมีเสียงอ่าน จำได้แน่น"),
         "07-kana-write": ("ฝึกเขียน", "ลำดับเส้นถูกต้อง จำได้จริง"),
         "08-lessons": ("50 บทเรียน Minna no Nihongo", "ครบทุกบทอยู่ในมือคุณ"),
         "09-vocab-list": ("เราพูดภาษาของคุณ", "ทุกคำแปลครบ 17 ภาษา"),
         "11-lesson-learn": ("โหมดเรียนรู้", "ปัดดูคำใหม่พร้อมเสียงอ่าน"),
         "12-lesson-quiz": ("แบบทดสอบบทเรียน", "ตรวจว่าคุณจำได้จริงไหม"),
     },
+    # The Latin-script locales below reuse the mode names the app's own UI shows
+    # in that language (nihongo/UIStrings.json: Test/Tarjetas/Aprender,
+    # Quiz/Cartes mémo/Apprendre, Pagsusulit/Matuto, Kuis/Kartu kilas/Belajar),
+    # so a screenshot caption and the screen under it use the same word.
+    "es-ES": {
+        "01-today": ("Sigue tu progreso", "Cada día, de un vistazo"),
+        "02-kana-table": ("Hiragana y katakana", "Las tablas de kana completas"),
+        "03-kana-flashcards": ("Tarjetas de kana", "Gira, escucha, recuerda"),
+        "04-kana-quiz-classic": ("Test de kana", "Ponte a prueba kana a kana"),
+        "06-kana-listening": ("Entrena el oído", "Cada kana con voz, para que se fije"),
+        "07-kana-write": ("Escritura a mano", "Orden real de trazos, memoria real"),
+        "08-lessons": ("Minna no Nihongo: 50 lecciones", "Cada lección en tu bolsillo"),
+        "09-vocab-list": ("En tu idioma", "Cada palabra explicada en 17 idiomas"),
+        "11-lesson-learn": ("Modo Aprender", "Desliza palabras nuevas con voz"),
+        "12-lesson-quiz": ("Test de la lección", "Comprueba lo que sabes de verdad"),
+    },
+    # Straight ASCII apostrophes, as in en-US, not U+2019: Arial Rounded Bold does
+    # carry the typographic apostrophe, but mixing the two across locales in one
+    # file is how a stray one ends up somewhere that can't render it.
+    "fr-FR": {
+        "01-today": ("Suis ta progression", "Chaque jour, d'un seul regard"),
+        "02-kana-table": ("Hiragana et katakana", "Les tableaux de kana complets"),
+        "03-kana-flashcards": ("Cartes mémo de kana", "Retourne, écoute, retiens"),
+        "04-kana-quiz-classic": ("Quiz de kana", "Teste-toi, kana par kana"),
+        "06-kana-listening": ("Entraîne ton oreille", "Chaque kana prononcé, pour l'ancrer"),
+        "07-kana-write": ("Écriture à la main", "Le vrai ordre des traits"),
+        "08-lessons": ("Minna no Nihongo : 50 leçons", "Chaque leçon dans ta poche"),
+        "09-vocab-list": ("On parle ta langue", "Chaque mot en 17 langues"),
+        "11-lesson-learn": ("Mode Apprendre", "Fais défiler les mots, avec le son"),
+        "12-lesson-quiz": ("Quiz de la leçon", "Vérifie ce que tu sais vraiment"),
+    },
+    "id": {
+        "01-today": ("Pantau kemajuan", "Setiap hari, sekali lihat"),
+        "02-kana-table": ("Hiragana dan katakana", "Tabel kana yang lengkap"),
+        "03-kana-flashcards": ("Kartu kilas kana", "Balik, dengar, ingat"),
+        "04-kana-quiz-classic": ("Kuis kana", "Uji dirimu, satu per satu"),
+        "06-kana-listening": ("Latihan menyimak", "Tiap kana ada suaranya"),
+        "07-kana-write": ("Latihan menulis", "Urutan coretan yang sebenarnya"),
+        "08-lessons": ("Minna no Nihongo: 50 pelajaran", "Tiap pelajaran di sakumu"),
+        "09-vocab-list": ("Kami bicara bahasamu", "Tiap kata dalam 17 bahasa"),
+        "11-lesson-learn": ("Mode Belajar", "Geser kata baru, ada suaranya"),
+        "12-lesson-quiz": ("Kuis pelajaran", "Cek yang benar-benar kamu kuasai"),
+    },
+    # Japanese: the one locale whose store copy can use the textbook's real
+    # Japanese title, みんなの日本語, rather than the romanisation. Titles are kept
+    # to eight characters or fewer because wrap="char" would otherwise break a
+    # headline mid-word to make it fit — see the ja entry in LOCALE_TYPOGRAPHY.
+    "ja": {
+        "01-today": ("進捗はひと目で", "毎日の学習を記録"),
+        "02-kana-table": ("ひらがな・カタカナ", "全チャートを収録"),
+        "03-kana-flashcards": ("フラッシュカード", "めくって、聴いて、覚える"),
+        "04-kana-quiz-classic": ("かなクイズ", "1文字ずつ力試し"),
+        "06-kana-listening": ("リスニング練習", "すべてのかなに音声つき"),
+        "07-kana-write": ("手書き練習", "本物の筆順で採点"),
+        "08-lessons": ("みんなの日本語50課", "どの課もポケットの中に"),
+        "09-vocab-list": ("あなたの言語で", "全単語を17言語で解説"),
+        "11-lesson-learn": ("学習モード", "新しい単語を音声つきでめくる"),
+        "12-lesson-quiz": ("レッスンのクイズ", "本当に覚えたかを確認"),
+    },
+    "ko": {
+        "01-today": ("진도를 한눈에", "매일의 학습을 기록"),
+        "02-kana-table": ("히라가나·가타카나", "가나 표 전체 수록"),
+        "03-kana-flashcards": ("가나 플래시카드", "넘기고, 듣고, 기억하기"),
+        "04-kana-quiz-classic": ("가나 퀴즈", "한 글자씩 확인하기"),
+        "06-kana-listening": ("듣기 연습", "모든 가나에 음성 제공"),
+        "07-kana-write": ("손글씨 연습", "실제 획순으로 채점"),
+        "08-lessons": ("Minna no Nihongo 50과", "모든 레슨이 주머니 속에"),
+        "09-vocab-list": ("당신의 언어로", "모든 단어를 17개 언어로"),
+        "11-lesson-learn": ("학습 모드", "새 단어를 음성과 함께 넘기기"),
+        "12-lesson-quiz": ("레슨 퀴즈", "정말 익혔는지 확인"),
+    },
 }
+
+# Store locales deliberately left without screenshots: `hi` (Devanagari) and `ta`
+# (Tamil). Both are conjunct-forming scripts, and this Pillow has no libraqm, so
+# there is no shaping at all — the same limitation that ruled out Thonburi for
+# Thai, only worse, because for these two it is the *text* that comes out wrong
+# rather than one mark. Measured, not assumed, against every Devanagari and Tamil
+# face on macOS (Kohinoor, Devanagari Sangam MN, ITF Devanagari, Devanagari MT,
+# .SF Devanagari; Tamil Sangam MN, Tamil MN, InaiMathi, .SF Tamil):
+#
+#   Devanagari - the virama never triggers the conjunct substitution, so स्ट्रोक,
+#   प्र and र् render as base + visible halant + base instead of the stacked and
+#   subjoined forms. Hindi cannot be written around this: हिरागाना (hiragana),
+#   लिखावट (handwriting), अभ्यास (practice) and क्विज़ (quiz) all need conjuncts
+#   or a pre-base i-matra, so there is no wording that dodges it.
+#
+#   Tamil - the pre-base vowel signs ெ ே ை render to the *right* of their
+#   consonant (கே comes out as க+ே), the two-part signs ொ ோ ௌ render as a
+#   dotted-circle placeholder, and the pulli ் is zero-advance but unpositioned,
+#   so it lands between two letters instead of above one.
+#
+# A legacy "visual order" workaround (storing the matra codepoints pre-reordered)
+# was tried and rejected: it cannot form Devanagari conjuncts at all, it leaves
+# Tamil's pulli misplaced, and it would put text into this file that is not valid
+# Hindi or Tamil — which `--check` cannot audit, since every codepoint still has
+# a glyph. Shipping mangled Devanagari is worse than shipping no hi screenshots,
+# so these two locales fall back to en-US's set on the store. To add them
+# properly, this script needs a shaping engine: a Pillow built with libraqm, or
+# pre-rendering the headline through CoreText.
 
 # Locales that ship another locale's rendered images verbatim. Simplified Chinese
 # readers get the Traditional copy rather than an empty screenshot set; swap this
@@ -217,8 +328,10 @@ LOCALES = {
 LOCALE_ALIASES = {"zh-Hans": "zh-Hant"}
 
 # Per-locale typography. This used to be a single boolean — "CJK or not" — which
-# picked one of two fonts and one of two wrap modes; that can't express five
+# picked one of two fonts and one of two wrap modes; that can't express six
 # scripts, so it's a mapping now, with DEFAULT_TYPOGRAPHY for anything unlisted.
+# Unlisted means Arial Rounded Bold + word wrapping, which is right for every
+# plain-Latin locale (en-US, de-DE, es-ES, fr-FR, id).
 # Keys:
 #   font    path to a .ttf/.ttc
 #   index   face index inside a .ttc collection (ignored for a plain .ttf)
@@ -263,6 +376,27 @@ LOCALE_TYPOGRAPHY = {
     # zero-advance and sit at their final height with no shaping, so unshaped
     # Pillow output is correct.
     "th": dict(font=FONT_SUKHUMVIT, index=5),
+    # Japanese: Hiragino Maru Gothic ProN W4 (face 1 — face 0 is the older
+    # non-ProN variant with a smaller kanji set). This is the *only* rounded
+    # Japanese face on macOS, and it is the same family the app itself sets for
+    # Japanese headwords (Theme.jp = "HiraMaruProN-W4"), so the screenshots and
+    # the screens inside them use one typeface. Maru Gothic ships in W4 only,
+    # with no bold weight — which is exactly why Theme.jpBold falls back to
+    # Hiragino Sans W6 in the app. W4 is kept here anyway: at a 116px headline
+    # its strokes read as heavy as Heiti Medium does for Chinese, and staying
+    # rounded matters more than matching the Latin locales' bold.
+    # No shaping needed: kana and kanji are all independent single-glyph
+    # clusters, so unshaped Pillow output is correct. wrap="char" for the same
+    # reason as Chinese — Japanese has no word spaces.
+    "ja": dict(font=FONT_HIRA_MARU, index=1, wrap="char"),
+    # Korean: Apple SD Gothic Neo Bold (face 6 — the odd indices are the hidden
+    # ".Apple SD Gothic NeoI" interface variants, not what we want). No rounded
+    # Korean face ships with macOS, so this is the same compromise Chinese makes
+    # with Heiti. Korean needs no shaping either: modern Hangul is written in
+    # precomposed syllable blocks (U+AC00..U+D7A3), one codepoint and one glyph
+    # per syllable, so no jamo composition happens at render time. wrap="word"
+    # because Korean *does* put spaces between words, unlike Chinese/Japanese.
+    "ko": dict(font=FONT_APPLE_SD_GOTHIC, index=6),
 }
 
 
