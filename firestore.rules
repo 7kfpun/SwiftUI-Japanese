@@ -1,0 +1,78 @@
+rules_version = '2';
+
+// Survey collections for Japanese Daily. Everything here is WRITE-ONLY from the
+// app's point of view: the client can append one well-formed document and can
+// never read, edit or delete anything — not even what it just wrote.
+//
+// Read access is for the project owner via the Firebase console, the Admin SDK or
+// a service account, all of which bypass these rules entirely. So denying `read`
+// costs nothing operationally and means a decompiled app yields no way to pull
+// other people's answers back out.
+//
+// There is no Firebase Auth in this app (no accounts, and deliberately no
+// identifier of any kind — the app ships without App Tracking Transparency and
+// its privacy manifest declares no collected identifiers). Anonymous Auth would
+// mint a persistent UID per install and undo that, so spam protection comes from
+// **App Check** instead: enable enforcement for Firestore in the Firebase console
+// so only attested builds of the real app can reach this collection at all.
+// Without that toggle these rules still bound *what* can be written, but not
+// *who* can write it.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // One document per completed onboarding run. Skips and partial runs write
+    // nothing here — drop-off is counted in Analytics instead, which is what
+    // keeps this schema closed with no nullable fields or sentinel values.
+    match /survey_intro/{doc} {
+      // Append-only. Denying update/delete matters as much as denying read:
+      // auto-IDs are unguessable but not secret, and a write-only-means-any-write
+      // rule would let someone overwrite or wipe collected answers.
+      allow read, update, delete: if false;
+
+      allow create: if isValidIntro(request.resource.data);
+    }
+
+    // Validate the whole document shape server-side. `hasOnly` closes the field
+    // set, and the enum checks mean a client-side typo can't silently invent a
+    // sixth `goal` value that quietly splits the data at analysis time.
+    function isValidIntro(d) {
+      return d.keys().hasOnly(['knows_kana', 'textbook_lesson', 'goal',
+                               'vocab_language', 'app_language',
+                               'app_version', 'os', 'platform', 'debug', 'v', 'at'])
+        && d.keys().hasAll(['knows_kana', 'textbook_lesson', 'goal',
+                            'vocab_language', 'app_language',
+                            'app_version', 'os', 'platform', 'debug', 'v', 'at'])
+        // Kana literacy is the one answer that changes app behaviour (a learner
+        // who can't read kana lands on the Kana tab, because lesson 1 rung 1 is
+        // a kana prompt and would otherwise be unreadable).
+        && d.knows_kana in ['none', 'hiragana', 'both']
+        // 0 = never studied Minna no Nihongo; 1-50 = the lesson they reached.
+        // Recorded only, so an out-of-range value is a client bug, not a threat.
+        && d.textbook_lesson is int
+        && d.textbook_lesson >= 0
+        && d.textbook_lesson <= 50
+        && d.goal in ['travel', 'jlpt', 'work', 'culture', 'other']
+        // The 17 shipped languages. Two separate settings: the app's own UI
+        // language and the language Japanese words are translated into.
+        && d.vocab_language is string
+        && d.vocab_language.size() <= 10
+        && d.app_language is string
+        && d.app_language.size() <= 10
+        && d.app_version is string
+        && d.app_version.size() <= 40
+        && d.os is string
+        && d.os.size() <= 40
+        && d.platform in ['iOS']
+        // True for a Debug build. `Survey` doesn't honour the analytics opt-out —
+        // a volunteered answer isn't telemetry — so development runs land here for
+        // real. This is how you filter them out when reading results.
+        && d.debug is bool
+        // Schema version, so a later question can be added without making every
+        // existing document ambiguous to whatever reads them.
+        && d.v is int
+        // Server-stamped: device clocks lie, and Firestore's offline queue can
+        // land a write hours after the tap that made it.
+        && d.at == request.time;
+    }
+  }
+}

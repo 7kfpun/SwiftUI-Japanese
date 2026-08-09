@@ -18,6 +18,7 @@ Read this folder cold-start, in roughly this order:
 | `05-shared-and-audio.md` | Cross-cutting pieces: the `Pronouncer` audio seam, shared quiz/flashcard UI components, the two independent language settings, `CardPager`/`FlashDeck`. |
 | `07-ux-ui.md` | The visual language: color tokens (dynamic light/dark), typography, the Tinder-like swipe pattern shared across Flashcards/Kana-swipe/Today, and a few non-obvious layout decisions. |
 | `08-analytics.md` | The `Track` API, the full event catalog, and the paywall source-attribution pattern. |
+| `09-intro-and-survey.md` | The five-card first-launch tour and the three questions it asks; the `survey_intro` Firestore collection, its write-only security rules, and the App Check setup that guards them — the app's only server write. |
 
 ## What's not covered here
 

@@ -21,4 +21,27 @@ enum Pref {
     static let analyticsExcluded   = "analyticsExcluded"
     /// Set once the rating star row has been shown, so it never asks twice.
     static let ratingAsked         = "ratingAsked"
+
+    // MARK: First-launch intro (see nihongo/Intro)
+
+    /// Set once the intro has been seen — including when it was skipped. It gates the
+    /// cover on its own, so a tour that reopened would be a nag, not a tour.
+    static let introAnswered       = "introAnswered"
+    /// How much kana the learner said they read: "none" / "hiragana" / "both".
+    /// **The only intro answer anything acts on**: "none" lands the app on the Kana tab
+    /// instead of Today, since Kana is free in full and a Today card is no use to someone
+    /// who can't read it yet.
+    static let knowsKana           = "knowsKana"
+    /// The lesson they said they'd reached in Minna no Nihongo (0 = never studied it).
+    ///
+    /// **Recorded only.** Nothing reads it: no lesson floor, no seeded `ChallengeResult`
+    /// rows, no effect on `TodayView.studyLesson()`. Seeding would push invented history
+    /// to every device through CloudKit and inflate `ChallengeResult.totalPassed`, which
+    /// gates the rating prompt. It exists so a later survey submission can be segmented by
+    /// prior experience — this app ships no user identifier of any kind, so there is no
+    /// join key and the answer has to travel with the row.
+    static let textbookLesson      = "textbookLesson"
+    /// Why they said they're learning: "travel" / "jlpt" / "work" / "culture" / "other".
+    /// Recorded only, for the same segmentation reason as `textbookLesson`.
+    static let goal                = "goal"
 }

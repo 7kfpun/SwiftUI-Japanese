@@ -3,20 +3,14 @@ import SafariServices
 
 struct SettingsView: View {
     @AppStorage(Pref.appLanguage) private var appLanguage = L.deviceDefault
-    @AppStorage(Pref.translationLanguage) private var vocabLanguage = VocabStore.defaultLanguage
+    @AppStorage(Pref.translationLanguage) private var vocabLanguage = VocabStore.deviceDefaultLanguage
     @Environment(Store.self) private var store
+    @Environment(Router.self) private var router
     @State private var showPaywall = false
     @State private var showFeedback = false
     @State private var legal: LegalDoc?
     @State private var analyticsExcluded = Track.isExcluded
     @State private var versionTapCount = 0
-
-    private static var appVersion: String {
-        let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
-        let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
-        return "\(v) (\(b))"
-    }
-
 
     var body: some View {
         NavigationStack {
@@ -36,7 +30,11 @@ struct SettingsView: View {
                         Button(L.t("Restore Purchases")) { Task { await store.restore() } }
                     }
                 } header: {
-                    Text(L.t("Premium"))
+                    // Section headers keep the size and secondary colour a grouped list
+                    // gives them and change only the face — a rounded heading over plain
+                    // rows, same split as everywhere else. Promoting them to `.headline`
+                    // would make the labels compete with the settings they label.
+                    Text(L.t("Premium")).font(Theme.title(.footnote))
                 }
 
                 Section {
@@ -46,7 +44,7 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text(L.t("Interface"))
+                    Text(L.t("Interface")).font(Theme.title(.footnote))
                 } footer: {
                     Text(L.t("The language used for the app's own text (tabs, buttons, labels)."))
                 }
@@ -58,7 +56,7 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text(L.t("Meanings"))
+                    Text(L.t("Meanings")).font(Theme.title(.footnote))
                 } footer: {
                     Text(L.t("The language Japanese words are translated into (vocabulary lists, quizzes, and search)."))
                 }
@@ -68,7 +66,7 @@ struct SettingsView: View {
                         Label(L.t("Send feedback"), systemImage: "envelope")
                     }
                 } header: {
-                    Text(L.t("Feedback"))
+                    Text(L.t("Feedback")).font(Theme.title(.footnote))
                 } footer: {
                     Text(L.t("Something wrong or missing? Feel free to reach out."))
                 }
@@ -78,12 +76,12 @@ struct SettingsView: View {
                     Button(L.t("Terms of Use")) { legal = .terms }
                     Button(L.t("Licenses")) { legal = .licenses }
                 } header: {
-                    Text(L.t("Legal"))
+                    Text(L.t("Legal")).font(Theme.title(.footnote))
                 } footer: {
                     // Tap 7 times to exclude this device from analytics — a hidden
                     // developer toggle, not a normal end-user setting, so no
                     // localized label; the small suffix is the only visible cue.
-                    Text(Self.appVersion + (analyticsExcluded ? " • Analytics off" : ""))
+                    Text(AppInfo.version + (analyticsExcluded ? " • Analytics off" : ""))
                         .onTapGesture {
                             versionTapCount += 1
                             guard versionTapCount >= 7 else { return }
@@ -91,6 +89,17 @@ struct SettingsView: View {
                             analyticsExcluded.toggle()
                             Track.setExcluded(analyticsExcluded)
                             UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        }
+                        // Second hidden developer affordance on the same footer: long-press
+                        // replays the first-launch tour. A distinct *gesture* rather than a
+                        // different tap count, so the two can't fire on the way to each
+                        // other — a 3-tap trigger would be unreachable past the 7-tap one.
+                        // Goes through `Router` because the cover lives above the TabView;
+                        // it deliberately doesn't clear `Pref.introAnswered`, so replaying
+                        // the tour doesn't make this install look brand new.
+                        .onLongPressGesture {
+                            router.replayIntro = true
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                         }
                 }
             }
@@ -116,4 +125,4 @@ struct SafariView: UIViewControllerRepresentable {
     func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
 }
 
-#Preview { SettingsView().environment(Store()) }
+#Preview { SettingsView().environment(Store()).environment(Router()) }

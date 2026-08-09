@@ -15,6 +15,15 @@ import SwiftUI
     /// a tap leave the user in the same place, with a working back button either way.
     var lessonPath = NavigationPath()
 
+    /// Replay the first-launch tour on demand — the hidden long-press in Settings.
+    ///
+    /// Here for the same reason `tab` is: the trigger lives in a tab and the cover lives
+    /// above the whole `TabView`, which no amount of local `@State` in `SettingsView` can
+    /// reach. Deliberately *not* `Pref.introAnswered` — that flag records "this person has
+    /// been shown the tour", which stays true; replaying it is a separate, transient act,
+    /// and conflating the two would make a developer's replay look like a fresh install.
+    var replayIntro = false
+
     /// Just the Lessons tab, at its root. Where a link lands when the rung it names is
     /// behind the paywall: the list is the honest destination, since pushing into a
     /// lesson the user can't open would only dead-end them a screen deeper.
