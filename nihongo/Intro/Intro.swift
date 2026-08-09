@@ -128,10 +128,8 @@ struct IntroAnswers: Equatable {
     var kana: Intro.KanaLevel?
     /// 0 = never studied Minna no Nihongo, 1…50 = the lesson they say they reached.
     ///
-    /// Recorded only. Deliberately no lesson floor, no seeded `ChallengeResult` rows and
-    /// no effect on `TodayView.studyLesson()`: seeding would push invented history to
-    /// every one of the learner's devices through CloudKit and inflate
-    /// `ChallengeResult.totalPassed`, which is what gates the rating prompt.
+    /// Recorded only — `Pref.textbookLesson` documents what deliberately doesn't happen
+    /// with it, and why seeding progress from it would be actively harmful.
     var textbookLesson: Int?
     var goal: Intro.Goal?
 
@@ -148,20 +146,20 @@ struct IntroAnswers: Equatable {
     /// The survey document for a completed run, or `nil` for a partial one.
     ///
     /// Returning `nil` rather than filling blanks is the whole gate: `survey_intro` has a
-    /// closed schema with no nullable fields (the security rules reject any document that
-    /// isn't exactly the ten expected keys), and a half-answered row would be
+    /// closed schema with no nullable fields (the security rules reject any document whose
+    /// keys aren't exactly the expected set), and a half-answered row would be
     /// indistinguishable from a deliberate "0" once it's in the collection. How far people
     /// get before abandoning is counted in Analytics instead, where counting belongs.
     ///
-    /// The two languages come from the caller because they're settings, not answers — one
-    /// of them (`vocabLanguage`) is what card 1 may just have changed.
-    func submission(vocabLanguage: String, appLanguage: String) -> Survey.Intro? {
+    /// Only the three answers. The two languages used to be passed in here; they now ride
+    /// along on `Survey.Context` like every other setting, which reads them from defaults —
+    /// including the change card 1 may just have made, since `@AppStorage` writes through
+    /// immediately.
+    var submission: Survey.Intro? {
         guard let kana, let textbookLesson, let goal else { return nil }
         return Survey.Intro(knowsKana: kana.rawValue,
                             textbookLesson: textbookLesson,
-                            goal: goal.rawValue,
-                            vocabLanguage: vocabLanguage,
-                            appLanguage: appLanguage)
+                            goal: goal.rawValue)
     }
 
     /// Mark the intro seen and persist whatever was answered.

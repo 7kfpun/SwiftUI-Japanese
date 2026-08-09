@@ -14,7 +14,28 @@ struct IntroModeSample: View {
     let entries: [Vocab]
     @Environment(\.pronouncer) private var pronouncer
 
-    private var word: Vocab? { entries.first }
+    /// A different lesson-1 word per mode, rather than the same one four times.
+    ///
+    /// Tapping through the chips should feel like looking at four modes, and repeating one
+    /// vocabulary item made them read as four skins on the same card. Keyed off the mode's
+    /// position so it's *stable* — deliberately not `randomElement()`, which would re-deal
+    /// on every SwiftUI redraw and make the card twitch (the same reason `LearnSample`
+    /// pseudo-shuffles its tiles by hash instead of shuffling).
+    private var word: Vocab? {
+        guard !entries.isEmpty else { return nil }
+        return entries[offset % entries.count]
+    }
+
+    /// Vocab List shows three rows starting at 0, so the others start past them: the card
+    /// shouldn't teach a word the list above it already showed.
+    private var offset: Int {
+        switch mode {
+        case .vocabList:  return 0
+        case .flashcards: return 3
+        case .train:      return 4
+        case .learn:      return 6
+        }
+    }
 
     var body: some View {
         Group {
@@ -75,7 +96,7 @@ struct IntroModeSample: View {
     /// (`picked: nil`), which is exactly the state whose chevrons read as "swipe this
     /// way". `TrainModel.optionCount` is 2, so two is the honest number.
     @ViewBuilder private var train: some View {
-        if let word, entries.count > 1 {
+        if let word, let other = distractor {
             VStack(spacing: 10) {
                 Text(word.kana)
                     .font(Theme.jp(30))
@@ -83,11 +104,18 @@ struct IntroModeSample: View {
                     .contentShape(Rectangle())
                     .onTapGesture { pronouncer.speak(word) }
                 HStack(spacing: 10) {
-                    chip(entries[0], side: 0, isAnswer: true)
-                    chip(entries[1], side: 1, isAnswer: false)
+                    chip(word, side: 0, isAnswer: true)
+                    chip(other, side: 1, isAnswer: false)
                 }
             }
         }
+    }
+
+    /// The wrong option: the next word along, so the pair is a real 50/50 from the lesson
+    /// rather than the prompt shown twice. Wraps, so it can't collide with `word`.
+    private var distractor: Vocab? {
+        guard entries.count > 1 else { return nil }
+        return entries[(offset + 1) % entries.count]
     }
 
     private func chip(_ vocab: Vocab, side: Int, isAnswer: Bool) -> some View {

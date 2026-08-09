@@ -25,6 +25,10 @@ struct IntroView: View {
 
     @AppStorage(Pref.translationLanguage) private var language = VocabStore.deviceDefaultLanguage
     @Environment(\.pronouncer) private var pronouncer
+    // Only for the survey's diagnostic context on the way out — the tour itself is never
+    // gated and reads no progress. See `Survey.Context`.
+    @Environment(Store.self) private var store
+    @Environment(\.modelContext) private var modelContext
 
     @State private var index = 0
     @State private var fling: Int?
@@ -85,11 +89,11 @@ struct IntroView: View {
     private var deck: some View {
         ZStack {
             CardStackPeek(count: min(2, Self.cards.count - 1 - index))
-            // No swipe hint, and no drag: the intro pages by button only. Cards 2, 4 and 5
-            // hold tappable answer chips, and a card that also moves under a horizontal
-            // drag makes choosing an answer feel precarious — a mistimed tap turns the
-            // page instead of picking. `Next` is unambiguous, and it still flings.
-            SwipeCard(showsHint: false) {
+            // Swipeable, like every other card surface in the app — Today, Flashcards,
+            // Train, Kana Swipe and Learn all page this way, so the first card a learner
+            // ever sees should teach that gesture rather than contradict it. `Next` stays as
+            // the obvious affordance for anyone who doesn't try a swipe.
+            SwipeCard(showsHint: true) {
                 content
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(20)
@@ -99,13 +103,24 @@ struct IntroView: View {
             // with the front card and the deck slides off as one slab instead of a card
             // leaving a stack behind. Same rule Flashcards and Today follow — and the same
             // trap `Flashcards.swift`'s own comment warns about.
-            .cardPager(fling: $fling, draggable: false) { turn($0) }
+            .cardPager(fling: $fling) { turn($0) }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var footer: some View {
         HStack {
+            // Past the first card only. A back-swipe already worked, but a gesture is a poor
+            // *only* way back: nothing on screen said the tour was reversible, and a learner
+            // who mis-tapped an answer had no visible way to correct it. Flings through the
+            // same `fling` binding as `Next`, so back and forward animate identically.
+            if index > 0 {
+                Button { retreat() } label: {
+                    Image(systemName: "chevron.left").fontWeight(.semibold)
+                }
+                .buttonStyle(.bordered)
+                .accessibilityLabel(L.t("Back"))
+            }
             dots
             Spacer(minLength: 12)
             Button { advance() } label: {
@@ -402,19 +417,24 @@ struct IntroView: View {
         if isLast { finish() } else { fling = 1 }
     }
 
+    /// One card back. Guarded rather than clamped so the first card's button is simply
+    /// absent — a disabled control that never becomes enabled is just clutter.
+    private func retreat() {
+        guard index > 0 else { return }
+        fling = -1
+    }
+
     private func trackCard() { Track.event("intro_card", ["card": card.rawValue]) }
 
     private func finish() {
         answers.save()
         Track.event("intro_done", answers.trackParams)
-        // Only a fully answered run is submitted — see `IntroAnswers.submission`. Nothing
-        // is awaited: the write is fire-and-forget with Firestore's offline queue behind
-        // it, so a learner who finishes the tour on a plane still has their answers land
-        // when the network comes back, and the intro closes at the speed of the tap either
-        // way. `L.current` rather than the stored key, since the app language falls back to
-        // the device's until Settings changes it.
-        if let submission = answers.submission(vocabLanguage: language, appLanguage: L.current) {
-            Survey.submit(submission)
+        // Only a fully answered run is submitted — see `IntroAnswers.submission`. Nothing is
+        // awaited: the write is fire-and-forget over Firestore's offline queue, so the intro
+        // closes at the speed of the tap and a learner who finishes the tour on a plane
+        // still has their answers land when the network comes back.
+        if let submission = answers.submission {
+            Survey.submit(submission, context: .init(store: store, modelContext: modelContext))
         }
         onFinish(Intro.landingTab(kana: answers.kana))
     }
