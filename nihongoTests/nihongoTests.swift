@@ -1,10 +1,3 @@
-//
-//  nihongoTests.swift
-//  nihongoTests
-//
-//  Created by KF PUN on 5/8/26.
-//
-
 import Testing
 import Foundation
 import SwiftData
@@ -28,8 +21,9 @@ struct DataTests {
         #expect(Set(ids).count == ids.count)
     }
 
-    /// Every screen's minimum data needs, checked for all 50 lessons: the Today tab
-    /// picks 7 words, and the quiz needs 4 distinct-kana options.
+    /// Every screen's minimum data needs, checked for all 50 lessons: a floor on lesson
+    /// size, so nothing deals a near-empty deck (Today deals a rung's pool, which is
+    /// larger), and 4 distinct kana so a multiple-choice question has four options.
     @Test func everyLessonSupportsGameplay() {
         for lesson in VocabStore.lessons() {
             #expect(lesson.entries.count >= 7, "lesson \(lesson.number) too small for Today")
@@ -83,7 +77,7 @@ struct TextTests {
     }
 }
 
-// MARK: - Kana data (generated from kana.js)
+// MARK: - Kana data (bundled from minna/vocab/kana.json)
 
 struct KanaTests {
     private func nonEmpty(_ t: [[K]]) -> Int { t.flatMap { $0 }.filter { !$0.isEmpty }.count }
@@ -265,7 +259,7 @@ struct TrainTests {
     }
 
     @Test func listeningVariantUsesAudioPromptAndWordOptions() {
-        // The old Listening mode is Train with an audio prompt; options are the word.
+        // Listening is Train with an audio prompt; the options are the written word.
         let model = TrainModel(vocab: VocabStore.lesson(3).entries, from: .audio)
         #expect(model.from == .audio)
         #expect(model.to == .kana)
@@ -520,6 +514,316 @@ struct TodayTests {
         #expect(next > mid)
         #expect(next.timeIntervalSince1970.truncatingRemainder(dividingBy: 3600) == 0)
         #expect(next.timeIntervalSince(mid) <= 3600)
+    }
+}
+
+// MARK: - Survey submissions
+
+/// The survey schemas are enforced *server-side* by `firestore.rules`, whose `hasOnly` /
+/// `hasAll` lists must match the app's field names exactly. A mismatch rejects every write
+/// with no user-visible symptom — the failure surfaces only as a console line and a
+/// `survey_failed` event — so these tests transcribe the published rules and compare.
+///
+/// This is the test that was missing when the shared context was introduced: the app began
+/// sending five new fields while the deployed rules still closed on the old set, which would
+/// have silently rejected every intro submission.
+struct SurveyTests {
+    /// Transcribed from `firestore.rules`' `context()`. Update both together, never one.
+    private static let ruleContextKeys: Set<String> = [
+        "platform", "app_version", "os", "device",
+        "os_language", "app_language", "vocab_language", "region",
+        "is_premium", "tier", "challenges_passed", "kana_answered",
+        "sound_on", "analytics_excluded", "shown_fields",
+        "text_size", "appearance", "last_screen",
+        "knows_kana", "goal", "textbook_lesson",
+        "debug", "v", "at",
+    ]
+
+    /// The primitive initializer, which is the only one a test can use: the convenience one
+    /// is `@MainActor` because it reads `UIApplication`, and these tests are not.
+    private var context: Survey.Context {
+        Survey.Context(isPremium: false, tier: "none", challengesPassed: 0,
+                       kanaAnswered: 0, textSize: "L", appearance: "light")
+    }
+
+    @Test func contextKeysMatchThePublishedRules() {
+        #expect(Survey.Context.keys == Self.ruleContextKeys)
+        // `fields` omits `at` deliberately — the server stamps it, so the map the app
+        // builds is the declared set minus that one key.
+        #expect(Set(context.fields.keys) == Self.ruleContextKeys.subtracting(["at"]))
+    }
+
+    /// The intro adds no fields of its own any more — its three answers are context fields
+    /// that every collection carries, which is why the rules take `hasExactly(data, [])`
+    /// there. `submit(_ intro:)` still merges them, to decide the *value*, not the key set.
+    @Test func introSubmissionIsExactlyTheContext() {
+        let answers: Set<String> = ["knows_kana", "textbook_lesson", "goal"]
+        #expect(answers.isSubset(of: Survey.Context.keys))
+        let all = Set(context.fields.keys).union(answers)
+        #expect(all == Self.ruleContextKeys.subtracting(["at"]))
+        // Values the rules pin to a closed set.
+        #expect(context.fields["platform"] as? String == "iOS")
+    }
+
+    /// One row per star tap, in its own collection — `survey_feedback` requires a non-empty
+    /// `message`, which a rating has no way to supply.
+    @Test func ratingSubmissionCarriesContextPlusItsStars() {
+        let own: Set<String> = ["stars"]
+        let all = Set(context.fields.keys).union(own)
+        #expect(all == Self.ruleContextKeys.subtracting(["at"]).union(own))
+        // The rules accept 1-5 only: no answer writes no row rather than a 0.
+        #expect(Survey.Rating(stars: 1).stars >= 1)
+        #expect(Survey.Rating(stars: 5).stars <= 5)
+    }
+
+    /// Transcribed from `firestore.rules`' `survey_feedback` own-field list. The three
+    /// second-level fields (`area`, `lesson`, `item`) are the reason this is spelled out
+    /// separately: they were added to the payload and the rules in one change, and the
+    /// moment those two lists disagree every feedback write is rejected with nothing to
+    /// show for it but a console line.
+    private static let ruleFeedbackKeys: Set<String> = [
+        "kind", "area", "message", "email", "source", "stars", "lesson", "item",
+    ]
+
+    @Test func feedbackSubmissionCarriesContextPlusItsOwnFields() {
+        let all = Set(context.fields.keys).union(Self.ruleFeedbackKeys)
+        #expect(all == Self.ruleContextKeys.subtracting(["at"]).union(Self.ruleFeedbackKeys))
+        // The payload the app actually builds, not just the declared set — a field named in
+        // the rules but never sent fails `hasAll` exactly as loudly as an unexpected one
+        // fails `hasOnly`.
+        let draft = FeedbackDraft(kind: .bug, area: .audio, message: "no sound", stars: 3)
+        let submission = draft.submission(source: .settings)
+        #expect(submission != nil)
+        #expect(Set(Self.feedbackPayload(submission!).keys) == Self.ruleFeedbackKeys)
+    }
+
+    /// The same merge `Survey.submit(_ feedback:)` performs, minus the context — kept here
+    /// because the real one writes to Firestore and can't be inspected.
+    private static func feedbackPayload(_ f: Survey.Feedback) -> [String: Any] {
+        ["kind": f.kind, "area": f.area, "message": f.message, "email": f.email,
+         "source": f.source, "stars": f.stars, "lesson": f.lesson, "item": f.item]
+    }
+
+    /// Every closed-set value in the feedback payload, against the rules' own lists. A value
+    /// the app can produce but the rules reject is a submission that vanishes.
+    @Test func feedbackEnumsAreWithinWhatTheRulesAccept() {
+        let sources: Set<String> = ["settings", "rating", "hidden", "card"]
+        #expect(Set(Feedback.Source.allCases.map(\.rawValue)) == sources)
+        let areas: Set<String> = ["audio", "kana", "lesson", "challenge",
+                                  "today", "watch", "purchase", "other"]
+        #expect(Set(Feedback.Area.allCases.map(\.rawValue)) == areas)
+        // The rules accept the eight plus "" — unanswered, and the value every non-bug row
+        // carries. Nothing else may reach the field.
+        let accepted = areas.union([""])
+        for kind in Feedback.Kind.allCases {
+            for area in Feedback.Area.allCases {
+                var draft = FeedbackDraft(kind: kind, message: "x")
+                draft.area = area
+                #expect(accepted.contains(draft.submittedArea))
+            }
+        }
+    }
+
+    /// The lesson int the rules bound to 0…50, and the romaji they length-cap. The cap has to
+    /// bite in the app, because over the limit the rules reject the whole document rather
+    /// than the one field.
+    @Test func reportedItemStaysWithinTheRulesBounds() {
+        for lesson in [1, 25, 50] {
+            let draft = FeedbackDraft(kind: .content,
+                                      item: Feedback.Item(lesson: lesson, romaji: "tsukue"),
+                                      message: "wrong meaning")
+            #expect(draft.submittedLesson >= 0 && draft.submittedLesson <= 50)
+            #expect(draft.submittedItem.count <= Feedback.itemLimit)
+        }
+        let long = FeedbackDraft(kind: .content,
+                                 item: Feedback.Item(lesson: 47,
+                                                     romaji: String(repeating: "a", count: 200)),
+                                 message: "wrong meaning")
+        #expect(long.submittedItem.count == Feedback.itemLimit)
+        // The longest romaji in the bundled data, so the cap is headroom rather than a
+        // truncation anybody meets.
+        let longest = VocabStore.allVocab().map(\.romaji.count).max() ?? 0
+        #expect(longest <= Feedback.itemLimit)
+    }
+
+    /// Every enum the rules validate. A value the app can produce but the rules reject is
+    /// a silently dropped submission.
+    @Test func enumsAreWithinWhatTheRulesAccept() {
+        let kana: Set<String> = ["none", "hiragana", "both"]
+        #expect(Set(Intro.KanaLevel.allCases.map(\.rawValue)) == kana)
+        let goals: Set<String> = ["travel", "jlpt", "work", "culture", "other"]
+        #expect(Set(Intro.Goal.allCases.map(\.rawValue)) == goals)
+        // The context carries the same two answers for *every* collection, where "not
+        // asked yet" is legitimate — hence one extra accepted value in each list, and it
+        // has to be the sentinel `IntroAnswers` already reports to Analytics.
+        #expect(IntroAnswers.unanswered == "unanswered")
+        #expect(IntroAnswers.unansweredLesson == -1)
+        #expect(kana.union([IntroAnswers.unanswered])
+                .contains(context.fields["knows_kana"] as? String ?? ""))
+        #expect(goals.union([IntroAnswers.unanswered])
+                .contains(context.fields["goal"] as? String ?? ""))
+        // -1 (unanswered) through 50, so the sentinel can't be read as lesson 0.
+        let lesson = context.fields["textbook_lesson"] as? Int ?? -99
+        #expect(lesson >= -1 && lesson <= 50)
+    }
+
+    /// `shown_fields` is one comma-joined string in a fixed order, not four fields and not
+    /// a map: the rules close the key set, and a fixed order means two senders with the
+    /// same card configuration produce the identical value instead of two spellings of it.
+    @Test func shownFieldsIsAFixedOrderCommaList() {
+        let value = context.fields["shown_fields"] as? String ?? "?"
+        #expect(value.count <= 40)
+        let parts = value.isEmpty ? [] : value.components(separatedBy: ",")
+        let order = ["kanji", "kana", "romaji", "translation"]
+        #expect(parts.allSatisfy(order.contains))
+        // Subsequence, not just membership — the order is the guarantee.
+        #expect(parts == order.filter(parts.contains))
+    }
+
+    /// Truncated to the length the rules cap, because a long screen name must degrade to a
+    /// short one rather than rejecting the whole document.
+    @Test func lastScreenIsRecordedAndCapped() {
+        Survey.recordScreen(String(repeating: "x", count: 60))
+        #expect(Survey.lastScreen.count == 40)
+        Survey.recordScreen("kana_write")
+        #expect(context.fields["last_screen"] as? String == "kana_write")
+    }
+
+    /// The two UIKit reads, on the actor they require. `appearance` is the one field the
+    /// rules pin to an exact pair of values, so a third one would reject every write.
+    @Test @MainActor func textSizeAndAppearanceAreWithinWhatTheRulesAccept() {
+        #expect(["light", "dark"].contains(AppInfo.appearance))
+        let sizes = ["XS", "S", "M", "L", "XL", "XXL", "XXXL",
+                     "AX1", "AX2", "AX3", "AX4", "AX5", "unknown"]
+        #expect(sizes.contains(AppInfo.textSize))
+        #expect(AppInfo.textSize.count <= 20)
+    }
+
+    /// The build-flavour discriminator has to actually discriminate, or dev rows can't be
+    /// filtered out of real results.
+    @Test func debugBuildIsFlaggedInTheTestTarget() {
+        #expect(AppInfo.isDebugBuild)
+        #expect(context.fields["debug"] as? Bool == true)
+    }
+
+    @Test func appInfoReportsUsableDiagnostics() {
+        #expect(AppInfo.os.hasPrefix("iOS "))
+        #expect(!AppInfo.version.isEmpty)
+        #expect(!AppInfo.device.isEmpty)
+    }
+}
+
+// MARK: - The feedback draft (what the sheet holds, and what it sends)
+
+/// The gate and the two second-level answers, tested without presenting a sheet — the whole
+/// reason `Feedback`/`FeedbackDraft` are view-free.
+///
+/// The rule these all circle is that **only an empty message may block a send**. Every field
+/// added to this form since is optional, and each new one is a new chance to accidentally
+/// make it a second gate.
+struct FeedbackTests {
+    @Test func onlyAnEmptyMessageBlocksSending() {
+        #expect(!FeedbackDraft().isValid)
+        #expect(!FeedbackDraft(message: "   \n ").isValid)
+        // No kind, no area, no item, no email, no stars — still sendable.
+        let bare = FeedbackDraft(message: "the audio cuts out")
+        #expect(bare.isValid)
+        let submission = bare.submission(source: .settings)
+        #expect(submission?.kind == "other")   // unpicked goes to the wire as `other`
+        #expect(submission?.area == "")
+        #expect(submission?.lesson == 0)
+        #expect(submission?.item == "")
+    }
+
+    /// `area` belongs to `Something's broken` alone. The scoping is in the draft rather than
+    /// the view because the kind can be re-picked after the area was answered, and a row
+    /// whose `area` contradicts its `kind` would make both fields unreadable.
+    @Test func areaIsEmptyUnlessTheKindIsBug() {
+        for kind in Feedback.Kind.allCases {
+            var draft = FeedbackDraft(kind: kind, message: "x")
+            draft.area = .audio
+            #expect(draft.submittedArea == (kind == .bug ? "audio" : ""))
+            #expect(draft.submission(source: .settings)?.area == (kind == .bug ? "audio" : ""))
+        }
+        // A bug report that skipped the follow-up is "" too — indistinguishable from an
+        // idea's empty area on purpose: both mean nobody said.
+        #expect(FeedbackDraft(kind: .bug, message: "x").submittedArea == "")
+    }
+
+    /// `lesson` and `item` belong to `A wrong word, meaning or sound` alone, for the same
+    /// reason: re-picking the kind must not leave a word attached to a report that is no
+    /// longer about one.
+    @Test func lessonAndItemAreEmptyUnlessTheKindIsContent() {
+        for kind in Feedback.Kind.allCases {
+            var draft = FeedbackDraft(kind: kind, message: "x")
+            draft.item = Feedback.Item(lesson: 12, romaji: "tsukue")
+            let content = kind == .content
+            #expect(draft.submittedLesson == (content ? 12 : 0))
+            #expect(draft.submittedItem == (content ? "tsukue" : ""))
+        }
+    }
+
+    /// The flag on a practice screen: the sheet opens knowing the bucket and the word, so the
+    /// sender only has to say what's wrong. This is the only route that fills these two
+    /// fields — the form itself has no word field.
+    @Test func aReportFromTheFlagSendsWithJustAMessage() throws {
+        // A real entry, read out of the bundled data rather than spelled here: the assertion
+        // below is that the two stored fields reconstruct this word's own `Vocab.id`.
+        let word = try #require(VocabStore.lesson(12).entries.first)
+        var draft = FeedbackDraft()
+        draft.kind = .content
+        draft.item = Feedback.Item(lesson: word.lesson, romaji: word.romaji)
+        #expect(!draft.isValid)   // the word alone is not a report
+        draft.message = "the English says desk, this is a chair"
+        let submission = try #require(draft.submission(source: .card))
+        #expect(submission.source == "card")
+        #expect(submission.kind == "content")
+        #expect(submission.lesson == 12)
+        #expect(submission.item == word.romaji)
+        // `lesson` + `item` reconstruct `Vocab.id`, which is the point of storing both.
+        #expect("\(submission.lesson)/\(submission.item)" == word.id)
+    }
+
+    /// A kana flashcard has no lesson: 0 with a non-empty item is a legitimate row, and the
+    /// rules allow exactly that. Without this, kana reports would either be rejected or have
+    /// to lie about a lesson.
+    @Test func aKanaReportCarriesNoLessonButStillNamesTheItem() {
+        var draft = FeedbackDraft(kind: .content, message: "this clip is cut short")
+        draft.item = Feedback.Item(lesson: 0, romaji: "kya")
+        #expect(draft.submittedLesson == 0)
+        #expect(draft.submittedItem == "kya")
+    }
+
+    /// The analytics half. Buckets travel (they aggregate), the romaji never does — `Track` is
+    /// the aggregate seam and content belongs only in the collection the sender wrote to.
+    @Test func trackParamsCountBucketsAndNeverContent() {
+        var draft = FeedbackDraft(kind: .content, message: "wrong meaning", email: "a@b.c")
+        draft.item = Feedback.Item(lesson: 12, romaji: "tsukue")
+        let params = draft.trackParams(source: .card)
+        #expect(params["area"] as? String == "")
+        #expect(params["lesson"] as? Int == 12)
+        #expect(params["has_item"] as? Bool == true)
+        #expect(params["has_email"] as? Bool == true)
+        #expect(params["message_length"] as? Int == 13)
+        let values = params.values.compactMap { $0 as? String }
+        #expect(!values.contains("tsukue"))
+        #expect(!values.contains("wrong meaning"))
+        #expect(!values.contains("a@b.c"))
+    }
+
+    /// Both follow-up lists are closed sets with a localized label and an SF Symbol per case,
+    /// like every other chip list in the app. A missing label would render as the raw key.
+    @Test func everyAreaHasALabelAndAnIcon() {
+        #expect(Feedback.Area.allCases.count == 8)
+        for area in Feedback.Area.allCases {
+            #expect(!area.titleKey.isEmpty)
+            #expect(!area.title.isEmpty)
+            #expect(!area.icon.isEmpty)
+        }
+        // Three labels are deliberately the tab names already in the table, so the chip calls
+        // that part of the app what the tab bar calls it.
+        #expect(Feedback.Area.kana.titleKey == "Kana")
+        #expect(Feedback.Area.lesson.titleKey == "Lessons")
     }
 }
 

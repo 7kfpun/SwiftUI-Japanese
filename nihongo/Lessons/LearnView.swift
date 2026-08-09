@@ -100,9 +100,19 @@ struct LearnView: View {
         .background(Theme.canvas)
         .navigationTitle("\(model.index + 1) / \(model.vocab.count)")
         .navigationBarTitleDisplayMode(.inline)
-        // Auto-play the word on each page when sound is on (mirrors RN assessment.js).
-        // Paging speaks explicitly in turnPage — onChange(of: index) would silently skip
-        // when random() happens to land on the same card.
+        // Learn is where a wrong reading shows up most plainly — the card spells the target
+        // out and the tiles have to match it — so the flag belongs here even though this is
+        // the one practice screen with no other toolbar item. Same placement as the other
+        // three. Not on the card: the card owns the horizontal drag (`cardPager`).
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                ReportItemButton(item: Feedback.Item(lesson: model.current.lesson,
+                                                     romaji: model.current.romaji))
+            }
+        }
+        // Auto-play the word on each page when sound is on. Paging speaks explicitly in
+        // `turnPage` — `onChange(of: index)` would silently skip when `random()` happens to
+        // land on the card already showing.
         .onAppear { autoPlay(); Track.screen("learn", ["lesson": lessonNumber]) }
         .onChange(of: model.state) {
             if model.state == .correct { Track.event("learn_answer", ["correct": true]) }

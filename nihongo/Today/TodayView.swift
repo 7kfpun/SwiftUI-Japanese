@@ -84,12 +84,10 @@ struct TodayView: View {
         .buttonStyle(.plain)
     }
 
-    /// To the lesson's mode list — not into the rung itself. Starting a scored test
-    /// nobody chose to start just manufactures abandons; from here the challenge is one
-    /// deliberate tap away. When the lesson is behind the paywall it stops at the
-    /// Lessons list instead, since the deck here is never gated and a free user can
-    /// legitimately be reading words for a challenge they can't take. Same rule as the
-    /// widget's link.
+    /// To the lesson's mode list — not into the rung itself — or to the Lessons list when
+    /// the lesson is behind the paywall, since the deck here is never gated and a free
+    /// user can legitimately be reading words for a challenge they can't take. Both rules
+    /// are `Router`'s (`openLesson` / `openLessonList`), and the widget's link shares them.
     private func openChallenge() {
         Track.event("today_challenge_open", ["lesson": lessonNumber, "index": upNext])
         if Gating.isLocked(lesson: lessonNumber, isPremium: store.isPremium) {
@@ -152,11 +150,6 @@ struct TodayView: View {
 
     /// Deal the study deck: every word the next unpassed challenge can ask — its new
     /// words plus the review window, since the challenge tests both.
-    ///
-    /// Deterministic, so it needs no persistence and advances by itself the moment a
-    /// rung is passed. When everything is cleared it holds lesson 50's last rung as
-    /// review; that's the only case where the deck isn't something you're about to be
-    /// tested on.
     private func loadPicks() {
         lessonNumber = studyLesson()
         let all = VocabStore.lesson(lessonNumber, language).entries

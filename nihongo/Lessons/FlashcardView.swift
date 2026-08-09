@@ -14,6 +14,7 @@ struct FlashcardView: View {
             summary: { L.t("You reviewed %@ words", "\($0)") },
             trackName: "flashcard",
             speak: { pronouncer.speak($0) },
+            report: { Feedback.Item(lesson: $0.lesson, romaji: $0.romaji) },
             face: { vocab, revealed in VocabFace(vocab: vocab, revealed: revealed) }
         )
         .onAppear { Track.screen("flashcards", ["lesson": lesson.number]) }

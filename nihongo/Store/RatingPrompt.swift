@@ -1,36 +1,82 @@
 import SwiftUI
 import StoreKit
 
-/// The Airtable feedback form (inherited from the RN app), prefilled with the platform
-/// and with where the user came from — Settings is someone choosing to write in, a
-/// low star rating is someone we sent. Those are different populations and the form
-/// can't tell them apart otherwise.
-enum Feedback {
-    static func url(source: String) -> URL {
-        URL(string: "https://airtable.com/shr7xvYAyInUbJNif?prefill_Platform=iOS&prefill_Source=\(source)")!
-    }
-}
-
 /// Asks for a rating, but only from people who have earned the right to be asked and
 /// only once.
 ///
 /// The shape is deliberate: a *custom* star picker first, and only a 4- or 5-star pick
-/// hands off to Apple's real review sheet. A low pick opens the feedback form instead.
-/// Apple's sheet gives no signal about what was submitted and is rate-limited to a
-/// handful of impressions a year, so spending one on someone about to leave two stars
-/// wastes the only asks the app gets. Routing unhappy taps to the form turns the same
-/// moment into something actionable — and the person gets a reply rather than a
-/// one-way star.
+/// hands off to Apple's real review sheet. A low pick opens the in-app feedback sheet
+/// instead (`FeedbackView`, with the chosen stars attached). Apple's sheet gives no signal
+/// about what was submitted and is rate-limited to a handful of impressions a year, so
+/// spending one on someone about to leave two stars wastes the only asks the app gets.
+/// Routing unhappy taps to the feedback sheet turns the same moment into something
+/// actionable — and the person gets a reply rather than a one-way star.
 ///
 /// Note this is not a rating *gate*: the App Store prohibits making a review path
 /// conditional on sentiment, and nothing here blocks anyone. The star row is the app's
 /// own question, every answer leads somewhere, and the App Store page stays reachable
 /// from Settings regardless.
 enum RatingPrompt {
-    /// Asked once, ever. Apple's own throttle would silently swallow a second ask
-    /// anyway, so a second one is only a chance to annoy.
-    static var hasAsked: Bool { UserDefaults.standard.bool(forKey: Pref.ratingAsked) }
-    static func markAsked() { UserDefaults.standard.set(true, forKey: Pref.ratingAsked) }
+    /// How long the app waits before it may ask again.
+    ///
+    /// This used to be "once, ever", justified by Apple silently swallowing a second ask —
+    /// which was true while a second ask produced *nothing*. It produces something now:
+    /// every star tap writes a `Survey.Rating` row before branching, so a later ask buys
+    /// sentiment over time even on the occasions Apple's sheet never appears.
+    ///
+    /// Roughly quarterly, chosen to sit *inside* Apple's own cap of about three review
+    /// impressions per year rather than fighting it. Asking monthly would mostly produce
+    /// star rows whose 4★+ half leads nowhere, which reads to the user as a prompt that
+    /// does nothing.
+    static let askAgainAfter: TimeInterval = 90 * 24 * 60 * 60
+
+    /// When the star row was last shown, or `nil` if it never has been.
+    static var lastAskedAt: Date? {
+        let stamp = UserDefaults.standard.double(forKey: Pref.ratingAskedAt)
+        return stamp > 0 ? Date(timeIntervalSince1970: stamp) : nil
+    }
+
+    /// Whether enough time has passed. `nil` (never asked) qualifies.
+    static var mayAskAgain: Bool {
+        guard let last = lastAskedAt else { return true }
+        return Date().timeIntervalSince(last) >= askAgainAfter
+    }
+
+    /// Stamps *now*, and clears the legacy boolean it replaces.
+    ///
+    /// The old `Pref.ratingAsked` shipped only in the unreleased 3.0.0, so almost no install
+    /// carries it — but a TestFlight tester's might, and `bool(forKey:)` on it would be
+    /// `true` with no date to compare against. `migrateLegacyFlagIfNeeded` handles that read
+    /// side; this handles the write side by retiring the key the moment we stamp a real date.
+    static func markAsked() {
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: Pref.ratingAskedAt)
+        UserDefaults.standard.removeObject(forKey: Pref.ratingAsked)
+    }
+
+    /// A tester who was asked under the old boolean has no timestamp, which would otherwise
+    /// read as "never asked" and prompt them immediately on updating. Treat the first check
+    /// after the update as the ask: conservative, and it makes the window predictable
+    /// instead of retroactive.
+    static func migrateLegacyFlagIfNeeded() {
+        guard lastAskedAt == nil,
+              UserDefaults.standard.bool(forKey: Pref.ratingAsked) else { return }
+        markAsked()
+    }
+
+    /// Clears the timer so the *real* trigger can fire again on this install.
+    ///
+    /// For the Diagnostics screen only, and it exists because the window is the one
+    /// condition of `shouldAsk` that no amount of practising can undo — you can't wait three
+    /// months to test a build. Nothing in the app calls this. Note it does not lift Apple's
+    /// own throttle on the review sheet, so a second earned ask will still show the star row
+    /// and may well show nothing after it.
+    ///
+    /// `removeObject` rather than writing a zero so both keys go back to absent, which is
+    /// what a fresh install actually looks like.
+    static func resetAsked() {
+        UserDefaults.standard.removeObject(forKey: Pref.ratingAskedAt)
+        UserDefaults.standard.removeObject(forKey: Pref.ratingAsked)
+    }
 
     /// Rungs that must be passed before the app asks anything. Roughly a lesson or two
     /// of real use — enough that there's something to rate.
@@ -46,16 +92,14 @@ enum RatingPrompt {
     /// opinion, and a rung they just *passed* — asking straight after a failure asks
     /// how they feel about failing, which is a different question.
     static func shouldAsk(isPremium: Bool, passed: Bool, passedCount: Int) -> Bool {
-        isPremium && passed && passedCount >= challengesRequired && !hasAsked
+        isPremium && passed && passedCount >= challengesRequired && mayAskAgain
     }
 
     /// 4★ and up → Apple's review sheet. Apple decides whether it actually appears;
     /// there's no callback and no guarantee, which is exactly why the star row exists
     /// in front of it.
     @MainActor static func requestAppStoreReview() {
-        guard let scene = UIApplication.shared.connectedScenes
-            .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene
-        else { return }
+        guard let scene = UIApplication.shared.foregroundScene else { return }
         AppStore.requestReview(in: scene)
     }
 }

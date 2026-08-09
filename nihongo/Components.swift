@@ -16,8 +16,8 @@ struct SoundToggle: View {
     }
 }
 
-/// One consistent score indicator used by every quiz in the app
-/// (Kana classic, Kana swipe, Lessons quiz). Shows right / wrong / total.
+/// One consistent score indicator used by every scored screen in the app (Kana classic,
+/// Kana swipe, Kana write, Train, and the Challenge ladder). Shows right / wrong / total.
 struct ScoreBadge: View {
     let correct: Int
     let total: Int
@@ -49,11 +49,42 @@ struct ScoreBadge: View {
     }
 }
 
+/// A mode row: accent icon, name in the title face, one-line description under it — used by
+/// both mode pickers (`SelectModeView`'s four Learn modes and `KanaQuizModeView`'s five kana
+/// modes), which are the same list of the same shape in two tabs.
+///
+/// The name is a heading and takes the title face; the subtitle is a sentence about it and
+/// stays on the system font. `locked` greys the icon and adds the padlock — only the Lessons
+/// side ever passes it, since Kana is free in full.
+struct ModeRow: View {
+    let icon: String, title: String, subtitle: String
+    var locked = false
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon)
+                .font(.title3)
+                .frame(width: 30)
+                .foregroundStyle(locked ? Color.secondary : Theme.accent)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(Theme.title(.headline))
+                Text(subtitle).font(.caption).foregroundStyle(.secondary)
+            }
+            if locked {
+                Spacer()
+                Image(systemName: "lock.fill")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
+        .foregroundStyle(.primary)   // keep the label neutral inside a plain Button
+    }
+}
+
 /// A quiz answer button that fills the space it's given. Shared by the two
-/// multiple-choice quizzes so they look identical — and now wearing the same
-/// `choiceChip` chrome as every other choice control in the app. It used to be a
-/// plain white box with a thin grey outline: inert before you answered, and the only
-/// control still speaking the old visual language.
+/// multiple-choice quizzes (the Challenge ladder and the classic kana quiz) so they
+/// look identical.
 ///
 /// Takes the answer state rather than a pre-computed colour, so the idle/correct/
 /// wrong rules live here instead of being re-derived at each call site.
@@ -289,6 +320,27 @@ struct SwipeCard<Content: View>: View {
     }
 }
 
+/// The full-screen verdict that flashes over a swipe-to-answer screen — Train and the
+/// kana swipe quiz, which both answer by flinging the card and so have no button left to
+/// change colour. Non-interactive on purpose: it appears for half a second while the card
+/// leaves and must not swallow the next gesture.
+struct AnswerBadge: View {
+    let correct: Bool
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: correct ? "checkmark.circle.fill" : "xmark.circle.fill")
+                .font(.system(size: 72))
+            Text(correct ? L.t("Correct!") : L.t("Wrong")).font(Theme.title(.title, weight: .bold))
+        }
+        .foregroundStyle(correct ? Theme.correct : Theme.wrong)
+        .padding(28)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
+        .transition(.scale.combined(with: .opacity))
+        .allowsHitTesting(false)
+    }
+}
+
 /// Tinder-style corner stamp for swipeable cards — one consistent visual language
 /// for every drag-to-decide screen in the app (flashcards, kana swipe quiz).
 struct SwipeStamp: View {
@@ -329,7 +381,6 @@ struct CardStackPeek: View {
     }
 }
 
-/// 2×2 grid of quiz options that expands to fill the available height.
 /// 2×2 grid of quiz options.
 ///
 /// Rows have a set height rather than expanding to fill. Letting them grow made the

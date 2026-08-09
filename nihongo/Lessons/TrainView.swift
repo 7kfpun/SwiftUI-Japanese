@@ -48,9 +48,8 @@ enum VForm: Int, CaseIterable {
     }
 }
 
-/// Endless practice loop behind the Train mode (the old Quiz + Listening, merged —
-/// Listening was always this model with an audio prompt). Untested and unscored
-/// beyond the session badge; the Challenge ladder is where results count.
+/// Endless practice loop behind the Train mode. Untested and unscored beyond the session
+/// badge; the Challenge ladder is where results count.
 @Observable
 final class TrainModel {
     let vocab: [Vocab]
@@ -158,8 +157,8 @@ final class TrainModel {
 
 /// Train — Tinder-style practice over a lesson's vocab: one prompt card, two
 /// candidates left and right, swipe toward the one that matches. The prompt cycles
-/// through every form including audio (the old Listening mode lives in that cycle),
-/// and it never ends: this is the Learn side's rehearsal room, not the test.
+/// through every form, audio included, and it never ends: this is the Learn side's
+/// rehearsal room, not the test.
 struct TrainView: View {
     @State private var model: TrainModel
     @Environment(\.pronouncer) private var pronouncer
@@ -232,11 +231,19 @@ struct TrainView: View {
         }
         .padding()
         .background(Theme.canvas)
-        .overlay { if let lastCorrect { resultBadge(lastCorrect) } }
+        .overlay { if let lastCorrect { AnswerBadge(correct: lastCorrect) } }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) { ScoreBadge(correct: model.correct, total: model.total) }
-            ToolbarItem(placement: .topBarTrailing) { SoundToggle() }
+            // Always available, unlike the Challenge ladder's copy of this: Train is
+            // unscored rehearsal, so there is nothing for the sheet to give away, and the
+            // card advances itself half a second after each answer — a flag that came and
+            // went with `picked` would flicker on every question.
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                ReportItemButton(item: Feedback.Item(lesson: model.answer.lesson,
+                                                     romaji: model.answer.romaji))
+                SoundToggle()
+            }
         }
         .onAppear {
             // Only on a real change: the model already took the preference at init, and
@@ -255,9 +262,8 @@ struct TrainView: View {
                                    "lesson": lessonNumber])
     }
 
-    /// Audio prompts always speak — the clip IS the question. Other prompts respect
-    /// the toggle, and a translation prompt never speaks: the chips are the Japanese
-    /// words, so pronouncing the answer would read the correct one aloud.
+    /// Audio prompts always speak — the clip IS the question. Everything else respects the
+    /// toggle, subject to `TrainModel.promptAudioSafe`.
     private func autoPlay() {
         if model.from.isAudio { pronouncer.speak(model.answer) }
         else if soundOn, TrainModel.promptAudioSafe(from: model.from) { pronouncer.speak(model.answer) }
@@ -306,20 +312,6 @@ struct TrainView: View {
                         picked: model.picked,
                         isAnswer: opt?.id == model.answer.id) { decide(side) }
     }
-
-    private func resultBadge(_ ok: Bool) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: ok ? "checkmark.circle.fill" : "xmark.circle.fill")
-                .font(.system(size: 72))
-            Text(ok ? L.t("Correct!") : L.t("Wrong")).font(Theme.title(.title, weight: .bold))
-        }
-        .foregroundStyle(ok ? Theme.correct : Theme.wrong)
-        .padding(28)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
-        .transition(.scale.combined(with: .opacity))
-        .allowsHitTesting(false)
-    }
-
 
     private func decide(_ side: Int) {
         guard model.picked == nil, model.options.count > side else { return }

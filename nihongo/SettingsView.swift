@@ -1,5 +1,5 @@
 import SwiftUI
-import SafariServices
+import SwiftData   // the preview builds a container; Diagnostics reads ChallengeResult
 
 struct SettingsView: View {
     @AppStorage(Pref.appLanguage) private var appLanguage = L.deviceDefault
@@ -9,8 +9,13 @@ struct SettingsView: View {
     @State private var showPaywall = false
     @State private var showFeedback = false
     @State private var legal: LegalDoc?
+    @State private var showDiagnostics = false
+    /// Raised inside the Diagnostics sheet, acted on once it has closed — see
+    /// `DiagnosticsView.pendingReplayIntro`.
+    @State private var pendingReplayIntro = false
+    /// Only for the footer's suffix; the switch itself moved to Diagnostics. Re-read when
+    /// that sheet closes, since it's the one place that can change it.
     @State private var analyticsExcluded = Track.isExcluded
-    @State private var versionTapCount = 0
 
     var body: some View {
         NavigationStack {
@@ -62,7 +67,7 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Button { showFeedback = true; Track.event("open_feedback") } label: {
+                    Button { showFeedback = true } label: {
                         Label(L.t("Send feedback"), systemImage: "envelope")
                     }
                 } header: {
@@ -71,6 +76,29 @@ struct SettingsView: View {
                     Text(L.t("Something wrong or missing? Feel free to reach out."))
                 }
 
+                #if DEBUG
+                // The same sheet the long-press below opens, as an ordinary row — but only
+                // in a DEBUG build, so it can never reach a user. TestFlight and the App
+                // Store both ship the Release configuration, where this section doesn't
+                // exist and the hidden gesture is the only way in.
+                //
+                // It's here because a gesture is fine as a one-off escape hatch and awful
+                // as a development loop: every check of the intro, the star row or a survey
+                // context now starts with remembering to long-press a line of version text.
+                //
+                // Unlocalized, like the screen it opens and like the affordance it doubles:
+                // "DEBUG" in front of it says loudly that it isn't a feature, and 17
+                // translations of a word only the developer will ever read is 17 strings
+                // that have to be kept in parity forever.
+                Section {
+                    Button { showDiagnostics = true } label: {
+                        Label("DEBUG · Diagnostics", systemImage: "ant.fill")
+                    }
+                } footer: {
+                    Text("Debug builds only. Release and TestFlight keep the long-press on the version below.")
+                }
+                #endif
+
                 Section {
                     Button(L.t("Privacy Policy")) { legal = .privacy }
                     Button(L.t("Terms of Use")) { legal = .terms }
@@ -78,27 +106,17 @@ struct SettingsView: View {
                 } header: {
                     Text(L.t("Legal")).font(Theme.title(.footnote))
                 } footer: {
-                    // Tap 7 times to exclude this device from analytics — a hidden
-                    // developer toggle, not a normal end-user setting, so no
-                    // localized label; the small suffix is the only visible cue.
+                    // The one hidden developer gesture in the app: long-press the version to
+                    // open Diagnostics. One gesture, not several competing tap counts on the
+                    // same line — everything else developer-only is a row on that screen.
+                    //
+                    // A long-press rather than a tap count because a footer that responds
+                    // to ordinary taps invites discovery, and this isn't an end-user
+                    // surface. The suffix stays as the only at-a-glance cue that this
+                    // device is excluded from analytics.
                     Text(AppInfo.version + (analyticsExcluded ? " • Analytics off" : ""))
-                        .onTapGesture {
-                            versionTapCount += 1
-                            guard versionTapCount >= 7 else { return }
-                            versionTapCount = 0
-                            analyticsExcluded.toggle()
-                            Track.setExcluded(analyticsExcluded)
-                            UINotificationFeedbackGenerator().notificationOccurred(.success)
-                        }
-                        // Second hidden developer affordance on the same footer: long-press
-                        // replays the first-launch tour. A distinct *gesture* rather than a
-                        // different tap count, so the two can't fire on the way to each
-                        // other — a 3-tap trigger would be unreachable past the 7-tap one.
-                        // Goes through `Router` because the cover lives above the TabView;
-                        // it deliberately doesn't clear `Pref.introAnswered`, so replaying
-                        // the tour doesn't make this install look brand new.
                         .onLongPressGesture {
-                            router.replayIntro = true
+                            showDiagnostics = true
                             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                         }
                 }
@@ -109,20 +127,28 @@ struct SettingsView: View {
             .onChange(of: appLanguage) { Track.event("set_app_language", ["code": appLanguage]) }
             .onChange(of: vocabLanguage) { Track.event("set_vocab_language", ["code": vocabLanguage]) }
             .sheet(isPresented: $showPaywall) { PaywallView(source: "settings") }
-            .sheet(isPresented: $showFeedback) {
-                SafariView(url: Feedback.url(source: "settings")).ignoresSafeArea()
+            .sheet(isPresented: $showFeedback) { FeedbackView(source: .settings) }
+            // `onDismiss` for the same reason the star row uses it: the intro tour's cover
+            // lives above the whole `TabView`, and raising it while this sheet is still
+            // animating away is silently dropped.
+            .sheet(isPresented: $showDiagnostics, onDismiss: leaveDiagnostics) {
+                DiagnosticsView(pendingReplayIntro: $pendingReplayIntro)
             }
         }
     }
-}
 
-/// Opens a URL in an in-app Safari sheet (no bounce to the external browser).
-struct SafariView: UIViewControllerRepresentable {
-    let url: URL
-    func makeUIViewController(context: Context) -> SFSafariViewController {
-        SFSafariViewController(url: url)
+    private func leaveDiagnostics() {
+        analyticsExcluded = Track.isExcluded
+        guard pendingReplayIntro else { return }
+        pendingReplayIntro = false
+        // Deliberately not clearing `Pref.introAnswered` — see `Router.replayIntro`.
+        router.replayIntro = true
     }
-    func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
 }
 
-#Preview { SettingsView().environment(Store()).environment(Router()) }
+#Preview {
+    SettingsView()
+        .environment(Store())
+        .environment(Router())
+        .modelContainer(for: [KanaResult.self, ChallengeResult.self], inMemory: true)
+}

@@ -105,8 +105,14 @@ struct PaywallView: View {
             feature("All 50 lessons unlocked")
             feature("Every challenge, from lesson 1 to 50")
             feature("No ads, ever")
-            feature("Flashcards, Learn, quizzes & listening")
-            feature("Native audio for every word")
+            // Both of these were wrong. "Flashcards, Learn, quizzes & listening" named two
+            // modes that no longer exist — Quiz and Listening became the Challenge ladder
+            // and Train — and "Native audio for every word" claimed native speakers when the
+            // clips are `say -v Kyoko`, with two sentence templates having none at all.
+            // Neither is a claim worth making on the screen that asks for money: what the
+            // audio is *for* sells better than who recorded it, and it happens to be true.
+            feature("Flashcards, Train, Learn and the full ladder")
+            feature("Audio in every practice and learning task, to help it stick")
             feature("Study offline, anywhere")
         }
         .frame(maxWidth: .infinity, alignment: .leading)

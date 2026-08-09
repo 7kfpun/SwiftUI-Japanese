@@ -20,7 +20,12 @@ enum Pref {
     /// developer exclude their own TestFlight/Release usage without a rebuild.
     static let analyticsExcluded   = "analyticsExcluded"
     /// Set once the rating star row has been shown, so it never asks twice.
+    /// Legacy: the boolean "asked once, ever" that shipped only in the unreleased 3.0.0.
+    /// Superseded by `ratingAskedAt`; read only by `RatingPrompt.migrateLegacyFlagIfNeeded`.
     static let ratingAsked         = "ratingAsked"
+    /// When the star row was last shown, as `timeIntervalSince1970`. A timestamp rather than
+    /// a flag so the ask can repeat quarterly — see `RatingPrompt.askAgainAfter`.
+    static let ratingAskedAt       = "ratingAskedAt"
 
     // MARK: First-launch intro (see nihongo/Intro)
 

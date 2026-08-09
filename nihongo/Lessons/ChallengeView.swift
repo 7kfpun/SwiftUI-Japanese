@@ -18,6 +18,9 @@ struct ChallengeView: View {
     @State private var showFeedback = false
     /// What the star row returned, or nil if it was dismissed without an answer.
     @State private var ratedStars: Int?
+    /// The same number, kept for the feedback sheet to carry. Separate because
+    /// `routeRating` clears `ratedStars` as it consumes it, and the sheet is built after.
+    @State private var feedbackStars = 0
 
     private let lesson: Lesson
     private let index: Int
@@ -69,7 +72,22 @@ struct ChallengeView: View {
         .navigationTitle(L.t("Challenge %@", "\(model.index)"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) { SoundToggle() }
+            // The flag appears only once the question has been answered, and that gate is
+            // the point: the sheet shows the sender the entry their report is about, so a
+            // flag offered mid-question would name the answer to a scored question. After
+            // the pick, `QuizOptionButton` has already marked the right option — nothing is
+            // given away, and "wait, that meaning is wrong" is exactly the moment it lands.
+            //
+            // A `.sheet`, so this view stays in the hierarchy while a report is written:
+            // `onDisappear` below logs `challenge_abandon` and fires the exit interstitial,
+            // and neither may happen because someone reported a word mid-run.
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                if let question = model.question, model.picked != nil {
+                    ReportItemButton(item: Feedback.Item(lesson: question.answer.lesson,
+                                                         romaji: question.answer.romaji))
+                }
+                SoundToggle()
+            }
         }
         .onAppear {
             // Coming back to a run that already ended means the view was reused —
@@ -99,14 +117,17 @@ struct ChallengeView: View {
             if !store.isPremium && model.isDone { Ads.showInterstitialIfReady() }
         }
         // Routed from `onDismiss`, not from the star tap. Both destinations replace the
-        // star row — Apple's review sheet and the feedback form each need the screen to
+        // star row — Apple's review sheet and the feedback sheet each need the screen to
         // themselves — and asking to present either while this one is still animating
         // away is silently dropped. `onDismiss` runs once it's actually gone.
         .sheet(isPresented: $showRating, onDismiss: routeRating) {
             RatingSheet { ratedStars = $0 }
         }
+        // The stars come along, so the complaint can be read next to the rating that
+        // produced it. `feedbackStars` rather than `ratedStars`, which `routeRating` has
+        // already cleared by the time this sheet is built.
         .sheet(isPresented: $showFeedback) {
-            SafariView(url: Feedback.url(source: "rating")).ignoresSafeArea()
+            FeedbackView(source: .rating, stars: feedbackStars)
         }
     }
 
@@ -141,9 +162,14 @@ struct ChallengeView: View {
     /// Where the stars lead, run once the star row has finished dismissing.
     ///
     /// 4★ and up hands off to Apple's native review sheet. Anything lower opens the
-    /// feedback form, where the complaint reaches someone who can answer it instead of
-    /// becoming a public one-liner. Dismissing without picking leads nowhere, which is
-    /// the point of offering "Not now" at all.
+    /// in-app feedback sheet, where the complaint reaches someone who can answer it
+    /// instead of becoming a public one-liner. Dismissing without picking leads nowhere,
+    /// which is the point of offering "Not now" at all.
+    ///
+    /// The `survey_rating` row is written *before* the branch and on neither arm, so the
+    /// star is captured whatever happens next — see `Survey.Rating`. It changes no routing:
+    /// every answer still leads exactly where it did, which is what keeps this the app's
+    /// own question rather than a rating gate (see `RatingPrompt`).
     private func routeRating() {
         guard let stars = ratedStars else {
             Track.event("rating_dismissed", ["lesson": lesson.number])
@@ -151,9 +177,12 @@ struct ChallengeView: View {
         }
         ratedStars = nil
         Track.event("rating_given", ["stars": stars, "lesson": lesson.number, "index": index])
+        Survey.submit(Survey.Rating(stars: stars),
+                      context: Survey.Context(store: store, modelContext: context))
         if stars >= 4 {
             RatingPrompt.requestAppStoreReview()
         } else {
+            feedbackStars = stars
             showFeedback = true
         }
     }
@@ -209,16 +238,13 @@ struct ChallengeView: View {
         .disabled(model.picked == nil)
     }
 
-    /// Audio questions must always speak — the clip *is* the question, so the sound
-    /// toggle can't silence them. Other prompts respect the toggle, with one hard
-    /// exception: a translation prompt never speaks. Its options are the Japanese
-    /// words, so pronouncing the answer reads the correct button aloud. (Any prompt
-    /// that shows the word — kana/kanji — already identifies it, so audio adds the
-    /// reading without giving anything away.)
+    /// Audio questions must always speak — the clip *is* the question, so the sound toggle
+    /// can't silence them. Everything else respects the toggle, and which prompts may speak
+    /// at all is `TrainModel.promptAudioSafe`'s rule, shared so the two quizzes can't drift.
     private func autoPlay() {
         guard let q = model.question else { return }
         if q.from.isAudio { pronouncer.speak(q.answer) }
-        else if soundOn, q.from != .translation { pronouncer.speak(q.answer) }
+        else if soundOn, TrainModel.promptAudioSafe(from: q.from) { pronouncer.speak(q.answer) }
     }
 }
 

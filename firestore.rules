@@ -11,63 +11,202 @@ rules_version = '2';
 //
 // There is no Firebase Auth in this app (no accounts, and deliberately no
 // identifier of any kind — the app ships without App Tracking Transparency and
-// its privacy manifest declares no collected identifiers). Anonymous Auth would
-// mint a persistent UID per install and undo that, so spam protection comes from
-// **App Check** instead: enable enforcement for Firestore in the Firebase console
-// so only attested builds of the real app can reach this collection at all.
-// Without that toggle these rules still bound *what* can be written, but not
-// *who* can write it.
+// mints no install ID). Anonymous Auth would create a persistent UID per install
+// and undo that, so spam protection comes from **App Check** instead: enable
+// enforcement for Firestore in the Firebase console so only attested builds of
+// the real app can reach these collections at all. Without that toggle these
+// rules still bound *what* can be written, but not *who* can write it.
+//
+// ── Three collections, and why they aren't one ────────────────────────────────
+// `survey_feedback` requires `message` to be non-empty. A rating has no message
+// and an intro answer has no prose, so merging them would mean surrendering that
+// guard permanently for the field that matters most. Cardinality differs wildly
+// too — a rating row per star tap, a feedback row only from someone who writes —
+// and merged, the prose you actually want to read would drown in rating rows in a
+// console that is a document browser with no useful filtering.
+//
+// Nothing links rows across collections, by design: the app mints no identifier,
+// so two submissions from one person are unjoinable wherever they live. That also
+// means **the collections must not be summed as "responses"** — a low rater who
+// then writes feedback appears in both. `survey_rating` is the denominator;
+// `survey_feedback` is the subset who elaborated, and it carries its own `stars`
+// so a complaint is self-contained.
+//
+// ── Keep in step with the app ────────────────────────────────────────────────
+// `hasOnly`/`hasAll` close the field set, so adding or removing ANY field in
+// `Survey.Context.fields` or a payload rejects every write until these rules are
+// re-published. The rejection is invisible except as a console line and a
+// `survey_failed` analytics event — publish the rules and the build together.
+// `SurveyTests.contextKeysMatchThePublishedRules` pins the app's key set against
+// `context()` below so the drift fails a test instead of failing in production.
 service cloud.firestore {
   match /databases/{database}/documents {
 
     // One document per completed onboarding run. Skips and partial runs write
-    // nothing here — drop-off is counted in Analytics instead, which is what
-    // keeps this schema closed with no nullable fields or sentinel values.
+    // nothing — drop-off is counted in Analytics (`intro_skip`), which is what
+    // keeps this schema closed with no nullable fields.
+    //
+    // It adds no fields of its own: the three answers live in the shared context
+    // (every collection carries them, for segmentation), so here they are simply
+    // required to be *answered* rather than carrying the unanswered sentinels.
     match /survey_intro/{doc} {
       // Append-only. Denying update/delete matters as much as denying read:
       // auto-IDs are unguessable but not secret, and a write-only-means-any-write
       // rule would let someone overwrite or wipe collected answers.
       allow read, update, delete: if false;
 
-      allow create: if isValidIntro(request.resource.data);
+      allow create: if hasExactly(request.resource.data, [])
+                    && validContext(request.resource.data)
+                    && request.resource.data.knows_kana != 'unanswered'
+                    && request.resource.data.goal != 'unanswered'
+                    && request.resource.data.textbook_lesson >= 0;
     }
 
-    // Validate the whole document shape server-side. `hasOnly` closes the field
-    // set, and the enum checks mean a client-side typo can't silently invent a
-    // sixth `goal` value that quietly splits the data at analysis time.
-    function isValidIntro(d) {
-      return d.keys().hasOnly(['knows_kana', 'textbook_lesson', 'goal',
-                               'vocab_language', 'app_language',
-                               'app_version', 'os', 'platform', 'debug', 'v', 'at'])
-        && d.keys().hasAll(['knows_kana', 'textbook_lesson', 'goal',
-                            'vocab_language', 'app_language',
-                            'app_version', 'os', 'platform', 'debug', 'v', 'at'])
-        // Kana literacy is the one answer that changes app behaviour (a learner
-        // who can't read kana lands on the Kana tab, because lesson 1 rung 1 is
-        // a kana prompt and would otherwise be unreadable).
-        && d.knows_kana in ['none', 'hiragana', 'both']
-        // 0 = never studied Minna no Nihongo; 1-50 = the lesson they reached.
-        // Recorded only, so an out-of-range value is a client bug, not a threat.
+    // One row per star tap, written before the 4-vs-below branch so every rating
+    // is captured whatever happens next. Without it, 4-5★ vanishes into Apple's
+    // review sheet (which reports nothing back) and a 1-3★ who abandons the
+    // feedback form is lost entirely.
+    match /survey_rating/{doc} {
+      allow read, update, delete: if false;
+
+      allow create: if hasExactly(request.resource.data, ['stars'])
+                    && validContext(request.resource.data)
+                    && request.resource.data.stars is int
+                    && request.resource.data.stars >= 1
+                    && request.resource.data.stars <= 5;
+    }
+
+    // One row per submitted feedback form. Free text, which is exactly why `kind`
+    // sits beside it: a bucket the sender picked beats classifying their prose
+    // afterwards, and it is what makes the collection sortable at all.
+    //
+    // `kind` now has a second level under it: `area` for a bug report, and
+    // `lesson` + `item` for a wrong word. All three are always present and
+    // empty ('' / 0) when unanswered — `hasAll` closes the key set, so "not
+    // answered" has to be a value rather than a missing field.
+    match /survey_feedback/{doc} {
+      allow read, update, delete: if false;
+
+      allow create: if hasExactly(request.resource.data,
+                                  ['kind', 'area', 'message', 'email', 'source',
+                                   'stars', 'lesson', 'item'])
+                    && validContext(request.resource.data)
+                    && request.resource.data.kind in ['bug', 'idea', 'content', 'other']
+                    // Which part of the app is broken — asked only after
+                    // `Something's broken`, so '' is both "another kind of report"
+                    // and "a bug report that skipped the question". The app scopes
+                    // it to the kind (`FeedbackDraft.submittedArea`), which is why
+                    // an `area` on a non-bug row can't arrive here at all.
+                    && request.resource.data.area in ['audio', 'kana', 'lesson',
+                                                      'challenge', 'today', 'watch',
+                                                      'purchase', 'other', '']
+                    // Required and non-empty — an empty report is the one thing the
+                    // form refuses to send. Capped generously enough for a real
+                    // paragraph, tightly enough that this isn't free storage.
+                    && request.resource.data.message is string
+                    && request.resource.data.message.size() > 0
+                    && request.resource.data.message.size() <= 2000
+                    // Optional, and never gates sending. Absent is "" rather than a
+                    // missing key, so the schema stays closed. No format check: a
+                    // typo'd address beats a discarded report, and the sender may
+                    // not want a reply at all.
+                    && request.resource.data.email is string
+                    && request.resource.data.email.size() <= 254
+                    // `card` is the flag on a practice screen — the route that
+                    // arrives already knowing which word it is about, and the only
+                    // one that fills `lesson` and `item`.
+                    && request.resource.data.source in ['settings', 'rating', 'hidden', 'card']
+                    // 1-5 when opened from the star row, 0 otherwise — present
+                    // either way, so a complaint reads next to its own rating.
+                    && request.resource.data.stars is int
+                    && request.resource.data.stars >= 0
+                    && request.resource.data.stars <= 5
+                    // The reported entry: `lesson` + `item` spell `Vocab.id`
+                    // ("2/tsukue"). The lesson is duplicated out of the id on
+                    // purpose — the console is a document browser, and sorting
+                    // content reports by lesson is what a reader wants first.
+                    //
+                    // 0 means no word is attached, and *also* means a kana item,
+                    // which belongs to no lesson: a kana report carries lesson 0
+                    // with a non-empty `item`, and `last_screen` says which table.
+                    && request.resource.data.lesson is int
+                    && request.resource.data.lesson >= 0
+                    && request.resource.data.lesson <= 50
+                    // Romaji, never the translation — that follows the sender's
+                    // `vocab_language` (which is in the context, so the reader can
+                    // resolve it), while the romaji means one thing in all 17.
+                    // The longest in the bundled data is 40 characters.
+                    && request.resource.data.item is string
+                    && request.resource.data.item.size() <= 60;
+    }
+
+    // Exactly the shared context plus this collection's own fields, and nothing
+    // else. Both halves matter: `hasOnly` stops a client writing junk, `hasAll`
+    // stops a partial document that would read as an unanswered question.
+    function hasExactly(d, own) {
+      return d.keys().hasOnly(context().concat(own))
+          && d.keys().hasAll(context().concat(own));
+    }
+
+    // `Survey.Context.fields` + the server-stamped `at`.
+    //
+    // Device *characteristics*, never a device identity: model, OS, languages and
+    // settings describe the machine and state a report came from, and none of them
+    // joins two rows back to one person.
+    function context() {
+      return ['platform', 'app_version', 'os', 'device',
+              'os_language', 'app_language', 'vocab_language', 'region',
+              'is_premium', 'tier', 'challenges_passed', 'kana_answered',
+              'sound_on', 'analytics_excluded', 'shown_fields',
+              'text_size', 'appearance', 'last_screen',
+              'knows_kana', 'goal', 'textbook_lesson',
+              'debug', 'v', 'at'];
+    }
+
+    function validContext(d) {
+      // Pinned to iOS: the field exists so an Android client could one day share
+      // these collections, but nothing else may claim to be this app.
+      return d.platform == 'iOS'
+        && d.app_version is string && d.app_version.size() <= 40
+        && d.os is string && d.os.size() <= 40
+        && d.device is string && d.device.size() <= 40
+        && d.os_language is string && d.os_language.size() <= 20
+        && d.app_language is string && d.app_language.size() <= 20
+        && d.vocab_language is string && d.vocab_language.size() <= 20
+        && d.region is string && d.region.size() <= 10
+        && d.is_premium is bool
+        && d.tier is string && d.tier.size() <= 20
+        && d.challenges_passed is int && d.challenges_passed >= 0
+        && d.kana_answered is int && d.kana_answered >= 0
+        && d.sound_on is bool
+        && d.analytics_excluded is bool
+        // Which of the four card fields are visible, comma-joined in a fixed
+        // order (e.g. "kanji,kana,romaji"). A report that "the word doesn't show"
+        // is very often that the sender hid it in `CardOptionsBar`.
+        && d.shown_fields is string && d.shown_fields.size() <= 40
+        // Dynamic Type category, shortened (e.g. "L", "XXL", "AX3"). Most
+        // "text is cut off" reports are an accessibility text size.
+        && d.text_size is string && d.text_size.size() <= 20
+        // `Theme` deliberately swaps the surface/canvas roles between light and
+        // dark, so a contrast complaint is meaningless without knowing which.
+        && d.appearance in ['light', 'dark']
+        // The most recent `Track.screen` name — the field that turns "the audio
+        // is broken" into "the audio is broken on Kana Write". "" before any
+        // screen has been recorded.
+        && d.last_screen is string && d.last_screen.size() <= 40
+        // The intro answers, carried by every collection so feedback and ratings
+        // can be segmented by prior experience and motive. `survey_intro` narrows
+        // these further above; elsewhere the unanswered sentinels are legitimate.
+        && d.knows_kana in ['none', 'hiragana', 'both', 'unanswered']
+        && d.goal in ['travel', 'jlpt', 'work', 'culture', 'other', 'unanswered']
         && d.textbook_lesson is int
-        && d.textbook_lesson >= 0
+        && d.textbook_lesson >= -1
         && d.textbook_lesson <= 50
-        && d.goal in ['travel', 'jlpt', 'work', 'culture', 'other']
-        // The 17 shipped languages. Two separate settings: the app's own UI
-        // language and the language Japanese words are translated into.
-        && d.vocab_language is string
-        && d.vocab_language.size() <= 10
-        && d.app_language is string
-        && d.app_language.size() <= 10
-        && d.app_version is string
-        && d.app_version.size() <= 40
-        && d.os is string
-        && d.os.size() <= 40
-        && d.platform in ['iOS']
-        // True for a Debug build. `Survey` doesn't honour the analytics opt-out —
-        // a volunteered answer isn't telemetry — so development runs land here for
-        // real. This is how you filter them out when reading results.
+        // True for a Debug build. `Survey` deliberately doesn't honour the
+        // analytics opt-out — a volunteered answer isn't telemetry — so
+        // development runs land here for real, and this is how you filter them.
         && d.debug is bool
-        // Schema version, so a later question can be added without making every
+        // Schema version, so a later field can be added without making every
         // existing document ambiguous to whatever reads them.
         && d.v is int
         // Server-stamped: device clocks lie, and Firestore's offline queue can

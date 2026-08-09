@@ -61,16 +61,22 @@ struct FlashcardScreen<Element, Face: View>: View {
     private let revealLabel: String
     private let summary: (Int) -> String
     private let trackName: String?
+    private let reportItem: ((Element) -> Feedback.Item)?
     private let face: (Element, Bool) -> Face
 
     private let threshold: CGFloat = 100
 
+    /// `report` is what the flag in the toolbar sends: how to name the card on screen as a
+    /// reportable entry. Optional so a caller can decline the affordance entirely; both of
+    /// this screen's two callers supply one, which is what makes wiring it here cover both
+    /// the Lessons and the Kana flashcards at once.
     init(deck: FlashDeck<Element>,
          id: @escaping (Element) -> String,
          revealLabel: String,
          summary: @escaping (Int) -> String,
          trackName: String? = nil,
          speak: @escaping (Element) -> Void,
+         report: ((Element) -> Feedback.Item)? = nil,
          @ViewBuilder face: @escaping (Element, Bool) -> Face) {
         _deck = State(initialValue: deck)
         self.idOf = id
@@ -78,6 +84,7 @@ struct FlashcardScreen<Element, Face: View>: View {
         self.summary = summary
         self.trackName = trackName
         self.speak = speak
+        self.reportItem = report
         self.face = face
     }
 
@@ -96,12 +103,19 @@ struct FlashcardScreen<Element, Face: View>: View {
         .onAppear { autoPlay() }
         .onChange(of: deck.current.map(idOf)) { autoPlay() }
         .onChange(of: soundOn) { if soundOn { autoPlay() } }
-        // Same toolbar placement as every other quiz/practice screen (counter
-        // centered, sound toggle top-right) — was previously a custom inline
-        // row with its own accent-tinted button, out of step with the rest of the app.
+        // Same toolbar placement as every other quiz/practice screen: counter centered,
+        // controls top-right.
         .toolbar {
             ToolbarItem(placement: .principal) { progress }
-            ToolbarItem(placement: .topBarTrailing) { SoundToggle() }
+            // The flag leads the sound toggle, in that order on every screen carrying both.
+            // Only while a card is up: on the done screen there is no word on screen for a
+            // report to be about.
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                if let reportItem, let card = deck.current {
+                    ReportItemButton(item: reportItem(card))
+                }
+                SoundToggle()
+            }
         }
     }
 
