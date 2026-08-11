@@ -75,6 +75,9 @@ final class ChallengeResult {
         // one" marker, so a later replay shouldn't move it.
         if row.completedAt == nil && score >= Challenge.passScore { row.completedAt = .now }
 
+        // Any attempt counts toward the streak, passed or not — the streak measures
+        // showing up, and only rewarding passes would punish the harder rungs.
+        StudyDay.record(context: context)
         try? context.save()
         return row
     }

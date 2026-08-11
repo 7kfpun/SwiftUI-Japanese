@@ -52,6 +52,9 @@ struct DiagnosticsView: View {
     /// redraw on its own.
     @State private var ratingAsked = RatingPrompt.lastAskedAt != nil
     @State private var introAnswered = UserDefaults.standard.bool(forKey: Pref.introAnswered)
+    @State private var shareAskedAt = SharePrompt.lastAskedAt
+    @State private var showSharePrompt = false
+    @State private var showShareSheet = false
 
     private struct FeedbackRequest: Identifiable {
         let id = UUID()
@@ -99,6 +102,27 @@ struct DiagnosticsView: View {
                     Text("Rating")
                 } footer: {
                     Text("The star row routes exactly as it does after a passed rung: 4★ and up to Apple's review sheet, below that to the feedback sheet with the stars attached. Apple decides whether its own sheet appears and allows only a few impressions a year per install — nothing showing is not a bug.")
+                }
+
+                Section {
+                    // Same discipline as the star row above: shows the real sheet and
+                    // routes it the real way, bypassing only `shouldAsk`. The month-long
+                    // window is the one condition nothing can practise past.
+                    Button("Show the recommend nudge") { showSharePrompt = true }
+                    Button("Open the share sheet") { showShareSheet = true }
+                    LabeledContent("Nudge last shown",
+                                   value: SharePrompt.lastAskedAt
+                                       .map { $0.formatted(date: .abbreviated, time: .shortened) }
+                                       ?? "never")
+                    LabeledContent("Rungs required", value: "\(SharePrompt.challengesRequired)")
+                    Button("Reset the monthly window") {
+                        SharePrompt.resetAsked()
+                        shareAskedAt = SharePrompt.lastAskedAt
+                    }
+                } header: {
+                    Text("Recommend to a friend")
+                } footer: {
+                    Text("Fires after a passed rung once \(SharePrompt.challengesRequired) rungs are cleared, at most once every 30 days, free users included. It stands down entirely on any rung where the star row appears — the rating is rate-limited by Apple, this isn't. Sends people to \(Course.current.appStoreURL).")
                 }
 
                 Section {
@@ -181,6 +205,11 @@ struct DiagnosticsView: View {
             .sheet(item: $feedbackRequest) { request in
                 FeedbackView(source: request.source, stars: request.stars)
             }
+            .sheet(isPresented: $showSharePrompt) {
+                ShareSheetPrompt { showShareSheet = true }
+            }
+            .shareSheet(isPresented: $showShareSheet,
+                        items: [SharePrompt.appStoreURL, SharePrompt.shareText()])
         }
     }
 
@@ -272,5 +301,5 @@ struct DiagnosticsView: View {
     DiagnosticsView(pendingReplayIntro: .constant(false))
         .tint(Theme.accent)
         .environment(Store())
-        .modelContainer(for: [KanaResult.self, ChallengeResult.self], inMemory: true)
+        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self], inMemory: true)
 }

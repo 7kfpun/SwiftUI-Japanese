@@ -8,7 +8,7 @@ import SwiftUI
 /// express. Hoisting just these two makes that reachable while leaving every other
 /// screen's navigation alone.
 @Observable final class Router {
-    enum Tab: Hashable { case today, kana, lessons, settings }
+    enum Tab: Hashable { case today, kana, lessons, progress, settings }
 
     var tab: Tab = .today
     /// The Lessons tab's stack. Ordinary row taps append to this too, so a deep link and

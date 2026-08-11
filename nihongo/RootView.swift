@@ -38,6 +38,10 @@ struct RootView: View {
                 .tabItem { Label(L.t("Lessons"), systemImage: "list.bullet") }
                 .tag(Router.Tab.lessons)
 
+            banner(StatsView(), .today)
+                .tabItem { Label(L.t("Progress"), systemImage: "chart.bar") }
+                .tag(Router.Tab.progress)
+
             banner(SettingsView(), .about)
                 .tabItem { Label(L.t("Settings"), systemImage: "gearshape") }
                 .tag(Router.Tab.settings)
@@ -71,5 +75,5 @@ struct RootView: View {
         .tint(Theme.accent)
         .environment(Store())
         .environment(Router())
-        .modelContainer(for: [KanaResult.self, ChallengeResult.self], inMemory: true)
+        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self], inMemory: true)
 }

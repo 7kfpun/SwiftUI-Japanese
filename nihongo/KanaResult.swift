@@ -33,6 +33,9 @@ final class KanaResult {
         } else {
             context.insert(KanaResult(romaji: romaji, isCorrect: isCorrect))
         }
+        // Kana counts toward the streak too — it is free in full, so for a learner who
+        // hasn't bought anything it is the *only* way to keep one going.
+        StudyDay.record(context: context)
         try? context.save()
     }
 }

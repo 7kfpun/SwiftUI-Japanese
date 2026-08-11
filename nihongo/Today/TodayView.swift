@@ -41,8 +41,14 @@ struct TodayView: View {
     /// Furthest card reached in this deck, so `today_swipe` reports depth rather than
     /// raw swipe count — back-and-forth on the same two cards isn't engagement.
     @State private var deepestCard = 1
+    /// Recomputed on appear rather than observed: the streak can only change by answering
+    /// something, which always happens on another screen, so there is nothing to watch
+    /// while Today is visible.
+    @State private var streak = Streak(days: [])
 
     private var current: Vocab? { picks.indices.contains(index) ? picks[index] : picks.first }
+
+    private func reloadStreak() { streak = StudyDay.streak(context: context) }
 
     var body: some View {
         NavigationStack {
@@ -59,7 +65,16 @@ struct TodayView: View {
             .background(Theme.canvas)
             .navigationTitle(L.t("Today"))
             .navigationBarTitleDisplayMode(.inline)
-            .onAppear { loadPicks(); autoPlay(); Track.screen("today", ["lesson": lessonNumber]) }
+            // The streak belongs on the surface it measures. Today *is* the daily-habit
+            // screen, so the number sits in its bar rather than claiming a fifth tab for
+            // one integer — and a toolbar item costs no vertical space on a screen that
+            // already gives some to a banner.
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    StreakBadge(streak: streak) { router.tab = .progress }
+                }
+            }
+            .onAppear { loadPicks(); autoPlay(); reloadStreak(); Track.screen("today", ["lesson": lessonNumber]) }
             .onChange(of: language) { loadPicks() }
         }
     }
@@ -188,7 +203,7 @@ struct TodayView: View {
         var passed: [Int: Set<Int>] = [:]
         for row in rows where row.isPassed { passed[row.lesson, default: []].insert(row.index) }
 
-        for n in 1...50 {
+        for n in 1...Course.current.lessonCount {
             let total = Challenge.count(wordCount: VocabStore.lesson(n, language).entries.count)
             if (passed[n]?.count ?? 0) < total { return n }
         }
