@@ -5,21 +5,15 @@ import UIKit
 /// existing lifetime buyers / subscribers restore automatically (a non-consumable stays
 /// tied to the Apple ID forever; StoreKit 2 surfaces it via `currentEntitlements`).
 enum PremiumProduct {
-    static let lifetime = "com.kfpun.nihongo.premium.lifetime"
+    /// The IDs themselves live on `Course` — they are per-app and must never be shared
+    /// between two apps built from this codebase. Everything below is unchanged in shape.
+    static var lifetime: String { Course.current.products.lifetime }
     /// Current subscription lineup in App Store Connect. Note the uppercase M on 3M/6M:
     /// product IDs are case-sensitive and immutable, and the lowercase 2019 IDs are
     /// reserved forever, so the new products had to differ.
-    static let subscriptions = [
-        "com.kfpun.nihongo.premium.1m",
-        "com.kfpun.nihongo.premium.3M",
-        "com.kfpun.nihongo.premium.6M",
-    ]
+    static var subscriptions: [String] { Course.current.products.subscriptions }
     /// Legacy RN-era subscriptions — no longer sold, still honored so old buyers restore.
-    static let legacy = [
-        "com.kfpun.nihongo.premium.3m",
-        "com.kfpun.nihongo.premium.6m",
-        "com.kfpun.nihongo.premium.12m",
-    ]
+    static var legacy: [String] { Course.current.products.legacy }
     /// What the paywall sells.
     static let purchasable = subscriptions + [lifetime]
     /// Everything that grants premium (incl. legacy) — used for the entitlement scan.
@@ -34,7 +28,7 @@ enum PremiumProduct {
 /// lessons — fill the progress bar, earn the stars — and meets the paywall carrying
 /// that momentum, rather than being cut off mid-practice by a card quota.
 enum Gating {
-    static let freeLessonLimit = 3
+    static var freeLessonLimit: Int { Course.current.freeLessonLimit }
 
     /// True when a lesson needs premium (everything but Vocab List).
     static func isLocked(lesson number: Int, isPremium: Bool) -> Bool {

@@ -354,7 +354,7 @@ struct IntroView: View {
                     Stepper("", value: Binding(get: { textbookLesson },
                                                set: { textbookLesson = $0
                                                       answers.textbookLesson = $0 }),
-                            in: 1...50)
+                            in: 1...Course.current.lessonCount)
                         .labelsHidden()
                         .accessibilityLabel(L.t("Lesson %@", "\(textbookLesson)"))
                 }

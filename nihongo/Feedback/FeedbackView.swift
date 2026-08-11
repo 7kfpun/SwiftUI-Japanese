@@ -265,7 +265,7 @@ struct FeedbackView: View {
     /// nothing to resolve: no item, a kana item (`lesson == 0`), or a romaji that a data
     /// regeneration has since renamed.
     private var reportedVocab: Vocab? {
-        guard let item = draft.item, (1...50).contains(item.lesson) else { return nil }
+        guard let item = draft.item, Course.current.hasLesson(item.lesson) else { return nil }
         return VocabStore.lesson(item.lesson, language).entries.first { $0.romaji == item.romaji }
     }
 
@@ -387,12 +387,12 @@ struct ReportItemButton: View {
     FeedbackView(source: .rating, stars: 2)
         .tint(Theme.accent)
         .environment(Store())
-        .modelContainer(for: [KanaResult.self, ChallengeResult.self], inMemory: true)
+        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self], inMemory: true)
 }
 
 #Preview("From the flag") {
     FeedbackView(source: .card, item: Feedback.Item(lesson: 2, romaji: "tsukue"))
         .tint(Theme.accent)
         .environment(Store())
-        .modelContainer(for: [KanaResult.self, ChallengeResult.self], inMemory: true)
+        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self], inMemory: true)
 }

@@ -12,9 +12,16 @@ enum VocabStore {
 
     /// First-launch default for `Pref.translationLanguage`: the device language, so a
     /// Vietnamese user gets Vietnamese meanings without first finding Settings →
-    /// Meanings. `L.deviceDefault` already validates against `availableLanguages`
-    /// (same 17 codes as the UI languages), so it needs no second locale rule here.
-    static var deviceDefaultLanguage: String { L.deviceDefault }
+    /// Meanings.
+    ///
+    /// `L.deviceDefault` resolves the device language against the *UI* list, which is 17
+    /// codes for both apps. The meanings list is per-course and can be shorter — three
+    /// for JLPT — so the answer has to be re-checked against this dataset before it is
+    /// used, or a Vietnamese phone would select a language the data has no rows for.
+    static var deviceDefaultLanguage: String {
+        let ui = L.deviceDefault
+        return availableLanguages.contains(ui) ? ui : defaultLanguage
+    }
 
     private struct LessonDTO: Codable { let number: Int; let entries: [VocabEntry] }
     private struct MinnaData: Codable {
@@ -24,25 +31,31 @@ enum VocabStore {
     }
 
     private static let data: MinnaData = {
-        guard let url = Bundle.main.url(forResource: "MinnaData", withExtension: "json"),
+        guard let url = Bundle.main.url(forResource: Course.current.dataResource, withExtension: "json"),
               let raw = try? Data(contentsOf: url),
               let decoded = try? JSONDecoder().decode(MinnaData.self, from: raw)
-        else { fatalError("MinnaData.json missing — run scripts/build-minna-data.py") }
+        else { fatalError("\(Course.current.dataResource).json missing — run scripts/build-minna-data.py") }
         return decoded
     }()
 
     static var availableLanguages: [String] { data.languages }
 
     private static func build(_ language: String) -> [Lesson] {
-        let tr = data.translations[language] ?? [:]
+        // Fall back to English wholesale rather than per-entry: a stored preference can
+        // name a language this course doesn't carry (someone switching between the two
+        // apps, or a course that later drops a language), and the alternative is every
+        // word rendering with a blank meaning — which looks like broken data, not like
+        // a missing translation.
+        let tr = data.translations[language] ?? data.translations[defaultLanguage] ?? [:]
         return data.lessons.map { dto in
-            let byRomaji = tr[String(dto.number)] ?? [:]
+            // Keyed by romaji for Minna, by `key` for courses whose romaji isn't unique.
+            let byKey = tr[String(dto.number)] ?? [:]
             let items = dto.entries.map { e in
                 Vocab(lesson: dto.number,
                       kanji: e.kanji, kana: e.kana, romaji: e.romaji,
                       dictionary: e.dictionary, useKana: e.useKana ?? false,
-                      translation: byRomaji[e.romaji] ?? "",
-                      audio: e.audio)
+                      translation: byKey[e.key ?? e.romaji] ?? "",
+                      audio: e.audio, key: e.key)
             }
             return Lesson(number: dto.number, entries: items)
         }

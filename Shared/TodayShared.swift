@@ -16,7 +16,9 @@ import Foundation
 /// the watch complications then read it back through this same API.
 enum TodayShared {
     /// Create this App Group in Signing & Capabilities on BOTH the app and widget targets.
-    static let appGroup = "group.com.kfpun.nihongo"
+    /// Per course (see `Course`), so two apps built from this codebase never share a
+    /// container — they would otherwise overwrite each other's Today snapshot.
+    static var appGroup: String { Course.current.appGroup }
     private static let key = "today.snapshot"
 
     struct Word: Codable, Hashable {
@@ -33,15 +35,9 @@ enum TodayShared {
     /// because the three used to be hand-copied and "keep them identical" is not a rule
     /// anything can enforce; identical is the point, since it's the difference between
     /// "not synced yet" and "broken".
-    static let sampleWords: [Word] = [
-        .init(kana: "わたし", kanji: "私", romaji: "watashi", meaning: "I"),
-        .init(kana: "せんせい", kanji: "先生", romaji: "sensei", meaning: "teacher"),
-        .init(kana: "がくせい", kanji: "学生", romaji: "gakusei", meaning: "student"),
-        .init(kana: "ほん", kanji: "本", romaji: "hon", meaning: "book"),
-        .init(kana: "とけい", kanji: "時計", romaji: "tokei", meaning: "watch, clock"),
-        .init(kana: "でんわ", kanji: "電話", romaji: "denwa", meaning: "telephone"),
-        .init(kana: "くるま", kanji: "車", romaji: "kuruma", meaning: "car"),
-    ]
+    /// The deck itself is course-specific, so it lives on `Course`; this stays as the
+    /// name every caller already uses.
+    static var sampleWords: [Word] { Course.current.sampleWords }
 
     private static var store: UserDefaults? { UserDefaults(suiteName: appGroup) }
 

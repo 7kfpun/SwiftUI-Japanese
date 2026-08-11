@@ -93,7 +93,8 @@ final class TrainModel {
         self.to = (from == .translation || from == .audio) ? .kana : .translation
         // Degrade gracefully on empty data (bad regen) instead of crashing at launch.
         self.answer = vocab.first ?? Vocab(lesson: 0, kanji: "", kana: "", romaji: "",
-                                           dictionary: nil, useKana: false, translation: "", audio: nil)
+                                           dictionary: nil, useKana: false, translation: "", audio: nil,
+                                           key: nil)
         next()
     }
 

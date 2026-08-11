@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Every identifier here is deliberately distinct from nihongo.entitlements.
+	  Sharing any one of them would let the two apps read each other's state: a
+	  shared CloudKit container in particular would have JLPT lesson 12's
+	  ChallengeResult rows overwrite Minna lesson 12's, since the row key is a
+	  lesson number and nothing else.
+
+	  App Attest stays "production" for the same reason it does in nihongo's file:
+	  one entitlements file serves both configurations, so the value has to be the
+	  one TestFlight and the App Store need. DEBUG never uses App Attest — the
+	  factory hands back AppCheckDebugProvider instead.
+	-->
+	<key>com.apple.developer.devicecheck.appattest-environment</key>
+	<string>production</string>
+	<key>com.apple.developer.icloud-container-identifiers</key>
+	<array>
+		<string>iCloud.com.kfpun.jlptjp</string>
+	</array>
+	<key>com.apple.developer.icloud-services</key>
+	<array>
+		<string>CloudKit</string>
+	</array>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.kfpun.jlptjp</string>
+	</array>
+</dict>
+</plist>

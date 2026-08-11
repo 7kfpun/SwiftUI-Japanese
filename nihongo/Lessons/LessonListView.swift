@@ -14,12 +14,7 @@ struct LessonListView: View {
     /// push lesson + rung directly. Row taps append to the same path.
     @Environment(Router.self) private var router
 
-    private static let groups: [(String, ClosedRange<Int>)] = [
-        ("Beginning 1", 1...13),
-        ("Beginning 2", 14...25),
-        ("Advanced 1", 26...38),
-        ("Advanced 2", 39...50),
-    ]
+    private static let groups = Course.current.groups
 
     private var results: [Vocab] { searchVocab(query, in: VocabStore.allVocab(language)) }
 
@@ -30,7 +25,7 @@ struct LessonListView: View {
                 if query.isEmpty {
                     Picker("", selection: $group) {
                         ForEach(Self.groups.indices, id: \.self) { i in
-                            Text(L.t(Self.groups[i].0)).tag(i)
+                            Text(L.t(Self.groups[i].name)).tag(i)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -40,7 +35,7 @@ struct LessonListView: View {
 
                 List {
                     if query.isEmpty {
-                        ForEach(Self.groups[group].1, id: \.self) { n in
+                        ForEach(Self.groups[group].range, id: \.self) { n in
                             NavigationLink(value: VocabStore.lesson(n, language)) {
                                 LessonRow(number: n,
                                           done: passed[n] ?? 0,

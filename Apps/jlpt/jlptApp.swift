@@ -1,8 +1,16 @@
 import SwiftUI
 import SwiftData
 
+/// The JLPT app's entry point.
+///
+/// Deliberately a near-copy of `nihongoApp` rather than a shared base type. Everything
+/// that actually differs between the two apps is already expressed in `Course`, so what
+/// is left here is the handful of lines Swift requires to be per-target: the `@main`
+/// attribute (only one per module), and the URL scheme, which is a string in each app's
+/// Info.plist and cannot come from a shared constant without one app claiming the
+/// other's links.
 @main
-struct nihongoApp: App {
+struct jlptApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var store = Store()
     @State private var router = Router()
@@ -12,17 +20,15 @@ struct nihongoApp: App {
         let schema = Schema([KanaResult.self, ChallengeResult.self, StudyDay.self])
 
         // CloudKit private database first, so kana mastery and challenge progress
-        // follow the user across devices. Neither model carries `.unique` — CloudKit
-        // forbids it; see `ChallengeResult` for how uniqueness is enforced instead.
+        // follow the user across devices. The container name comes from `Course` —
+        // sharing Minna's would let JLPT lesson 12 overwrite Minna lesson 12, since a
+        // `ChallengeResult` is keyed by lesson number and nothing else.
         do {
             return try ModelContainer(
                 for: schema,
                 configurations: [ModelConfiguration(schema: schema,
                                                     cloudKitDatabase: .private(Course.current.cloudKitContainer))])
         } catch {
-            // No iCloud entitlement (open-source clone), no logged-in account on the
-            // simulator, or CloudKit refusing the schema — progress still matters
-            // locally, so fall back to the plain on-device store rather than dying.
             print("CloudKit store unavailable (\(error)) — falling back to local-only")
         }
 
@@ -47,17 +53,10 @@ struct nihongoApp: App {
         .modelContainer(sharedModelContainer)
     }
 
-    /// The widget's deep links.
-    ///
-    /// `nihongo://widget?lesson=N` — a tap on the card itself, which opens Today: the
-    /// widget *is* a Today card, so the tab holding the same deck is where a tap should
-    /// continue. It also makes the tap countable — a widget launch is otherwise
-    /// indistinguishable from any other cold start.
-    ///
-    /// `nihongo://challenge?lesson=N&index=C` — the "Ready for Challenge C?" call to
-    /// action, which lands on that lesson's mode list rather than the app's front door.
+    /// The widget's deep links — see `nihongoApp.handle` for what each one means. The
+    /// scheme is `jlpt`, so a link minted by one app can never open the other.
     private func handle(_ url: URL) {
-        guard url.scheme == "nihongo" else { return }
+        guard url.scheme == "jlpt" else { return }
         let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
         func int(_ name: String) -> Int? {
             items.first { $0.name == name }?.value.flatMap(Int.init)
@@ -69,18 +68,11 @@ struct nihongoApp: App {
             router.tab = .today
 
         case "challenge":
-            // `index` is read only for the analytics event — the link lands on the
-            // lesson's mode list, not the rung, so nothing navigates by it.
             guard let n = int("lesson"), Course.current.hasLesson(n) else { return }
             Track.event("widget_challenge_open", ["lesson": n, "index": int("index") ?? 0])
-            // Today keeps showing words for lessons a free user can't yet test on, so
-            // this link can legitimately name a locked lesson. Those stop at the
-            // Lessons list rather than dead-ending one screen deeper on the paywall.
             if Gating.isLocked(lesson: n, isPremium: store.isPremium) {
                 router.openLessonList()
             } else {
-                // The widget carries no language of its own — it renders whatever the
-                // app last published — so resolve the lesson in the app's current one.
                 let language = UserDefaults.standard.string(forKey: Pref.translationLanguage)
                     ?? VocabStore.deviceDefaultLanguage
                 router.openLesson(VocabStore.lesson(n, language))

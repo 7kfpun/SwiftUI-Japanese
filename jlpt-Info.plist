@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Without this the home screen reads "jlpt", the target name. -->
+	<key>CFBundleDisplayName</key>
+	<string>JLPT Daily</string>
+
+	<!-- Distinct from nihongo's `nihongo://`: iOS resolves a scheme claimed by two
+	     apps arbitrarily, so a shared one would let either app open the other's links. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.kfpun.jlptjp</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>jlpt</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- PLACEHOLDER: Google's public *test* app ID. It cannot be omitted —
+	     `AppDelegate` calls MobileAds.shared.start() unconditionally and the SDK
+	     raises at launch without this key — and it must not be nihongo's, which
+	     would file this app's impressions under the Minna app. Replace once the
+	     JLPT app exists in AdMob. Ad *unit* IDs need no placeholder: `AdConfig`
+	     already falls back to Google's public test units when Secrets.plist is
+	     absent, and it is absent here by design.
+
+	     Xcode's plist editor strips these comments whenever it rewrites the file,
+	     so this warning also lives in the plan's Phase 4 notes. -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
+
+	<!-- Omitting this makes App Store Connect ask about export compliance on every
+	     single upload. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
+	<!-- The handwriting scoring template face (`Theme.jpStrokes`) — functional, not
+	     decorative: `KanaWriteView` draws its stroke-order glyph from it. -->
+	<key>UIAppFonts</key>
+	<array>
+		<string>KanjiStrokeOrders_v4.005.ttf</string>
+	</array>
+</dict>
+</plist>
