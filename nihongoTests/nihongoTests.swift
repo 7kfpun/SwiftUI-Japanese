@@ -348,6 +348,35 @@ struct FlashcardTests {
 // MARK: - Train / kana quiz models
 
 struct TrainTests {
+    /// Random mode deals from a shuffled bag, not independent draws.
+    ///
+    /// This was `vocab.randomElement()` per question — sampling *with replacement*, which
+    /// meets only ~64% of a lesson's words over a full pass whatever the lesson size,
+    /// spending the rest re-asking words just seen. Users reported it as being tested on
+    /// a handful of words, which is exactly what it was.
+    @MainActor
+    @Test func randomOrderAsksEveryWordBeforeRepeatingAny() {
+        let vocab = VocabStore.lesson(7).entries
+        let model = TrainModel(vocab: vocab)
+
+        // One full pass: every word exactly once, no repeats, nothing missed.
+        var seen = [model.answer.id]
+        for _ in 1..<vocab.count {
+            model.next()
+            seen.append(model.answer.id)
+        }
+        #expect(Set(seen).count == vocab.count)
+        #expect(Set(seen) == Set(vocab.map(\.id)))
+
+        // And across the refill boundary the next word is never the one on screen —
+        // two independent shuffles would collide there at a very noticeable rhythm.
+        for _ in 0..<(vocab.count * 3) {
+            let before = model.answer.id
+            model.next()
+            #expect(model.answer.id != before)
+        }
+    }
+
     /// Two chips, one swipe: the answer is present and the distractor differs on BOTH
     /// faces — a shared display text is unanswerable, a shared prompt text (homophones,
     /// なん/なに-style glosses) is a second right answer that would be marked wrong.

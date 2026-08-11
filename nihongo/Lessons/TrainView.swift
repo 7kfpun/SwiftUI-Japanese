@@ -79,6 +79,21 @@ final class TrainModel {
     }
     private var cursor = -1
 
+    /// Words not yet drawn in this pass through the lesson, in a shuffled order.
+    ///
+    /// Random mode used to be `vocab.randomElement()` on every question — independent
+    /// draws *with replacement*, which is "random" in the coin-flip sense and wrong here.
+    /// Over one lesson's worth of questions that meets only ~64% of the words whatever
+    /// the lesson size: a third of the run is spent re-asking words you just saw while
+    /// others never appear at all. Reported as 好像都幾個單字再考 — it feels like being
+    /// tested on a handful of words, because you are.
+    ///
+    /// A bag fixes it without becoming predictable: every word is asked once before any
+    /// is asked twice, and the order inside each pass is freshly shuffled, so there is
+    /// still nothing to memorise. This is the same reason a shuffled deck beats rolling
+    /// a die for the next card.
+    private var bag: [Vocab] = []
+
     /// `ordered` is an init parameter, not something the view applies afterwards: the
     /// first `next()` happens right here, so a value assigned later would arrive after
     /// a word had already been drawn at random — and `didSet` would then anchor the
@@ -105,9 +120,24 @@ final class TrainModel {
             cursor = (cursor + 1) % vocab.count
             answer = vocab[cursor]
         } else {
-            answer = vocab.randomElement()!
+            answer = drawFromBag()
         }
         rebuildOptions()
+    }
+
+    /// The next word of the current pass, refilling and reshuffling when the pass ends.
+    ///
+    /// The refill also avoids handing back the word already on screen, which is the one
+    /// place a bag can still produce an immediate repeat: the last word of one pass and
+    /// the first of the next are independent shuffles, so without this they collide
+    /// every `vocab.count` questions — and a repeat at exactly that rhythm is the most
+    /// noticeable kind.
+    private func drawFromBag() -> Vocab {
+        if bag.isEmpty {
+            bag = vocab.shuffled()
+            if bag.count > 1, bag.last?.id == answer.id { bag.swapAt(bag.count - 1, 0) }
+        }
+        return bag.removeLast()
     }
 
     /// The prompt can be any form incl. audio; the answer options can't be audio.
