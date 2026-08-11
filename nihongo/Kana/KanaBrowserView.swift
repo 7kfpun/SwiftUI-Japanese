@@ -41,6 +41,25 @@ struct KanaBrowserView: View {
         ("あ", "Hiragana"), ("ア", "Katakana"), ("A", "Romaji"),
     ]
 
+    /// Distinct kana in the chart the picker is currently showing. Counted from the
+    /// chart, never hardcoded — it is generated from the submodule, and a literal here
+    /// would rot the moment a row changed.
+    private var totalInTable: Int {
+        Set(table.rows.flatMap { $0 }.filter { !$0.isEmpty }.map(\.romaji)).count
+    }
+
+    /// How many of those the learner has got right most recently.
+    ///
+    /// Deduped by romaji before counting, because a CloudKit merge can leave two rows for
+    /// the same kana — and because じ/ぢ and ず/づ share a romaji by design, so the chart
+    /// itself has fewer distinct answers than it has tiles.
+    private var learnedInTable: Int {
+        let inTable = Set(table.rows.flatMap { $0 }.filter { !$0.isEmpty }.map(\.romaji))
+        let latest = Dictionary(results.map { ($0.romaji, $0) },
+                                uniquingKeysWith: { $0.timestamp >= $1.timestamp ? $0 : $1 })
+        return inTable.filter { latest[$0]?.isCorrect == true }.count
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
@@ -49,6 +68,9 @@ struct KanaBrowserView: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
+
+                KanaProgressBar(learned: learnedInTable, total: totalInTable)
+                    .padding(.horizontal)
 
                 ScrollView {
                     // Combos (拗音) are 3 columns instead of 5 — forcing them square
@@ -222,6 +244,68 @@ struct KanaTileView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(border, lineWidth: 1.5))
+    }
+}
+
+/// How much of the chart on screen is learned — a bar *and* a percentage.
+///
+/// Both, deliberately. The bar is what you read without looking: a glance says "nearly
+/// there" and the gap at the end is the pull. The number is what makes it a target —
+/// "94%" invites finishing in a way a partly-filled capsule doesn't, and it's the thing
+/// worth saying out loud.
+///
+/// Scoped to the **selected table**, not all of kana. Three reachable hundreds beat one
+/// distant one, and the bar visibly resets when the picker moves, which turns switching
+/// charts into a new goal rather than a lost one.
+private struct KanaProgressBar: View {
+    let learned: Int
+    let total: Int
+
+    private var fraction: Double { total > 0 ? Double(learned) / Double(total) : 0 }
+    private var percent: Int { Int((fraction * 100).rounded()) }
+    private var isComplete: Bool { total > 0 && learned >= total }
+
+    var body: some View {
+        VStack(spacing: 6) {
+            HStack(spacing: 6) {
+                // The reward for finishing is a different glyph, not just a full bar —
+                // a filled capsule alone reads as "nothing left to do" rather than "well
+                // done", and those feel different.
+                Image(systemName: isComplete ? "checkmark.seal.fill" : "chart.bar.fill")
+                    .font(.caption)
+                    .foregroundStyle(isComplete ? Color.streak : Theme.accent)
+                    .symbolEffect(.bounce, value: isComplete)
+
+                Text(isComplete ? L.t("Complete!") : "\(learned) / \(total)")
+                    .font(.footnote.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(isComplete ? Color.streak : .secondary)
+
+                Spacer(minLength: 8)
+
+                Text("\(percent)%")
+                    .font(.footnote.weight(.bold).monospacedDigit())
+                    .foregroundStyle(isComplete ? Color.streak : Theme.accent)
+                    .contentTransition(.numericText())
+            }
+
+            Capsule()
+                .fill(Color.secondary.opacity(0.18))
+                .frame(height: 8)
+                .overlay(alignment: .leading) {
+                    GeometryReader { geo in
+                        Capsule()
+                            .fill(isComplete ? Color.streak : Theme.accent)
+                            .frame(width: geo.size.width * max(0, min(fraction, 1)))
+                    }
+                }
+                .clipShape(Capsule())
+        }
+        // One animation on the fraction drives the bar, the number and the glyph swap
+        // together, so the whole row moves as one thing when an answer lands.
+        .animation(.spring(duration: 0.45), value: fraction)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(L.t("Kana"))
+        .accessibilityValue("\(learned) / \(total)")
     }
 }
 

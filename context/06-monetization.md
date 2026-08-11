@@ -141,10 +141,11 @@ Two conditions, each ruling out a different bad moment:
 
 - **A rung they just passed**, not one they failed — asking after a failure asks how they
   feel about failing.
-- **15 rungs cleared** (`ChallengeResult.totalPassed`, deduped by id so a sync merge
-  can't fire it early), i.e. roughly a lesson or two of real use.
-- **Not again for ~90 days** (`Pref.ratingAskedAt`). Roughly quarterly, sized to sit
-  inside Apple's own cap of about three review impressions a year rather than fight it.
+- **21 rungs cleared** (`ChallengeResult.totalPassed`, deduped by id so a sync merge
+  can't fire it early), i.e. several lessons of real use — high enough that the ask lands
+  on people who stayed rather than people who looked.
+- **Not again for 60 days** (`Pref.ratingAskedAt`), which still sits inside Apple's own
+  cap of about three review impressions a year rather than fighting it.
 
 It used to be **subscribers only**, on the reasoning that a free user's most likely
 rating is about the paywall. That was dropped: it silenced the ask for the large

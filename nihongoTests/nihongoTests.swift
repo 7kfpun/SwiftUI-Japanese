@@ -116,17 +116,17 @@ struct DataTests {
         // Asking someone to recommend the app straight after they failed asks a different
         // question than the one intended.
         #expect(!SharePrompt.shouldAsk(passed: false, passedCount: enough, ratingShown: false))
-        // Zero passed rungs is still too few, even at a threshold of one — the nudge is
-        // tied to something having visibly worked, not to opening the app.
+        // The nudge is tied to something having visibly worked, not to opening the app.
         #expect(!SharePrompt.shouldAsk(passed: true, passedCount: 0, ratingShown: false))
+        #expect(!SharePrompt.shouldAsk(passed: true, passedCount: enough - 1, ratingShown: false))
 
-        // Far lower bar than the rating: this asks for a recommendation, not a public
-        // verdict, so it fires on the first rung anyone clears.
-        #expect(SharePrompt.challengesRequired == 1)
+        // Lower bar than the rating: this asks for a recommendation, not a public verdict.
+        #expect(SharePrompt.challengesRequired == 7)
         #expect(SharePrompt.challengesRequired < RatingPrompt.challengesRequired)
-        // Monthly here, quarterly there — and separate keys, or each would silence the
-        // other the moment one of them stamped.
-        #expect(SharePrompt.askAgainAfter < RatingPrompt.askAgainAfter)
+        // The windows are deliberately the *same* two months — the prompts are separated
+        // by what they ask for and by the rating's precedence, not by cadence. What must
+        // never converge is the storage: one key would let each silence the other.
+        #expect(SharePrompt.askAgainAfter == RatingPrompt.askAgainAfter)
         #expect(Pref.shareAskedAt != Pref.ratingAskedAt)
     }
 
@@ -1018,6 +1018,24 @@ struct LocalizationTests {
         // UI languages, so equality here would be asserting a coincidence.
         #expect(Set(table.keys) == Set(L.availableLanguages))
         #expect(Set(VocabStore.availableLanguages).isSubset(of: Set(table.keys)))
+
+        // Both pickers use one order, so they read as one family rather than two
+        // unrelated lists of the same languages. The meanings list is a subset, so the
+        // check is that it appears in the same *relative* order, not that it matches.
+        let ui = L.availableLanguages
+        let meanings = VocabStore.availableLanguages
+        #expect(meanings == ui.filter(meanings.contains))
+
+        // Every shipped language is placed deliberately. `L.ordered` appends unknowns
+        // rather than dropping them, so without this a new language would quietly land
+        // at the bottom of both pickers and nobody would notice.
+        #expect(Set(table.keys).isSubset(of: Set(L.languageOrder)))
+
+        // The two Chinese variants are one decision to a reader; half a list between them
+        // looks like a bug.
+        let zh = try #require(L.languageOrder.firstIndex(of: "zh"))
+        let zhHant = try #require(L.languageOrder.firstIndex(of: "zh-Hant"))
+        #expect(abs(zh - zhHant) == 1)
         let enKeys = try #require(table["en"]).keys
         #expect(enKeys.count >= 70)
         for (lang, dict) in table {

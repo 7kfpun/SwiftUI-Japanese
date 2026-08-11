@@ -1,8 +1,8 @@
 import SwiftUI
 import StoreKit
 
-/// Asks for a rating, but only from people who have earned the right to be asked and
-/// only once.
+/// Asks for a rating, but only from people who have earned the right to be asked, and
+/// no more than once every couple of months.
 ///
 /// The shape is deliberate: a *custom* star picker first, and only a 4- or 5-star pick
 /// hands off to Apple's real review sheet. A low pick opens the in-app feedback sheet
@@ -24,11 +24,11 @@ enum RatingPrompt {
     /// every star tap writes a `Survey.Rating` row before branching, so a later ask buys
     /// sentiment over time even on the occasions Apple's sheet never appears.
     ///
-    /// Roughly quarterly, chosen to sit *inside* Apple's own cap of about three review
+    /// Two months, which still sits inside Apple's own cap of about three review
     /// impressions per year rather than fighting it. Asking monthly would mostly produce
     /// star rows whose 4★+ half leads nowhere, which reads to the user as a prompt that
     /// does nothing.
-    static let askAgainAfter: TimeInterval = 90 * 24 * 60 * 60
+    static let askAgainAfter: TimeInterval = 60 * 24 * 60 * 60
 
     /// When the star row was last shown, or `nil` if it never has been.
     static var lastAskedAt: Date? {
@@ -66,7 +66,7 @@ enum RatingPrompt {
     /// Clears the timer so the *real* trigger can fire again on this install.
     ///
     /// For the Diagnostics screen only, and it exists because the window is the one
-    /// condition of `shouldAsk` that no amount of practising can undo — you can't wait three
+    /// condition of `shouldAsk` that no amount of practising can undo — you can't wait two
     /// months to test a build. Nothing in the app calls this. Note it does not lift Apple's
     /// own throttle on the review sheet, so a second earned ask will still show the star row
     /// and may well show nothing after it.
@@ -78,9 +78,13 @@ enum RatingPrompt {
         UserDefaults.standard.removeObject(forKey: Pref.ratingAsked)
     }
 
-    /// Rungs that must be passed before the app asks anything. Roughly a lesson or two
-    /// of real use — enough that there's something to rate.
-    static let challengesRequired = 15
+    /// Rungs that must be passed before the app asks anything. Several lessons of real
+    /// use — enough that there's something to rate, and high enough that the ask lands on
+    /// people who stayed rather than people who looked.
+    ///
+    /// Deliberately three times the share nudge's bar: this one asks for a public verdict
+    /// on the App Store, that one asks someone to mention the app to a friend.
+    static let challengesRequired = 21
 
     /// Whether to ask after this challenge.
     ///

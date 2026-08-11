@@ -1,11 +1,13 @@
 import SwiftUI
 
-/// Sharing the app, and the once-a-month nudge that suggests it.
+/// Sharing the app, and the nudge that suggests it.
 ///
-/// Kept strictly separate from `RatingPrompt` even though the two look alike: a rating is
-/// a favour asked of a paying user and is rate-limited by Apple; a recommendation is a
-/// favour asked of anyone and is limited only by taste. They share a moment (a just-passed
-/// rung) and must never share an *occasion* — see `ChallengeView`, where the rating wins.
+/// Kept strictly separate from `RatingPrompt` even though the two now look very alike:
+/// same audience, same two-month window, same trigger. What differs is what they ask for
+/// — a public verdict on the App Store versus a word to a friend — and that the rating is
+/// additionally rate-limited by Apple, whose own throttle no code here can see. They share
+/// a moment (a just-passed rung) and must never share an *occasion*: see `ChallengeView`,
+/// where the rating gets first refusal.
 enum SharePrompt {
     /// The listing to send people to. Course-specific: the two apps are two listings, and
     /// a JLPT user recommending the Minna app would be the kind of mistake nobody reports.
@@ -22,19 +24,17 @@ enum SharePrompt {
 
     // MARK: - The nudge
 
-    /// One a month, at most. Long enough that it reads as a suggestion rather than a
+    /// Two months, at most. Long enough that it reads as a suggestion rather than a
     /// campaign; short enough to catch someone in a stretch of real use.
-    static let askAgainAfter: TimeInterval = 30 * 24 * 60 * 60
+    static let askAgainAfter: TimeInterval = 60 * 24 * 60 * 60
 
-    /// Rungs passed before the app suggests anything — one, i.e. the first rung anyone
-    /// clears.
+    /// Rungs passed before the app suggests anything — about a lesson's worth.
     ///
-    /// Far below the rating's 15, and deliberately: that one asks for a public verdict on
+    /// A third of the rating's 21, and deliberately: that one asks for a public verdict on
     /// the App Store, which needs a body of experience behind it. This asks someone to
-    /// mention the app to a friend, and the best moment for that is the first time it
-    /// visibly worked, while the feeling is fresh. The 30-day window is what keeps a low
-    /// bar from becoming a nag — someone who says no is not asked again for a month.
-    static let challengesRequired = 1
+    /// mention the app to a friend, which needs only that the app has visibly worked for
+    /// them.
+    static let challengesRequired = 7
 
     static var lastAskedAt: Date? {
         let stamp = UserDefaults.standard.double(forKey: Pref.shareAskedAt)
@@ -50,8 +50,8 @@ enum SharePrompt {
         UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: Pref.shareAskedAt)
     }
 
-    /// Diagnostics only — the month is the one condition no amount of practising can
-    /// undo, and nobody can wait a month to test a build. Nothing in the app calls this.
+    /// Diagnostics only — the two-month window is the one condition no amount of
+    /// practising can undo. Nothing in the app calls this.
     static func resetAsked() {
         UserDefaults.standard.removeObject(forKey: Pref.shareAskedAt)
     }
@@ -61,11 +61,11 @@ enum SharePrompt {
     /// `ratingShown` is the important argument. Both prompts trigger on a passed rung, and
     /// a user who just answered the star row being handed a second sheet would read the
     /// app as begging. The rating takes precedence because Apple rate-limits it to a
-    /// handful of impressions a year; this one comes back next month regardless.
+    /// handful of impressions a year, so a wasted occasion costs it more; this one is
+    /// limited only by the window here.
     ///
-    /// Not restricted to subscribers, unlike the rating: a free user recommending the app
-    /// is exactly the person this is for, and there is nothing to be embarrassed about in
-    /// a lesson they got for free.
+    /// Its lower bar is the other half of that split — someone with a lesson's worth of
+    /// rungs behind them has enough to recommend, if not yet enough to review.
     static func shouldAsk(passed: Bool, passedCount: Int, ratingShown: Bool) -> Bool {
         passed && !ratingShown && passedCount >= challengesRequired && mayAskAgain
     }

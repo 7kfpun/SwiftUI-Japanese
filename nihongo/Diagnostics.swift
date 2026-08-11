@@ -122,7 +122,7 @@ struct DiagnosticsView: View {
                 } header: {
                     Text("Recommend to a friend")
                 } footer: {
-                    Text("Fires after a passed rung once \(SharePrompt.challengesRequired) rungs are cleared, at most once every 30 days, free users included. It stands down entirely on any rung where the star row appears — the rating is rate-limited by Apple, this isn't. Sends people to \(Course.current.appStoreURL).")
+                    Text("Fires after a passed rung once \(SharePrompt.challengesRequired) rungs are cleared, at most once every \(Int(SharePrompt.askAgainAfter / 86_400)) days. It stands down entirely on any rung where the star row appears — the rating is additionally rate-limited by Apple, so a wasted occasion costs it more. Sends people to \(Course.current.appStoreURL).")
                 }
 
                 Section {

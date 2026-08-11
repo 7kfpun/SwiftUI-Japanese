@@ -38,7 +38,13 @@ enum VocabStore {
         return decoded
     }()
 
-    static var availableLanguages: [String] { data.languages }
+    /// The meaning languages this course ships, in the app's one canonical order.
+    ///
+    /// Sorted rather than taken as-is from the data file: the file's order is whatever
+    /// the build script's `LANGS`/`ORDER` happened to be, and the meanings picker sitting
+    /// in a different order from the interface picker made two lists of the same
+    /// languages look unrelated. See `L.languageOrder`.
+    static var availableLanguages: [String] { L.ordered(data.languages) }
 
     private static func build(_ language: String) -> [Lesson] {
         // Fall back to English wholesale rather than per-entry: a stored preference can

@@ -33,8 +33,8 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
     /// Pauses. Long enough to say the word back before the next one starts — that gap is
     /// the practice, not dead air. The meaning follows its Japanese more closely than the
     /// next word follows the meaning, so the ear can group the pair.
-    private static let betweenWords: TimeInterval = 0.9
-    private static let beforeMeaning: TimeInterval = 0.45
+    private static let betweenWords: TimeInterval = 1.2
+    private static let beforeMeaning: TimeInterval = 0.65
 
     override init() { super.init(); synth.delegate = self }
 

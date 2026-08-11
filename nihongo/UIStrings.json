@@ -177,7 +177,8 @@
     "Learn Japanese with me": "Learn Japanese with me",
     "Bookmarks": "Bookmarks",
     "Bookmark": "Bookmark",
-    "Tap the star beside any word to save it here.": "Tap the star beside any word to save it here."
+    "Tap the star beside any word to save it here.": "Tap the star beside any word to save it here.",
+    "Complete!": "Complete!"
   },
   "zh": {
     "Kana": "假名",
@@ -357,7 +358,8 @@
     "Learn Japanese with me": "和我一起学日语",
     "Bookmarks": "收藏",
     "Bookmark": "收藏",
-    "Tap the star beside any word to save it here.": "点击单词旁的星号即可收藏到这里。"
+    "Tap the star beside any word to save it here.": "点击单词旁的星号即可收藏到这里。",
+    "Complete!": "全部完成！"
   },
   "zh-Hant": {
     "Kana": "假名",
@@ -537,7 +539,8 @@
     "Learn Japanese with me": "和我一起學日語",
     "Bookmarks": "收藏",
     "Bookmark": "收藏",
-    "Tap the star beside any word to save it here.": "點一下單字旁的星號就能收藏到這裡。"
+    "Tap the star beside any word to save it here.": "點一下單字旁的星號就能收藏到這裡。",
+    "Complete!": "全部完成！"
   },
   "vi": {
     "Kana": "Kana",
@@ -717,7 +720,8 @@
     "Learn Japanese with me": "Học tiếng Nhật cùng mình",
     "Bookmarks": "Đã lưu",
     "Bookmark": "Lưu",
-    "Tap the star beside any word to save it here.": "Chạm ngôi sao bên cạnh từ để lưu vào đây."
+    "Tap the star beside any word to save it here.": "Chạm ngôi sao bên cạnh từ để lưu vào đây.",
+    "Complete!": "Hoàn thành!"
   },
   "de": {
     "Kana": "Kana",
@@ -897,7 +901,8 @@
     "Learn Japanese with me": "Lern Japanisch mit mir",
     "Bookmarks": "Lesezeichen",
     "Bookmark": "Lesezeichen",
-    "Tap the star beside any word to save it here.": "Tippe auf den Stern neben einem Wort, um es hier zu speichern."
+    "Tap the star beside any word to save it here.": "Tippe auf den Stern neben einem Wort, um es hier zu speichern.",
+    "Complete!": "Geschafft!"
   },
   "th": {
     "Kana": "คานะ",
@@ -1077,7 +1082,8 @@
     "Learn Japanese with me": "มาเรียนภาษาญี่ปุ่นด้วยกัน",
     "Bookmarks": "รายการที่บันทึก",
     "Bookmark": "บันทึก",
-    "Tap the star beside any word to save it here.": "แตะดาวข้างคำศัพท์เพื่อบันทึกไว้ที่นี่"
+    "Tap the star beside any word to save it here.": "แตะดาวข้างคำศัพท์เพื่อบันทึกไว้ที่นี่",
+    "Complete!": "ครบแล้ว!"
   },
   "my": {
     "Kana": "ကာနာ",
@@ -1257,7 +1263,8 @@
     "Learn Japanese with me": "ကျွန်ုပ်နှင့်အတူ ဂျပန်စာ လေ့လာပါ",
     "Bookmarks": "မှတ်သားထားသူများ",
     "Bookmark": "မှတ်သားရန်",
-    "Tap the star beside any word to save it here.": "ဤနေရာတွင် သိမ်းရန် စကားလုံးဘေးက ကြယ်ကို နှိပ်ပါ။"
+    "Tap the star beside any word to save it here.": "ဤနေရာတွင် သိမ်းရန် စကားလုံးဘေးက ကြယ်ကို နှိပ်ပါ။",
+    "Complete!": "ပြီးပါပြီ!"
   },
   "es": {
     "Kana": "Kana",
@@ -1437,7 +1444,8 @@
     "Learn Japanese with me": "Aprende japonés conmigo",
     "Bookmarks": "Guardados",
     "Bookmark": "Guardar",
-    "Tap the star beside any word to save it here.": "Toca la estrella junto a una palabra para guardarla aquí."
+    "Tap the star beside any word to save it here.": "Toca la estrella junto a una palabra para guardarla aquí.",
+    "Complete!": "¡Completado!"
   },
   "fr": {
     "Kana": "Kana",
@@ -1617,7 +1625,8 @@
     "Learn Japanese with me": "Apprends le japonais avec moi",
     "Bookmarks": "Favoris",
     "Bookmark": "Favori",
-    "Tap the star beside any word to save it here.": "Touche l'étoile à côté d'un mot pour l'enregistrer ici."
+    "Tap the star beside any word to save it here.": "Touche l'étoile à côté d'un mot pour l'enregistrer ici.",
+    "Complete!": "Terminé !"
   },
   "ru": {
     "Kana": "Кана",
@@ -1797,7 +1806,8 @@
     "Learn Japanese with me": "Учи японский вместе со мной",
     "Bookmarks": "Закладки",
     "Bookmark": "Закладка",
-    "Tap the star beside any word to save it here.": "Нажмите звёздочку рядом со словом, чтобы сохранить его здесь."
+    "Tap the star beside any word to save it here.": "Нажмите звёздочку рядом со словом, чтобы сохранить его здесь.",
+    "Complete!": "Готово!"
   },
   "bn": {
     "Kana": "কানা",
@@ -1977,7 +1987,8 @@
     "Learn Japanese with me": "আমার সঙ্গে জাপানি শিখুন",
     "Bookmarks": "বুকমার্ক",
     "Bookmark": "বুকমার্ক",
-    "Tap the star beside any word to save it here.": "এখানে সংরক্ষণ করতে যেকোনো শব্দের পাশের তারায় ট্যাপ করুন।"
+    "Tap the star beside any word to save it here.": "এখানে সংরক্ষণ করতে যেকোনো শব্দের পাশের তারায় ট্যাপ করুন।",
+    "Complete!": "সম্পূর্ণ!"
   },
   "hi": {
     "Kana": "काना",
@@ -2157,7 +2168,8 @@
     "Learn Japanese with me": "मेरे साथ जापानी सीखें",
     "Bookmarks": "बुकमार्क",
     "Bookmark": "बुकमार्क",
-    "Tap the star beside any word to save it here.": "किसी शब्द के आगे बने तारे पर टैप करके उसे यहाँ सहेजें।"
+    "Tap the star beside any word to save it here.": "किसी शब्द के आगे बने तारे पर टैप करके उसे यहाँ सहेजें।",
+    "Complete!": "पूरा हुआ!"
   },
   "ta": {
     "Kana": "கானா",
@@ -2337,7 +2349,8 @@
     "Learn Japanese with me": "என்னுடன் ஜப்பானிய மொழி கற்றுக்கொள்ளுங்கள்",
     "Bookmarks": "புக்மார்க்குகள்",
     "Bookmark": "புக்மார்க்",
-    "Tap the star beside any word to save it here.": "இங்கே சேமிக்க எந்த சொல்லுக்கும் அருகிலுள்ள நட்சத்திரத்தைத் தட்டவும்."
+    "Tap the star beside any word to save it here.": "இங்கே சேமிக்க எந்த சொல்லுக்கும் அருகிலுள்ள நட்சத்திரத்தைத் தட்டவும்.",
+    "Complete!": "முடிந்தது!"
   },
   "te": {
     "Kana": "కానా",
@@ -2517,7 +2530,8 @@
     "Learn Japanese with me": "నాతో జపనీస్ నేర్చుకోండి",
     "Bookmarks": "బుక్‌మార్క్‌లు",
     "Bookmark": "బుక్‌మార్క్",
-    "Tap the star beside any word to save it here.": "ఇక్కడ సేవ్ చేయడానికి ఏదైనా పదం పక్కన ఉన్న నక్షత్రాన్ని నొక్కండి."
+    "Tap the star beside any word to save it here.": "ఇక్కడ సేవ్ చేయడానికి ఏదైనా పదం పక్కన ఉన్న నక్షత్రాన్ని నొక్కండి.",
+    "Complete!": "పూర్తయింది!"
   },
   "fil": {
     "Kana": "Kana",
@@ -2697,7 +2711,8 @@
     "Learn Japanese with me": "Mag-aral ng Hapon kasama ako",
     "Bookmarks": "Mga bookmark",
     "Bookmark": "Bookmark",
-    "Tap the star beside any word to save it here.": "I-tap ang bituin sa tabi ng kahit anong salita para i-save dito."
+    "Tap the star beside any word to save it here.": "I-tap ang bituin sa tabi ng kahit anong salita para i-save dito.",
+    "Complete!": "Kumpleto!"
   },
   "id": {
     "Kana": "Kana",
@@ -2877,7 +2892,8 @@
     "Learn Japanese with me": "Belajar bahasa Jepang bersamaku",
     "Bookmarks": "Markah",
     "Bookmark": "Markah",
-    "Tap the star beside any word to save it here.": "Ketuk bintang di samping kata untuk menyimpannya di sini."
+    "Tap the star beside any word to save it here.": "Ketuk bintang di samping kata untuk menyimpannya di sini.",
+    "Complete!": "Selesai!"
   },
   "ko": {
     "Kana": "가나",
@@ -3057,6 +3073,7 @@
     "Learn Japanese with me": "저와 함께 일본어를 배워요",
     "Bookmarks": "북마크",
     "Bookmark": "북마크",
-    "Tap the star beside any word to save it here.": "단어 옆의 별을 누르면 여기에 저장됩니다."
+    "Tap the star beside any word to save it here.": "단어 옆의 별을 누르면 여기에 저장됩니다.",
+    "Complete!": "완료!"
   }
 }
