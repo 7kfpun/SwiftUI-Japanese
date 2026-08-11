@@ -23,7 +23,15 @@ Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
   filepath: File.expand_path(env.fetch("ASC_KEY_PATH")),
 )
 
-app = Spaceship::ConnectAPI::App.find("com.kfpun.nihongo")
+# Which app to inspect: `ruby asc_state.rb [minna|jlpt]`, default minna.
+APPS = { "minna" => ["com.kfpun.nihongo", "fastlane/minna/metadata"],
+         "nihongo" => ["com.kfpun.nihongo", "fastlane/minna/metadata"],
+         "jlpt" => ["com.kfpun.jlptjp", "fastlane/jlpt/metadata"] }
+bundle_id, metadata_dir = APPS.fetch(ARGV[0] || "minna") do
+  abort("unknown app #{ARGV[0].inspect} — expected one of: #{APPS.keys.join(', ')}")
+end
+
+app = Spaceship::ConnectAPI::App.find(bundle_id)
 puts "app #{app.id} — #{app.name}"
 
 puts "\nversions:"
@@ -56,6 +64,6 @@ end
 # Locale folders on disk vs. locales that exist in App Store Connect. Anything in
 # the first list and not the second gets no text — `ta` is deliberately in that
 # position (see fastlane/Fastfile's header note).
-on_disk = Dir.children("fastlane/metadata").select { |d| File.directory?("fastlane/metadata/#{d}") }
+on_disk = Dir.children(metadata_dir).select { |d| File.directory?("#{metadata_dir}/#{d}") }
 in_asc = info ? info.get_app_info_localizations.map(&:locale) : []
 puts "\nmetadata/ folders with no ASC localization: #{(on_disk - in_asc).sort.join(', ')}"

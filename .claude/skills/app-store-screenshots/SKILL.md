@@ -1,20 +1,21 @@
 ---
 name: app-store-screenshots
-description: Generate the framed, titled App Store marketing screenshots in fastlane/screenshots/ with fastlane/generate_framed_screenshots.py — which must run under `arch -x86_64 python3` because the installed Pillow is x86_64-only — and audit the localized copy with its `--check` mode before rendering. Use when asked to "regenerate the screenshots", "update the screenshot titles/captions", "add a locale to the screenshots", "the Russian screenshots look wrong / show boxes", or when a headline is clipped or renders as tofu. Also documents how the raw simulator captures are produced, and that per-locale fonts are chosen for glyph coverage, not taste.
+description: Generate the framed, titled App Store marketing screenshots in fastlane/minna/screenshots/ with fastlane/generate_framed_screenshots.py — which must run under `arch -x86_64 python3` because the installed Pillow is x86_64-only — and audit the localized copy with its `--check` mode before rendering. Use when asked to "regenerate the screenshots", "update the screenshot titles/captions", "add a locale to the screenshots", "the Russian screenshots look wrong / show boxes", or when a headline is clipped or renders as tofu. Also documents how the raw simulator captures are produced, and that per-locale fonts are chosen for glyph coverage, not taste.
 when_to_use: regenerate App Store screenshots, framed screenshots, screenshot captions, screenshot titles, add a screenshot locale, tofu boxes in screenshots, clipped headline, Pillow architecture error, arch -x86_64, incompatible architecture x86_64 arm64, capture raw screenshots, generate_framed_screenshots
 allowed-tools: Bash, Read, Edit
 ---
 
 # Generating the framed App Store screenshots
 
-**Two apps ship from this repo.** These paths are nihongo's. The JLPT app's live under
-`fastlane/jlpt/screenshots/`, and the upload lane takes `app:` —
-`fastlane ios screenshots app:jlpt`. `generate_framed_screenshots.py` still writes only
-nihongo's; a JLPT run needs its own `LOCALES` table and output dir.
+**Two apps ship from this repo, one folder each.** Everything below lives under
+`fastlane/<app>/` — `minna/` (the nihongo app) and `jlpt/`. The script takes
+`--app <name>`, defaulting to minna, and that one flag switches the captures read, the
+folder written **and** the copy table together. The upload lane takes `app:` the same
+way: `fastlane ios screenshots app:jlpt`. `nihongo` is accepted as an alias for `minna`.
 
-`fastlane/screenshots/<locale>/<key>-<device>.png` is **generated** by
+`fastlane/minna/screenshots/<locale>/<key>-<device>.png` is **generated** by
 `fastlane/generate_framed_screenshots.py` from the hand-captured raw shots in
-`fastlane/screenshot_raw/`. `CLAUDE.md` lists it as a generated tree: never touch
+`fastlane/minna/screenshot_raw/`. `CLAUDE.md` lists it as a generated tree: never touch
 the PNGs, edit the script.
 
 Pure Pillow, no ImageMagick (frameit's own tool needs `convert`, which isn't
@@ -126,7 +127,7 @@ folder name.
   `COPY`/`LOCALES` is curated to exactly 10 keys — note the deliberate gaps at
   `05` and `10`/`13`/`14`. Add an eleventh and only the first ten alphabetically
   upload, with no error.
-- **Every subdirectory of `fastlane/screenshots/` is read as a locale** by
+- **Every subdirectory of `fastlane/minna/screenshots/` is read as a locale** by
   `Deliver::Loader::LanguageFolder`. Nothing but locale folders may live there —
   that is why the raw captures sit in a separate top-level `screenshot_raw/`. Don't
   add a scratch or backup folder under `screenshots/`.
@@ -138,7 +139,7 @@ silently.
 
 ## Where the raw captures come from — needs explicit permission
 
-`fastlane/screenshot_raw/iphone/*.png` and `ipad/*.png` are produced by
+`fastlane/minna/screenshot_raw/iphone/*.png` and `ipad/*.png` are produced by
 `nihongoUITests/ScreenshotTests.swift`, one small test per screen, each launching
 the app fresh so a hiccup costs one shot rather than the run. It launches with
 `-SCREENSHOTS` (hides the ad banner) and `-introAnswered YES` (skips the intro,
@@ -163,7 +164,7 @@ xcrun xcresulttool export attachments \
 
 That writes UUID-named files plus a `manifest.json` mapping
 `suggestedHumanReadableName` → `exportedFileName`; rename by that mapping into
-`fastlane/screenshot_raw/<device>/<name>.png`. `fastlane/screenshot_raw/watch/`
+`fastlane/minna/screenshot_raw/<device>/<name>.png`. `fastlane/minna/screenshot_raw/watch/`
 exists but no code path consumes it — the script has no watch device bucket.
 
 ## Uploading
@@ -204,4 +205,4 @@ call, not yours**; state them and stop.
 
 Worth knowing before any overwrite: ASC can hold sets with no counterpart on
 disk. `en-US` currently has an `APP_WATCH_SERIES_10` set (uploaded separately from
-`fastlane/screenshot_raw/watch/`), and a regenerate-and-overwrite drops it.
+`fastlane/minna/screenshot_raw/watch/`), and a regenerate-and-overwrite drops it.

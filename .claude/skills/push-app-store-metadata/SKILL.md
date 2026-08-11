@@ -1,6 +1,6 @@
 ---
 name: push-app-store-metadata
-description: Push App Store Connect text metadata (name, subtitle, description, keywords, release notes, promotional text, URLs) from fastlane/metadata/ — including when `fastlane deliver` cannot be used because the version isn't in a state its hardcoded filter recognises, in which case Spaceship::ConnectAPI is driven directly. Use when asked to "push the metadata", "update the App Store description/keywords/release notes", "upload the store text", or when a metadata lane hangs retrying "Cannot find edit app store version" for ten minutes and fails. Also covers why `bundle exec` must be pinned to the system Ruby here, and why `ta` is silently dropped.
+description: Push App Store Connect text metadata (name, subtitle, description, keywords, release notes, promotional text, URLs) from fastlane/minna/metadata/ — including when `fastlane deliver` cannot be used because the version isn't in a state its hardcoded filter recognises, in which case Spaceship::ConnectAPI is driven directly. Use when asked to "push the metadata", "update the App Store description/keywords/release notes", "upload the store text", or when a metadata lane hangs retrying "Cannot find edit app store version" for ten minutes and fails. Also covers why `bundle exec` must be pinned to the system Ruby here, and why `ta` is silently dropped.
 when_to_use: push App Store metadata, update the App Store description, upload keywords, release notes, fastlane deliver, fastlane metadata lane, Cannot find edit app store version, deliver retrying with backoff, bundle exec broken, GemNotFound, ta not uploading, App Store Connect localizations
 allowed-tools: Bash, Read, Edit
 ---
@@ -14,7 +14,7 @@ allowed-tools: Bash, Read, Edit
 because `deliver` resolves both by convention and would push one app's copy to the
 other's listing while reporting success. See `APPS` at the top of the Fastfile.
 
-Source of truth is `fastlane/metadata/<locale>/*.txt` — 14 locale folders,
+Source of truth is `fastlane/minna/metadata/<locale>/*.txt` — 14 locale folders,
 each with `name`, `subtitle`, `description`, `keywords`, `promotional_text`,
 `release_notes`, `support_url`, `marketing_url`, `privacy_url`. The lanes live in
 `fastlane/Fastfile`; read its header note before anything else, it is current.
@@ -107,7 +107,7 @@ target = vers.find { |v| v.version_string == "3.0.0" }   # name it, don't infer 
 
 Spaceship::ConnectAPI::AppStoreVersionLocalization
   .all(app_store_version_id: target.id).each do |loc|
-    dir = "fastlane/metadata/#{loc.locale}"
+    dir = "fastlane/minna/metadata/#{loc.locale}"
     next unless File.directory?(dir)
     attrs = {}
     { "description.txt" => :description, "keywords.txt" => :keywords,
@@ -140,7 +140,7 @@ The second, blocking reason is worse: `ta` **doesn't exist on the App Store
 version at all**. Step 0 confirms it — 13 ASC localizations (`de-DE`, `en-US`,
 `es-ES`, `fr-FR`, `hi`, `id`, `ja`, `ko`, `ru`, `th`, `vi`, `zh-Hans`, `zh-Hant`)
 against 14 folders on disk. So there's no destination even going around
-fastlane. `fastlane/metadata/ta` is inert reference copy by decision; don't chase
+fastlane. `fastlane/minna/metadata/ta` is inert reference copy by decision; don't chase
 it as a bug. Shipping it means adding Tamil in App Store Connect first.
 
 `fil` used to sit in the same state and was removed outright — store metadata and

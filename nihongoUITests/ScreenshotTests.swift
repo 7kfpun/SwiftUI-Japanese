@@ -106,7 +106,10 @@ final class ScreenshotTests: XCTestCase {
 
     @MainActor
     func test11LessonLearn() throws {
-        guard openLessonMode("Learn"), wait(app.buttons["Ordered"]) else { return }
+        // `row`, not `app.buttons`: "Ordered" is a segment of a `Picker`, and how a
+        // segmented control publishes its segments is exactly the kind of thing that
+        // changes between OS releases — this shot went missing that way.
+        guard openLessonMode("Learn"), wait(row("Ordered")) else { return }
         shot("11-lesson-learn")
     }
 
@@ -123,9 +126,9 @@ final class ScreenshotTests: XCTestCase {
         openTab("Lessons")
         // "Challenge 1", not "Challenge" — the bare word is also the section header, and two
         // matches make a singular query fail for reasons unrelated to the test.
-        guard tap(app.staticTexts["Lesson 1"]),
+        guard tap(row("Lesson 1")),
               wait(app.staticTexts["Vocab List"]),
-              tap(app.staticTexts["Challenge 1"]),
+              tap(row("Challenge 1")),
               wait(app.buttons["Next"]) else { return }
         shot("12-lesson-quiz")
     }
@@ -160,8 +163,48 @@ final class ScreenshotTests: XCTestCase {
     /// Lessons tab → Lesson 1 → the given mode row.
     private func openLessonMode(_ mode: String) -> Bool {
         openTab("Lessons")
-        guard tap(app.staticTexts["Lesson 1"]), wait(app.staticTexts["Vocab List"]) else { return false }
-        return tap(app.staticTexts[mode])
+        guard tap(row("Lesson 1")), wait(app.staticTexts["Vocab List"]) else { return false }
+        return tap(row(mode))
+    }
+
+    /// A tappable list row carrying `label`.
+    ///
+    /// Not `app.staticTexts[label]`. A row built with `.accessibilityElement(children:
+    /// .combine)` — every lesson row is — publishes the *row* as one element and leaves
+    /// its inner text present but **not hittable**, so a query for the static text finds
+    /// something that `tap` will poll on until it times out. The test then passes, having
+    /// captured nothing, which is how four screenshots went missing without a failure.
+    ///
+    /// Ordered widest-net-last: the button and cell forms are what a combined row
+    /// actually publishes, and the static text stays as the fallback for the plain rows
+    /// that never combined anything.
+    /// Polls rather than resolving once: called straight after a navigation, none of the
+    /// candidates exist yet, and an eager version would fall through to the static text
+    /// every time — reintroducing the same silent non-hittable wait it exists to avoid.
+    private func row(_ label: String, _ timeout: TimeInterval = 3) -> XCUIElement {
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            for candidate in [app.buttons[label], app.otherElements[label]] where candidate.exists {
+                return candidate
+            }
+            // Two rules here, both learned the hard way.
+            //
+            // `element(boundBy:)` after a count check, never `.firstMatch`: on a compound
+            // `.containing` query `firstMatch` short-circuits to the first element of the
+            // *base* query and ignores the filter, so it tapped the top row of the list
+            // whatever label was asked for.
+            //
+            // And the **last** match, not the first. A label can appear on a section
+            // header as well as a row — SelectModeView's mode section is headed "Learn"
+            // and also contains a "Learn" row — and a header sorts before the rows it
+            // heads. Tapping the header does nothing, the guard then times out, and the
+            // test passes having captured nothing. Same collision the "Challenge 1"
+            // comment above warns about, which is the other place it bit.
+            let cells = app.cells.containing(.staticText, identifier: label)
+            if cells.count > 0 { return cells.element(boundBy: cells.count - 1) }
+            Thread.sleep(forTimeInterval: 0.2)
+        } while Date() < deadline
+        return app.staticTexts[label]
     }
 
     /// Switch tab (tab bar buttons; falls back to a plain button match).

@@ -44,13 +44,13 @@ vendor/
 # Firebase Hosting deploy cache
 .firebase/
 
-# App Store screenshot pipeline. Both the raw captures (fastlane/screenshot_raw/)
-# and the generated uploads (fastlane/screenshots/) are tracked, so the exact
-# listing imagery is reproducible from a clean clone — the raw ones especially,
-# since re-capturing needs a specific simulator + iOS version and the UI drifts.
-# Regenerate the uploads with fastlane/generate_framed_screenshots.py. Device frame
-# PNGs stay ignored: they're a cache auto-downloaded from fastlane's own public
-# frameit-frames CDN (see ensure_frame()).
+# App Store screenshot pipeline, per app: fastlane/<app>/screenshot_raw/ and
+# fastlane/<app>/screenshots/ are both tracked, so the exact listing imagery is
+# reproducible from a clean clone — the raw ones especially, since re-capturing
+# needs a specific simulator + iOS version and the UI drifts. Regenerate the uploads
+# with `generate_framed_screenshots.py --app <app>`. Device frame PNGs stay ignored
+# and are NOT per-app: they're a cache auto-downloaded from fastlane's own public
+# frameit-frames CDN (see ensure_frame()), and the same phone holds either app.
 fastlane/screenshot_frames/
 scripts/__pycache__/
 fastlane/__pycache__/

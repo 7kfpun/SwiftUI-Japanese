@@ -26,7 +26,7 @@ first and follow its index; it is kept current and is the fastest way in.
 | `nihongo/Resources/MinnaData.json`, `KanaChart.json`, `Resources/audio/{vocab,kana}/` | `scripts/build-minna-data.py` ← `minna/` submodule |
 | `Apps/jlpt/Resources/JLPTData.json`, `Resources/audio/` | `scripts/build-jlpt-data.py` ← the same submodule's `jlpt/` half |
 | `web/**` (except `privacy.html`, `terms.html`) | `scripts/build-web.py` — all copy lives in its `T` dict |
-| `fastlane/screenshots/**` | `fastlane/generate_framed_screenshots.py` ← `fastlane/screenshot_raw/` |
+| `fastlane/minna/screenshots/**` | `fastlane/generate_framed_screenshots.py` ← `fastlane/minna/screenshot_raw/` |
 
 ## Seams — go through them, don't bypass
 

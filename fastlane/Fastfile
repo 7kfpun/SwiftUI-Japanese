@@ -1,7 +1,7 @@
 default_platform(:ios)
 
 # `ta` is NOT uploaded to App Store Connect, by decision — don't chase it as a bug. Its
-# text under fastlane/metadata/ta is written and current; it just has nowhere to go.
+# text under fastlane/minna/metadata/ta is written and current; it just has nowhere to go.
 #
 # Two independent reasons, and the second is the blocking one:
 #
@@ -32,8 +32,9 @@ def asc_api_key
 end
 
 # ---------------------------------------------------------------------------
-# Two apps are built from this repo. Every lane takes `app:` and defaults to
-# nihongo, so `fastlane ios metadata` still means what it always did.
+# Two apps are built from this repo, and everything they own is filed under
+# fastlane/<app>/ — metadata, screenshots and raw captures alike. Every lane takes
+# `app:` and defaults to minna.
 #
 # This indirection is not tidiness. `deliver` resolves the target app from the
 # Appfile and finds copy at `fastlane/metadata` **by convention** — so before
@@ -41,17 +42,15 @@ end
 # description to Minna's listing and reported success. Nothing would have
 # looked wrong. Every lane below therefore passes `app_identifier`,
 # `metadata_path` and `screenshots_path` explicitly and never relies on a
-# default, so the wrong pairing can't happen silently.
-#
-# nihongo deliberately keeps the unprefixed paths: they are the ones in git
-# history, in the skills, and in generate_framed_screenshots.py's output dir.
+# default, so the wrong pairing can't happen silently — and now there is no
+# unprefixed path left for a default to accidentally find.
 APPS = {
-  "nihongo" => {
+  "minna" => {
     identifier: "com.kfpun.nihongo",
     scheme: "nihongo",
-    metadata: "fastlane/metadata",
-    screenshots: "fastlane/screenshots",
-    privacy: "fastlane/app_privacy_details.json",
+    metadata: "fastlane/minna/metadata",
+    screenshots: "fastlane/minna/screenshots",
+    privacy: "fastlane/minna/app_privacy_details.json",
   },
   "jlpt" => {
     identifier: "com.kfpun.jlptjp",
@@ -62,10 +61,17 @@ APPS = {
   },
 }.freeze
 
+# The app is `nihongo`, its course is `minna`, and both names are load-bearing
+# elsewhere — the Xcode target and bundle id say nihongo, Course.id and the data
+# submodule say minna. The folders are named for the course so the two apps read as
+# siblings; this alias means either name works and neither is a wrong guess.
+APP_ALIASES = { "nihongo" => "minna" }.freeze
+
 def app_config(options)
-  name = (options[:app] || "nihongo").to_s
+  name = (options[:app] || "minna").to_s
+  name = APP_ALIASES.fetch(name, name)
   config = APPS[name]
-  UI.user_error!("unknown app '#{name}' — expected one of: #{APPS.keys.join(', ')}") unless config
+  UI.user_error!("unknown app '#{name}' — expected one of: #{(APPS.keys + APP_ALIASES.keys).join(", ")}") unless config
   UI.message("→ #{name} (#{config[:identifier]})")
   config
 end

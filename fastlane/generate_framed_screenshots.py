@@ -74,10 +74,24 @@ import urllib.request
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RAW_DIR = os.path.join(ROOT, "fastlane/screenshot_raw/iphone")
-IPAD_RAW_DIR = os.path.join(ROOT, "fastlane/screenshot_raw/ipad")
+# Device frames are the one shared asset — the same phone, whichever app is inside it.
 FRAMES_DIR = os.path.join(ROOT, "fastlane/screenshot_frames")
-OUT_DIR = os.path.join(ROOT, "fastlane/screenshots")
+
+# Two apps ship from this repo, and each owns a folder. `--app jlpt` switches the
+# captures read, the folder written, and the marketing copy — all three together,
+# because rendering one app's copy over the other's captures produces files that
+# look completely plausible and are wrong.
+APP = "minna"
+
+
+def app_paths(app):
+    base = os.path.join(ROOT, "fastlane", app)
+    return (os.path.join(base, "screenshot_raw/iphone"),
+            os.path.join(base, "screenshot_raw/ipad"),
+            os.path.join(base, "screenshots"))
+
+
+RAW_DIR, IPAD_RAW_DIR, OUT_DIR = app_paths(APP)
 FRAMES_CDN = "https://fastlane.github.io/frameit-frames/latest"
 
 # Display faces, one per script. The house style is *rounded* — it matches the
@@ -114,7 +128,11 @@ DEVICES = {
     # aspect) purely as decorative device art; it doesn't affect the required
     # output pixel size.
     "ipad13": dict(canvas=(2064, 2752), frame="Apple iPad Pro (12.9-inch) (4th generation) Silver.png",
-                   off=(96, 102), off_w=2048, raw_dir=IPAD_RAW_DIR),
+                   # `ipad=True`, not `raw_dir=IPAD_RAW_DIR`. A path baked in here is
+                   # captured at import time, so `--app` could not move it — and the
+                   # iPad shots silently rendered one app's captures under the other
+                   # app's copy, which looks entirely plausible and is wrong.
+                   off=(96, 102), off_w=2048, ipad=True),
 }
 
 # headline, subtitle for each raw screenshot (<raw dir>/<key>.png), per App
@@ -325,6 +343,43 @@ LOCALES = {
 # Locales that ship another locale's rendered images verbatim. Simplified Chinese
 # readers get the Traditional copy rather than an empty screenshot set; swap this
 # for a real "zh-Hans" block in LOCALES above once the copy is translated.
+
+# The JLPT app's copy. Only the locales its listing actually carries — en-US and
+# zh-Hant, with zh-Hans aliased onto the latter by LOCALE_ALIASES below.
+#
+# Two lines deliberately differ from minna's beyond the numbers. `08-lessons` names
+# no textbook (Guideline 5.2), and `09-vocab-list` does not say "17 languages": this
+# app's *interface* is 17, but its meanings are English and Traditional Chinese, and
+# the screenshot is the most-seen surface of the three that could get that wrong.
+JLPT_LOCALES = {
+    "en-US": {
+        "01-today": ("Track your progress", "Every day, at a glance"),
+        "02-kana-table": ("Hiragana & Katakana", "The complete kana charts"),
+        "03-kana-flashcards": ("Kana flashcards", "Flip, listen, remember"),
+        "04-kana-quiz-classic": ("Kana quizzes", "Test yourself, kana by kana"),
+        "06-kana-listening": ("Listening practice", "Every kana spoken, to help it stick"),
+        "07-kana-write": ("Write practice", "Real stroke order, real memory"),
+        "08-lessons": ("201 lessons, N5 to N1", "7,972 words in teaching order"),
+        "09-vocab-list": ("Hear every word", "All 7,972, spoken and explained"),
+        "11-lesson-learn": ("Learn mode", "Swipe through new words with audio"),
+        "12-lesson-quiz": ("Lesson quizzes", "Check what you've really learned"),
+    },
+    "zh-Hant": {
+        "01-today": ("追蹤你的學習進度", "每天一目了然"),
+        "02-kana-table": ("五十音", "完整的平假名與片假名表"),
+        "03-kana-flashcards": ("五十音字卡", "翻牌、聆聽、記住"),
+        "04-kana-quiz-classic": ("五十音測驗", "一個一個考考自己"),
+        "06-kana-listening": ("聽力練習", "每個假名都朗讀，聽了就記住"),
+        "07-kana-write": ("書寫練習", "正確筆順，真正記住"),
+        "08-lessons": ("201 課，N5 到 N1", "7,972 個單字，依教學順序"),
+        "09-vocab-list": ("每個單字都能聽", "全部 7,972 個，有發音也有解釋"),
+        "11-lesson-learn": ("學習模式", "滑動瀏覽新單字並聽發音"),
+        "12-lesson-quiz": ("課程測驗", "檢查你真正學到了什麼"),
+    },
+}
+
+APP_LOCALES = {"minna": LOCALES, "jlpt": JLPT_LOCALES}
+
 LOCALE_ALIASES = {"zh-Hans": "zh-Hant"}
 
 # Per-locale typography. This used to be a single boolean — "CJK or not" — which
@@ -498,7 +553,8 @@ def compose_device(raw_shot: Image.Image, frame_path: str, off_x, off_y, off_w) 
 
 
 def process(locale, key, dev_key, dev):
-    raw_path = os.path.join(dev.get("raw_dir", RAW_DIR), f"{key}.png")
+    # Resolved per call, so `--app` reaches it — see the note in DEVICES.
+    raw_path = os.path.join(IPAD_RAW_DIR if dev.get("ipad") else RAW_DIR, f"{key}.png")
     if not os.path.exists(raw_path):
         return None
     raw = Image.open(raw_path)
@@ -631,11 +687,23 @@ if __name__ == "__main__":
     # e.g. "de-DE" renders only German, "01-today" renders that screenshot
     # for every locale, "de-DE:01-today" combines both filters.
     # `--check [locale]` audits fonts/copy and renders nothing.
-    if "--check" in sys.argv[1:]:
-        rest = [a for a in sys.argv[1:] if a != "--check"]
+    argv = sys.argv[1:]
+    # `--app <name>` selects which app is being framed. Consumed before anything
+    # else so the filter argument keeps its existing meaning.
+    if "--app" in argv:
+        i = argv.index("--app")
+        APP = argv[i + 1]
+        if APP not in APP_LOCALES:
+            sys.exit(f"unknown app {APP!r} — expected one of: {', '.join(APP_LOCALES)}")
+        del argv[i:i + 2]
+        RAW_DIR, IPAD_RAW_DIR, OUT_DIR = app_paths(APP)
+        LOCALES = APP_LOCALES[APP]
+
+    if "--check" in argv:
+        rest = [a for a in argv if a != "--check"]
         sys.exit(0 if check(rest[0] if rest else None) else 1)
 
-    arg = sys.argv[1] if len(sys.argv) > 1 else None
+    arg = argv[0] if argv else None
     locale_filter, key_filter = (None, None)
     if arg:
         if ":" in arg:
