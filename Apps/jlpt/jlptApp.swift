@@ -17,7 +17,7 @@ struct jlptApp: App {
     private let pronouncer = AudioPronouncer()
 
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([KanaResult.self, ChallengeResult.self, StudyDay.self])
+        let schema = Schema([KanaResult.self, ChallengeResult.self, StudyDay.self, Bookmark.self])
 
         // CloudKit private database first, so kana mastery and challenge progress
         // follow the user across devices. The container name comes from `Course` —

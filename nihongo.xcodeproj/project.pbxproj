@@ -106,8 +106,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		AA7CC705302A13DE007DA35F /* jlptUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = jlptUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA7CC51A302A13DE007DA35F /* jlpt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = jlpt.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA7CC705302A13DE007DA35F /* jlptUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = jlptUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AADA49653023578E006010F5 /* nihongo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = nihongo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AADA497430235791006010F5 /* nihongoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = nihongoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AADA497E30235791006010F5 /* nihongoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = nihongoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -200,13 +200,6 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		AA7CC703302A13DE007DA35F /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		AA7CC517302A13DE007DA35F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -216,6 +209,13 @@
 				AA7CC621302A13DE007DA35F /* FirebaseAnalytics in Frameworks */,
 				AA7CC624302A13DE007DA35F /* FirebaseAppCheck in Frameworks */,
 				AA7CC625302A13DE007DA35F /* GoogleMobileAds in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA7CC703302A13DE007DA35F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -314,29 +314,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		AA7CC701302A13DE007DA35F /* jlptUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = AA7CC708302A13DE007DA35F /* Build configuration list for PBXNativeTarget "jlptUITests" */;
-			buildPhases = (
-				AA7CC702302A13DE007DA35F /* Sources */,
-				AA7CC703302A13DE007DA35F /* Frameworks */,
-				AA7CC704302A13DE007DA35F /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				AA7CC707302A13DE007DA35F /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				AADA498130235791006010F5 /* nihongoUITests */,
-			);
-			name = jlptUITests;
-			packageProductDependencies = (
-			);
-			productName = jlptUITests;
-			productReference = AA7CC705302A13DE007DA35F /* jlptUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 		AA7CC519302A13DE007DA35F /* jlpt */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = AA7CC522302A13E1007DA35F /* Build configuration list for PBXNativeTarget "jlpt" */;
@@ -365,6 +342,29 @@
 			productName = jlpt;
 			productReference = AA7CC51A302A13DE007DA35F /* jlpt.app */;
 			productType = "com.apple.product-type.application";
+		};
+		AA7CC701302A13DE007DA35F /* jlptUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA7CC708302A13DE007DA35F /* Build configuration list for PBXNativeTarget "jlptUITests" */;
+			buildPhases = (
+				AA7CC702302A13DE007DA35F /* Sources */,
+				AA7CC703302A13DE007DA35F /* Frameworks */,
+				AA7CC704302A13DE007DA35F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AA7CC707302A13DE007DA35F /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				AADA498130235791006010F5 /* nihongoUITests */,
+			);
+			name = jlptUITests;
+			packageProductDependencies = (
+			);
+			productName = jlptUITests;
+			productReference = AA7CC705302A13DE007DA35F /* jlptUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 		AADA49643023578E006010F5 /* nihongo */ = {
 			isa = PBXNativeTarget;
@@ -585,14 +585,14 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		AA7CC704302A13DE007DA35F /* Resources */ = {
+		AA7CC518302A13DE007DA35F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		AA7CC518302A13DE007DA35F /* Resources */ = {
+		AA7CC704302A13DE007DA35F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -644,14 +644,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		AA7CC702302A13DE007DA35F /* Sources */ = {
+		AA7CC516302A13DE007DA35F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		AA7CC516302A13DE007DA35F /* Sources */ = {
+		AA7CC702302A13DE007DA35F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -736,46 +736,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		AA7CC709302A13DE007DA35F /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = CC4C8V8BXN;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kfpun.jlptjpUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = jlpt;
-			};
-			name = Debug;
-		};
-		AA7CC70A302A13DE007DA35F /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = CC4C8V8BXN;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kfpun.jlptjpUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = jlpt;
-			};
-			name = Release;
-		};
 		AA7CC523302A13E1007DA35F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -849,6 +809,46 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		AA7CC709302A13DE007DA35F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CC4C8V8BXN;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kfpun.jlptjpUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = jlpt;
+			};
+			name = Debug;
+		};
+		AA7CC70A302A13DE007DA35F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CC4C8V8BXN;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kfpun.jlptjpUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = jlpt;
 			};
 			name = Release;
 		};
@@ -1330,20 +1330,20 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		AA7CC708302A13DE007DA35F /* Build configuration list for PBXNativeTarget "jlptUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				AA7CC709302A13DE007DA35F /* Debug */,
-				AA7CC70A302A13DE007DA35F /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		AA7CC522302A13E1007DA35F /* Build configuration list for PBXNativeTarget "jlpt" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AA7CC523302A13E1007DA35F /* Debug */,
 				AA7CC524302A13E1007DA35F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA7CC708302A13DE007DA35F /* Build configuration list for PBXNativeTarget "jlptUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA7CC709302A13DE007DA35F /* Debug */,
+				AA7CC70A302A13DE007DA35F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

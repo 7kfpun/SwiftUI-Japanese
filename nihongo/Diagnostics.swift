@@ -301,5 +301,5 @@ struct DiagnosticsView: View {
     DiagnosticsView(pendingReplayIntro: .constant(false))
         .tint(Theme.accent)
         .environment(Store())
-        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self], inMemory: true)
+        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self, Bookmark.self], inMemory: true)
 }

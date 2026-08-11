@@ -151,5 +151,5 @@ struct SettingsView: View {
     SettingsView()
         .environment(Store())
         .environment(Router())
-        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self], inMemory: true)
+        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self, Bookmark.self], inMemory: true)
 }

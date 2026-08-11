@@ -180,6 +180,9 @@ struct VocabRow: View {
             }
             .contentShape(Rectangle())
         }
+        // Outside the speak button, not inside it: nested buttons in a `List` row make
+        // the whole row ambiguous to hit, and tapping a star must never also play audio.
+        .overlay(alignment: .topTrailing) { BookmarkStars(vocab: vocab) }
         // Plain style so the words read as text, not as a link. The default button
         // style tints its whole label with the accent color, and that tint beats a
         // `.foregroundStyle(.primary)` applied inside the label — only the style

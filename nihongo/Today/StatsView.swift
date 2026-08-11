@@ -53,6 +53,22 @@ struct StatsView: View {
                             "\(challengesPassed) / \(challengesTotal)")
                         row("character.book.closed", L.t("Kana learned"),
                             "\(kanaLearned) / \(kanaTotal)")
+
+                        // The shelf belongs with the rest of "what's mine" rather than
+                        // on a tab of its own — it's a place you go on purpose, not one
+                        // you need in front of you.
+                        Section {
+                            NavigationLink {
+                                BookmarksView()
+                            } label: {
+                                Label {
+                                    Text(L.t("Bookmarks"))
+                                        .font(Theme.title(.body, weight: .regular))
+                                } icon: {
+                                    Image(systemName: "star").foregroundStyle(Theme.accent)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -125,5 +141,5 @@ struct StatsView: View {
 #Preview {
     StatsView()
         .tint(Theme.accent)
-        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self], inMemory: true)
+        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self, Bookmark.self], inMemory: true)
 }

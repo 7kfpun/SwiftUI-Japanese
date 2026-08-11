@@ -75,5 +75,5 @@ struct RootView: View {
         .tint(Theme.accent)
         .environment(Store())
         .environment(Router())
-        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self], inMemory: true)
+        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self, Bookmark.self], inMemory: true)
 }

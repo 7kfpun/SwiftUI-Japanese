@@ -387,12 +387,12 @@ struct ReportItemButton: View {
     FeedbackView(source: .rating, stars: 2)
         .tint(Theme.accent)
         .environment(Store())
-        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self], inMemory: true)
+        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self, Bookmark.self], inMemory: true)
 }
 
 #Preview("From the flag") {
     FeedbackView(source: .card, item: Feedback.Item(lesson: 2, romaji: "tsukue"))
         .tint(Theme.accent)
         .environment(Store())
-        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self], inMemory: true)
+        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self, Bookmark.self], inMemory: true)
 }
