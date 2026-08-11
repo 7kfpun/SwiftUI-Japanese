@@ -16,6 +16,10 @@ struct ChallengeView: View {
     @State private var recorded = false
     @State private var showRating = false
     @State private var showFeedback = false
+    @State private var showSharePrompt = false
+    /// Raised after the nudge dismisses — see `ShareSheetPrompt`, which can't present the
+    /// system share sheet from a view that is already going away.
+    @State private var showShareSheet = false
     /// What the star row returned, or nil if it was dismissed without an answer.
     @State private var ratedStars: Int?
     /// The same number, kept for the feedback sheet to carry. Separate because
@@ -129,6 +133,14 @@ struct ChallengeView: View {
         .sheet(isPresented: $showFeedback) {
             FeedbackView(source: .rating, stars: feedbackStars)
         }
+        .sheet(isPresented: $showSharePrompt) {
+            ShareSheetPrompt { showShareSheet = true }
+        }
+        // The system share sheet, raised only after the nudge has gone. `.shareSheet` is
+        // this app's wrapper; the modifier form is used rather than a `ShareLink` because
+        // the trigger is a button inside a sheet that no longer exists by then.
+        .shareSheet(isPresented: $showShareSheet,
+                    items: [SharePrompt.appStoreURL, SharePrompt.shareText()])
     }
 
     /// Persist the result once. Guarded because `isDone` can re-fire on redraws and a
@@ -143,20 +155,41 @@ struct ChallengeView: View {
                                            "score": model.scorePercent,
                                            "stars": model.stars,
                                            "passed": model.passed])
-        askForRatingIfEarned()
+        // Order matters and is the whole point: the rating gets first refusal, and the
+        // share nudge only runs if it declined. Two sheets stacked on one passed rung
+        // reads as begging, and Apple rate-limits the rating to a handful a year while
+        // this one comes back next month regardless.
+        let asked = askForRatingIfEarned()
+        if !asked { askForShareIfEarned() }
     }
 
     /// A just-passed rung is the one moment the app is unambiguously working, so it's
     /// where the ask goes — subscribers only, and once. Deferred a beat so the result
     /// screen is on screen behind the sheet rather than appearing under it.
-    private func askForRatingIfEarned() {
+    /// Returns whether it took the occasion, so the share nudge knows to stand down.
+    @discardableResult
+    private func askForRatingIfEarned() -> Bool {
         let passedCount = ChallengeResult.totalPassed(context: context)
         guard RatingPrompt.shouldAsk(isPremium: store.isPremium,
                                      passed: model.passed,
-                                     passedCount: passedCount) else { return }
+                                     passedCount: passedCount) else { return false }
         RatingPrompt.markAsked()
         Track.event("rating_shown", ["lesson": lesson.number, "passed_total": passedCount])
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { showRating = true }
+        return true
+    }
+
+    /// The once-a-month "tell a friend". Same moment as the rating and the same deferral,
+    /// but open to free users too — someone recommending a lesson they got for free is
+    /// exactly who this is for.
+    private func askForShareIfEarned() {
+        let passedCount = ChallengeResult.totalPassed(context: context)
+        guard SharePrompt.shouldAsk(passed: model.passed,
+                                    passedCount: passedCount,
+                                    ratingShown: false) else { return }
+        SharePrompt.markAsked()
+        Track.event("share_prompt_shown", ["lesson": lesson.number, "passed_total": passedCount])
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { showSharePrompt = true }
     }
 
     /// Where the stars lead, run once the star row has finished dismissing.

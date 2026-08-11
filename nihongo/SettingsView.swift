@@ -67,6 +67,7 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    ShareAppLink()
                     Button { showFeedback = true } label: {
                         Label(L.t("Send feedback"), systemImage: "envelope")
                     }
@@ -150,5 +151,5 @@ struct SettingsView: View {
     SettingsView()
         .environment(Store())
         .environment(Router())
-        .modelContainer(for: [KanaResult.self, ChallengeResult.self], inMemory: true)
+        .modelContainer(for: [KanaResult.self, ChallengeResult.self, StudyDay.self], inMemory: true)
 }

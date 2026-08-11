@@ -26,6 +26,11 @@ enum Pref {
     /// When the star row was last shown, as `timeIntervalSince1970`. A timestamp rather than
     /// a flag so the ask can repeat quarterly — see `RatingPrompt.askAgainAfter`.
     static let ratingAskedAt       = "ratingAskedAt"
+    /// When the "recommend it to a friend" nudge was last shown, as
+    /// `timeIntervalSince1970`. Separate from `ratingAskedAt` on purpose: the two prompts
+    /// have different audiences and different windows (monthly here, quarterly there),
+    /// and sharing a key would make each one silence the other — see `SharePrompt`.
+    static let shareAskedAt        = "shareAskedAt"
 
     // MARK: First-launch intro (see nihongo/Intro)
 
