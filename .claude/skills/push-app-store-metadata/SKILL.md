@@ -7,6 +7,13 @@ allowed-tools: Bash, Read, Edit
 
 # Pushing App Store text metadata
 
+**Two apps ship from this repo.** Every lane takes `app:` and defaults to nihongo, so
+`fastlane ios metadata` is unchanged; `fastlane ios metadata app:jlpt` targets
+`com.kfpun.jlptjp` and reads `fastlane/jlpt/metadata/` instead. Each lane passes
+`app_identifier` and `metadata_path` explicitly — never rely on the Appfile default,
+because `deliver` resolves both by convention and would push one app's copy to the
+other's listing while reporting success. See `APPS` at the top of the Fastfile.
+
 Source of truth is `fastlane/metadata/<locale>/*.txt` — 14 locale folders,
 each with `name`, `subtitle`, `description`, `keywords`, `promotional_text`,
 `release_notes`, `support_url`, `marketing_url`, `privacy_url`. The lanes live in

@@ -1,1 +1,8 @@
+# Fallback only. Two apps are built from this repo, so the real identifier comes from
+# the `app:` parameter every lane takes — see APPS in the Fastfile, where each lane
+# passes app_identifier explicitly rather than letting this value apply by default.
+#
+# It stays set because some fastlane actions still consult the Appfile when nothing is
+# passed; leaving it blank would turn a wrong-app mistake into a confusing prompt
+# instead of a loud one.
 app_identifier("com.kfpun.nihongo")

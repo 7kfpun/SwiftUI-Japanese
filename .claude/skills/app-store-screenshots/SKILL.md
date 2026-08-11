@@ -7,6 +7,11 @@ allowed-tools: Bash, Read, Edit
 
 # Generating the framed App Store screenshots
 
+**Two apps ship from this repo.** These paths are nihongo's. The JLPT app's live under
+`fastlane/jlpt/screenshots/`, and the upload lane takes `app:` —
+`fastlane ios screenshots app:jlpt`. `generate_framed_screenshots.py` still writes only
+nihongo's; a JLPT run needs its own `LOCALES` table and output dir.
+
 `fastlane/screenshots/<locale>/<key>-<device>.png` is **generated** by
 `fastlane/generate_framed_screenshots.py` from the hand-captured raw shots in
 `fastlane/screenshot_raw/`. `CLAUDE.md` lists it as a generated tree: never touch
@@ -169,3 +174,34 @@ asked**. It also shares both of the traps in the `push-app-store-metadata` skill
 the pinned `PATH=/usr/bin:… /usr/bin/bundle exec` invocation, and `deliver`'s
 inability to see a version whose state isn't in its hardcoded filter. Read that
 skill before running it, starting with its read-only `asc_state.rb`.
+
+### A version in review cannot be re-screenshotted, and step 0 won't warn you
+
+`asc_state.rb` reporting **"deliver can edit this"** is not sufficient for a
+screenshot push. `WAITING_FOR_REVIEW` *is* in `deliver`'s state filter, so the edit
+lookup succeeds — and then the upload dies anyway, because the lane's
+`overwrite_screenshots: true` deletes the old sets first and Apple refuses:
+
+```
+Failed to delete screenshot vi APP_IPHONE_67
+The request cannot be fulfilled because of the state of another resource.
+  - Can't Delete Screenshot After Submit for review appScreenshots
+Failed verification of all screenshots deleted... 155 screenshot(s) still exist
+```
+
+Observed 2026-08-09 against 3.0.0 in `WAITING_FOR_REVIEW`. It fails in ~27s,
+retries 5× and gives up, having uploaded nothing. **Nothing is damaged** — no
+screenshot is deleted, and the version is *not* bounced out of the review queue.
+So this is a safe failure, not a dangerous one; it just cannot succeed.
+
+Do not try to route around it by dropping `overwrite_screenshots`. Appending
+leaves the old images in place and 155 + 286 breaches the 10-per-bucket cap
+above, which is the error `overwrite_screenshots` exists to prevent.
+
+The only fixes are version-state changes — pull the version from review, or wait
+for the outcome and upload to the next editable version. **Both are the user's
+call, not yours**; state them and stop.
+
+Worth knowing before any overwrite: ASC can hold sets with no counterpart on
+disk. `en-US` currently has an `APP_WATCH_SERIES_10` set (uploaded separately from
+`fastlane/screenshot_raw/watch/`), and a regenerate-and-overwrite drops it.

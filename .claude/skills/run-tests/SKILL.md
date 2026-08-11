@@ -107,7 +107,7 @@ A new failure after your change means something in that area regressed, not that
 the test is wrong — several of these suites are deliberate canaries and are
 supposed to be annoying:
 
-- `DataTests.generatedDataShape` pins 2089 entries / 2087 audio clips. If it
+- `DataTests.generatedDataShape` pins 2089 entries / 2089 audio clips. If it
   fails, the bundled data changed — see the `refresh-data` skill, and update the
   numbers deliberately rather than relaxing the assertion.
 - `LocalizationTests` fails on an English-only string, a lost `%@`, or an

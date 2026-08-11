@@ -47,7 +47,12 @@ This writes:
 |---|---|
 | `nihongo/Resources/MinnaData.json` | yes — 50 lessons + 17 languages, one file |
 | `nihongo/Resources/KanaChart.json` | yes — `minna/vocab/kana.json` copied verbatim |
-| `nihongo/Resources/audio/*.m4a` | **no**, git-ignored — regenerated every run |
+| `nihongo/Resources/audio/vocab/*.m4a` | **no**, git-ignored — regenerated every run |
+| `nihongo/Resources/audio/kana/*.m4a` | **no**, git-ignored — shared by both apps |
+
+The second dataset has its own script, `scripts/build-jlpt-data.py` → `Apps/jlpt/Resources/`
+(`JLPTData.json` + `audio/<id>.m4a`, both git-ignored). Run it after the same
+`git submodule update`; it reads `minna/jlpt/` and touches nothing under `nihongo/`.
 
 (The script's own docstring says "7 languages". It's stale — `LANGS` in the same
 file lists 17. Don't propagate the 7.)
@@ -55,7 +60,7 @@ file lists 17. Don't propagate the 7.)
 Watch the script's one summary line. It looks like
 
 ```
-MinnaData.json 1618KB | entries=2089 | vocab clips=2087 | kana clips=…
+MinnaData.json 1618KB | entries=2089 | vocab clips=2089 | kana clips=102
 ```
 
 and it grows a ` | MISSING kana (n): …` suffix when a kana romaji in
@@ -81,10 +86,10 @@ read the bundled data too.
 What each canary is actually protecting, in `DataTests`:
 
 - **`generatedDataShape`** — `allVocab().count == 2089`,
-  `filter { $0.audio != nil }.count == 2087` (2 words legitimately have no clip
-  and fall back to live synthesis — `CLAUDE.md` states this as a product fact, so
-  the 2087 is copy-relevant, not just a test number), and
-  `lessons().map(\.number) == Array(1...50)`.
+  `filter { $0.audio != nil }.count == 2089` (every word now has a clip; the two
+  `～` placeholders got theirs upstream in `13675e0`. `CLAUDE.md` states clip
+  coverage as a product fact, so this is copy-relevant, not just a test number),
+  and `lessons().map(\.number) == Array(1...50)`.
 - **`idsAreGloballyUnique`** — romaji repeat across lessons, so `Vocab.id` must
   keep its lesson prefix.
 - **`everyLessonSupportsGameplay`** — every lesson needs ≥7 entries (Today picks
@@ -96,10 +101,26 @@ What each canary is actually protecting, in `DataTests`:
   non-empty translation for every entry of lesson 1.
 
 If a count assertion fails, that is usually the data genuinely having changed.
-**Update the assertion deliberately and change all its readers together** —
-2089/2087 are quoted in `CLAUDE.md`, in the website's `T` dict copy
-(`scripts/build-web.py`) and in `context/01-data-model.md`. Never relax an
-assertion to `>=` to make a red suite green.
+**Update the assertion deliberately and change all its readers together.** The
+entry count 2089 is quoted in `CLAUDE.md`, `context/01-data-model.md`,
+`context/00-overview.md` and the website's `T` dict (`scripts/build-web.py`); the
+*clip* count is quoted everywhere except `build-web.py`, which only ever states
+how many **words** there are. Never relax an assertion to `>=` to make a red
+suite green.
+
+## The submodule has two datasets, and clip paths use a different base
+
+Since `5874aca` the submodule root holds `minna/` (this app's data) beside `jlpt/`
+(a separate 7972-word dataset this app does not bundle). So the script reads JSON
+from `SRC` = `minna/minna`, one level below the submodule root.
+
+**But `audio.kyoko` values inside that JSON are relative to the submodule *root***
+and carry their own `minna/` prefix — `minna/audio/kyoko/1/watashi.m4a`. They must
+be joined onto `SUB` (the root), not `SRC`. Getting this wrong is silent: every
+`os.path.exists` misses, **zero clips copy**, and the script still writes a
+structurally valid `MinnaData.json` and reports success. The only visible symptom
+is `vocab clips=0 | kana clips=0` in the summary line and, later, a failing
+`generatedDataShape`. Read the summary line every run.
 
 ## Hard rules and flakes
 

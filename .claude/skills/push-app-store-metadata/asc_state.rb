@@ -54,7 +54,8 @@ if info
 end
 
 # Locale folders on disk vs. locales that exist in App Store Connect. Anything in
-XX# deliberately in that position (see fastlane/Fastfile's header note).
+# the first list and not the second gets no text — `ta` is deliberately in that
+# position (see fastlane/Fastfile's header note).
 on_disk = Dir.children("fastlane/metadata").select { |d| File.directory?("fastlane/metadata/#{d}") }
 in_asc = info ? info.get_app_info_localizations.map(&:locale) : []
 puts "\nmetadata/ folders with no ASC localization: #{(on_disk - in_asc).sort.join(', ')}"
