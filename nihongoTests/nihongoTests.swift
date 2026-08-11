@@ -470,15 +470,28 @@ struct PremiumTests {
     }
 
     @Test func gatingRules() {
-        // Lessons 1…3 free in full, 4…50 premium — one rule, no partial trial.
-        #expect(Gating.freeLessonLimit == 3)
+        // Lessons 1…7 free in full, 8…50 premium — one rule, no partial trial.
+        let free = Gating.freeLessonLimit
+        #expect(free == 7)
         for n in 1...50 {
-            #expect(Gating.isLocked(lesson: n, isPremium: false) == (n > 3))
+            #expect(Gating.isLocked(lesson: n, isPremium: false) == (n > free))
             #expect(!Gating.isLocked(lesson: n, isPremium: true))
         }
-        // The boundary specifically: 3 free, 4 locked.
-        #expect(!Gating.isLocked(lesson: 3, isPremium: false))
-        #expect(Gating.isLocked(lesson: 4, isPremium: false))
+        // The boundary specifically: the last free lesson is, the next one isn't.
+        #expect(!Gating.isLocked(lesson: free, isPremium: false))
+        #expect(Gating.isLocked(lesson: free + 1, isPremium: false))
+    }
+
+    /// The rating ask is open to everyone, not just subscribers. Pinned because it was
+    /// subscribers-only and the argument is still accepted — a silent revert would look
+    /// like nothing had changed while almost nobody got asked.
+    @Test func ratingAsksFreeUsersToo() {
+        let enough = RatingPrompt.challengesRequired
+        #expect(RatingPrompt.shouldAsk(isPremium: false, passed: true, passedCount: enough))
+        #expect(RatingPrompt.shouldAsk(isPremium: true, passed: true, passedCount: enough))
+        // The two conditions that do still gate it.
+        #expect(!RatingPrompt.shouldAsk(isPremium: true, passed: false, passedCount: enough))
+        #expect(!RatingPrompt.shouldAsk(isPremium: true, passed: true, passedCount: enough - 1))
     }
 }
 

@@ -56,7 +56,7 @@ distinct kanji.
 **No pricing, premium or free-lesson limit is mentioned anywhere in the five
 cards.** A deliberate product decision, not an omission. Consequence: a free
 user's first paywall encounter is passing lesson 3's last rung and finding lesson
-4 locked (`Gating.freeLessonLimit = 3`).
+8 locked (`Gating.freeLessonLimit = 7`).
 
 ### Card 3 — tap to preview
 

@@ -84,7 +84,7 @@ extension Course {
             .init(name: "Advanced 1", first: 26, last: 38),
             .init(name: "Advanced 2", first: 39, last: 50),
         ],
-        freeLessonLimit: 3,
+        freeLessonLimit: 7,
         appGroup: "group.com.kfpun.nihongo",
         cloudKitContainer: "iCloud.com.kfpun.nihongo",
         appStoreURL: "https://apps.apple.com/app/id1447639161",
@@ -130,11 +130,11 @@ extension Course {
             .init(name: "N2", first: 94, last: 136),
             .init(name: "N1", first: 137, last: 201),
         ],
-        // Provisional. Three of fifty is a real taste of Minna; three of 201 is a
-        // thinner offer, and the choice between "3 lessons", "all of N5" and a
-        // per-level allowance is still open. Nothing else in the engine cares, so
-        // changing this number is a one-line decision whenever it gets made.
-        freeLessonLimit: 3,
+        // Seven, matching Minna's — one rule across both apps rather than a
+        // per-course tuning nobody can remember. Still a thinner slice here (7 of 201
+        // against 7 of 50), but the offer is "finish a few whole lessons", and that
+        // reads the same either way.
+        freeLessonLimit: 7,
         appGroup: "group.com.kfpun.jlptjp",
         cloudKitContainer: "iCloud.com.kfpun.jlptjp",
         appStoreURL: "https://apps.apple.com/app/id6800220716",

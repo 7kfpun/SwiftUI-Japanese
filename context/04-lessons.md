@@ -171,7 +171,7 @@ An unattempted-but-open rung shows its number and three empty stars — no padlo
 | Learn | locked |
 | Challenge (every rung) | locked |
 
-**One rule, no partial trial.** Lessons 1–`Gating.freeLessonLimit` (3) are free in
+**One rule, no partial trial.** Lessons 1–`Gating.freeLessonLimit` (7) are free in
 full — every mode, every rung — and the rest are locked outright. The earlier
 per-mode card/page/question quotas are gone: a free user can *finish* the early
 lessons, fill the progress bar and earn the stars, then meet the paywall carrying that

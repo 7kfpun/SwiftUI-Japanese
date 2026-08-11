@@ -49,7 +49,7 @@ chart — is compiled ahead of time by `scripts/build-minna-data.py` from the
 
 Defined in `nihongo/Store/Store.swift` (`Gating` enum):
 
-- **Lessons 1–3 are free forever** (`Gating.freeLessonLimit = 3`). Lessons 4–50
+- **Lessons 1–7 are free forever** (`Gating.freeLessonLimit = 7`). Lessons 8–50
   are premium.
 - **Kana (all of it — browser + every quiz mode) is always free.** There is no
   Kana gating anywhere in the code.
@@ -90,7 +90,8 @@ Detailed in `06-monetization.md`; the shape of it:
 - **AdMob interstitial** (`nihongo/Ads/Interstitial.swift`) — shown at most once
   every 3 minutes, non-premium only, on leaving **Train** (if anything was answered) or
   **a Challenge run** (only if it finished — never mid-run).
-- **A rating ask**, offered once to a subscriber who has just passed their 15th rung:
+- **A rating ask**, offered to anyone who has just passed their 15th rung, at most
+  once a quarter:
   the app's own star row first, and only 4★+ hands off to Apple's review sheet.
 - **Firebase Analytics + Crashlytics** — see `08-analytics.md`.
 - Ships with **no App Tracking Transparency prompt**: AdMob is explicitly

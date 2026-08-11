@@ -84,15 +84,21 @@ enum RatingPrompt {
 
     /// Whether to ask after this challenge.
     ///
-    /// Subscribers only — they've already said the app is worth paying for, and the
-    /// question is "would you say so publicly" rather than a cold ask. A free user's
-    /// most likely rating is about the paywall, which the star row can't fix.
+    /// **Everyone, not just subscribers.** This used to be subscribers-only, on the
+    /// reasoning that a free user's most likely rating is about the paywall. The cost of
+    /// that was steeper than the risk: it silenced the ask for the large majority of
+    /// users, so almost nobody was ever asked at all, and the rungs-cleared bar already
+    /// filters for people who have actually used the app rather than bounced off it.
     ///
-    /// The other two conditions pick the moment: enough rungs cleared to have an
+    /// The two remaining conditions pick the moment: enough rungs cleared to have an
     /// opinion, and a rung they just *passed* — asking straight after a failure asks
     /// how they feel about failing, which is a different question.
+    ///
+    /// `isPremium` is still taken, and still ignored, so the call sites keep passing it:
+    /// the star row's low path opens the feedback sheet, whose `Survey.Context` carries
+    /// the tier, and that is where the free-versus-paid split is actually worth reading.
     static func shouldAsk(isPremium: Bool, passed: Bool, passedCount: Int) -> Bool {
-        isPremium && passed && passedCount >= challengesRequired && mayAskAgain
+        passed && passedCount >= challengesRequired && mayAskAgain
     }
 
     /// 4★ and up → Apple's review sheet. Apple decides whether it actually appears;

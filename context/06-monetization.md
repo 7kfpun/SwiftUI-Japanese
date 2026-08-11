@@ -39,14 +39,14 @@ product ID are deliberately *not* the same string.
 
 ```swift
 enum Gating {
-    static let freeLessonLimit = 3
+    static let freeLessonLimit = 7
     static func isLocked(lesson number: Int, isPremium: Bool) -> Bool {
         !isPremium && number > freeLessonLimit
     }
 }
 ```
 
-**Lessons 1–3 are free in full** — every practice mode, every rung of the ladder — and
+**Lessons 1–7 are free in full** — every practice mode, every rung of the ladder — and
 4–50 need premium. There is no card quota, no per-mode allowance and no partial trial:
 a free user can *finish* the early lessons, fill the progress bar, earn the stars, and
 meets the paywall carrying that momentum instead of being cut off mid-practice.
@@ -137,17 +137,21 @@ static func shouldAsk(isPremium: Bool, passed: Bool, passedCount: Int) -> Bool {
 }
 ```
 
-Three conditions and each rules out a different bad moment:
+Two conditions, each ruling out a different bad moment:
 
-- **Subscribers only.** They've already said the app is worth paying for, so the
-  question is "would you say so publicly" rather than a cold ask. A free user's most
-  likely rating is about the paywall, which a star row can't fix.
 - **A rung they just passed**, not one they failed — asking after a failure asks how they
   feel about failing.
 - **15 rungs cleared** (`ChallengeResult.totalPassed`, deduped by id so a sync merge
   can't fire it early), i.e. roughly a lesson or two of real use.
-- **Once, ever** (`Pref.ratingAsked`). Apple's own throttle would swallow a second ask
-  anyway, so a second one is only a chance to annoy.
+- **Not again for ~90 days** (`Pref.ratingAskedAt`). Roughly quarterly, sized to sit
+  inside Apple's own cap of about three review impressions a year rather than fight it.
+
+It used to be **subscribers only**, on the reasoning that a free user's most likely
+rating is about the paywall. That was dropped: it silenced the ask for the large
+majority of users, so almost nobody was ever asked, and the rungs-cleared bar already
+selects for people who have used the app rather than bounced off it. `shouldAsk` still
+*takes* `isPremium` and ignores it — the free-versus-paid split is worth reading on the
+feedback sheet's `Survey.Context`, which is where a low star pick lands.
 
 **The design point: the app's own star row runs *before* Apple's review sheet.**
 `AppStore.requestReview` gives no signal about what was submitted and is rate-limited to

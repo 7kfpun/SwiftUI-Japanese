@@ -96,7 +96,7 @@ first and follow its index; it is kept current and is the fastest way in.
 Each of these was wrong in shipped copy and had to be corrected across 17 languages.
 Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
 
-- **Lessons 1–3 are free** (`Gating.freeLessonLimit = 3`), one rule, **no** partial or
+- **Lessons 1–7 are free** (`Gating.freeLessonLimit = 7`), one rule, **no** partial or
   per-mode trial. **Do not state a free-lesson count** in App Store or website copy —
   the product decision is that a visitor assumes it's free and meets the paywall having
   already got value. Still make clear a paid unlock exists.
