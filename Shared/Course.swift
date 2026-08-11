@@ -137,10 +137,7 @@ extension Course {
         freeLessonLimit: 3,
         appGroup: "group.com.kfpun.jlptjp",
         cloudKitContainer: "iCloud.com.kfpun.jlptjp",
-        // PLACEHOLDER until the JLPT app has an App Store record. Deliberately not
-        // nihongo's: a share that sends people to the other app is worse than one that
-        // 404s, because it looks like it worked.
-        appStoreURL: "https://apps.apple.com/app/id0000000000",
+        appStoreURL: "https://apps.apple.com/app/id6800220716",
         products: .init(
             lifetime: "com.kfpun.jlptjp.premium.lifetime",
             subscriptions: [
