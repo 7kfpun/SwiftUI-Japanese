@@ -49,11 +49,15 @@ It reads `minna/` and writes into `nihongo/Resources/`:
 - **`KanaChart.json`** (tracked) — `minna/vocab/kana.json` copied **verbatim**:
   grid position (`row`/`col`), romaji, hiragana/katakana stroke counts, and
   audio paths for every kana cell, grouped by `seion`/`dakuon`/`youon`.
-- **`Resources/audio/<lesson>-<slug>.m4a`** — every vocab word's Kyoko clip,
+- **`Resources/audio/vocab/<lesson>-<slug>.m4a`** — every vocab word's Kyoko clip,
   renamed flat (`1-watashi.m4a`, …) so the synchronized group can bundle them
   as individually-copied resources with no name collisions. **Git-ignored** —
   regenerate by re-running the script; it isn't checked in because of its size.
-- **`Resources/audio/kana-<romaji>.m4a`** — one clip per kana cell, deduped by
+  The `vocab/` level exists so the pbxproj can name it: the `nihongo` folder is
+  also listed by the `jlpt` target, and 23MB of Minna clips have no business in a
+  JLPT binary. Subfolders inside a synchronized group flatten into the bundle
+  root, so `Bundle.main.url(forResource:)` is unaffected by the extra level.
+- **`Resources/audio/kana/kana-<romaji>.m4a`** — one clip per kana cell, deduped by
   romaji (じ/ぢ and ず/づ share a pronunciation, so the *first* one wins;
   see the comment in the script for exactly which).
 
@@ -70,7 +74,7 @@ Counted from `MinnaData.json`, not from memory:
 |---|---|
 | Lessons | 50 |
 | Vocab entries | 2089 |
-| Entries with a bundled clip | 2087 (2 fall back to live TTS) |
+| Entries with a bundled clip | 2089 (all of them) |
 | Words per lesson | 17 (min) – 63 (max) |
 | Languages | 17 |
 | Resolved translation strings | 35 513 |
@@ -264,7 +268,7 @@ equivalent, no bookmarking and no spaced-repetition schedule.
 
 `nihongoTests/nihongoTests.swift` is the living contract for the generated data and will
 fail loudly if `build-minna-data.py`'s output shape changes. `DataTests` pins: exactly
-2089 vocab entries across lessons 1…50, 2087 of them with a bundled audio clip,
+2089 vocab entries across lessons 1…50, all of them with a bundled audio clip,
 globally-unique `Vocab.id`, at least 4 distinct kana readings per lesson (a quiz needs 4
 options), one named clip that actually decodes, a bundled clip for *every* kana cell, and
 non-empty translations for lesson 1 in all 17 languages. `KanaTests` pins the 46/25/33

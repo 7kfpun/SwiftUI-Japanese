@@ -11,8 +11,157 @@ struct DataTests {
     @Test func generatedDataShape() {
         // Entry/audio totals are regeneration canaries — update together with `make data`.
         #expect(VocabStore.allVocab().count == 2089)
-        #expect(VocabStore.allVocab().filter { $0.audio != nil }.count == 2087)
+        #expect(VocabStore.allVocab().filter { $0.audio != nil }.count == 2089)
         #expect(VocabStore.lessons().map(\.number) == Array(1...50))
+    }
+
+    /// The lesson list renders exactly one group's range at a time, so the groups have
+    /// to tile `1...lessonCount` with no gap and no overlap — a gap makes lessons
+    /// unreachable and an overlap lists them twice, and neither shows up anywhere but
+    /// on the screen itself. Course-agnostic on purpose: this guards JLPT's five levels
+    /// as much as Minna's four bands.
+    @Test func lessonGroupsTileEveryLesson() {
+        let groups = Course.current.groups
+        #expect(groups.first?.first == 1)
+        #expect(groups.last?.last == Course.current.lessonCount)
+        for (a, b) in zip(groups, groups.dropFirst()) {
+            #expect(b.first == a.last + 1, "gap or overlap between \(a.name) and \(b.name)")
+        }
+    }
+
+    @Test func streakCountsBackFromTodayAndSurvivesAnOpenDay() {
+        let today = 20260811
+        func back(_ n: Int) -> Int { StudyDay.stamp(today, offsetBy: -n) }
+
+        // Nothing recorded at all.
+        #expect(Streak(days: [], today: today).current == 0)
+
+        // Three days ending today.
+        let done = Streak(days: [back(0), back(1), back(2)], today: today)
+        #expect(done.current == 3)
+        #expect(done.studiedToday)
+
+        // Same three days, but today hasn't been studied yet: the streak is still alive
+        // — it breaks on a *missed* day, not on an unfinished one — and says so.
+        let open = Streak(days: [back(1), back(2), back(3)], today: today)
+        #expect(open.current == 3)
+        #expect(!open.studiedToday)
+
+        // A gap two days ago ends it.
+        #expect(Streak(days: [back(0), back(2), back(3)], today: today).current == 1)
+
+        // `best` remembers a longer past run than the current one.
+        let past = Streak(days: [back(0), back(10), back(11), back(12), back(13)], today: today)
+        #expect(past.current == 1)
+        #expect(past.best == 4)
+    }
+
+    /// The pressure states. Everything the UI nags with keys off `atRisk`, so it must be
+    /// false in every state where the user has nothing left to do — including the one
+    /// where they have no streak at all, or a streak of zero would be chased for nothing.
+    @Test func streakAppliesPressureOnlyWhenSomethingIsActuallyAtRisk() {
+        let today = 20260811
+        func back(_ n: Int) -> Int { StudyDay.stamp(today, offsetBy: -n) }
+
+        #expect(!Streak(days: [], today: today).atRisk)                    // nothing to lose
+        #expect(!Streak(days: [back(0), back(1)], today: today).atRisk)    // today already done
+        #expect(Streak(days: [back(1), back(2)], today: today).atRisk)     // alive, today open
+
+        // Nothing to chase once the current run *is* the record — the app must not invent
+        // a target when the honest answer is "you're at your best".
+        #expect(Streak(days: [back(0), back(1), back(2)], today: today).toBeatBest == nil)
+
+        // Behind the record: one more than the gap, because matching it isn't beating it.
+        let behind = Streak(days: [back(0), back(10), back(11), back(12)], today: today)
+        #expect(behind.current == 1)
+        #expect(behind.best == 3)
+        #expect(behind.toBeatBest == 3)
+
+        // The week strip is always seven days, oldest first, ending today.
+        let week = Streak(days: [back(0), back(3)], today: today).lastWeek()
+        #expect(week.count == 7)
+        #expect(week.last?.day == today)
+        #expect(week.map(\.studied) == [false, false, false, true, false, false, true])
+    }
+
+    /// The countdown must be silent unless something is genuinely at stake, and it must
+    /// run to real local midnight — the same boundary `StudyDay.record` stamps against,
+    /// or the clock would hit zero at a moment the streak doesn't actually end.
+    @Test func countdownRunsToMidnightAndOnlyWhenAtRisk() throws {
+        let calendar = StudyDay.calendar
+        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 8, day: 11,
+                                                                  hour: 21, minute: 30)))
+        let today = StudyDay.stamp(now)
+        func back(_ n: Int) -> Int { StudyDay.stamp(today, offsetBy: -n) }
+
+        #expect(Streak(days: [], today: today).timeLeft(now: now) == nil)
+        #expect(Streak(days: [back(0)], today: today).timeLeft(now: now) == nil)
+
+        let left = try #require(Streak(days: [back(1)], today: today).timeLeft(now: now))
+        #expect(left == 2.5 * 3600)   // 21:30 → midnight
+    }
+
+    /// A meaning must be spoken by a voice for *its* language. The mapped codes are the
+    /// ones that would otherwise resolve to no voice at all and fall back to silence or
+    /// to the wrong accent.
+    /// The recommend nudge must never land on the same rung as the star row, and must
+    /// never fire on a failed one. Both prompts trigger on "challenge finished", so the
+    /// precedence is the only thing stopping two sheets stacking on one screen.
+    @Test func sharePromptStandsDownForTheRatingAndForFailures() {
+        let enough = SharePrompt.challengesRequired
+
+        #expect(SharePrompt.shouldAsk(passed: true, passedCount: enough, ratingShown: false))
+        // The star row took this occasion.
+        #expect(!SharePrompt.shouldAsk(passed: true, passedCount: enough, ratingShown: true))
+        // Asking someone to recommend the app straight after they failed asks a different
+        // question than the one intended.
+        #expect(!SharePrompt.shouldAsk(passed: false, passedCount: enough, ratingShown: false))
+        // Zero passed rungs is still too few, even at a threshold of one — the nudge is
+        // tied to something having visibly worked, not to opening the app.
+        #expect(!SharePrompt.shouldAsk(passed: true, passedCount: 0, ratingShown: false))
+
+        // Far lower bar than the rating: this asks for a recommendation, not a public
+        // verdict, so it fires on the first rung anyone clears.
+        #expect(SharePrompt.challengesRequired == 1)
+        #expect(SharePrompt.challengesRequired < RatingPrompt.challengesRequired)
+        // Monthly here, quarterly there — and separate keys, or each would silence the
+        // other the moment one of them stamped.
+        #expect(SharePrompt.askAgainAfter < RatingPrompt.askAgainAfter)
+        #expect(Pref.shareAskedAt != Pref.ratingAskedAt)
+    }
+
+    /// The share text must carry *this* app's listing. Two apps, two listings, and a
+    /// recommendation pointing at the other one would look like it worked.
+    @Test func shareLinkPointsAtThisCoursesListing() {
+        #expect(SharePrompt.appStoreURL.absoluteString == Course.current.appStoreURL)
+        #expect(SharePrompt.shareText().contains(Course.current.appStoreURL))
+        #expect(Course.minna.appStoreURL != Course.jlpt.appStoreURL)
+    }
+
+    @Test func meaningLocalesAreSpeakableTags() {
+        #expect(Speech.meaningLocale("zh") == "zh-CN")        // `zh` is Simplified here
+        #expect(Speech.meaningLocale("zh-Hant") == "zh-TW")
+        #expect(Speech.meaningLocale("fil") == "fil-PH")      // no voice under bare `fil`
+        #expect(Speech.meaningLocale("vi") == "vi")           // already a valid tag
+
+        // Every meaning language the course ships must map to something non-empty.
+        for language in VocabStore.availableLanguages {
+            #expect(!Speech.meaningLocale(language).isEmpty, "no locale for \(language)")
+        }
+    }
+
+    /// Month and year ends are exactly where a streak computed by integer arithmetic
+    /// breaks: 20260301 minus one is not 20260228 in a leap year, and 20260101 minus one
+    /// is not 20260100. Both must walk through `Calendar`.
+    @Test func streakStampsCrossMonthAndYearBoundaries() {
+        #expect(StudyDay.stamp(20260301, offsetBy: -1) == 20260228)   // 2026 is not a leap year
+        #expect(StudyDay.stamp(20240301, offsetBy: -1) == 20240229)   // 2024 is
+        #expect(StudyDay.stamp(20260101, offsetBy: -1) == 20251231)
+        #expect(StudyDay.stamp(20251231, offsetBy: 1) == 20260101)
+
+        // A run spanning a year end is one run, not two.
+        let days: Set<Int> = [20251230, 20251231, 20260101, 20260102]
+        #expect(Streak(days: days, today: 20260102).current == 4)
     }
 
     @Test func idsAreGloballyUnique() {
@@ -139,7 +288,7 @@ struct LearnTests {
 
     @Test func detectsCorrectAndWrong() {
         let v = Vocab(lesson: 1, kanji: "わたし", kana: "わたし", romaji: "watashi",
-                      dictionary: nil, useKana: false, translation: "I", audio: nil)
+                      dictionary: nil, useKana: false, translation: "I", audio: nil, key: nil)
 
         let ok = LearnModel(vocab: [v])
         for ch in "わたし".map(String.init) { ok.tap(Tile(id: 0, text: ch)) }
@@ -850,8 +999,12 @@ struct LocalizationTests {
 
     @Test func uiStringsCoverEveryLanguageAndKey() throws {
         let table = try table()
-        // The UI languages are exactly the vocabulary languages — one picker list.
-        #expect(Set(table.keys) == Set(VocabStore.availableLanguages))
+        // The UI list is UIStrings' own key set, and every meaning language must have a
+        // UI to sit in — but not the reverse. They were the same 17 codes while Minna
+        // was the only course; JLPT ships three meaning languages against the same 17
+        // UI languages, so equality here would be asserting a coincidence.
+        #expect(Set(table.keys) == Set(L.availableLanguages))
+        #expect(Set(VocabStore.availableLanguages).isSubset(of: Set(table.keys)))
         let enKeys = try #require(table["en"]).keys
         #expect(enKeys.count >= 70)
         for (lang, dict) in table {

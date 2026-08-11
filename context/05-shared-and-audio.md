@@ -39,10 +39,10 @@ that delegate is the *only* thing `LessonPlayer` adds over `AudioPronouncer`.
 The playback order:
 
 1. **Bundled clip first** — `Speech.clipPlayer` / `VocabStore.kanaAudioURL` resolve the
-   pre-generated Kyoko `.m4a`. This is the primary path for 2087 of 2089 words and every
+   pre-generated Kyoko `.m4a`. This is the primary path for all 2089 words and every
    kana cell: reliable, works in the simulator, no dependence on which voices a device
    has installed.
-2. **Live TTS fallback** — for the 2 clip-less words and any bare kana glyph without a
+2. **Live TTS fallback** — for any word whose clip is absent and any bare kana glyph without a
    clip (shouldn't happen — see `DataTests.everyKanaHasABundledClip`),
    `AVSpeechSynthesizer` speaks `Speech.utterance(...)`. Every fallback logs
    `Track.audioMissing(_:)` — an Analytics event *and* a Crashlytics breadcrumb — so

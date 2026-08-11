@@ -23,7 +23,8 @@ first and follow its index; it is kept current and is the fastest way in.
 
 | Generated | From |
 |---|---|
-| `nihongo/Resources/MinnaData.json`, `KanaChart.json`, `Resources/audio/` | `scripts/build-minna-data.py` ← `minna/` submodule |
+| `nihongo/Resources/MinnaData.json`, `KanaChart.json`, `Resources/audio/{vocab,kana}/` | `scripts/build-minna-data.py` ← `minna/` submodule |
+| `Apps/jlpt/Resources/JLPTData.json`, `Resources/audio/` | `scripts/build-jlpt-data.py` ← the same submodule's `jlpt/` half |
 | `web/**` (except `privacy.html`, `terms.html`) | `scripts/build-web.py` — all copy lives in its `T` dict |
 | `fastlane/screenshots/**` | `fastlane/generate_framed_screenshots.py` ← `fastlane/screenshot_raw/` |
 
@@ -50,6 +51,15 @@ first and follow its index; it is kept current and is the fastest way in.
 - **SwiftData is CloudKit-backed** (`iCloud.com.kfpun.nihongo`), so no
   `@Attribute(.unique)` is permitted and every reader must tolerate duplicate rows from
   a sync merge — see `ChallengeResult.better(_:_:)`.
+- **A new `@Model` needs its CloudKit schema deployed to Production before release.**
+  Running in Xcode only creates it in Development. Ship without pressing *Deploy Schema
+  Changes* and the type silently never syncs for App Store users — no crash, no error,
+  progress just never leaves the device. `StudyDay` (the streak) is the current one
+  awaiting this in **both** containers.
+- **Day stamps use `StudyDay.calendar`, never `Calendar.current`.** The region setting
+  changes the calendar, and under a Buddhist one today's year component is 2569 — so a
+  stored `yyyymmdd` would be reinterpreted, and every recorded day would move. Gregorian
+  numbering, the user's time zone.
 - **Never fabricate progress.** Seeding `ChallengeResult` rows pushes invented history to
   every device the user owns and inflates `totalPassed`, which gates the rating prompt.
 - **The rating flow is not a rating gate.** The App Store forbids conditioning a review
@@ -72,7 +82,14 @@ first and follow its index; it is kept current and is the fastest way in.
   Vietnamese and Burmese run long.
 - Cards sit *lighter* than the screen in both appearances; a `Theme.surface` element on
   a `Theme.surface` card is invisible. Inset panes use `Theme.canvas`.
-- SF Symbols only.
+- **SF Symbols only for anything functional** — icons, controls, list rows, tab items.
+  They scale with Dynamic Type, follow the appearance, and render in all 17 languages
+  for free, which is the whole reason for the rule.
+  The single exception is `nihongo/Illustrations.xcassets`: hand-drawn SVGs from
+  [koboyo](https://koboyo.com/icons) (free for commercial use, no attribution) used as
+  **empty-state artwork only** — never as an icon, never inside a control. They are
+  template-rendered so they take `Theme` colours. Adding one to a control would give up
+  every property above; if a screen needs a symbol, it needs an SF Symbol.
 
 ## Product facts copy must not get wrong
 
@@ -87,7 +104,9 @@ Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
   Challenge ladder**. There is no `QuizView.swift`; Quiz and Listening became the ladder
   and `TrainModel`. Kana has five modes, one of which is Listening.
 - **The audio is `say -v Kyoko` TTS, not native-speaker recordings.** Never claim
-  "native audio". 2087 of 2089 words have a clip; 2 fall back to live synthesis.
+  "native audio". All 2089 words have a clip. Live `AVSpeechSynthesizer` remains the
+  fallback path — it covers bare kana tiles, and any future course whose dataset ships
+  without clips — so "every word has a clip" is true of *this* data, not a guarantee.
 - **Subscriptions sold: 1, 3, 6 months + lifetime.** 12-month is legacy and
   unpurchasable, honoured only for restores. Product IDs are case-sensitive and
   immutable — note the uppercase `M` in `3M`/`6M`.
