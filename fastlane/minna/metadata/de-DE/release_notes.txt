@@ -1,9 +1,11 @@
-Version 3.0 — komplett neu gebaut!
+Version 3.0.1
 
-Schneller, aufgeräumter, komplett offline
-Neue Karteikarten + Training für jede Lektion
-Natürliches Audio für jedes Wort & Kana
-17 Sprachen
-Premium schaltet alle 50 Lektionen frei & entfernt Werbung
+Tages-Serie — bau sie auf, ein Countdown warnt dich vor Mitternacht
+Neuer Tab „Fortschritt" — Lerntage, bestandene Challenges und gelernte Kana auf einen Blick
+Lesezeichen — tippe ein- bis dreimal auf den Stern neben einem Wort und lerne deine eigenen Gruppen
+„Alle abspielen" liest jetzt auch die Bedeutungen vor — eine ganze Lektion läuft freihändig
+Kana-Tabellen zeigen genau, wie nah du an 100 % bist
+Mehr Lektionen kostenlos zum Ausprobieren
+Trainieren wiederholt kein Wort mehr, bevor alle dran waren
 
-Wir liefern schnell — sag uns unter Einstellungen → Feedback, was als Nächstes kommt!
+Sag uns unter Einstellungen → Feedback, was als Nächstes kommt!

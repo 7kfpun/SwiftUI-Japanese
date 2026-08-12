@@ -1,9 +1,11 @@
-Versi 3.0 — dibangun ulang total!
+Versi 3.0.1
 
-Lebih cepat, lebih bersih, sepenuhnya luring
-Kartu kilas + Latihan baru di tiap pelajaran
-Audio alami untuk setiap kata & kana
-17 bahasa
-Premium membuka semua 50 pelajaran & menghilangkan iklan
+Rentetan harian — bangun terus, hitung mundur mengingatkan sebelum tengah malam
+Tab Kemajuan baru — hari belajar, tantangan lulus dan kana dipelajari dalam satu tempat
+Markah — ketuk bintang di samping kata mana pun satu sampai tiga kali, lalu pelajari grup Anda sendiri
+"Putar semua" kini bisa membacakan artinya juga — satu pelajaran penuh berjalan tanpa tangan
+Tabel kana menunjukkan persis seberapa dekat Anda ke 100%
+Lebih banyak pelajaran gratis untuk dicoba
+Latihan tidak lagi mengulang kata sebelum semuanya ditanyakan
 
-Kami rilis cepat — beri tahu kami di Pengaturan → Masukan!
+Beri tahu kami di Pengaturan → Masukan!

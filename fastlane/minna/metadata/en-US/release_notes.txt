@@ -1,9 +1,11 @@
-Version 3.0 — a complete rebuild!
+Version 3.0.1
 
-Faster, cleaner, fully offline
-New Flashcards + Train for every lesson
-Natural audio for every word & kana
-17 languages
-Premium unlocks all 50 lessons & removes ads
+Daily streak — build it up, and a countdown warns you before midnight
+New Progress tab — days studied, challenges passed and kana learned in one place
+Bookmarks — tap the star beside any word one to three times, then study your own groups
+Play all can now speak the meanings too, so a whole lesson plays hands-free
+Kana charts show exactly how close you are to 100%
+More lessons free to try
+Train no longer repeats a word until it has asked them all
 
-We ship fast — tell us what's next in Settings → Feedback!
+Tell us what's next in Settings → Feedback!

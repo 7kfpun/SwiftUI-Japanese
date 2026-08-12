@@ -1,1 +1,1 @@
-Version 3: handwriting practice with real stroke-order scoring, a challenge ladder with stars, and the Today deck on your Lock Screen and Watch. Free to start.
+New in 3.0.1: a daily streak with a midnight countdown, a Progress tab for everything you've earned, and Bookmarks — star any word once, twice or three times.

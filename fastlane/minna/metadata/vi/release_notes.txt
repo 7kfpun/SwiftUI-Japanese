@@ -1,9 +1,11 @@
-Phiên bản 3.0 — viết lại hoàn toàn!
+Phiên bản 3.0.1
 
-Nhanh hơn, gọn hơn, hoàn toàn offline
-Thẻ ghi nhớ + Luyện nhanh cho mỗi bài
-Âm thanh tự nhiên cho mọi từ & kana
-17 ngôn ngữ
-Cao cấp mở khoá cả 50 bài & gỡ quảng cáo
+Chuỗi ngày học — giữ cho chuỗi dài thêm, có đồng hồ đếm ngược nhắc bạn trước nửa đêm
+Tab Tiến độ mới — số ngày đã học, thử thách đã qua và kana đã học ở cùng một chỗ
+Đã lưu — chạm ngôi sao bên cạnh từ bất kỳ một đến ba lần, rồi học theo nhóm của riêng bạn
+"Phát tất cả" nay đọc được cả nghĩa — nghe trọn một bài mà không cần chạm
+Bảng kana cho biết bạn còn cách 100% bao xa
+Nhiều bài học miễn phí hơn để thử
+Luyện tập không lặp lại từ nào cho đến khi đã hỏi hết
 
-Chúng tôi cập nhật nhanh — góp ý tại Cài đặt → Phản hồi!
+Hãy cho chúng tôi biết điều tiếp theo tại Cài đặt → Phản hồi!

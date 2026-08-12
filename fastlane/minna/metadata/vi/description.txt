@@ -14,6 +14,12 @@ Bảng hiragana và katakana đầy đủ, cùng năm cách luyện: thẻ ghi n
 RỒI CHỨNG MINH: THANG THỬ THÁCH
 Mỗi bài là một cái thang. Mười câu một bậc, đúng 80% là qua, tối đa ba sao. Qua bậc này thì bậc sau mở ra — và câu hỏi khó dần: từ nhận ra, tới tự nhớ, rồi chỉ còn âm thanh, không một gợi ý nào để nhìn.
 
+GIỮ CHUỖI NGÀY HỌC
+Học vào bất kỳ ngày nào và chuỗi của bạn dài thêm. Đồng hồ đếm ngược cho biết còn bao lâu nữa đến nửa đêm, còn tab Tiến độ gom chuỗi dài nhất, số ngày đã học, thử thách đã qua và kana đã học về cùng một chỗ.
+
+ĐÁNH DẤU TỪ KHÓ NHỚ
+Chạm ngôi sao bên cạnh từ bất kỳ — một, hai hoặc ba lần — và từ đó vào mục Đã lưu, xếp nhóm theo mức độ còn phải luyện.
+
 ÂM THANH TỰ NHIÊN
 Mọi từ và mọi kana đều được đọc rõ ràng. Chạm vào đâu cũng nghe được, hoặc để cả bài tự phát, rảnh tay.
 

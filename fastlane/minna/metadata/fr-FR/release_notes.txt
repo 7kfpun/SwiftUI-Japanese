@@ -1,9 +1,11 @@
-Version 3.0 — reconstruction totale !
+Version 3.0.1
 
-Plus rapide, plus épurée, entièrement hors ligne
-Nouvelles Cartes + Entraînement pour chaque leçon
-Audio naturel pour chaque mot & kana
-17 langues
-Premium débloque les 50 leçons & retire les pubs
+Série quotidienne — faites-la grandir, un compte à rebours vous prévient avant minuit
+Nouvel onglet Progression — jours étudiés, défis réussis et kana appris au même endroit
+Favoris — touchez l'étoile à côté d'un mot une à trois fois, puis révisez vos propres groupes
+« Tout lire » peut maintenant énoncer aussi les sens : une leçon entière s'écoute sans les mains
+Les tableaux de kana indiquent exactement votre avancement vers 100 %
+Plus de leçons gratuites à essayer
+L'entraînement ne répète plus un mot avant de les avoir tous demandés
 
-On publie vite — dites-nous la suite dans Réglages → Commentaires !
+Dites-nous la suite dans Réglages → Commentaires !
