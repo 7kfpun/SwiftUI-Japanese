@@ -156,7 +156,8 @@ Project is `kf-nihongo` (see `.firebaserc`); `firebase.json` points hosting's
 - Before writing any new marketing claim into `T`, re-read **"Product facts copy
   must not get wrong"** in `CLAUDE.md`. Every item on that list was wrong in
   shipped copy once. The three that bite the website specifically: **no free
-  lesson count** on the page, **never "native audio"** (it is `say -v Kyoko`
+  lesson count** on the page, **never "native audio"** (it is synthesised — VOICEVOX
+  for Minna, `say -v Kyoko`
   TTS), and the textbook's name is confined to the meta description and one FAQ
   answer (Guideline 5.2).
 - Editing copy in `T` means editing it in **all 17 locales**, same as

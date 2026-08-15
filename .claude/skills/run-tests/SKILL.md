@@ -1,6 +1,6 @@
 ---
 name: run-tests
-description: Run the nihongo unit test suite via xcodebuild, the only way this project verifies Swift changes from the command line. Use after any change to nihongo/*.swift or nihongoTests/*.swift, or whenever asked to "run the tests" / "check if this builds" / "verify nothing broke". Never build or launch the full app — that is a hard standing rule for this project; the user builds/runs in Xcode themselves.
+description: Run the nihongo unit test suite via xcodebuild, the only way this project verifies Swift changes from the command line. Use after any change to nihongo/*.swift or nihongoTests/*.swift, or whenever asked to "run the tests" / "check if this builds" / "verify nothing broke". Don't build the full app to verify your own work — the user checks it in Xcode; a build they explicitly ask for (archive, upload, screenshots) is allowed and confirmed first.
 when_to_use: run tests, run the test suite, verify tests pass, check nothing broke, xcodebuild test
 allowed-tools: Bash
 ---
@@ -45,17 +45,20 @@ Add whatever test-name substrings are relevant to what you just changed to
 the `grep -E` pattern (e.g. `|FlashcardTests|GatingTests`) so a failure in the
 area you touched isn't buried.
 
-## Hard rule: never build or launch the app itself
+## Hard rule: don't build the app to check your own work
 
-This is `CLAUDE.md`'s first hard rule, repeated here because this is the skill
-where it gets broken.
+`CLAUDE.md`'s first hard rule, repeated here because this is the skill where it
+gets broken.
 
-**Never** run `xcodebuild build` (or `test` without `-only-testing:...`
-narrowed to `nihongoTests`) on the full `nihongo` app scheme, and **never**
-`xcrun simctl install`/`launch` it. This project's standing rule is that the
-user builds and runs the app themselves in Xcode — your job from the CLI is
-tests only. If a change needs eyes-on verification beyond what a unit test can
-express, say so and let the user check it in Xcode.
+**Never** reach for `xcodebuild build` (or `test` without `-only-testing:...`
+narrowed to `nihongoTests`) on the full `nihongo` app scheme, and never
+`xcrun simctl install`/`launch`, as a way of verifying a change. Your job from
+the CLI is tests only. If a change needs eyes-on verification beyond what a unit
+test can express, say so and let the user check it in Xcode.
+
+A build the **user explicitly asks for** — an archive, an upload, App Store
+screenshots — is a different thing and is allowed; confirm what will run first.
+The rule here is about initiative, not capability.
 
 ## If it flakes: Mach error -308
 

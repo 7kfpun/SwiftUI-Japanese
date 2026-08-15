@@ -7,14 +7,27 @@ first and follow its index; it is kept current and is the fastest way in.
 
 ## Hard rules
 
-- **Never build or launch the app.** Not `xcodebuild build`, not `simctl
-  install`/`launch`. Verification from the CLI is the `run-tests` skill and nothing
-  else. If a change needs eyes on the running app, say so and let the user check it
-  in Xcode. (Exception, only when explicitly asked: capturing App Store screenshots.)
+- **Never build or launch the app on your own initiative.** Not `xcodebuild build`, not
+  `simctl install`/`launch`. Routine verification from the CLI is the `run-tests` skill
+  and nothing else; if a change needs eyes on the running app, say so and let the user
+  check it in Xcode.
+
+  **Building *is* allowed when the user explicitly asks for it** — `fastlane ios release`,
+  an archive, an upload, capturing App Store screenshots. "Explicitly" means they named
+  the build, the archive or the upload. It is never implied by a request to change code,
+  fix a bug, or update the store listing.
 - **Never create a git commit.** Editing, staging, `git status`/`git diff` are fine.
   When asked for a commit *message*: `type: lowercase description`, and no mention of
   Claude or Claude Code anywhere in it.
-- **Never publish or deploy without being asked.** `fastlane`, `firebase deploy`, App
+- **"Publish to the App Store" means the metadata**, not a binary. It is
+  `fastlane ios metadata app:<app>` — description, keywords, promotional text, release
+  notes — and that is the whole job unless a build is named. Shipping a binary is a
+  separate, explicit request.
+- **Confirm before a build, an upload or a submission**, even when asked directly. Say
+  what will run and what it will produce, and wait. These cost real time, put an
+  artefact in front of App Review, and are awkward to walk back — unlike metadata, which
+  is a text field that can be rewritten a minute later.
+- **Never publish or deploy anything else without being asked.** `firebase deploy`, App
   Store Connect writes and Firestore rule deploys are outward-facing. Write the change,
   then stop.
 - **Remove trailing whitespace** from every line you touch.
@@ -130,10 +143,23 @@ Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
 - **Four practice modes** per lesson — Vocab List, Flashcards, Train, Learn — **plus the
   Challenge ladder**. There is no `QuizView.swift`; Quiz and Listening became the ladder
   and `TrainModel`. Kana has five modes, one of which is Listening.
-- **The audio is `say -v Kyoko` TTS, not native-speaker recordings.** Never claim
-  "native audio". All 2089 words have a clip. Live `AVSpeechSynthesizer` remains the
-  fallback path — it covers bare kana tiles, and any future course whose dataset ships
-  without clips — so "every word has a clip" is true of *this* data, not a guarantee.
+- **All the audio is synthesised, never native-speaker recordings — so never claim
+  "native audio"**, whatever the voice. The two courses use different engines:
+  - **Minna: VOICEVOX** (neural). `whitecul` is the default for vocab and kana;
+    `kenzaki` ships alongside it purely so the Challenge ladder can alternate voices —
+    with one voice a listening rung is passable by recognising the waveform rather than
+    the word. `Speech.Voice.alternate.suffix` must equal the suffix
+    `build-minna-data.py` writes, or `audioURL` silently falls back to the default and
+    the ladder stops being a listening test with nothing to notice.
+  - **JLPT: `say -v Kyoko`** (macOS, concatenative) — the only voice its dataset ships.
+    `audioURL`'s fallback is what makes `.alternate` harmless there.
+  - **VOICEVOX requires attribution.** Its characters are licensed for commercial use
+    with a visible credit (e.g. `VOICEVOX:WhiteCUL`). Nothing in the app carries one yet;
+    Settings → Licenses is where it belongs. Check the current terms before shipping.
+
+  All 2089 Minna words and all 7972 JLPT words have a clip. Live `AVSpeechSynthesizer`
+  remains the fallback — it covers bare kana tiles, and any future course shipping no
+  clips — so "every word has a clip" is true of *this* data, not a guarantee.
 - **Subscriptions sold: 1, 3, 6 months + lifetime.** 12-month is legacy and
   unpurchasable, honoured only for restores. Product IDs are case-sensitive, immutable,
   and unique per *team* forever — a deleted one is reserved and can never be recreated.

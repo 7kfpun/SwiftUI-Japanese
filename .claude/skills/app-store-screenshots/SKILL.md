@@ -146,11 +146,11 @@ the app fresh so a hiccup costs one shot rather than the run. It launches with
 which is a `fullScreenCover` over the whole TabView — without it every capture
 would be a picture of the tour).
 
-**This launches the app in a simulator.** `CLAUDE.md` forbids that, with one
-explicit exception: *capturing App Store screenshots, only when explicitly asked.*
-So don't run it as part of "regenerate the screenshots" — regenerating means
-re-framing existing raw captures. Ask first, and only if the raw captures
-themselves are what's wrong.
+**This launches the app in a simulator**, which `CLAUDE.md` allows only when the
+user explicitly asks for it. Capturing raw screenshots qualifies; *regenerating*
+them does not — regenerating means re-framing captures that already exist. So
+don't run this as part of "regenerate the screenshots". Ask first, and only when
+the raw captures themselves are what's wrong.
 
 When asked: run `nihongoUITests/ScreenshotTests` against the iPhone 17 Pro
 (`6.3`-sized raws) or iPad Pro 13-inch (M5) simulator, then export the kept

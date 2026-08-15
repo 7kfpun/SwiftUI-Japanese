@@ -158,13 +158,16 @@ Re-read **"Product facts copy must not get wrong"** in `CLAUDE.md`. Every item
 there was wrong in shipped store copy once. The ones that bite store fields:
 **no third-party trademark in the name or subtitle** (Guideline 5.2 — the textbook
 name stays out of every user-visible store field), **no free-lesson count**, and
-**never "native audio"** (it is `say -v Kyoko` TTS). And metadata is 15 locales:
+**never "native audio"** (it is synthesised — VOICEVOX for Minna, `say -v Kyoko` for
+JLPT). And metadata is 15 locales:
 an English-only edit ships an inconsistent store listing.
 
 ## Lanes that are not this skill's job
 
-- `fastlane ios release` — archives and uploads a **build**. It runs `build_app`,
-  i.e. it builds the app, which `CLAUDE.md` forbids. Human-only.
+- `fastlane ios release` — archives and uploads a **build**, which is a different job
+  from this skill and never implied by it. "Publish to the App Store" means the metadata
+  lane; a build happens only when the user names the build, the archive or the upload —
+  and then confirm what will run before starting it (`CLAUDE.md`, Hard rules).
 - `fastlane ios privacy` — rides Apple's private web API and prompts for an Apple
   ID password and 2FA interactively. Human-only.
 - `fastlane ios screenshots` — uploads images, not text; it shares Trap 1 and

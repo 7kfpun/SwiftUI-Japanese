@@ -14,7 +14,7 @@ it's pure source data, refreshed independently of app releases. Its structure:
 minna/
   vocab/{1..50}.json     Japanese source of truth (kanji/kana/romaji/dictionary/useKana/audio path)
   vocab/kana.json        the kana chart: grid layout (row/col), stroke counts, audio paths
-  audio/…                Kyoko (`say -v Kyoko`) source clips, referenced by relative path
+  audio/<voice>/…        source clips per voice (kyoko, kenzaki, whitecul), by relative path
   en|zh|zh-Hant|vi|de|th|my|es|fr|ru|bn|hi|ta|te|fil|id|ko/{1..50}.json
                          translations, keyed by romaji — 17 languages total
 ```
@@ -23,8 +23,12 @@ minna/
 files, but it is only **unique within a lesson** — romaji repeat across different
 lessons, so nothing downstream can key off romaji alone (see `Vocab.id` below).
 
-**The bundled audio is Apple's `say -v Kyoko` TTS, generated upstream — not
-native-speaker recordings.** Marketing and store copy must not claim otherwise.
+**The bundled audio is synthesised upstream — not native-speaker recordings.**
+Marketing and store copy must not claim otherwise, whatever the voice.
+
+The submodule ships three voices for Minna: `kyoko` (Apple's `say`, concatenative) and
+the VOICEVOX neural pair `kenzaki` and `whitecul`. `whitecul` is what the app bundles;
+`kenzaki` rides along only for the Challenge ladder. JLPT ships `kyoko` alone.
 
 ## Why there's a compile step (`scripts/build-minna-data.py`)
 
@@ -49,7 +53,8 @@ It reads `minna/` and writes into `nihongo/Resources/`:
 - **`KanaChart.json`** (tracked) — `minna/vocab/kana.json` copied **verbatim**:
   grid position (`row`/`col`), romaji, hiragana/katakana stroke counts, and
   audio paths for every kana cell, grouped by `seion`/`dakuon`/`youon`.
-- **`Resources/audio/vocab/<lesson>-<slug>.m4a`** — every vocab word's Kyoko clip,
+- **`Resources/audio/vocab/<lesson>-<slug>.m4a`** — every vocab word's default clip
+  (`whitecul`), with `<lesson>-<slug>-kenzaki.m4a` beside it for the ladder,
   renamed flat (`1-watashi.m4a`, …) so the synchronized group can bundle them
   as individually-copied resources with no name collisions. **Git-ignored** —
   regenerate by re-running the script; it isn't checked in because of its size.

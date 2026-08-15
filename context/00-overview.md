@@ -142,10 +142,11 @@ changed. See `build-and-deploy-web` skill.
   (17 languages each), premium management, legal docs, feedback link. Two hidden
   developer affordances on the version footer: 7 taps toggles analytics
   exclusion, long-press replays the intro.
-- **Audio**: all 2089 words have a pre-generated Kyoko (`say -v Kyoko`) clip
-  bundled, with a live `AVSpeechSynthesizer` fallback for bare kana tiles and for
-  any word whose clip is absent. These are TTS, **not native-speaker recordings** —
-  marketing copy must not claim otherwise.
+- **Audio**: all 2089 words have a pre-generated VOICEVOX (`whitecul`) clip, plus a
+  second `kenzaki` clip the Challenge ladder alternates with, plus a live
+  `AVSpeechSynthesizer` fallback for bare kana tiles and any word whose clip is absent.
+  Synthesised, **not native-speaker recordings** — marketing copy must not claim
+  otherwise. JLPT bundles `say -v Kyoko` instead, the only voice its dataset ships.
 - **Sync**: kana mastery (`KanaResult`) and challenge progress (`ChallengeResult`) are
   the app's only two `@Model` types, both in one CloudKit-backed SwiftData container
   (`iCloud.com.kfpun.nihongo`), so they follow the user across devices — and neither can

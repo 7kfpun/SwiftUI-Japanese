@@ -47,7 +47,7 @@ This writes:
 |---|---|
 | `nihongo/Resources/MinnaData.json` | yes — 50 lessons + 17 languages, one file |
 | `nihongo/Resources/KanaChart.json` | yes — `minna/vocab/kana.json` copied verbatim |
-| `nihongo/Resources/audio/vocab/*.m4a` | **no**, git-ignored — regenerated every run |
+| `nihongo/Resources/audio/vocab/*.m4a` | **no**, git-ignored — regenerated every run. Two per word: the `PRIMARY` voice under the bare name, and `ALT` with a `-<voice>` suffix for the Challenge ladder. |
 | `nihongo/Resources/audio/kana/*.m4a` | **no**, git-ignored — shared by both apps |
 
 The second dataset has its own script, `scripts/build-jlpt-data.py` → `Apps/jlpt/Resources/`
@@ -60,11 +60,11 @@ file lists 17. Don't propagate the 7.)
 Watch the script's one summary line. It looks like
 
 ```
-MinnaData.json 1618KB | entries=2089 | vocab clips=2089 | kana clips=102
+MinnaData.json 1609KB | entries=2089 | whitecul clips=2089 | kenzaki clips=2089 | kana clips=102
 ```
 
 and it grows a ` | MISSING kana (n): …` suffix when a kana romaji in
-`minna/vocab/kana.json` has no `audio.kyoko` source. That is an upstream data
+`minna/vocab/kana.json` has no clip for the voice `PRIMARY` names. That is an upstream data
 problem, not a re-run problem: `DataTests.everyKanaHasABundledClip` asserts a
 clip for **every** cell of `seion` + `dakuon` + `youon`, so a missing one fails
 the suite. Note that じ/ぢ and ず/づ share a romaji and therefore a clip (first
@@ -114,12 +114,12 @@ Since `5874aca` the submodule root holds `minna/` (this app's data) beside `jlpt
 (a separate 7972-word dataset this app does not bundle). So the script reads JSON
 from `SRC` = `minna/minna`, one level below the submodule root.
 
-**But `audio.kyoko` values inside that JSON are relative to the submodule *root***
-and carry their own `minna/` prefix — `minna/audio/kyoko/1/watashi.m4a`. They must
+**But `audio.<voice>` values inside that JSON are relative to the submodule *root***
+and carry their own `minna/` prefix — `minna/audio/whitecul/1/watashi.m4a`. They must
 be joined onto `SUB` (the root), not `SRC`. Getting this wrong is silent: every
 `os.path.exists` misses, **zero clips copy**, and the script still writes a
 structurally valid `MinnaData.json` and reports success. The only visible symptom
-is `vocab clips=0 | kana clips=0` in the summary line and, later, a failing
+is `whitecul clips=0 | kana clips=0` in the summary line and, later, a failing
 `generatedDataShape`. Read the summary line every run.
 
 ## Hard rules and flakes
