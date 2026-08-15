@@ -141,7 +141,7 @@ interruption, and those want opposite fixes.
 | `train_order_mode` | `ordered` |
 | `learn_answer` | `correct` |
 | `learn_order_mode` | `ordered` |
-| `read_all` | `lesson` |
+| `read_all` | `lesson`, `mode` (`japanese`/`withMeaning`), `preview` |
 | `play_vocab` | `lesson` |
 | `search_vocab` | `query_length`, `results` |
 | `lesson_group` | `group` |
@@ -200,23 +200,51 @@ from any other cold launch.
 ### Monetization
 | Event | Params |
 |---|---|
-| `paywall_shown` | `source` |
-| `paywall_dismissed` | `source`, `purchased` |
-| `purchase_start` | `tier` |
-| `purchase_success` | `tier` |
-| `purchase_failed` | `tier`, `reason` (`error`/`cancelled`/`pending`/`unverified`) |
+| `paywall_shown` | `source`, `lesson` (absent from Settings) |
+| `paywall_dismissed` | `source`, `lesson`, `purchased` |
+| `purchase_start` | `tier`, `source` |
+| `purchase_success` | `tier`, `source` |
+| `purchase_failed` | `tier`, `source`, `reason` (`error`/`cancelled`/`pending`/`unverified`) |
 | `restore` | `premium` |
 | `manage_subscription` | — |
-| `locked_mode` | `mode`, `lesson` |
+| `locked_mode` | `mode` (`flashcards`/`train`/`learn`), `lesson` |
 | `locked_challenge` | `lesson`, `index` |
+| `locked_read_all` | `lesson`, `heard` |
 | `interstitial_shown` | — |
 | `ad_failed` | `error` |
 
-`locked_mode` and `locked_challenge` are the two halves of hitting the paywall from a
-lesson: a practice row versus a ladder rung. Both fire from `SelectModeView`, the single
-place gating is enforced, and both immediately precede a `paywall_shown` with source
-`select_mode_locked` — so the pair tells you *what* someone wanted, which `source` alone
-can't.
+### Where people hit the paywall
+
+`source` is the answer, and it is on **every** event in the funnel — shown, dismissed and
+all three purchase events. Four values, all stable ASCII keys:
+
+| `source` | Triggered by |
+|---|---|
+| `locked_mode` | a locked Flashcards / Train / Learn row (`SelectModeView`) |
+| `locked_challenge` | a locked ladder rung (`SelectModeView`) |
+| `read_all_meanings` | the meaning preview running out (`VocabListView`) |
+| `settings` | the Premium row in Settings |
+
+`lesson` rides alongside it wherever a lesson triggered it, which separates "lesson 8
+stops people" from "people don't buy". The finer `locked_*` events say *what* was wanted
+— which mode, which rung, how many words were heard — and immediately precede the
+matching `paywall_shown`.
+
+Because `source` reaches `purchase_success`, conversion by entry point is a group-by
+rather than a timestamp join. Three things were fixed to make that true, all of which had
+looked fine in the code:
+
+- **`purchase_*` carried only `tier`.** The funnel stopped dead at `paywall_shown` and
+  which entry point actually earned money was a guess, despite `PaywallView.source`'s own
+  comment claiming otherwise.
+- **`paywall_dismissed` fired only from the Cancel button**, so swiping the sheet away
+  logged nothing, and buying dismissed via the `isPremium` observer without logging
+  either — making `purchased` a hardcoded `false` that could never be anything else. It
+  now fires from `onDisappear`, once, for every exit.
+- **`locked_mode`'s `mode` was localized.** It was passed `L.t("Flashcards")`, so the same
+  tap arrived as `Flashcards`, `闪卡`, `Karteikarten` — 17 unaggregatable values. It now
+  takes a separate stable `key`; `SelectModeView.mode(key:icon:title:…)` keeps the
+  analytics name and the on-screen name as two arguments so they can't merge again.
 
 ### Rating
 | Event | Params |
@@ -256,27 +284,29 @@ no flag distinguishing them; the surrounding `intro_card` events are how you tel
 
 ## Source-attribution pattern on paywall events
 
-`PaywallView` takes a **`source: String`** it doesn't otherwise use except to
-tag its own two events (`paywall_shown`, `paywall_dismissed`). Each call site
-passes a distinct, purpose-named source so a funnel can tell which entry point
-actually converts. There are currently **two**, which is the whole surface area of the
-paywall:
+`PaywallView` takes a **`source: String`** and an optional **`lesson: Int?`**, and tags
+every event it and `Store.purchase` emit. Each call site passes a distinct, purpose-named
+source so a funnel can tell which entry point actually converts:
 
 | Call site | `source` value |
 |---|---|
-| `SelectModeView`, any locked mode row or locked rung | `select_mode_locked` |
+| `SelectModeView`, a locked Flashcards / Train / Learn row | `locked_mode` |
+| `SelectModeView`, a locked ladder rung | `locked_challenge` |
+| `VocabListView`, the meaning preview running out | `read_all_meanings` |
 | `SettingsView`, "Unlock all lessons" | `settings` |
+
+`PaywallView.params` builds `source` + `lesson` once and every event merges it, so a new
+paywall event can't be added without its attribution.
 
 The same pattern runs on the feedback form (`Feedback.url(source:)`), with `settings`
 for someone choosing to write in and `rating` for someone a low star sent there — two
 different populations that the Airtable form couldn't otherwise tell apart.
 
-**Known gap**: `source` does *not* propagate into the purchase events
-(`purchase_start`/`purchase_success`/`purchase_failed`) — those only carry
-`tier`. So you can see *which entry point opened the paywall* and *whether a purchase
-happened*, but not join them in one event; doing so requires session-level correlation
-(e.g. timestamp proximity) rather than a shared param. Worth fixing if paywall-source ROI
-ever needs precise attribution.
+The gap this section used to describe — `source` not reaching the purchase events — is
+**closed**: `Store.purchase(_:source:)` takes it and puts it on `purchase_start`,
+`purchase_success` and `purchase_failed`. Attribution is a group-by, not a timestamp
+join. `SelectModeView` also used to report both its triggers as one `select_mode_locked`
+source; they are now distinct.
 
 There is no longer a separate `trial_limit` event: the per-mode card/page/question quotas
 it measured are gone, replaced by one whole-lesson rule (`06-monetization.md`), and
@@ -292,3 +322,141 @@ TTS fallback usage (e.g. after a data regeneration accidentally drops a clip) is
 both in a crash-adjacent log stream and in an analytics dashboard, without needing a
 crash to actually happen. The expected baseline is not zero: 2 of 2089 words have no clip
 by design (`01-data-model.md`).
+
+## Firebase Performance
+
+Linked as `FirebasePerformance` on **both** app targets (not the widgets or the watch app)
+and started by `FirebaseApp.configure()` like everything else — there is no separate
+`configure` call. Most of its value is automatic and needs no code: app start time,
+foreground/background traces, screen rendering including **slow and frozen frames**, and
+every `URLSession` request.
+
+It honours the same kill switch as Analytics and Crashlytics. `AppBootstrap` disables it
+when `Pref.analyticsExcluded` is set or the build is DEBUG, and `Track.setExcluded`
+flips it live with the other two. A developer's own device would otherwise skew exactly
+the numbers Performance exists to watch — debug build, fast device, office wifi.
+
+### Custom traces go through `Track.trace`
+
+```swift
+Track.trace("vocab_decode") { … }
+```
+
+`Track` is the one seam and nothing else may import a Firebase module, so this wraps
+`Performance.startTrace` the way `Track.event` wraps `Analytics.logEvent`. It takes the
+same `nihongo_2026_` prefix, wants `lower_snake_case` names, and — because the whole body
+is behind `canImport` — a build with no Firebase package still runs the work, untimed,
+rather than failing to compile.
+
+There is exactly one custom trace today, and adding more should clear a real bar: the
+automatic instrumentation already covers launch, rendering and network.
+
+| Trace | Why it isn't covered automatically |
+|---|---|
+| `vocab_decode` | The bundled-JSON decode in `VocabStore.data` — the largest single launch cost, and the one that differs by *course* rather than by device (2,089 entries against JLPT's 7,972, from identical code). A regression reads to users as "the app got slow to open", a report that never arrives with a cause attached. |
+
+### What it costs
+
+Performance is not a small dependency: it pulls in `FirebaseInstallations`,
+`FirebaseRemoteConfig` and `FirebaseABTesting` (it fetches its own sampling config at
+runtime). That is binary size and a network call at launch. Weigh that before assuming
+any further Firebase product is free to add.
+
+### Identifiers
+
+Performance reports carry the Firebase Installation ID. **It does not introduce one** —
+`FirebaseAppCheck` and `FirebaseSessions` (under Crashlytics) already depend on
+`FirebaseInstallations`, so the FID predates this. See `CLAUDE.md`'s identifier bullet
+for where the app's own no-identifier rule starts and the SDKs' internals end.
+
+`PERFORMANCE_DATA` was **already** declared in `fastlane/minna/app_privacy_details.json`
+before the SDK existed in the project. That declaration is now accurate rather than
+aspirational; don't remove it.
+
+## Notifications
+
+Three types, and they do not overlap. Confusing them is the easiest way to break this.
+
+| Type | Owner | What it's for |
+|---|---|---|
+| Local | `StreakReminder` | The daily "you haven't studied yet" nudge. No server, no token, no identifier. |
+| Remote (FCM) | `PushService` | Server-initiated messages — announcements, campaigns. |
+| Remote (OneSignal) | `PushService` | The same job as FCM. Both are wired; pick one to actually send with. |
+
+### The streak reminder is deliberately local
+
+Everything it needs — the streak, the time zone, the wall-clock hour — is on the device
+already. A server would need all three plus an identifier to join them, which is three
+things this app avoids. It also works offline, which the rest of the app promises.
+
+Scheduling is a **sliding one-week plan of one-shot triggers**, not a repeating trigger:
+iOS can't skip a single occurrence of a repeat, and skipping is the whole feature. Today
+is included only if it is still winnable — not already studied, and the hour not yet
+past — so the reminder can't fire at someone who is already done. `reschedule` runs on
+every `reloadStreak` and after every `StudyDay.record`, which is what keeps that true.
+`StreakReminderTests` pins the planner.
+
+### Asking is a two-step, and that is not decoration
+
+**iOS raises the system permission alert once per install, ever.** A "Don't Allow" is
+permanent and only the Settings app can undo it. So the alert is never spent on a guess:
+
+1. A **soft ask** in the app's own UI (`NotificationOptInCard`) explains the offer.
+2. Only a **yes** calls `requestAuthorization`. A "not now" reaches iOS not at all.
+
+`NotificationOptIn` is the shared policy so the two callers can't both fire in the same
+week. It stays silent when the reminder is already on, when the status is `.denied`
+(a yes would have nowhere to go), and for `askAgainAfter` (60 days) after any ask.
+
+| Trigger | Where |
+|---|---|
+| Last intro card (`Intro.Card.reminders`) | after the tour has shown what there is to come back to |
+| Streak reaches `streakThreshold` (7) | `TodayView.reloadStreak` — the run you're *on*, never `best` |
+
+Turning the reminder **off** in Settings raises a confirmation. Not a dark pattern: the
+default action is still "Turn off", and the thing it says — it stays quiet on days you've
+already studied — is exactly what someone reacting to one badly-timed alert doesn't know.
+
+| Event | Params |
+|---|---|
+| `notification_opt_in` | `source` (`intro`/`streak`), `accepted`, `streak` |
+| `notification_permission` | `granted` |
+| `notification_opened` | `kind` (`streak_reminder`/`push`) |
+| `streak_reminder` | `on`, `hour` |
+| `streak_reminder_hour` | `hour` |
+| `streak_reminder_kept` | — |
+| `push_registered` | — |
+| `push_register_failed` | `error` |
+| `fcm_token` | `present` — **never the token itself** |
+
+### Running FCM and OneSignal together
+
+Both swizzle `UIApplicationDelegate` by default and both want the APNs device token and
+`UNUserNotificationCenter.delegate`. Left alone they race, and the loser goes silent with
+no error — noticed weeks later as "a campaign went out and nobody got it".
+
+`PushService` is the single owner, which is what makes coexistence safe:
+
+- `FirebaseAppDelegateProxyEnabled` is `NO` in **both** Info.plists.
+- `AppDelegate.application(_:didRegisterForRemoteNotificationsWithDeviceToken:)` forwards
+  the token, and `PushService.didRegister` hands it to each SDK by name. Those delegate
+  methods are load-bearing, not boilerplate — delete them and FCM never learns the token.
+- `UNUserNotificationCenter.delegate` is set once, to `PushService.shared`.
+
+If one provider is ever dropped, delete its branch rather than re-enabling the proxy.
+
+**The FCM registration token is a persistent install-scoped identifier the app itself
+handles** — a stronger claim than the Installation ID App Check already carries, because
+push only works if something stores it. It is never logged and never written into
+`Survey`. See `CLAUDE.md`'s identifier rule.
+
+### Not done yet
+
+- `OneSignalAppID` is **empty** in both Info.plists. `PushService` skips OneSignal
+  entirely while it is, which is the honest behaviour for "not configured".
+- An **APNs Auth Key** must be uploaded to Firebase *and* OneSignal.
+- **Push Notifications capability** must be enabled on both App IDs in the developer
+  portal — `aps-environment` is in both entitlements files, so signing fails without it.
+- No **Notification Service Extension** target. OneSignal needs one for confirmed
+  delivery and rich media; basic push works without it.
+- App Store privacy labels don't yet declare anything push-related.

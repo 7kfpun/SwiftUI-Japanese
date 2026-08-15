@@ -45,9 +45,21 @@ first and follow its index; it is kept current and is the fastest way in.
   field set, so adding a field without republishing `firestore.rules` rejects **every**
   write, visible only as a console line and a `survey_failed` event.
   `SurveyTests.contextKeysMatchThePublishedRules` guards this — keep it passing.
-- **No persistent identifier, ever.** No IDFA, IDFV, vendor UUID or minted install ID.
-  The app ships without App Tracking Transparency; device *characteristics* (model, OS,
-  language) are fine, anything that joins two rows to one person is not.
+- **The app never mints or sends a persistent identifier of its own.** No IDFA, IDFV,
+  vendor UUID or minted install ID in anything *this code* writes — above all `Survey`,
+  whose Firestore documents carry no user, session or reply channel. It ships without App
+  Tracking Transparency and forces non-personalized ads. Device *characteristics* (model,
+  OS, language, region) are fine; anything that joins two rows to one person is not, and
+  `Survey.Context.model` is a characteristic precisely because every unit of a model
+  returns the same string where `identifierForVendor` would not.
+
+  **The Google SDKs are a separate matter and do carry install-scoped IDs.** Firebase
+  Installations (an FID in the keychain) is pulled in by `FirebaseAppCheck` and by
+  `FirebaseSessions` under Crashlytics — so it predates, and is not introduced by,
+  Firebase Performance, which also consumes it. Analytics keeps its own app-instance ID.
+  This is the accepted boundary, not an oversight: the rule governs the app's own data,
+  and third-party SDK internals are declared in their own privacy manifests. Don't cite
+  this bullet as proof the binary contains no identifier — it doesn't say that.
 - **SwiftData is CloudKit-backed** (`iCloud.com.kfpun.nihongo`), so no
   `@Attribute(.unique)` is permitted and every reader must tolerate duplicate rows from
   a sync merge — see `ChallengeResult.better(_:_:)`.
@@ -96,10 +108,13 @@ first and follow its index; it is kept current and is the fastest way in.
 Each of these was wrong in shipped copy and had to be corrected across 17 languages.
 Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
 
-- **Lessons 1–7 are free** (`Gating.freeLessonLimit = 7`), one rule, **no** partial or
-  per-mode trial. **Do not state a free-lesson count** in App Store or website copy —
-  the product decision is that a visitor assumes it's free and meets the paywall having
-  already got value. Still make clear a paid unlock exists.
+- **Lessons 1–7 are free** (`Gating.freeLessonLimit = 7`), one whole-lesson rule. There is
+  **exactly one** partial trial and no others: on a locked lesson, "Play with meanings"
+  reads `Gating.freeMeaningPreview` (7) words and then shows the paywall
+  (`Gating.wordsToRead`). Plain "Play all" — Japanese only — stays free on every lesson,
+  and Vocab List itself is free everywhere. **Do not state a free-lesson count** in App
+  Store or website copy — the product decision is that a visitor assumes it's free and
+  meets the paywall having already got value. Still make clear a paid unlock exists.
 - **Four practice modes** per lesson — Vocab List, Flashcards, Train, Learn — **plus the
   Challenge ladder**. There is no `QuizView.swift`; Quiz and Listening became the ladder
   and `TrainModel`. Kana has five modes, one of which is Listening.
@@ -108,8 +123,13 @@ Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
   fallback path — it covers bare kana tiles, and any future course whose dataset ships
   without clips — so "every word has a clip" is true of *this* data, not a guarantee.
 - **Subscriptions sold: 1, 3, 6 months + lifetime.** 12-month is legacy and
-  unpurchasable, honoured only for restores. Product IDs are case-sensitive and
-  immutable — note the uppercase `M` in `3M`/`6M`.
+  unpurchasable, honoured only for restores. Product IDs are case-sensitive, immutable,
+  and unique per *team* forever — a deleted one is reserved and can never be recreated.
+  **The two apps' IDs differ on purpose and must not be "aligned":** minna uses uppercase
+  `3M`/`6M` (the lowercase ones were burned by the RN app) and `premium.lifetime`; JLPT
+  uses lowercase `3m`/`6m` and `premium.forever` (its `premium.lifetime` was deleted
+  during setup and is gone for good). `Course.swift` is the record of what App Store
+  Connect actually holds — `PremiumTests.jlptProductIDsMatchAppStoreConnect` pins it.
 - **No third-party trademark in the App Store name or subtitle** (Guideline 5.2). The
   textbook name stays out of every user-visible store field; the website keeps it to the
   meta description and one FAQ answer.

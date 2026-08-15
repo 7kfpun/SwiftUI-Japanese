@@ -498,8 +498,42 @@ struct PremiumTests {
         #expect(PremiumProduct.all.allSatisfy { $0.hasPrefix("com.kfpun.nihongo.premium") })
     }
 
+    /// The exact strings App Store Connect holds for JLPT — pinned because they look
+    /// like mistakes and are not, and because a "correction" is unfixable.
+    ///
+    /// Product IDs are immutable and reserved per *team* forever. `premium.lifetime` was
+    /// created for this app and deleted during setup, so Apple has retired the word here
+    /// permanently — hence `forever`. The lowercase `3m`/`6m` are simply the clean choice:
+    /// minna's uppercase `3M`/`6M` are a workaround for IDs its RN predecessor burned, and
+    /// JLPT has no such history to inherit.
+    ///
+    /// Get any of these wrong and `Product.products(for:)` silently returns fewer plans —
+    /// the paywall renders what it got and nothing reports an error.
+    @Test func jlptProductIDsMatchAppStoreConnect() {
+        let p = Course.jlpt.products
+        #expect(p.lifetime == "com.kfpun.jlptjp.premium.forever")
+        #expect(p.subscriptions == [
+            "com.kfpun.jlptjp.premium.1m",
+            "com.kfpun.jlptjp.premium.3m",
+            "com.kfpun.jlptjp.premium.6m",
+        ])
+        // The burned ID must never reappear: it cannot be created, so shipping it would
+        // mean the lifetime row simply never loads.
+        #expect(p.lifetime != "com.kfpun.jlptjp.premium.lifetime")
+        #expect(!p.subscriptions.contains { $0.hasSuffix("M") })
+        // Nothing sold yet, so nothing to honour on restore.
+        #expect(p.legacy.isEmpty)
+
+        // The two courses must not share a product: one purchase would unlock both apps.
+        let minna = Set([Course.minna.products.lifetime] + Course.minna.products.subscriptions
+                        + Course.minna.products.legacy)
+        let jlpt = Set([p.lifetime] + p.subscriptions + p.legacy)
+        #expect(minna.isDisjoint(with: jlpt))
+    }
+
     @Test func gatingRules() {
-        // Lessons 1…7 free in full, 8…50 premium — one rule, no partial trial.
+        // Lessons 1…7 free in full, 8…50 premium. One whole-lesson rule; the meaning
+        // preview below is the single exception to it.
         let free = Gating.freeLessonLimit
         #expect(free == 7)
         for n in 1...50 {
@@ -521,6 +555,35 @@ struct PremiumTests {
         // The two conditions that do still gate it.
         #expect(!RatingPrompt.shouldAsk(isPremium: true, passed: false, passedCount: enough))
         #expect(!RatingPrompt.shouldAsk(isPremium: true, passed: true, passedCount: enough - 1))
+    }
+
+    /// Reading the Japanese aloud is free on every lesson — locked or not, premium or not.
+    /// Only the meanings are paid, and only the meanings get cut short.
+    ///
+    /// Pinned because the lock lives on a *lesson* everywhere else in the app, so the
+    /// obvious implementation is to check `isLocked` and truncate. That would take away a
+    /// feature that has always been free and that nobody asked to charge for.
+    @Test func plainReadAllIsFreeEvenOnALockedLesson() {
+        for count in [17, 30, 63] {
+            #expect(Gating.wordsToRead(mode: .japanese, count: count, isLocked: true) == count)
+            #expect(Gating.wordsToRead(mode: .japanese, count: count, isLocked: false) == count)
+            // The meanings mode is only cut short when the lesson is actually locked.
+            #expect(Gating.wordsToRead(mode: .withMeaning, count: count, isLocked: false) == count)
+            #expect(Gating.wordsToRead(mode: .withMeaning, count: count, isLocked: true)
+                    == Gating.freeMeaningPreview)
+        }
+    }
+
+    /// The preview has to stop *short* of the lesson, or it isn't one: it would read every
+    /// word and then demand payment for what the listener had already heard in full — the
+    /// worst version of this feature, and indistinguishable from a bug in the logs.
+    @Test func previewStopsShortOfEveryLesson() {
+        let smallest = VocabStore.lessons().map(\.entries.count).min() ?? 0
+        #expect(smallest > 0)
+        #expect(Gating.freeMeaningPreview < smallest,
+                "preview of \(Gating.freeMeaningPreview) does not stop short of a \(smallest)-word lesson")
+        // And it must leave something behind to buy — a one-word remainder is not an offer.
+        #expect(smallest - Gating.freeMeaningPreview >= 5)
     }
 }
 
@@ -627,6 +690,170 @@ struct KanaSketchTests {
 }
 
 // MARK: - Today deck & widget contract
+
+// MARK: - Streak reminder (local notifications)
+
+struct StreakReminderTests {
+    /// A fixed 10am on 2026-08-11, so "has the fire time passed" is a decision the test
+    /// makes rather than one the clock makes.
+    private func morning() -> Date {
+        var c = DateComponents()
+        c.year = 2026; c.month = 8; c.day = 11; c.hour = 10
+        return StudyDay.calendar.date(from: c)!
+    }
+
+    /// The whole point of the feature: it must never nag someone who is already done.
+    /// A reminder that fires after you've studied is the one that gets notifications
+    /// turned off permanently, and iOS only ever asks for permission once.
+    @Test func todayIsSkippedOnceItHasBeenStudied() {
+        let now = morning()
+        let today = StudyDay.stamp(now)
+
+        let open = StreakReminder.plan(now: now, studiedToday: false, hour: 20, horizon: 3)
+        #expect(open.first == today)
+        #expect(open.count == 4)                      // today + 3 ahead
+
+        let done = StreakReminder.plan(now: now, studiedToday: true, hour: 20, horizon: 3)
+        #expect(!done.contains(today))
+        #expect(done.count == 3)                      // tomorrow onward only
+        // Skipping today must not shorten the horizon — a studied day still gets the
+        // same week of cover ahead of it.
+        #expect(done == Array(open.dropFirst()))
+    }
+
+    /// iOS silently drops a calendar trigger whose components are in the past, so a plan
+    /// that includes today after the fire time has gone looks scheduled and is not.
+    @Test func todayIsSkippedOnceItsHourHasPassed() {
+        let now = morning()                            // 10:00
+        let today = StudyDay.stamp(now)
+        #expect(StreakReminder.plan(now: now, studiedToday: false, hour: 20).contains(today))
+        #expect(!StreakReminder.plan(now: now, studiedToday: false, hour: 9).contains(today))
+        // The boundary: the hour it is right now has already begun, so it's too late.
+        #expect(!StreakReminder.plan(now: now, studiedToday: false, hour: 10).contains(today))
+    }
+
+    /// Days are walked through `Calendar`, not by adding one to an integer — 20260228 + 1
+    /// is not 20260229, and a month end is exactly where a hand-rolled plan breaks.
+    @Test func planWalksRealCalendarDays() {
+        var c = DateComponents()
+        c.year = 2026; c.month = 8; c.day = 30; c.hour = 10
+        let now = StudyDay.calendar.date(from: c)!
+
+        let days = StreakReminder.plan(now: now, studiedToday: false, hour: 20, horizon: 3)
+        #expect(days == [20260830, 20260831, 20260901, 20260902])
+        // Every stamp is a real date, and they strictly increase.
+        #expect(days == days.sorted())
+    }
+
+    /// Well inside the 64 pending-request ceiling iOS enforces, past which it silently
+    /// drops the rest — the horizon is a week for reasons of tone, not of limits.
+    @Test func horizonStaysFarBelowTheSystemLimit() {
+        let days = StreakReminder.plan(now: morning(), studiedToday: false)
+        #expect(days.count <= 8)
+        #expect(StreakReminder.horizon == 7)
+    }
+
+    /// An unset key reads 0 from `UserDefaults`, which is indistinguishable from a
+    /// deliberate midnight — so the getter has to treat it as "never chosen".
+    @Test func hourFallsBackRatherThanReadingMidnight() {
+        let key = Pref.streakReminderHour
+        let saved = UserDefaults.standard.object(forKey: key)
+        defer { UserDefaults.standard.set(saved, forKey: key) }
+
+        UserDefaults.standard.removeObject(forKey: key)
+        #expect(StreakReminder.resolvedHour == StreakReminder.defaultHour)
+        UserDefaults.standard.set(0, forKey: key)
+        #expect(StreakReminder.resolvedHour == StreakReminder.defaultHour)
+        UserDefaults.standard.set(7, forKey: key)
+        #expect(StreakReminder.resolvedHour == 7)
+        UserDefaults.standard.set(99, forKey: key)
+        #expect(StreakReminder.resolvedHour == StreakReminder.defaultHour)
+    }
+
+    /// The trigger is built from components, never a resolved `Date`, so iOS matches them
+    /// against the calendar at fire time and a learner who flies still gets reminded at
+    /// 8pm where they are.
+    @Test func triggerComponentsCarryTheLocalHour() {
+        let c = StreakReminder.components(day: 20260901, hour: 20)
+        #expect(c.year == 2026 && c.month == 9 && c.day == 1)
+        #expect(c.hour == 20 && c.minute == 0)
+        // No timezone pinned — that is what lets it follow the device.
+        #expect(c.timeZone == nil)
+    }
+}
+
+// MARK: - Notification opt-in policy
+
+struct NotificationOptInTests {
+    private func streak(_ current: Int, today: Int = 20260811) -> Streak {
+        let days = (0..<max(0, current)).map { StudyDay.stamp(today, offsetBy: -$0) }
+        return Streak(days: Set(days), today: today)
+    }
+
+    /// The rule the whole design exists for: iOS shows its permission alert **once per
+    /// install**, so a soft "not now" must never be followed by the real thing, and a
+    /// system-level denial must stop the soft ask too — there is nowhere for a yes to go.
+    @Test func neverAsksWhenTheSystemAlertCouldNotHelp() {
+        #expect(NotificationOptIn.mayAsk(isOn: false, status: .notDetermined, lastAsked: nil))
+        // Already on: nothing to offer.
+        #expect(!NotificationOptIn.mayAsk(isOn: true, status: .notDetermined, lastAsked: nil))
+        // Denied: iOS will never ask again, only the Settings app can undo it.
+        #expect(!NotificationOptIn.mayAsk(isOn: false, status: .denied, lastAsked: nil))
+        // Authorized but our toggle is off is a real state — permission granted, reminder
+        // later switched off — and is worth asking about.
+        #expect(NotificationOptIn.mayAsk(isOn: false, status: .authorized, lastAsked: nil))
+    }
+
+    @Test func aNotNowIsRespectedForTheWholeWindow() {
+        let now = Date()
+        let justAsked = now.addingTimeInterval(-60)
+        let longAgo = now.addingTimeInterval(-NotificationOptIn.askAgainAfter - 60)
+
+        #expect(!NotificationOptIn.mayAsk(isOn: false, status: .notDetermined,
+                                          lastAsked: justAsked, now: now))
+        #expect(NotificationOptIn.mayAsk(isOn: false, status: .notDetermined,
+                                         lastAsked: longAgo, now: now))
+        // Long enough that the prompt-about-prompts can't become its own nag.
+        #expect(NotificationOptIn.askAgainAfter >= 30 * 24 * 60 * 60)
+    }
+
+    /// The offer is to protect the run you are *on*. A 30-day record means nothing if
+    /// today is day 1 — there is no streak at stake tonight, and saying otherwise is the
+    /// kind of manufactured urgency this app doesn't do.
+    @Test func theStreakAskWaitsForAStreakWorthProtecting() {
+        let threshold = NotificationOptIn.streakThreshold
+        #expect(threshold == 7)
+
+        for n in 0..<threshold {
+            #expect(!NotificationOptIn.shouldAskAfterStreak(streak(n), isOn: false,
+                                                            status: .notDetermined, lastAsked: nil))
+        }
+        #expect(NotificationOptIn.shouldAskAfterStreak(streak(threshold), isOn: false,
+                                                       status: .notDetermined, lastAsked: nil))
+        #expect(NotificationOptIn.shouldAskAfterStreak(streak(threshold + 5), isOn: false,
+                                                       status: .notDetermined, lastAsked: nil))
+
+        // A long best streak that is currently broken must not trigger it.
+        let brokenButDecorated = Streak(days: Set((5...20).map { StudyDay.stamp(20260811, offsetBy: -$0) }),
+                                        today: 20260811)
+        #expect(brokenButDecorated.best >= threshold)
+        #expect(brokenButDecorated.current == 0)
+        #expect(!NotificationOptIn.shouldAskAfterStreak(brokenButDecorated, isOn: false,
+                                                        status: .notDetermined, lastAsked: nil))
+    }
+
+    /// Every gate in `mayAsk` still applies once the streak qualifies — the milestone is
+    /// an extra condition, never an override.
+    @Test func theStreakAskStillObeysEveryOtherGate() {
+        let long = streak(30)
+        #expect(!NotificationOptIn.shouldAskAfterStreak(long, isOn: true,
+                                                        status: .notDetermined, lastAsked: nil))
+        #expect(!NotificationOptIn.shouldAskAfterStreak(long, isOn: false,
+                                                        status: .denied, lastAsked: nil))
+        #expect(!NotificationOptIn.shouldAskAfterStreak(long, isOn: false, status: .notDetermined,
+                                                        lastAsked: Date()))
+    }
+}
 
 struct TodayTests {
     private var lesson: [Vocab] { VocabStore.lesson(2).entries }
@@ -1545,10 +1772,12 @@ struct IntroTests {
 
     /// Five cards, numbered 1…5 in paging order — the raw values are what `intro_card`
     /// and `intro_skip` report, so they double as the analytics contract.
-    @Test func fiveCardsNumberedInPagingOrder() {
-        #expect(Intro.Card.allCases.count == 5)
-        #expect(Intro.Card.allCases.map(\.rawValue) == [1, 2, 3, 4, 5])
-        #expect(Intro.Card.allCases == [.meanings, .kana, .modes, .challenge, .today])
+    @Test func cardsAreNumberedInPagingOrder() {
+        #expect(Intro.Card.allCases.count == 6)
+        #expect(Intro.Card.allCases.map(\.rawValue) == [1, 2, 3, 4, 5, 6])
+        #expect(Intro.Card.allCases == [.meanings, .kana, .modes, .challenge, .today, .reminders])
+        // The ask goes last, after the tour has shown what there is to come back to.
+        #expect(Intro.Card.allCases.last == .reminders)
     }
 
     /// The one answer with a behavioural consumer. Only "not yet" diverts the landing

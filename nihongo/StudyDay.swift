@@ -80,6 +80,11 @@ final class StudyDay {
             context.insert(StudyDay(day: today, answers: 1))
         }
         try? context.save()
+
+        // Today is now studied, so any reminder still pending for tonight has become a
+        // nag. Re-planning here rather than only on launch is what makes the reminder
+        // trustworthy: it can't fire at someone who already did the thing.
+        Task { await StreakReminder.reschedule(studiedToday: true) }
     }
 
     // MARK: - Streak

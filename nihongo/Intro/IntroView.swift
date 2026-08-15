@@ -123,15 +123,21 @@ struct IntroView: View {
             }
             dots
             Spacer(minLength: 12)
-            Button { advance() } label: {
-                HStack(spacing: 6) {
-                    Text(isLast ? L.t("Start learning") : L.t("Next"))
-                        .lineLimit(1).minimumScaleFactor(0.7)
-                    Image(systemName: "arrow.right")
+            // The reminders card carries its own two answers ("Remind me" / "Not now"),
+            // and a third button here would be a way to finish the tour without answering
+            // — which would land someone in the app having neither opted in nor declined,
+            // and leave the ask to fire again later as if it had never been shown.
+            if card != .reminders {
+                Button { advance() } label: {
+                    HStack(spacing: 6) {
+                        Text(isLast ? L.t("Start learning") : L.t("Next"))
+                            .lineLimit(1).minimumScaleFactor(0.7)
+                        Image(systemName: "arrow.right")
+                    }
+                    .fontWeight(.semibold)
                 }
-                .fontWeight(.semibold)
+                .buttonStyle(.borderedProminent)
             }
-            .buttonStyle(.borderedProminent)
         }
     }
 
@@ -155,6 +161,27 @@ struct IntroView: View {
         case .modes:     modesCard
         case .challenge: challengeCard
         case .today:     todayCard
+        case .reminders: remindersCard
+        }
+    }
+
+    // MARK: - Card 6 · Reminders
+
+    /// The soft opt-in. Answering either way finishes the tour, and **only a yes reaches
+    /// iOS** — a "not now" here must never be followed by the system alert, because that
+    /// alert can only be shown once and a refusal to it is permanent.
+    private var remindersCard: some View {
+        NotificationOptInCard { wantsReminders in
+            NotificationOptIn.recordAsked()
+            Track.event("notification_opt_in", ["source": "intro", "accepted": wantsReminders])
+            Task {
+                if wantsReminders, await StreakReminder.requestAuthorization() {
+                    UserDefaults.standard.set(true, forKey: Pref.streakReminderOn)
+                    await StreakReminder.reschedule(studiedToday: false)
+                    await PushService.shared.registerIfAuthorized()
+                }
+                await MainActor.run { finish() }
+            }
         }
     }
 
@@ -407,6 +434,10 @@ struct IntroView: View {
     /// swipe off the last card finishes, exactly as the button does, so the gesture the
     /// tour just taught is enough to leave it.
     private func turn(_ direction: Int) {
+        // The reminders card is the one that must be *answered*, so a forward swipe there
+        // does nothing — otherwise the tour's own gesture would be a way past the question,
+        // and the answer would go unrecorded and be asked again as if never shown.
+        if direction > 0 && card == .reminders { return }
         if direction > 0 && isLast { finish(); return }
         index = min(max(0, index + direction), Self.cards.count - 1)
     }

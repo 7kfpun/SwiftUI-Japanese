@@ -16,7 +16,10 @@ enum Intro {
     /// The raw value is the 1-based card number the analytics events carry, so
     /// `intro_card` / `intro_skip` line up with "card 3" in a conversation about the flow.
     enum Card: Int, CaseIterable, Identifiable {
-        case meanings = 1, kana, modes, challenge, today
+        /// `reminders` is last on purpose. It is the only card that asks for something
+        /// rather than showing something, and a permission rationale only lands once the
+        /// tour has demonstrated what there is to come back to.
+        case meanings = 1, kana, modes, challenge, today, reminders
         var id: Int { rawValue }
     }
 

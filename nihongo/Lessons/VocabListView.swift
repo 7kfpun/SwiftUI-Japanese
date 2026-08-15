@@ -25,6 +25,12 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
     private enum Part { case japanese, meaning }
     private var part: Part = .japanese
 
+    /// Called when the list runs out on its own. **Not** called by `stop()`: a listener
+    /// who taps stop hasn't reached the end, and the meaning preview hangs a paywall off
+    /// this — putting one on screen because someone chose to stop would be the same
+    /// interruption the whole-lesson rule exists to avoid.
+    var onFinished: (() -> Void)?
+
     private var entries: [Vocab] = []
     private var meaningLocale = Speech.meaningLocale(VocabStore.defaultLanguage)
     private var player: AVAudioPlayer?
@@ -66,7 +72,15 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
     }
 
     private func play(_ i: Int) {
-        guard isPlaying, i < entries.count else { stop(); return }
+        guard isPlaying else { stop(); return }
+        guard i < entries.count else {
+            // `i > 0` so an empty list can't fire this. Running out having played nothing
+            // isn't "finished", and a paywall on an empty lesson would be pure noise.
+            let reachedEnd = i > 0
+            stop()
+            if reachedEnd { onFinished?() }
+            return
+        }
         currentIndex = i
         part = .japanese
         let v = entries[i]
@@ -126,9 +140,8 @@ struct VocabListView: View {
     // Re-resolve by lesson number so meanings update immediately when the language changes.
     private var entries: [Vocab] { VocabStore.lesson(lesson.number, language).entries }
 
-    /// Reading the meanings aloud is premium — under the *same* whole-lesson rule as every
-    /// other paid mode, not a rule of its own. Lessons 1…3 read both halves for free, so
-    /// the feature can be heard before it is bought rather than only described.
+    /// Reading the meanings aloud is premium. On a free lesson it plays the lesson through;
+    /// on a locked one it plays `Gating.freeMeaningPreview` words properly and *then* asks.
     ///
     /// The Vocab List itself stays free at every lesson. This gates one button on it.
     private var meaningLocked: Bool {
@@ -177,19 +190,34 @@ struct VocabListView: View {
                 }
             }
         }
-        .sheet(isPresented: $showPaywall) { PaywallView(source: "read_all_meanings") }
-        .onDisappear { player.stop() }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(source: "read_all_meanings", lesson: lesson.number)
+        }
+        // `onFinished` closes over this view, which owns the player — clearing it here
+        // breaks that cycle, and stops a paywall arriving on a screen already left.
+        .onDisappear { player.stop(); player.onFinished = nil }
     }
 
     private func play(_ mode: ReadMode) {
-        if mode == .withMeaning && meaningLocked {
+        // A locked lesson gets a taste, not a closed door. The paywall is triggered by the
+        // preview *reaching its end*, never by a timer and never by the tap itself, so a
+        // listener who stops early is left alone.
+        let limit = Gating.wordsToRead(mode: mode, count: entries.count, isLocked: meaningLocked)
+        let list = Array(entries.prefix(limit))
+        // "Preview" means literally that the list was cut short, so the paywall can only
+        // follow playback the user didn't get all of.
+        let isPreview = limit < entries.count
+
+        player.onFinished = isPreview ? {
+            Track.event("locked_read_all", ["lesson": lesson.number,
+                                            "heard": list.count])
             showPaywall = true
-            Track.event("locked_read_all", ["lesson": lesson.number])
-            return
-        }
-        player.toggle(entries, mode: mode, language: language)
+        } : nil
+
+        player.toggle(list, mode: mode, language: language)
         if player.isPlaying {
-            Track.event("read_all", ["lesson": lesson.number, "mode": mode.rawValue])
+            Track.event("read_all", ["lesson": lesson.number, "mode": mode.rawValue,
+                                     "preview": isPreview])
         }
     }
 }

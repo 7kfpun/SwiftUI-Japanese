@@ -45,10 +45,31 @@ struct TodayView: View {
     /// something, which always happens on another screen, so there is nothing to watch
     /// while Today is visible.
     @State private var streak = Streak(days: [])
+    /// The soft opt-in, raised once the streak has earned it — see `NotificationOptIn`.
+    @State private var showNotificationOptIn = false
 
     private var current: Vocab? { picks.indices.contains(index) ? picks[index] : picks.first }
 
-    private func reloadStreak() { streak = StudyDay.streak(context: context) }
+    private func reloadStreak() {
+        streak = StudyDay.streak(context: context)
+        // A streak worth protecting is the moment the offer makes sense — asking on day 1
+        // is asking someone to defend something they don't have yet. Checked here because
+        // this is the one place the streak is read; the policy itself lives in
+        // `NotificationOptIn` so the intro and this can't both fire in the same week.
+        Task { [streak] in
+            let status = await StreakReminder.authorizationStatus()
+            let on = UserDefaults.standard.bool(forKey: Pref.streakReminderOn)
+            if NotificationOptIn.shouldAskAfterStreak(streak, isOn: on, status: status) {
+                await MainActor.run { showNotificationOptIn = true }
+            }
+        }
+        // The reminder plan is a sliding week, and it depends on whether today is already
+        // done — both of which go stale on their own. Re-planning wherever the streak is
+        // read keeps the two in step without a timer or a background task.
+        Task { [studiedToday = streak.studiedToday] in
+            await StreakReminder.reschedule(studiedToday: studiedToday)
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -75,6 +96,25 @@ struct TodayView: View {
                 }
             }
             .onAppear { loadPicks(); autoPlay(); reloadStreak(); Track.screen("today", ["lesson": lessonNumber]) }
+            // A sheet rather than an alert: this is an offer with a rationale, and an
+            // alert's two bare buttons can't carry the reason it's worth a yes.
+            .sheet(isPresented: $showNotificationOptIn) {
+                NotificationOptInCard { wantsReminders in
+                    NotificationOptIn.recordAsked()
+                    Track.event("notification_opt_in",
+                                ["source": "streak", "accepted": wantsReminders,
+                                 "streak": streak.current])
+                    showNotificationOptIn = false
+                    guard wantsReminders else { return }
+                    Task {
+                        guard await StreakReminder.requestAuthorization() else { return }
+                        UserDefaults.standard.set(true, forKey: Pref.streakReminderOn)
+                        await StreakReminder.reschedule(studiedToday: streak.studiedToday)
+                        await PushService.shared.registerIfAuthorized()
+                    }
+                }
+                .presentationDetents([.medium])
+            }
             .onChange(of: language) { loadPicks() }
         }
     }

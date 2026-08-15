@@ -14,6 +14,14 @@
 		AA7CC623302A13DE007DA35F /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = AA7CC613302A13DE007DA35F /* FirebaseFirestore */; };
 		AA7CC624302A13DE007DA35F /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = AA7CC614302A13DE007DA35F /* FirebaseAppCheck */; };
 		AA7CC625302A13DE007DA35F /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = AA7CC615302A13DE007DA35F /* GoogleMobileAds */; };
+		AA7CC7A2302A13DE007DA35F /* FirebasePerformance in Frameworks */ = {isa = PBXBuildFile; productRef = AA7CC7A1302A13DE007DA35F /* FirebasePerformance */; };
+		AA7CC7A4302A13DE007DA35F /* FirebasePerformance in Frameworks */ = {isa = PBXBuildFile; productRef = AA7CC7A3302A13DE007DA35F /* FirebasePerformance */; };
+		AA7CC7B2302A13DE007DA35F /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = AA7CC7B1302A13DE007DA35F /* FirebaseMessaging */; };
+		AA7CC7B4302A13DE007DA35F /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = AA7CC7B3302A13DE007DA35F /* FirebaseMessaging */; };
+		AA7CC7C2302A13DE007DA35F /* OneSignalFramework in Frameworks */ = {isa = PBXBuildFile; productRef = AA7CC7C1302A13DE007DA35F /* OneSignalFramework */; };
+		AA7CC7C4302A13DE007DA35F /* OneSignalFramework in Frameworks */ = {isa = PBXBuildFile; productRef = AA7CC7C3302A13DE007DA35F /* OneSignalFramework */; };
+		AA7CC80C302A13DE007DA35F /* OneSignalNSE.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA7CC803302A13DE007DA35F /* OneSignalNSE.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA7CC80E302A13DE007DA35F /* OneSignalExtension in Frameworks */ = {isa = PBXBuildFile; productRef = AA7CC80D302A13DE007DA35F /* OneSignalExtension */; };
 		AADAA70D3023ACC5006010F5 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = AADAA70C3023ACC5006010F5 /* GoogleMobileAds */; };
 		AAF4B1BD30245931001F7D2E /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = AAF4B1BC30245931001F7D2E /* FirebaseAnalytics */; };
 		AAF4B1BF30245931001F7D2E /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = AAF4B1BE30245931001F7D2E /* FirebaseCrashlytics */; };
@@ -31,6 +39,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = AA7CC519302A13DE007DA35F;
 			remoteInfo = jlpt;
+		};
+		AA7CC80A302A13DE007DA35F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AADA495D3023578E006010F5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA7CC802302A13DE007DA35F;
+			remoteInfo = OneSignalNSE;
 		};
 		AADA497530235791006010F5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -77,6 +92,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				AAF4D4CD30247E61001F7D2E /* TodayWidgetExtension.appex in Embed Foundation Extensions */,
+				AA7CC80C302A13DE007DA35F /* OneSignalNSE.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -108,6 +124,7 @@
 /* Begin PBXFileReference section */
 		AA7CC51A302A13DE007DA35F /* jlpt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = jlpt.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA7CC705302A13DE007DA35F /* jlptUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = jlptUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA7CC803302A13DE007DA35F /* OneSignalNSE.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OneSignalNSE.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AADA49653023578E006010F5 /* nihongo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = nihongo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AADA497430235791006010F5 /* nihongoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = nihongoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AADA497E30235791006010F5 /* nihongoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = nihongoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -156,6 +173,11 @@
 		AA7CC51B302A13DE007DA35F /* Apps/jlpt */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Apps/jlpt;
+			sourceTree = "<group>";
+		};
+		AA7CC801302A13DE007DA35F /* OneSignalNSE */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = OneSignalNSE;
 			sourceTree = "<group>";
 		};
 		AADA49673023578E006010F5 /* nihongo */ = {
@@ -209,6 +231,9 @@
 				AA7CC621302A13DE007DA35F /* FirebaseAnalytics in Frameworks */,
 				AA7CC624302A13DE007DA35F /* FirebaseAppCheck in Frameworks */,
 				AA7CC625302A13DE007DA35F /* GoogleMobileAds in Frameworks */,
+				AA7CC7A2302A13DE007DA35F /* FirebasePerformance in Frameworks */,
+				AA7CC7B2302A13DE007DA35F /* FirebaseMessaging in Frameworks */,
+				AA7CC7C2302A13DE007DA35F /* OneSignalFramework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,6 +241,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA7CC805302A13DE007DA35F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA7CC80E302A13DE007DA35F /* OneSignalExtension in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -228,6 +261,9 @@
 				AAF4B1BD30245931001F7D2E /* FirebaseAnalytics in Frameworks */,
 				AA7CC4F830279680007DA35F /* FirebaseAppCheck in Frameworks */,
 				AADAA70D3023ACC5006010F5 /* GoogleMobileAds in Frameworks */,
+				AA7CC7A4302A13DE007DA35F /* FirebasePerformance in Frameworks */,
+				AA7CC7B4302A13DE007DA35F /* FirebaseMessaging in Frameworks */,
+				AA7CC7C4302A13DE007DA35F /* OneSignalFramework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -282,6 +318,7 @@
 				AAF4E00330250001001F7D2E /* WatchApp */,
 				AAF4E01330250001001F7D2E /* WatchWidget */,
 				AA7CC51B302A13DE007DA35F /* Apps/jlpt */,
+				AA7CC801302A13DE007DA35F /* OneSignalNSE */,
 				AAF4D4B830247E5E001F7D2E /* Frameworks */,
 				AADA49663023578E006010F5 /* Products */,
 			);
@@ -291,6 +328,7 @@
 			isa = PBXGroup;
 			children = (
 				AADA49653023578E006010F5 /* nihongo.app */,
+				AA7CC803302A13DE007DA35F /* OneSignalNSE.appex */,
 				AADA497430235791006010F5 /* nihongoTests.xctest */,
 				AADA497E30235791006010F5 /* nihongoUITests.xctest */,
 				AAF4D4B730247E5E001F7D2E /* TodayWidgetExtension.appex */,
@@ -338,6 +376,9 @@
 				AA7CC612302A13DE007DA35F /* FirebaseCrashlytics */,
 				AA7CC613302A13DE007DA35F /* FirebaseFirestore */,
 				AA7CC614302A13DE007DA35F /* FirebaseAppCheck */,
+				AA7CC7A1302A13DE007DA35F /* FirebasePerformance */,
+				AA7CC7B1302A13DE007DA35F /* FirebaseMessaging */,
+				AA7CC7C1302A13DE007DA35F /* OneSignalFramework */,
 			);
 			productName = jlpt;
 			productReference = AA7CC51A302A13DE007DA35F /* jlpt.app */;
@@ -366,6 +407,29 @@
 			productReference = AA7CC705302A13DE007DA35F /* jlptUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		AA7CC802302A13DE007DA35F /* OneSignalNSE */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA7CC807302A13DE007DA35F /* Build configuration list for PBXNativeTarget "OneSignalNSE" */;
+			buildPhases = (
+				AA7CC804302A13DE007DA35F /* Sources */,
+				AA7CC805302A13DE007DA35F /* Frameworks */,
+				AA7CC806302A13DE007DA35F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AA7CC801302A13DE007DA35F /* OneSignalNSE */,
+			);
+			name = OneSignalNSE;
+			packageProductDependencies = (
+				AA7CC80D302A13DE007DA35F /* OneSignalExtension */,
+			);
+			productName = OneSignalNSE;
+			productReference = AA7CC803302A13DE007DA35F /* OneSignalNSE.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		AADA49643023578E006010F5 /* nihongo */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = AADA498830235791006010F5 /* Build configuration list for PBXNativeTarget "nihongo" */;
@@ -381,6 +445,7 @@
 			dependencies = (
 				AAF4D4CC30247E61001F7D2E /* PBXTargetDependency */,
 				AAF4E02530250001001F7D2E /* PBXTargetDependency */,
+				AA7CC80B302A13DE007DA35F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				AA5HA2ED30250002001F7D2E /* Shared */,
@@ -393,6 +458,9 @@
 				AAF4B1BE30245931001F7D2E /* FirebaseCrashlytics */,
 				AA7CC4F530279674007DA35F /* FirebaseFirestore */,
 				AA7CC4F730279680007DA35F /* FirebaseAppCheck */,
+				AA7CC7A3302A13DE007DA35F /* FirebasePerformance */,
+				AA7CC7B3302A13DE007DA35F /* FirebaseMessaging */,
+				AA7CC7C3302A13DE007DA35F /* OneSignalFramework */,
 			);
 			productName = nihongo;
 			productReference = AADA49653023578E006010F5 /* nihongo.app */;
@@ -566,6 +634,7 @@
 			packageReferences = (
 				AADAA70B3023ACC5006010F5 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
 				AAF4B1BB30245931001F7D2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				AA7CC7D0302A13DE007DA35F /* XCRemoteSwiftPackageReference "OneSignal-XCFramework" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AADA49663023578E006010F5 /* Products */;
@@ -580,6 +649,7 @@
 				AAF4E01130250001001F7D2E /* WatchWidgetExtension */,
 				AA7CC519302A13DE007DA35F /* jlpt */,
 				AA7CC701302A13DE007DA35F /* jlptUITests */,
+				AA7CC802302A13DE007DA35F /* OneSignalNSE */,
 			);
 		};
 /* End PBXProject section */
@@ -593,6 +663,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		AA7CC704302A13DE007DA35F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA7CC806302A13DE007DA35F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -658,6 +735,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA7CC804302A13DE007DA35F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AADA49613023578E006010F5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -707,6 +791,11 @@
 			isa = PBXTargetDependency;
 			target = AA7CC519302A13DE007DA35F /* jlpt */;
 			targetProxy = AA7CC706302A13DE007DA35F /* PBXContainerItemProxy */;
+		};
+		AA7CC80B302A13DE007DA35F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA7CC802302A13DE007DA35F /* OneSignalNSE */;
+			targetProxy = AA7CC80A302A13DE007DA35F /* PBXContainerItemProxy */;
 		};
 		AADA497630235791006010F5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -852,6 +941,60 @@
 			};
 			name = Release;
 		};
+		AA7CC808302A13DE007DA35F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = OneSignalNSE.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 25;
+				DEVELOPMENT_TEAM = CC4C8V8BXN;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "OneSignalNSE-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = OneSignalNSE;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 3.0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kfpun.nihongo.OneSignalNSE;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AA7CC809302A13DE007DA35F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = OneSignalNSE.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 25;
+				DEVELOPMENT_TEAM = CC4C8V8BXN;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "OneSignalNSE-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = OneSignalNSE;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 3.0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kfpun.nihongo.OneSignalNSE;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		AADA498630235791006010F5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -980,7 +1123,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = nihongo.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 24;
+				CURRENT_PROJECT_VERSION = 25;
 				DEVELOPMENT_TEAM = CC4C8V8BXN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -995,7 +1138,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0.0;
+				MARKETING_VERSION = 3.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kfpun.nihongo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -1015,7 +1158,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = nihongo.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 24;
+				CURRENT_PROJECT_VERSION = 25;
 				DEVELOPMENT_TEAM = CC4C8V8BXN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1030,7 +1173,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0.0;
+				MARKETING_VERSION = 3.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kfpun.nihongo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -1134,7 +1277,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = TodayWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 24;
+				CURRENT_PROJECT_VERSION = 25;
 				DEVELOPMENT_TEAM = CC4C8V8BXN;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TodayWidget/Info.plist;
@@ -1145,7 +1288,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 3.0.0;
+				MARKETING_VERSION = 3.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kfpun.nihongo.TodayWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1165,7 +1308,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = TodayWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 24;
+				CURRENT_PROJECT_VERSION = 25;
 				DEVELOPMENT_TEAM = CC4C8V8BXN;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TodayWidget/Info.plist;
@@ -1176,7 +1319,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 3.0.0;
+				MARKETING_VERSION = 3.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kfpun.nihongo.TodayWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1196,7 +1339,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = WatchApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 25;
 				DEVELOPMENT_TEAM = CC4C8V8BXN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1208,7 +1351,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0.0;
+				MARKETING_VERSION = 3.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kfpun.nihongo.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -1232,7 +1375,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = WatchApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 25;
 				DEVELOPMENT_TEAM = CC4C8V8BXN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1244,7 +1387,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0.0;
+				MARKETING_VERSION = 3.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kfpun.nihongo.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -1266,7 +1409,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = WatchWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 24;
+				CURRENT_PROJECT_VERSION = 25;
 				DEVELOPMENT_TEAM = CC4C8V8BXN;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WatchWidget/Info.plist;
@@ -1277,7 +1420,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 3.0.0;
+				MARKETING_VERSION = 3.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kfpun.nihongo.watchkitapp.WatchWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -1299,7 +1442,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = WatchWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 24;
+				CURRENT_PROJECT_VERSION = 25;
 				DEVELOPMENT_TEAM = CC4C8V8BXN;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WatchWidget/Info.plist;
@@ -1310,7 +1453,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 3.0.0;
+				MARKETING_VERSION = 3.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kfpun.nihongo.watchkitapp.WatchWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -1344,6 +1487,15 @@
 			buildConfigurations = (
 				AA7CC709302A13DE007DA35F /* Debug */,
 				AA7CC70A302A13DE007DA35F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA7CC807302A13DE007DA35F /* Build configuration list for PBXNativeTarget "OneSignalNSE" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA7CC808302A13DE007DA35F /* Debug */,
+				AA7CC809302A13DE007DA35F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1414,6 +1566,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		AA7CC7D0302A13DE007DA35F /* XCRemoteSwiftPackageReference "OneSignal-XCFramework" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/OneSignal/OneSignal-XCFramework";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.2.14;
+			};
+		};
 		AADAA70B3023ACC5006010F5 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads";
@@ -1467,6 +1627,41 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AADAA70B3023ACC5006010F5 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
 			productName = GoogleMobileAds;
+		};
+		AA7CC7A1302A13DE007DA35F /* FirebasePerformance */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AAF4B1BB30245931001F7D2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebasePerformance;
+		};
+		AA7CC7A3302A13DE007DA35F /* FirebasePerformance */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AAF4B1BB30245931001F7D2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebasePerformance;
+		};
+		AA7CC7B1302A13DE007DA35F /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AAF4B1BB30245931001F7D2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		AA7CC7B3302A13DE007DA35F /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AAF4B1BB30245931001F7D2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		AA7CC7C1302A13DE007DA35F /* OneSignalFramework */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA7CC7D0302A13DE007DA35F /* XCRemoteSwiftPackageReference "OneSignal-XCFramework" */;
+			productName = OneSignalFramework;
+		};
+		AA7CC7C3302A13DE007DA35F /* OneSignalFramework */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA7CC7D0302A13DE007DA35F /* XCRemoteSwiftPackageReference "OneSignal-XCFramework" */;
+			productName = OneSignalFramework;
+		};
+		AA7CC80D302A13DE007DA35F /* OneSignalExtension */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA7CC7D0302A13DE007DA35F /* XCRemoteSwiftPackageReference "OneSignal-XCFramework" */;
+			productName = OneSignalExtension;
 		};
 		AADAA70C3023ACC5006010F5 /* GoogleMobileAds */ = {
 			isa = XCSwiftPackageProductDependency;

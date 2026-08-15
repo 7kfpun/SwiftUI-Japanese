@@ -7,6 +7,10 @@ struct SelectModeView: View {
     @Environment(Store.self) private var store
     @Environment(\.modelContext) private var context
     @State private var showPaywall = false
+    /// Which row opened the paywall — a locked mode or a locked challenge rung. Both used
+    /// to report one `select_mode_locked` source, which is the difference between "people
+    /// bounce off the ladder" and "people bounce off Flashcards".
+    @State private var paywallSource = "select_mode_locked"
     @State private var results: [Int: ChallengeResult] = [:]
 
     // Re-resolve so entering a mode uses the current Meanings language.
@@ -34,11 +38,11 @@ struct SelectModeView: View {
                     ModeRow(icon: "list.bullet", title: L.t("Vocab List"),
                             subtitle: L.t("Browse & hear all words"))
                 }
-                mode(icon: "rectangle.on.rectangle.angled", title: L.t("Flashcards"),
+                mode(key: "flashcards", icon: "rectangle.on.rectangle.angled", title: L.t("Flashcards"),
                      subtitle: L.t("Swipe right if you know it")) { FlashcardView(lesson: current) }
-                mode(icon: "arrow.left.arrow.right", title: L.t("Train"),
+                mode(key: "train", icon: "arrow.left.arrow.right", title: L.t("Train"),
                      subtitle: L.t("Swipe to the right answer")) { TrainView(lesson: current) }
-                mode(icon: "square.grid.2x2", title: L.t("Learn"),
+                mode(key: "learn", icon: "square.grid.2x2", title: L.t("Learn"),
                      subtitle: L.t("Rebuild the reading from tiles")) { LearnView(lesson: current) }
             } header: {
                 Text(L.t("Learn")).font(Theme.title(.footnote))
@@ -67,7 +71,9 @@ struct SelectModeView: View {
             Track.screen("select_mode", ["lesson": lesson.number])
             reloadResults()
         }
-        .sheet(isPresented: $showPaywall) { PaywallView(source: "select_mode_locked") }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(source: paywallSource, lesson: lesson.number)
+        }
     }
 
     /// Re-read on every appear so a challenge finished and popped back updates its row.
@@ -83,6 +89,7 @@ struct SelectModeView: View {
 
         if locked {
             Button {
+                paywallSource = "locked_challenge"
                 showPaywall = true
                 Track.event("locked_challenge", ["lesson": lesson.number, "index": i])
             } label: {
@@ -101,13 +108,19 @@ struct SelectModeView: View {
     }
 
     /// A premium-gated mode row: navigates when unlocked, opens the paywall when not.
+    ///
+    /// `key` is the analytics name and `title` is the on-screen one, and they are separate
+    /// arguments because they were the same one. `title` arrives from `L.t`, so the event
+    /// reported "Flashcards" to an English user and "闪卡" to a Chinese one — the same tap
+    /// spread across 17 values, none of which could be summed.
     @ViewBuilder
-    private func mode<D: View>(icon: String, title: String, subtitle: String,
+    private func mode<D: View>(key: String, icon: String, title: String, subtitle: String,
                                @ViewBuilder destination: @escaping () -> D) -> some View {
         if locked {
             Button {
+                paywallSource = "locked_mode"
                 showPaywall = true
-                Track.event("locked_mode", ["mode": title, "lesson": lesson.number])
+                Track.event("locked_mode", ["mode": key, "lesson": lesson.number])
             } label: {
                 ModeRow(icon: icon, title: title, subtitle: subtitle, locked: true)
             }

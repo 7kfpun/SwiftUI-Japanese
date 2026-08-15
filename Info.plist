@@ -15,10 +15,30 @@
 			</array>
 		</dict>
 	</array>
+	<!--
+	  Firebase must NOT swizzle the app delegate. FCM and OneSignal both swizzle by
+	  default, and both want the same two things: the APNs device token, and
+	  UNUserNotificationCenter.delegate. Left to fight over them, whichever loses
+	  goes quiet — with no error, on device only, usually noticed as "a campaign
+	  went out and nobody got it".
+
+	  With the proxy off, PushService owns both and hands the token to each SDK
+	  explicitly. Do not set this back to YES without removing one of them.
+	-->
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-8610011634603119~3848593989</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<!--
+	  OneSignal App ID for this app (Minna). Public by design — it ships in the binary
+	  and identifies the app to OneSignal; it is NOT the REST API key, which is secret
+	  and must never live here. jlpt-Info.plist is deliberately still empty: JLPT needs
+	  its own OneSignal app, and PushService skips OneSignal entirely while blank.
+	-->
+	<key>OneSignalAppID</key>
+	<string>a8038c73-97b5-46b3-a297-989c495f547f</string>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>

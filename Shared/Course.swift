@@ -138,12 +138,27 @@ extension Course {
         appGroup: "group.com.kfpun.jlptjp",
         cloudKitContainer: "iCloud.com.kfpun.jlptjp",
         appStoreURL: "https://apps.apple.com/app/id6800220716",
+        // These IDs deliberately do **not** mirror minna's, and both differences are
+        // load-bearing. Product IDs are immutable and unique per *team* forever, so this
+        // block records what App Store Connect actually holds — never an aspiration.
+        //
+        // `forever`, not `lifetime`: `…premium.lifetime` was created here and deleted
+        // during setup, and Apple reserves a deleted product ID permanently. The word is
+        // simply gone for this app. (`…premium.lifttime`, a typo made while working
+        // around that, also exists and is deliberately left unattached — deleting it
+        // would burn a third ID and gain nothing.) `forever` matches the paywall's own
+        // "Pay once, yours forever", and `Store.tierLabel` matches this product by
+        // identity rather than by string, so analytics still report `lifetime`.
+        //
+        // Lowercase `3m`/`6m`: minna's uppercase `3M`/`6M` are a workaround for lowercase
+        // IDs the RN app burned there. JLPT has no such history, so lowercase is the
+        // clean choice here, not a mistake to correct.
         products: .init(
-            lifetime: "com.kfpun.jlptjp.premium.lifetime",
+            lifetime: "com.kfpun.jlptjp.premium.forever",
             subscriptions: [
                 "com.kfpun.jlptjp.premium.1m",
-                "com.kfpun.jlptjp.premium.3M",
-                "com.kfpun.jlptjp.premium.6M",
+                "com.kfpun.jlptjp.premium.3m",
+                "com.kfpun.jlptjp.premium.6m",
             ],
             // Nothing legacy yet — this app has never sold anything.
             legacy: []),

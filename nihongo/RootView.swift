@@ -38,7 +38,7 @@ struct RootView: View {
                 .tabItem { Label(L.t("Lessons"), systemImage: "list.bullet") }
                 .tag(Router.Tab.lessons)
 
-            banner(StatsView(), .today)
+            banner(StatsView(), .progress)
                 .tabItem { Label(L.t("Progress"), systemImage: "chart.bar") }
                 .tag(Router.Tab.progress)
 

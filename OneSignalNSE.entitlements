@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  OneSignal's own App Group, shared between the app and this extension so the two
+	  processes can agree on badge counts and delivery receipts.
+
+	  Deliberately NOT group.com.kfpun.nihongo, the app's existing group: that one holds
+	  the Today deck the widget and watch app read, and OneSignal writes its own state
+	  into whatever group it is given. Two unrelated writers in one container is how a
+	  widget starts showing a stale word for reasons nobody can trace.
+	-->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.kfpun.nihongo.onesignal</string>
+	</array>
+</dict>
+</plist>

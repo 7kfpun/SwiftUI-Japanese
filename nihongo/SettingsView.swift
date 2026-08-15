@@ -6,6 +6,9 @@ struct SettingsView: View {
     @AppStorage(Pref.translationLanguage) private var vocabLanguage = VocabStore.deviceDefaultLanguage
     @Environment(Store.self) private var store
     @Environment(Router.self) private var router
+    /// Only so the reminder can be re-planned against today's real state when the toggle
+    /// or the hour changes — a plan built from a guess would nag someone already done.
+    @Environment(\.modelContext) private var context
     @State private var showPaywall = false
     @State private var showFeedback = false
     @State private var legal: LegalDoc?
@@ -16,6 +19,23 @@ struct SettingsView: View {
     /// Only for the footer's suffix; the switch itself moved to Diagnostics. Re-read when
     /// that sheet closes, since it's the one place that can change it.
     @State private var analyticsExcluded = Track.isExcluded
+    @AppStorage(Pref.streakReminderOn) private var streakReminderOn = false
+    @AppStorage(Pref.streakReminderHour) private var streakReminderHour = StreakReminder.defaultHour
+    /// iOS only ever asks once. When the answer was no, the toggle can't do anything and
+    /// must say so rather than sit there looking functional.
+    @State private var notificationsDenied = false
+    @State private var showReminderOffConfirm = false
+    /// Guards the writes the dialog's own buttons make, which re-enter `onChange` and
+    /// would otherwise raise the dialog a second time.
+    @State private var suppressOffConfirm = false
+
+    /// The hour as the learner's locale writes it — "8 PM" or "20:00" — rather than a
+    /// bare number, which is ambiguous in every 12-hour region.
+    private static func hourLabel(_ hour: Int) -> String {
+        var c = DateComponents(); c.hour = hour; c.minute = 0
+        guard let date = Calendar.current.date(from: c) else { return "\(hour)" }
+        return date.formatted(.dateTime.hour().minute())
+    }
 
     var body: some View {
         NavigationStack {
@@ -64,6 +84,26 @@ struct SettingsView: View {
                     Text(L.t("Meanings")).font(Theme.title(.footnote))
                 } footer: {
                     Text(L.t("The language Japanese words are translated into (vocabulary lists, quizzes, and search)."))
+                }
+
+                Section {
+                    Toggle(L.t("Daily reminder"), isOn: $streakReminderOn)
+                    if streakReminderOn {
+                        Picker(L.t("Reminder time"), selection: $streakReminderHour) {
+                            // Whole hours only. A minute picker implies a precision the
+                            // feature doesn't have — the reminder is "some time this
+                            // evening", not an appointment.
+                            ForEach(6...23, id: \.self) { hour in
+                                Text(Self.hourLabel(hour)).tag(hour)
+                            }
+                        }
+                    }
+                } header: {
+                    Text(L.t("Reminders")).font(Theme.title(.footnote))
+                } footer: {
+                    Text(notificationsDenied
+                         ? L.t("Notifications are turned off for this app in iOS Settings.")
+                         : L.t("A nudge on any day you haven't studied yet. Nothing is sent when you're already done."))
                 }
 
                 Section {
@@ -125,6 +165,60 @@ struct SettingsView: View {
             .navigationTitle(L.t("Settings"))
             .sheet(item: $legal) { doc in LegalView(titleKey: doc.titleKey, resource: doc.rawValue) }
             .onAppear { Track.screen("settings") }
+            .task { notificationsDenied = await StreakReminder.authorizationStatus() == .denied }
+            // Permission is requested here — on an explicit "yes, remind me" — and nowhere
+            // else. If iOS says no, the toggle goes back off rather than staying on over a
+            // reminder that can never fire.
+            .onChange(of: streakReminderOn) { _, on in
+                // Turning it *off* asks first. Not a dark pattern and not a second toggle:
+                // the confirm exists because switching this off is usually a reaction to
+                // one badly-timed alert, and the thing worth saying — it stays quiet on
+                // days you've already studied — is exactly what the person who just got
+                // annoyed doesn't know yet. "Turn off" remains the default action.
+                if !on && !suppressOffConfirm {
+                    showReminderOffConfirm = true
+                    return
+                }
+                Task {
+                    if on {
+                        let granted = await StreakReminder.requestAuthorization()
+                        notificationsDenied = !granted
+                        if !granted { streakReminderOn = false; return }
+                        await PushService.shared.registerIfAuthorized()
+                    }
+                    await StreakReminder.reschedule(studiedToday: StudyDay.streak(context: context).studiedToday)
+                    Track.event("streak_reminder", ["on": on, "hour": streakReminderHour])
+                }
+            }
+            .confirmationDialog(L.t("Turn off the daily reminder?"),
+                                isPresented: $showReminderOffConfirm, titleVisibility: .visible) {
+                Button(L.t("Turn off"), role: .destructive) {
+                    // `suppressOffConfirm` stops the re-entrant `onChange` this write
+                    // triggers from raising the same dialog again.
+                    suppressOffConfirm = true
+                    streakReminderOn = false
+                    suppressOffConfirm = false
+                    Task {
+                        await StreakReminder.reschedule(studiedToday: StudyDay.streak(context: context).studiedToday)
+                        Track.event("streak_reminder", ["on": false, "hour": streakReminderHour])
+                    }
+                }
+                Button(L.t("Keep it on"), role: .cancel) {
+                    // Put the switch back: the binding already flipped to draw the tap.
+                    suppressOffConfirm = true
+                    streakReminderOn = true
+                    suppressOffConfirm = false
+                    Track.event("streak_reminder_kept")
+                }
+            } message: {
+                Text(L.t("Most people who lose a streak simply forgot. The reminder only arrives on days you haven't studied — and never once you're done."))
+            }
+            .onChange(of: streakReminderHour) { _, hour in
+                Task {
+                    await StreakReminder.reschedule(studiedToday: StudyDay.streak(context: context).studiedToday)
+                    Track.event("streak_reminder_hour", ["hour": hour])
+                }
+            }
             .onChange(of: appLanguage) { Track.event("set_app_language", ["code": appLanguage]) }
             .onChange(of: vocabLanguage) { Track.event("set_vocab_language", ["code": vocabLanguage]) }
             .sheet(isPresented: $showPaywall) { PaywallView(source: "settings") }

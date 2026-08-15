@@ -171,12 +171,16 @@ An unattempted-but-open rung shows its number and three empty stars — no padlo
 | Learn | locked |
 | Challenge (every rung) | locked |
 
-**One rule, no partial trial.** Lessons 1–`Gating.freeLessonLimit` (7) are free in
-full — every mode, every rung — and the rest are locked outright. The earlier
-per-mode card/page/question quotas are gone: a free user can *finish* the early
-lessons, fill the progress bar and earn the stars, then meet the paywall carrying that
-momentum instead of being cut off mid-practice. See `06-monetization.md` for `Gating`,
-the products and the paywall itself.
+**One whole-lesson rule.** Lessons 1–`Gating.freeLessonLimit` (7) are free in full —
+every mode, every rung — and the rest are locked outright. The earlier per-mode
+card/page/question quotas are gone: a free user can *finish* the early lessons, fill the
+progress bar and earn the stars, then meet the paywall carrying that momentum instead of
+being cut off mid-practice.
+
+The **one** exception is Vocab List's "Play with meanings", which on a locked lesson
+reads `Gating.freeMeaningPreview` (7) words and then shows the paywall. Plain "Play all"
+is Japanese only and free everywhere. See `06-monetization.md` for `Gating`, the
+products, the paywall and why that exception is the only one.
 
 ## What's *not* in this app
 

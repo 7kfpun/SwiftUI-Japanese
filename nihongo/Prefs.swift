@@ -32,6 +32,21 @@ enum Pref {
     /// and sharing a key would make each one silence the other — see `SharePrompt`.
     static let shareAskedAt        = "shareAskedAt"
 
+    // MARK: Notifications (see nihongo/StreakReminder.swift)
+
+    /// Whether the daily streak reminder is scheduled. **Off by default** — a learner who
+    /// has never asked for notifications hasn't agreed to a daily one, and turning it on
+    /// is what triggers the iOS permission prompt.
+    static let streakReminderOn    = "streakReminderOn"
+    /// Local hour (1…23) the reminder fires. Unset reads as `StreakReminder.defaultHour`,
+    /// because a stored 0 can't be told apart from "never chosen".
+    static let streakReminderHour  = "streakReminderHour"
+    /// When the *soft* opt-in was last shown, as `timeIntervalSince1970`. Not "has the
+    /// system prompt been shown": iOS owns that and answers it via
+    /// `UNAuthorizationStatus`. This one exists so a "not now" is respected for a while —
+    /// see `NotificationOptIn.askAgainAfter`.
+    static let notificationAskedAt = "notificationAskedAt"
+
     // MARK: First-launch intro (see nihongo/Intro)
 
     /// Set once the intro has been seen — including when it was skipped. It gates the

@@ -4,6 +4,10 @@ import Foundation
 /// iOS unit names in the original RN `config.js`, e.g. `ios-kana-banner`).
 enum AdSlot: String {
     case today
+    /// The Progress tab. Split off `today`, which it used to share: two screens on one
+    /// unit blend their impressions, so there was no way to tell whether a tab people
+    /// visit briefly earns anything at all.
+    case progress
     case kana, lessons
     case selectMode = "select-mode"
     case vocabList  = "vocab-list"

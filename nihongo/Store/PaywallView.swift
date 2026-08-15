@@ -8,9 +8,24 @@ struct PaywallView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var legal: LegalDoc?
 
-    /// Where this paywall was triggered from (settings, a locked Today lesson, a
-    /// locked mode row) — lets analytics tell which entry point actually converts.
+    /// Where this paywall was triggered from — `settings`, `locked_mode`,
+    /// `locked_challenge`, `read_all_meanings`. Values are stable ASCII keys, never
+    /// localized text, or the same entry point would land under 17 different names.
+    ///
+    /// Carried all the way into `purchase_*` so "which entry point converts" is a group-by
+    /// rather than a timestamp join. It's on every paywall event for the same reason.
     let source: String
+
+    /// The lesson that triggered it, when one did — settings has none. Tells "lesson 8
+    /// stops people" from "people don't buy", which the source alone can't.
+    var lesson: Int? = nil
+
+    /// Common params, so no paywall event can be logged without its attribution.
+    private var params: [String: Any] {
+        var p: [String: Any] = ["source": source]
+        if let lesson { p["lesson"] = lesson }
+        return p
+    }
 
     private let subscriptionTerms = "Auto-renewable subscriptions renew unless canceled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage in Settings."
 
@@ -66,14 +81,19 @@ struct PaywallView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(L.t("Cancel")) {
-                        Track.event("paywall_dismissed", ["source": source, "purchased": false])
-                        dismiss()
-                    }
+                    Button(L.t("Cancel")) { dismiss() }
                 }
             }
             .sheet(item: $legal) { doc in LegalView(titleKey: doc.titleKey, resource: doc.rawValue) }
-            .onAppear { Track.event("paywall_shown", ["source": source]) }
+            .onAppear { Track.event("paywall_shown", params) }
+            // On disappear, not on the Cancel button. Cancel is one of three ways out —
+            // swiping the sheet down fired nothing at all, and buying dismisses via the
+            // `isPremium` observer below, so `purchased` was a hardcoded `false` that
+            // could never be anything else. Every exit is counted here, once.
+            .onDisappear {
+                Track.event("paywall_dismissed",
+                            params.merging(["purchased": store.isPremium]) { a, _ in a })
+            }
             // Retry on open. Products load once at launch, so a user who started the
             // app offline would otherwise face an empty paywall for the whole session.
             .task { if store.products.isEmpty { await store.load() } }
@@ -134,7 +154,7 @@ struct PaywallView: View {
     private func subscriptionRow(_ product: Product) -> some View {
         let isBest = product.id == bestValue?.id
         return Button {
-            Task { await store.purchase(product) }
+            Task { await store.purchase(product, source: source) }
         } label: {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 3) {
@@ -190,7 +210,7 @@ struct PaywallView: View {
             .padding(.top, 4)
 
             Button {
-                Task { await store.purchase(product) }
+                Task { await store.purchase(product, source: source) }
             } label: {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 3) {

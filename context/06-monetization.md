@@ -47,11 +47,11 @@ enum Gating {
 ```
 
 **Lessons 1–7 are free in full** — every practice mode, every rung of the ladder — and
-4–50 need premium. There is no card quota, no per-mode allowance and no partial trial:
-a free user can *finish* the early lessons, fill the progress bar, earn the stars, and
-meets the paywall carrying that momentum instead of being cut off mid-practice.
+8–50 need premium. There is no card quota and no per-mode allowance: a free user can
+*finish* the early lessons, fill the progress bar, earn the stars, and meets the paywall
+carrying that momentum instead of being cut off mid-practice.
 
-Three exemptions, all deliberate:
+Four exemptions, all deliberate:
 
 - **Vocab List is free on every lesson** (`SelectModeView.swift:33` navigates it
   unconditionally), so browsing and search never lock.
@@ -61,10 +61,33 @@ Three exemptions, all deliberate:
   them is what premium buys. Both entry points that could dead-end a free user (the
   Today capsule, the widget's "Ready for Challenge N?" link) stop at the Lessons list
   when the lesson is locked, rather than one screen deeper on a paywall.
+- **"Play with meanings" previews rather than refuses** — the one partial trial in the
+  app. On a locked lesson it reads `Gating.freeMeaningPreview` (7) words in full and
+  *then* shows the paywall. Plain "Play all" (Japanese only) is free on every lesson and
+  is never truncated.
 
-`SelectModeView` is the **single place** gating is enforced (`:17`, `:84`, `:107`): a
-locked row opens the paywall instead of navigating, so no practice screen has to police
-access itself. `PremiumTests.gatingRules` walks all 50 lessons and pins the 3/4 boundary.
+`SelectModeView` enforces gating for the practice modes and the ladder (`:17`, `:88`,
+`:115`): a locked row opens the paywall instead of navigating, so no practice screen has
+to police access itself. `VocabListView` is the **only** other enforcement point, and it
+is the exception above, not a second rule — the Vocab List itself stays free and only the
+one playback mode is gated (`Gating.wordsToRead`).
+
+`PremiumTests` pins all of it: `gatingRules` walks all 50 lessons and the 7/8 boundary,
+`plainReadAllIsFreeEvenOnALockedLesson` pins that the Japanese-only mode is never cut
+short, and `previewStopsShortOfEveryLesson` pins that the preview is smaller than the
+smallest lesson in the course — otherwise a "preview" would play the whole lesson and
+then ask for money for what had already been heard.
+
+### Why this one gets an exception
+
+Every other paid mode can be understood from its name and row subtitle. This one can't:
+"reads the meaning aloud after each word" describes a *rhythm* — word, pause, meaning,
+pause — that means nothing described and everything heard. The lesson's Vocab List is
+already free and already on screen, so the preview withholds nothing the user couldn't
+read; only the voice is new. That is what makes it safe to give away seven words of.
+
+Do not generalise it. A partial trial on Flashcards or the ladder cuts someone off
+mid-practice, which is exactly what the whole-lesson rule exists to prevent.
 
 ## `Store` — StoreKit 2, on device, no server
 

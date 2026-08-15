@@ -53,12 +53,17 @@ Defined in `nihongo/Store/Store.swift` (`Gating` enum):
   are premium.
 - **Kana (all of it — browser + every quiz mode) is always free.** There is no
   Kana gating anywhere in the code.
-- **One rule, no partial trial.** A locked lesson's practice modes and challenges
-  are simply locked; the row opens the paywall instead of navigating
-  (`SelectModeView` is the single place gating is enforced). The earlier
-  5-card-trial design is gone: a free user can *finish* lessons 1–3 — fill the
-  progress bar, earn the stars — and meets the paywall carrying that momentum,
-  rather than being cut off mid-practice by a card quota.
+- **One whole-lesson rule.** A locked lesson's practice modes and challenges are
+  simply locked; the row opens the paywall instead of navigating (`SelectModeView`
+  is where that is enforced). The earlier 5-card-trial design is gone: a free user
+  can *finish* lessons 1–7 — fill the progress bar, earn the stars — and meets the
+  paywall carrying that momentum, rather than being cut off mid-practice by a card
+  quota.
+- **One exception, and only one: the meaning preview.** On a locked lesson, "Play
+  with meanings" reads `Gating.freeMeaningPreview` (7) words and then shows the
+  paywall (`Gating.wordsToRead`, `VocabListView`). Plain "Play all" is Japanese
+  only and stays free on every lesson. Don't generalise this into a second gating
+  concept — see `06-monetization.md` for why it earns its exception.
 - **Vocab List stays free on every lesson**, so browsing and search never lock.
 - **Today is never paywalled.** Its deck is derived from progress and walks all
   50 lessons whatever the subscription says — meeting the words is free, being

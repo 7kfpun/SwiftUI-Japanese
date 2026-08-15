@@ -2,6 +2,39 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!--
+	  Required by OneSignal for Confirmed Delivery and for the Notification Service
+	  Extension to run at all. It does NOT let the app run in the background generally
+	  — it lets APNs wake it briefly to process an incoming notification.
+	-->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<!--
+	  OneSignal App ID for JLPT Daily — dashboard → Settings → Keys & IDs.
+	  Public by design: it ships in the binary and identifies the app to OneSignal. It is
+	  NOT the REST API key, which is secret and must never live here.
+
+	  Distinct from Minna's ID in Info.plist, and they must never be shared: one ID means
+	  one subscriber list, so a JLPT campaign would land on Minna's users too. Blank here
+	  makes PushService skip OneSignal entirely, which is the honest state for an app
+	  that has no OneSignal project yet.
+	-->
+	<key>OneSignalAppID</key>
+	<string>24ad4d16-fe36-47cc-896b-3c63d769c348</string>
+	<!--
+	  Firebase must NOT swizzle the app delegate. FCM and OneSignal both swizzle by
+	  default, and both want the same two things: the APNs device token, and
+	  UNUserNotificationCenter.delegate. Left to fight over them, whichever loses
+	  goes quiet — with no error, on device only, usually noticed as "a campaign
+	  went out and nobody got it".
+
+	  With the proxy off, PushService owns both and hands the token to each SDK
+	  explicitly. Do not set this back to YES without removing one of them.
+	-->
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
 	<!-- Without this the home screen reads "jlpt", the target name. -->
 	<key>CFBundleDisplayName</key>
 	<string>JLPT Daily</string>
@@ -20,7 +53,7 @@
 		</dict>
 	</array>
 
-	<!-- PLACEHOLDER: Google's public *test* app ID. It cannot be omitted —
+	<!-- REAL: Google's public *test* app ID. It cannot be omitted —
 	     `AppDelegate` calls MobileAds.shared.start() unconditionally and the SDK
 	     raises at launch without this key — and it must not be nihongo's, which
 	     would file this app's impressions under the Minna app. Replace once the
@@ -31,7 +64,7 @@
 	     Xcode's plist editor strips these comments whenever it rewrites the file,
 	     so this warning also lives in the plan's Phase 4 notes. -->
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<string>ca-app-pub-8610011634603119~9542527647</string>
 
 	<!-- Omitting this makes App Store Connect ask about export compliance on every
 	     single upload. -->

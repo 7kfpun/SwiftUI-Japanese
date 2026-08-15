@@ -14,6 +14,17 @@
 	  AppCheckDebugProvider instead, which authenticates with a token registered in
 	  the Firebase console.
 	-->
+	<!--
+	  Push. "development" is wrong here for the same reason App Attest above is
+	  "production": Debug and Release share one entitlements file, so only one value
+	  can ship, and it has to be the one TestFlight and the App Store need. APNs
+	  accepts a production token from a development build, so nothing is lost locally.
+
+	  Requires the Push Notifications capability on this App ID in the developer
+	  portal — without it, signing fails rather than push silently not working.
+	-->
+	<key>aps-environment</key>
+	<string>production</string>
 	<key>com.apple.developer.devicecheck.appattest-environment</key>
 	<string>production</string>
 	<key>com.apple.developer.icloud-container-identifiers</key>
@@ -27,6 +38,14 @@
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>group.com.kfpun.nihongo</string>
+		<!--
+		  OneSignal's own group, shared with the OneSignalNSE extension so the app and
+		  the extension agree on badge counts and delivery receipts. Separate from the
+		  group above on purpose: that one holds the Today deck the widget and watch app
+		  read, and giving a third-party SDK write access to it is how a widget starts
+		  showing a stale word for reasons nobody can trace.
+		-->
+		<string>group.com.kfpun.nihongo.onesignal</string>
 	</array>
 </dict>
 </plist>

@@ -11,6 +11,9 @@ import FirebaseCrashlytics
 #if canImport(FirebaseAppCheck)
 import FirebaseAppCheck
 #endif
+#if canImport(FirebasePerformance)
+import FirebasePerformance
+#endif
 #if canImport(GoogleMobileAds)
 import GoogleMobileAds
 #endif
@@ -72,9 +75,23 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
                 #if canImport(FirebaseCrashlytics)
                 Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(false)
                 #endif
+                #if canImport(FirebasePerformance)
+                // Excluded on the same terms as the other two. A developer's own device
+                // would otherwise skew exactly the numbers Performance exists to watch —
+                // it runs a debug build, on a fast device, on office wifi.
+                Performance.sharedInstance().isDataCollectionEnabled = false
+                Performance.sharedInstance().isInstrumentationEnabled = false
+                #endif
             }
         }
         #endif
+
+        // After `FirebaseApp.configure()`: `Messaging.messaging()` needs a configured app
+        // and hands back a useless instance before there is one. Starting it here rather
+        // than in a `.task` also means the notification delegate is set before iOS can
+        // deliver a launch notification.
+        PushService.shared.start(launchOptions: launchOptions)
+        Task { await PushService.shared.registerIfAuthorized() }
 
         #if canImport(GoogleMobileAds)
         // Non-personalized ads only: we deliberately ship without App Tracking
@@ -85,6 +102,20 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         #endif
 
         return true
+    }
+
+    // Firebase's app-delegate proxy is disabled (`FirebaseAppDelegateProxyEnabled = NO`
+    // in both Info.plists) so it can't fight OneSignal over these callbacks. That makes
+    // them load-bearing rather than boilerplate: without them FCM never learns the APNs
+    // token and every push it sends is dropped, silently.
+    func application(_ application: UIApplication,
+                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        PushService.shared.didRegister(deviceToken: deviceToken)
+    }
+
+    func application(_ application: UIApplication,
+                     didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        PushService.shared.didFailToRegister(error: error)
     }
 }
 
@@ -218,6 +249,12 @@ enum Track {
         #if canImport(FirebaseCrashlytics)
         if FirebaseApp.app() != nil { Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(!excluded) }
         #endif
+        #if canImport(FirebasePerformance)
+        if FirebaseApp.app() != nil {
+            Performance.sharedInstance().isDataCollectionEnabled = !excluded
+            Performance.sharedInstance().isInstrumentationEnabled = !excluded
+        }
+        #endif
     }
 
     static var isExcluded: Bool { UserDefaults.standard.bool(forKey: Pref.analyticsExcluded) }
@@ -230,5 +267,29 @@ enum Track {
         Crashlytics.crashlytics().log("audio is missing: \(item)")
         #endif
         event("audio_missing", ["item": item])
+    }
+
+    /// Time `work` as a Firebase Performance custom trace.
+    ///
+    /// Here rather than at the call sites for the same reason `event` is: `Track` is the
+    /// one seam, and nothing else in the app may import a Firebase module. It also means
+    /// a build without the SDK — an open-source clone with no `GoogleService-Info.plist`
+    /// — still runs the work, untimed, instead of failing to compile.
+    ///
+    /// Most of what's worth knowing is already automatic: Performance instruments app
+    /// start, foreground/background, screen rendering (including frozen and slow frames)
+    /// and every URLSession request without being asked. Reach for this only for a
+    /// specific span those don't cover, and name it `lower_snake_case` like an event.
+    @discardableResult
+    static func trace<T>(_ name: String, _ work: () throws -> T) rethrows -> T {
+        #if canImport(FirebasePerformance)
+        guard FirebaseApp.app() != nil, let t = Performance.startTrace(name: prefix + name) else {
+            return try work()
+        }
+        defer { t.stop() }
+        return try work()
+        #else
+        return try work()
+        #endif
     }
 }

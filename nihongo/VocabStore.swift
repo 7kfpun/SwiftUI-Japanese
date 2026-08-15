@@ -30,13 +30,18 @@ enum VocabStore {
         let translations: [String: [String: [String: String]]]  // lang -> lessonNo -> romaji -> text
     }
 
-    private static let data: MinnaData = {
+    // Timed: this is the app's largest single launch cost, it blocks the first screen that
+    // needs a word, and it is the one number that differs by course rather than by device
+    // — 2,089 entries for Minna against 7,972 for JLPT, from the same code. A regression
+    // here (a bigger dataset, a slower decode) looks like "the app got slow to open",
+    // which is exactly the report that arrives without a cause attached.
+    private static let data: MinnaData = Track.trace("vocab_decode") {
         guard let url = Bundle.main.url(forResource: Course.current.dataResource, withExtension: "json"),
               let raw = try? Data(contentsOf: url),
               let decoded = try? JSONDecoder().decode(MinnaData.self, from: raw)
         else { fatalError("\(Course.current.dataResource).json missing — run scripts/build-minna-data.py") }
         return decoded
-    }()
+    }
 
     /// The meaning languages this course ships, in the app's one canonical order.
     ///

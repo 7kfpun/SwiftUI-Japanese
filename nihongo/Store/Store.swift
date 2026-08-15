@@ -24,15 +24,41 @@ enum PremiumProduct {
 /// every challenge — and the rest need premium. Vocab List is the one exception, free
 /// on every lesson, so browsing and search stay open.
 ///
-/// Deliberately one rule with no partial trial. A free user can *finish* the early
-/// lessons — fill the progress bar, earn the stars — and meets the paywall carrying
-/// that momentum, rather than being cut off mid-practice by a card quota.
+/// One whole-lesson rule, not a card quota. A free user can *finish* the early lessons —
+/// fill the progress bar, earn the stars — and meets the paywall carrying that momentum,
+/// rather than being cut off mid-practice.
+///
+/// `freeMeaningPreview` is the single deliberate exception; see the note on it.
 enum Gating {
     static var freeLessonLimit: Int { Course.current.freeLessonLimit }
+
+    /// How many words "Play with meanings" reads on a *locked* lesson before the paywall
+    /// appears. The one partial trial in the app, and it is one on purpose.
+    ///
+    /// Every other paid mode can be understood from its name and its row subtitle. This
+    /// one can't: "reads the meaning aloud after each word" describes a rhythm — word,
+    /// pause, meaning, pause — that means nothing until you've heard it. So the lesson's
+    /// Vocab List, which is free at every lesson anyway, plays a few words properly and
+    /// then asks. Nothing is withheld that isn't already on screen; only the voice is.
+    ///
+    /// Must stay below the smallest lesson in every course, or a "preview" would read the
+    /// whole lesson and then charge for it — `previewStopsShortOfEveryLesson` guards that.
+    static let freeMeaningPreview = 7
 
     /// True when a lesson needs premium (everything but Vocab List).
     static func isLocked(lesson number: Int, isPremium: Bool) -> Bool {
         !isPremium && number > freeLessonLimit
+    }
+
+    /// How many of a lesson's `count` words "Play all" reads.
+    ///
+    /// The whole lesson, except for the meanings mode on a locked lesson, which gets
+    /// `freeMeaningPreview`. `mode` is taken here rather than the caller checking
+    /// `isLocked` itself because the Japanese-only mode is free on **every** lesson,
+    /// locked or not — the lock is on reading the meaning aloud, not on the button.
+    static func wordsToRead(mode: ReadMode, count: Int, isLocked: Bool) -> Int {
+        guard mode == .withMeaning, isLocked else { return count }
+        return min(freeMeaningPreview, count)
     }
 }
 
@@ -100,26 +126,31 @@ final class Store {
         Track.setPremium(premium, tier: tier)
     }
 
-    func purchase(_ product: Product) async {
+    /// `source` is the paywall entry point that led here — see `PaywallView.source`. It
+    /// rides every purchase event so conversion can be grouped by where the paywall was
+    /// triggered; without it the funnel stops at `paywall_shown` and which entry point
+    /// actually earns money is a guess.
+    func purchase(_ product: Product, source: String) async {
         purchasingID = product.id
         defer { purchasingID = nil }
         let tier = Self.tierLabel(product.id)
-        Track.event("purchase_start", ["tier": tier])
+        let base: [String: Any] = ["tier": tier, "source": source]
+        Track.event("purchase_start", base)
         guard let result = try? await product.purchase() else {
-            Track.event("purchase_failed", ["tier": tier, "reason": "error"])
+            Track.event("purchase_failed", base.merging(["reason": "error"]) { a, _ in a })
             return
         }
         switch result {
         case .success(.verified(let t)):
             await t.finish()
             await refreshEntitlement()
-            Track.event("purchase_success", ["tier": tier])
+            Track.event("purchase_success", base)
         case .userCancelled:
-            Track.event("purchase_failed", ["tier": tier, "reason": "cancelled"])
+            Track.event("purchase_failed", base.merging(["reason": "cancelled"]) { a, _ in a })
         case .pending:
-            Track.event("purchase_failed", ["tier": tier, "reason": "pending"])
+            Track.event("purchase_failed", base.merging(["reason": "pending"]) { a, _ in a })
         default:
-            Track.event("purchase_failed", ["tier": tier, "reason": "unverified"])
+            Track.event("purchase_failed", base.merging(["reason": "unverified"]) { a, _ in a })
         }
     }
 
