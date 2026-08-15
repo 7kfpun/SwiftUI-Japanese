@@ -1,11 +1,8 @@
-Phiên bản 3.0.1
+Phiên bản 3.0.2
 
-Chuỗi ngày học — giữ cho chuỗi dài thêm, có đồng hồ đếm ngược nhắc bạn trước nửa đêm
-Tab Tiến độ mới — số ngày đã học, thử thách đã qua và kana đã học ở cùng một chỗ
-Đã lưu — chạm ngôi sao bên cạnh từ bất kỳ một đến ba lần, rồi học theo nhóm của riêng bạn
-"Phát tất cả" nay đọc được cả nghĩa — nghe trọn một bài mà không cần chạm
-Bảng kana cho biết bạn còn cách 100% bao xa
-Nhiều bài học miễn phí hơn để thử
-Luyện tập không lặp lại từ nào cho đến khi đã hỏi hết
+Mở khoá thêm mà không cần trả tiền — ba sao ở mọi thử thách của các bài đầu sẽ mở toàn bộ nhóm Khởi đầu 1
+Nhắc nhở hằng ngày — tuỳ chọn, chỉ đến vào ngày bạn chưa học và im lặng vào ngày đã học
+Gói 12 tháng bổ sung cho 1, 3 và 6 tháng
+Mục Đã lưu và danh sách từ dễ đọc hơn
 
 Hãy cho chúng tôi biết điều tiếp theo tại Cài đặt → Phản hồi!

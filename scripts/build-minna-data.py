@@ -24,7 +24,7 @@ REPO = os.path.join(os.path.dirname(__file__), "..")
 # translated into only en + zh-Hant). Only the first is bundled.
 #
 # Two bases, deliberately: data files are read from SRC (one level down), but the
-# `audio.kyoko` values inside them are stored relative to the submodule *root* and
+# `audio.<voice>` values inside them are stored relative to the submodule *root* and
 # carry their own "minna/" prefix — so joining them onto SRC silently resolves to
 # nothing, copies zero clips, and still writes a valid-looking MinnaData.json.
 SUB  = os.path.join(REPO, "minna")
@@ -33,10 +33,26 @@ ROOT = os.path.join(REPO, "nihongo", "Resources")
 VOCAB_DST = os.path.join(ROOT, "audio", "vocab")
 KANA_DST  = os.path.join(ROOT, "audio", "kana")
 LANGS = ["en", "zh", "zh-Hant", "vi", "de", "th", "my", "es", "fr", "ru", "bn", "hi", "ta", "te", "fil", "id", "ko"]
+
+# Voices. The submodule ships three for minna: `kyoko` (macOS `say`, concatenative) and
+# two VOICEVOX neural voices. VOICEVOX is a generation ahead on naturalness and pitch
+# accent, which is what a vocabulary app is actually teaching, so it is now the default.
+#
+# ALT exists for one reason: the Challenge ladder's listening rungs. With a single voice
+# a learner can pass by recognising the waveform rather than the word — the clip becomes
+# the answer key. Alternating two voices makes the rung test comprehension again.
+#
+# PRIMARY clips keep the bare `<lesson>-<slug>` name, so `Vocab.audio` and every call
+# site are unchanged; ALT clips take a suffix that `Speech.Voice` mirrors exactly.
+# Kana gets PRIMARY only — the ladder is vocabulary, and a second kana set would be
+# ~800KB for nothing.
+PRIMARY = "whitecul"
+ALT = "kenzaki"
+ALT_SUFFIX = f"-{ALT}"
 os.makedirs(VOCAB_DST, exist_ok=True)
 os.makedirs(KANA_DST, exist_ok=True)
 
-lessons, audio_copied = [], 0
+lessons, audio_copied, alt_copied = [], 0, 0
 for n in range(1, 51):
     data = json.load(open(f"{SRC}/vocab/{n}.json"))["data"]
     out = []
@@ -44,7 +60,8 @@ for n in range(1, 51):
         entry = {"kanji": e["kanji"], "kana": e["kana"], "romaji": e["romaji"]}
         if "dictionary" in e: entry["dictionary"] = e["dictionary"]
         if e.get("useKana"):  entry["useKana"] = True
-        rel = (e.get("audio") or {}).get("kyoko")
+        clips = e.get("audio") or {}
+        rel = clips.get(PRIMARY)
         if rel:
             name = f"{n}-{os.path.splitext(os.path.basename(rel))[0]}"
             src = os.path.join(SUB, rel)
@@ -52,6 +69,15 @@ for n in range(1, 51):
                 shutil.copyfile(src, os.path.join(VOCAB_DST, f"{name}.m4a"))
                 entry["audio"] = name
                 audio_copied += 1
+                # The alternate is addressed by suffix rather than recorded in the JSON:
+                # one name in the data, and `Speech.Voice` derives the rest. A voice
+                # missing upstream then falls back to PRIMARY at playback instead of
+                # needing a per-entry flag nothing else would read.
+                alt_rel = clips.get(ALT)
+                if alt_rel and os.path.exists(os.path.join(SUB, alt_rel)):
+                    shutil.copyfile(os.path.join(SUB, alt_rel),
+                                    os.path.join(VOCAB_DST, f"{name}{ALT_SUFFIX}.m4a"))
+                    alt_copied += 1
         out.append(entry)
     lessons.append({"number": n, "entries": out})
 
@@ -74,7 +100,7 @@ for group in kana["data"].values():
         if name in kana_seen:
             continue
         kana_seen.add(name)
-        rel = (e.get("audio") or {}).get("kyoko")
+        rel = (e.get("audio") or {}).get(PRIMARY)
         src = os.path.join(SUB, rel) if rel else None
         if src and os.path.exists(src):
             shutil.copyfile(src, os.path.join(KANA_DST, name))
@@ -83,7 +109,7 @@ for group in kana["data"].values():
             kana_missing.append(e["romaji"])
 
 msg = (f"MinnaData.json {os.path.getsize(dst)//1024}KB | entries={sum(len(l['entries']) for l in lessons)}"
-       f" | vocab clips={audio_copied} | kana clips={kana_made}")
+       f" | {PRIMARY} clips={audio_copied} | {ALT} clips={alt_copied} | kana clips={kana_made}")
 if kana_missing:
     msg += f" | MISSING kana ({len(kana_missing)}): {','.join(kana_missing)}"
 print(msg)

@@ -1,11 +1,8 @@
-Version 3.0.1
+Version 3.0.2
 
-Série quotidienne — faites-la grandir, un compte à rebours vous prévient avant minuit
-Nouvel onglet Progression — jours étudiés, défis réussis et kana appris au même endroit
-Favoris — touchez l'étoile à côté d'un mot une à trois fois, puis révisez vos propres groupes
-« Tout lire » peut maintenant énoncer aussi les sens : une leçon entière s'écoute sans les mains
-Les tableaux de kana indiquent exactement votre avancement vers 100 %
-Plus de leçons gratuites à essayer
-L'entraînement ne répète plus un mot avant de les avoir tous demandés
+Débloquez plus sans payer : trois étoiles à chaque défi des premières leçons ouvrent tout le groupe Débutant 1
+Rappels quotidiens : optionnels, seulement les jours sans révision, silencieux les autres
+Un abonnement de 12 mois rejoint ceux de 1, 3 et 6 mois
+Favoris et liste de vocabulaire plus lisibles
 
 Dites-nous la suite dans Réglages → Commentaires !

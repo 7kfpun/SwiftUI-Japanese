@@ -6,14 +6,20 @@ import AVFoundation
 /// Kyoko` clips with live `AVSpeechSynthesizer` as the fallback; `SilentPronouncer` is
 /// the environment default, so previews and tests make no sound.
 protocol Pronouncer {
-    func speak(_ vocab: Vocab)
+    func speak(_ vocab: Vocab, voice: Speech.Voice)
     func speak(kana: K)
     func stop()
 }
 
+extension Pronouncer {
+    /// The default voice — what every screen but the Challenge ladder wants, so no call
+    /// site had to change when the alternate arrived.
+    func speak(_ vocab: Vocab) { speak(vocab, voice: .default) }
+}
+
 /// No-op — used in previews/tests where audio isn't wanted.
 struct SilentPronouncer: Pronouncer {
-    func speak(_ vocab: Vocab) {}
+    func speak(_ vocab: Vocab, voice: Speech.Voice) {}
     func speak(kana: K) {}
     func stop() {}
 }
@@ -42,6 +48,31 @@ enum PlaybackSession {
 /// their own copy of the voice lookup, the 0.4 rate and the `cleanWord` call, and
 /// nothing made them agree.
 enum Speech {
+    /// Which recorded voice a clip comes from.
+    ///
+    /// Minna bundles two: a default used everywhere, and an alternate the Challenge
+    /// ladder mixes in. That mix is the reason the alternate exists — with one voice a
+    /// listening rung can be passed by recognising the waveform instead of the word, so
+    /// the clip quietly becomes the answer key. Two voices make it a listening test again.
+    ///
+    /// `suffix` is the filename tail `build-minna-data.py` writes, and the default's is
+    /// empty on purpose: its clips keep the bare name, so `Vocab.audio` is already its
+    /// filename and nothing outside this type has to know voices exist. JLPT ships one
+    /// voice, and `audioURL` falls back to the default, so `.alternate` is harmless there.
+    enum Voice: CaseIterable {
+        case `default`, alternate
+
+        var suffix: String {
+            switch self {
+            case .default:   return ""
+            case .alternate: return "-kenzaki"
+            }
+        }
+
+        /// One of the two, for a ladder question that wants an unpredictable voice.
+        static func random() -> Voice { Bool.random() ? .default : .alternate }
+    }
+
     /// The course's language. The `hasPrefix` fallback catches devices where the exact
     /// region tag isn't installed but some voice for the language is.
     static let locale = "ja-JP"
@@ -77,11 +108,11 @@ enum Speech {
         }
     }
 
-    /// A player primed for the word's bundled clip, or nil when it has none (2 of the
-    /// 2089 words) — the caller then falls back to `utterance(_:)`. Callers that need
-    /// completion callbacks set `delegate` on the result themselves.
-    static func clipPlayer(for vocab: Vocab) -> AVAudioPlayer? {
-        guard let url = VocabStore.audioURL(for: vocab),
+    /// A player primed for the word's bundled clip, or nil when it has none — the caller
+    /// then falls back to `utterance(_:)`. Callers that need completion callbacks set
+    /// `delegate` on the result themselves.
+    static func clipPlayer(for vocab: Vocab, voice: Voice = .default) -> AVAudioPlayer? {
+        guard let url = VocabStore.audioURL(for: vocab, voice: voice),
               let p = try? AVAudioPlayer(contentsOf: url) else { return nil }
         p.volume = 1
         p.prepareToPlay()
@@ -95,10 +126,10 @@ final class AudioPronouncer: Pronouncer {
     private let synth = AVSpeechSynthesizer()
     private var player: AVAudioPlayer?
 
-    func speak(_ vocab: Vocab) {
+    func speak(_ vocab: Vocab, voice: Speech.Voice = .default) {
         stop()
         PlaybackSession.activate()
-        if let p = Speech.clipPlayer(for: vocab) {
+        if let p = Speech.clipPlayer(for: vocab, voice: voice) {
             player = p
             p.play()
         } else {

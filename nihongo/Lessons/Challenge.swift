@@ -146,6 +146,13 @@ struct ChallengeQuestion: Identifiable {
     let options: [Vocab]
     let from: VForm
     let to: VForm
+    /// Which recorded voice speaks this question.
+    ///
+    /// Fixed when the question is built, not chosen at playback: a replay has to sound
+    /// like the same question, or tapping the speaker again would be a *different* test.
+    /// A fresh run rebuilds the questions and so re-rolls every voice, which is what
+    /// stops a word from settling into one voice across attempts.
+    var voice: Speech.Voice = .default
 
     func isCorrect(_ optionIndex: Int) -> Bool { options[optionIndex].id == answer.id }
 }
@@ -221,11 +228,16 @@ final class ChallengeModel {
             let rotation = pairs.indices.map { pairs[($0 + position) % pairs.count] }
             let pair = rotation.first { Challenge.supports(word, from: $0.from, to: $0.to) }
                 ?? (from: VForm.kana, to: VForm.translation)
+            // Alternating voices is what keeps a listening rung a listening test — one
+            // voice and a learner can pass by recognising the waveform rather than the
+            // word. Rolled for every question, not just the audio ones, so the spoken
+            // prompt on a written question varies too.
             return ChallengeQuestion(id: position,
                                      answer: word,
                                      options: options(for: word, from: pair.from, to: pair.to, pool: pool),
                                      from: pair.from,
-                                     to: pair.to)
+                                     to: pair.to,
+                                     voice: Speech.Voice.random())
         }
     }
 

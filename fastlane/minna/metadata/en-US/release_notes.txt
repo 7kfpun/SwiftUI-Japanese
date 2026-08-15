@@ -1,11 +1,8 @@
-Version 3.0.1
+Version 3.0.2
 
-Daily streak — build it up, and a countdown warns you before midnight
-New Progress tab — days studied, challenges passed and kana learned in one place
-Bookmarks — tap the star beside any word one to three times, then study your own groups
-Play all can now speak the meanings too, so a whole lesson plays hands-free
-Kana charts show exactly how close you are to 100%
-More lessons free to try
-Train no longer repeats a word until it has asked them all
+Unlock more without paying — three stars on every challenge in the opening lessons opens the whole Beginning 1 group, free
+Daily reminders — an optional nudge on days you haven't studied yet, and silence on the days you have
+A 12-month plan joins the 1, 3 and 6-month options
+Bookmarks and the vocabulary list are easier to read
 
 Tell us what's next in Settings → Feedback!

@@ -1,11 +1,8 @@
-Version 3.0.1
+Version 3.0.2
 
-Tages-Serie — bau sie auf, ein Countdown warnt dich vor Mitternacht
-Neuer Tab „Fortschritt" — Lerntage, bestandene Challenges und gelernte Kana auf einen Blick
-Lesezeichen — tippe ein- bis dreimal auf den Stern neben einem Wort und lerne deine eigenen Gruppen
-„Alle abspielen" liest jetzt auch die Bedeutungen vor — eine ganze Lektion läuft freihändig
-Kana-Tabellen zeigen genau, wie nah du an 100 % bist
-Mehr Lektionen kostenlos zum Ausprobieren
-Trainieren wiederholt kein Wort mehr, bevor alle dran waren
+Mehr freischalten, ohne zu zahlen — drei Sterne in jeder Challenge der ersten Lektionen öffnen die ganze Gruppe „Anfang 1"
+Tägliche Erinnerungen — optional, nur an Tagen ohne Lerneinheit, und still an allen anderen
+Ein 12-Monats-Abo ergänzt 1, 3 und 6 Monate
+Lesezeichen und die Vokabelliste lesen sich klarer
 
 Sag uns unter Einstellungen → Feedback, was als Nächstes kommt!

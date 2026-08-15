@@ -95,10 +95,17 @@ enum VocabStore {
         lessons(language)[n - 1]
     }
 
-    /// Resolve a vocab's Kyoko clip in the bundle by its flat basename, e.g. "1-watashi".
-    static func audioURL(for vocab: Vocab) -> URL? {
+    /// Resolve a vocab's clip in the bundle by its flat basename, e.g. "1-watashi".
+    ///
+    /// `voice` appends the suffix the build script wrote — the default voice's clips carry
+    /// none, so `Vocab.audio` is already its filename. A voice with no clip for this word
+    /// falls back to the default rather than to live TTS: the whole point of the alternate
+    /// is that it is the *same* word in another voice, and dropping to a synthesiser mid-run
+    /// would be a bigger change than simply repeating the default.
+    static func audioURL(for vocab: Vocab, voice: Speech.Voice = .default) -> URL? {
         guard let name = vocab.audio else { return nil }
-        return Bundle.main.url(forResource: name, withExtension: "m4a")
+        return Bundle.main.url(forResource: name + voice.suffix, withExtension: "m4a")
+            ?? Bundle.main.url(forResource: name, withExtension: "m4a")
     }
 
     /// Resolve a kana's pre-generated Kyoko clip, e.g. "ka" → "kana-ka.m4a".

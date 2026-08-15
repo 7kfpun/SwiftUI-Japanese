@@ -181,6 +181,44 @@ struct DataTests {
         }
     }
 
+    /// Both recorded voices are bundled, and the suffix `Speech.Voice` appends is exactly
+    /// the one `build-minna-data.py` wrote.
+    ///
+    /// The two are coupled by a bare string and nothing else enforces it, so a rename on
+    /// either side would fail silently: `audioURL` falls back to the default clip, every
+    /// question would sound identical, and the ladder would quietly stop being a listening
+    /// test — with no crash and no missing file to notice.
+    @Test func bothVoicesAreBundledAndTheSuffixMatchesTheBuildScript() {
+        #expect(Speech.Voice.default.suffix == "")
+        #expect(Speech.Voice.alternate.suffix == "-kenzaki")
+
+        let word = try! #require(VocabStore.lesson(1).entries.first { $0.audio != nil })
+        let primary = VocabStore.audioURL(for: word, voice: .default)
+        let alternate = VocabStore.audioURL(for: word, voice: .alternate)
+        #expect(primary != nil)
+        #expect(alternate != nil)
+        // Distinct files, not the fallback quietly serving the same clip twice.
+        #expect(primary != alternate)
+        #expect(alternate?.lastPathComponent.contains("-kenzaki") == true)
+    }
+
+    /// A challenge run mixes both voices rather than settling on one.
+    ///
+    /// Ten rungs of ten questions is 100 draws; both voices appearing at least once is
+    /// certain enough to assert (the chance of a uniform run is 2^-99). What this really
+    /// guards is the *wiring* — a `voice` left at its default everywhere would pass every
+    /// other test in the suite.
+    @Test func challengeQuestionsUseBothVoices() {
+        var seen = Set<String>()
+        for index in 1...10 {
+            let lesson = VocabStore.lesson(1)
+            let model = ChallengeModel(lessonNumber: 1, index: index, total: 10,
+                                       words: lesson.entries)
+            for q in model.questions { seen.insert(q.voice.suffix) }
+        }
+        #expect(seen.count == 2, "a run should mix voices, saw \(seen)")
+    }
+
     @Test func vocabClipIsNamedAndDecodes() throws {
         let watashi = try #require(VocabStore.lesson(1).entries.first { $0.romaji == "watashi" })
         #expect(watashi.audio == "1-watashi")                    // flat naming scheme

@@ -1,11 +1,8 @@
-Versión 3.0.1
+Versión 3.0.2
 
-Racha diaria — hazla crecer, con una cuenta atrás que avisa antes de medianoche
-Nueva pestaña Progreso — días estudiados, desafíos superados y kana aprendidos en un solo sitio
-Guardados — toca la estrella junto a cualquier palabra de una a tres veces y estudia tus propios grupos
-«Reproducir todo» ya puede decir también los significados: una lección entera suena sin manos
-Las tablas de kana muestran exactamente lo cerca que estás del 100 %
-Más lecciones gratis para probar
-Entrenar ya no repite una palabra hasta haberlas preguntado todas
+Desbloquea más sin pagar: tres estrellas en cada desafío de las primeras lecciones abren todo el grupo Principiante 1
+Recordatorios diarios: opcionales, solo los días que aún no has estudiado, y silencio el resto
+Un plan de 12 meses se suma a los de 1, 3 y 6
+Guardados y la lista de vocabulario se leen mejor
 
 Dinos qué sigue en Ajustes → Comentarios.

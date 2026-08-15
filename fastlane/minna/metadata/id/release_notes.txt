@@ -1,11 +1,8 @@
-Versi 3.0.1
+Versi 3.0.2
 
-Rentetan harian — bangun terus, hitung mundur mengingatkan sebelum tengah malam
-Tab Kemajuan baru — hari belajar, tantangan lulus dan kana dipelajari dalam satu tempat
-Markah — ketuk bintang di samping kata mana pun satu sampai tiga kali, lalu pelajari grup Anda sendiri
-"Putar semua" kini bisa membacakan artinya juga — satu pelajaran penuh berjalan tanpa tangan
-Tabel kana menunjukkan persis seberapa dekat Anda ke 100%
-Lebih banyak pelajaran gratis untuk dicoba
-Latihan tidak lagi mengulang kata sebelum semuanya ditanyakan
+Buka lebih banyak tanpa bayar — tiga bintang di setiap tantangan pelajaran awal membuka seluruh grup Pemula 1
+Pengingat harian — opsional, hanya di hari kamu belum belajar, dan diam di hari lainnya
+Paket 12 bulan melengkapi 1, 3, dan 6 bulan
+Markah dan daftar kosakata lebih mudah dibaca
 
 Beri tahu kami di Pengaturan → Masukan!

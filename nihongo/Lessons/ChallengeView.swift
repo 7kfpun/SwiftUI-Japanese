@@ -64,7 +64,7 @@ struct ChallengeView: View {
                                      picked: model.picked,
                                      isAnswer: question.isCorrect(i)) {
                         model.choose(i)
-                        if soundOn || question.from.isAudio { pronouncer.speak(question.answer) }
+                        if soundOn || question.from.isAudio { pronouncer.speak(question.answer, voice: question.voice) }
                     }
                 }
                 nextButton
@@ -277,7 +277,7 @@ struct ChallengeView: View {
         .frame(maxHeight: .infinity)
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
         .contentShape(Rectangle())
-        .onTapGesture { pronouncer.speak(q.answer) }
+        .onTapGesture { pronouncer.speak(q.answer, voice: q.voice) }
     }
 
     private var nextButton: some View {
@@ -295,8 +295,8 @@ struct ChallengeView: View {
     /// at all is `TrainModel.promptAudioSafe`'s rule, shared so the two quizzes can't drift.
     private func autoPlay() {
         guard let q = model.question else { return }
-        if q.from.isAudio { pronouncer.speak(q.answer) }
-        else if soundOn, TrainModel.promptAudioSafe(from: q.from) { pronouncer.speak(q.answer) }
+        if q.from.isAudio { pronouncer.speak(q.answer, voice: q.voice) }
+        else if soundOn, TrainModel.promptAudioSafe(from: q.from) { pronouncer.speak(q.answer, voice: q.voice) }
     }
 }
 
