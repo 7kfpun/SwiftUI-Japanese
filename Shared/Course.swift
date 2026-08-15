@@ -31,7 +31,10 @@ struct Course {
     /// Must cover `1...lessonCount` contiguously: the list renders exactly the selected
     /// segment's range, so a gap hides lessons and an overlap shows them twice.
     let groups: [Group]
-    /// Lessons 1…`freeLessonLimit` are free in full. One rule, no partial trial.
+    /// Lessons 1…`freeLessonLimit` are free in full.
+    ///
+    /// Not the only way past the paywall: three-starring every challenge in those
+    /// lessons earns `groups.first` outright — see `Gating.freeThrough(earnedFirstGroup:)`.
     let freeLessonLimit: Int
     let appGroup: String
     let cloudKitContainer: String
@@ -84,7 +87,7 @@ extension Course {
             .init(name: "Advanced 1", first: 26, last: 38),
             .init(name: "Advanced 2", first: 39, last: 50),
         ],
-        freeLessonLimit: 7,
+        freeLessonLimit: 5,
         appGroup: "group.com.kfpun.nihongo",
         cloudKitContainer: "iCloud.com.kfpun.nihongo",
         appStoreURL: "https://apps.apple.com/app/id1447639161",
@@ -130,11 +133,12 @@ extension Course {
             .init(name: "N2", first: 94, last: 136),
             .init(name: "N1", first: 137, last: 201),
         ],
-        // Seven, matching Minna's — one rule across both apps rather than a
-        // per-course tuning nobody can remember. Still a thinner slice here (7 of 201
-        // against 7 of 50), but the offer is "finish a few whole lessons", and that
-        // reads the same either way.
-        freeLessonLimit: 7,
+        // Five, matching Minna's — one rule across both apps rather than a per-course
+        // tuning nobody can remember. A thinner slice here (5 of 201 against 5 of 50),
+        // but the offer is "finish a few whole lessons", which reads the same either
+        // way — and the earned unlock is what makes the slice generous: mastering these
+        // five opens all of N5, 19 lessons, against Minna's 13.
+        freeLessonLimit: 5,
         appGroup: "group.com.kfpun.jlptjp",
         cloudKitContainer: "iCloud.com.kfpun.jlptjp",
         appStoreURL: "https://apps.apple.com/app/id6800220716",

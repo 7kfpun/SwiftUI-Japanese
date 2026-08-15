@@ -531,11 +531,67 @@ struct PremiumTests {
         #expect(minna.isDisjoint(with: jlpt))
     }
 
-    @Test func gatingRules() {
-        // Lessons 1…7 free in full, 8…50 premium. One whole-lesson rule; the meaning
-        // preview below is the single exception to it.
+    /// Mastering the free lessons opens the course's first band without paying.
+    ///
+    /// Three stars, not a pass: `Challenge.stars` awards three only for a clean 100%, so
+    /// the bar is real. A pass would be no bar at all — the ladder already requires one
+    /// to advance, so everyone who finished the free lessons would qualify by default.
+    @Test func masteringTheFreeLessonsEarnsTheFirstBand() {
         let free = Gating.freeLessonLimit
-        #expect(free == 7)
+        #expect(free == 5)
+
+        // Every free lesson swept.
+        let rungs = Dictionary(uniqueKeysWithValues: (1...free).map { ($0, 4) })
+        #expect(Gating.hasEarnedFirstGroup(rungs: rungs, threeStarred: rungs))
+
+        // One rung short anywhere is not earned — the sweep has to be complete.
+        for lesson in 1...free {
+            var partial = rungs
+            partial[lesson] = 3
+            #expect(!Gating.hasEarnedFirstGroup(rungs: rungs, threeStarred: partial),
+                    "lesson \(lesson) one rung short should not earn the band")
+        }
+
+        // A lesson whose rung count is unknown has not been *proven* mastered. Absence of
+        // measurement must not read as success, or a data hiccup would hand out the band.
+        var gap = rungs; gap[3] = nil
+        #expect(!Gating.hasEarnedFirstGroup(rungs: gap, threeStarred: rungs))
+        var zero = rungs; zero[3] = 0
+        #expect(!Gating.hasEarnedFirstGroup(rungs: zero, threeStarred: zero))
+    }
+
+    /// What the reward actually opens, and that it can only ever add.
+    @Test func earningTheBandExtendsTheFreeRangeAndNeverShrinksIt() {
+        let free = Gating.freeLessonLimit
+        let band = Gating.earnableGroup
+        #expect(band != nil)
+        // Always the *first* band, or the reward would open nothing new.
+        #expect(band?.first == 1)
+        #expect(band!.last > free, "the band must reach past the free lessons to be a reward")
+
+        #expect(Gating.freeThrough(earnedFirstGroup: false) == free)
+        #expect(Gating.freeThrough(earnedFirstGroup: true) == band!.last)
+
+        // The gate itself: a lesson inside the band is locked before, open after.
+        let inside = band!.last
+        #expect(Gating.isLocked(lesson: inside, isPremium: false, earnedFirstGroup: false))
+        #expect(!Gating.isLocked(lesson: inside, isPremium: false, earnedFirstGroup: true))
+        // Beyond the band still needs premium — the reward is one band, not the course.
+        #expect(Gating.isLocked(lesson: band!.last + 1, isPremium: false, earnedFirstGroup: true))
+        // Premium is unaffected either way.
+        #expect(!Gating.isLocked(lesson: band!.last + 1, isPremium: true, earnedFirstGroup: true))
+
+        // Defaulting to unearned makes an un-plumbed caller fail *closed*: a lock a tap
+        // can clear, never a lesson handed out unearned.
+        #expect(Gating.isLocked(lesson: inside, isPremium: false))
+    }
+
+    @Test func gatingRules() {
+        // Lessons 1…5 free in full, 6…50 premium — *before* anything is earned. Two
+        // documented exceptions: the meaning preview below, and the first band, which
+        // three-starring these five opens outright.
+        let free = Gating.freeLessonLimit
+        #expect(free == 5)
         for n in 1...50 {
             #expect(Gating.isLocked(lesson: n, isPremium: false) == (n > free))
             #expect(!Gating.isLocked(lesson: n, isPremium: true))

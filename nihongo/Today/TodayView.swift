@@ -27,6 +27,7 @@ struct TodayView: View {
     @Environment(\.modelContext) private var context
     // Only for deciding where the capsule's tap goes — the deck itself is never gated.
     @Environment(Store.self) private var store
+    @Environment(Unlock.self) private var unlock
     @Environment(Router.self) private var router
 
     @State private var picks: [Vocab] = []
@@ -95,7 +96,11 @@ struct TodayView: View {
                     StreakBadge(streak: streak) { router.tab = .progress }
                 }
             }
-            .onAppear { loadPicks(); autoPlay(); reloadStreak(); Track.screen("today", ["lesson": lessonNumber]) }
+            .onAppear {
+                loadPicks(); autoPlay(); reloadStreak()
+                unlock.refresh(context: context)
+                Track.screen("today", ["lesson": lessonNumber])
+            }
             // A sheet rather than an alert: this is an offer with a rationale, and an
             // alert's two bare buttons can't carry the reason it's worth a yes.
             .sheet(isPresented: $showNotificationOptIn) {
@@ -145,7 +150,8 @@ struct TodayView: View {
     /// are `Router`'s (`openLesson` / `openLessonList`), and the widget's link shares them.
     private func openChallenge() {
         Track.event("today_challenge_open", ["lesson": lessonNumber, "index": upNext])
-        if Gating.isLocked(lesson: lessonNumber, isPremium: store.isPremium) {
+        if Gating.isLocked(lesson: lessonNumber, isPremium: store.isPremium,
+                           earnedFirstGroup: unlock.earnedFirstGroup) {
             router.openLessonList()
         } else {
             router.openLesson(VocabStore.lesson(lessonNumber, language))

@@ -12,6 +12,7 @@ struct ChallengeView: View {
     @Environment(\.pronouncer) private var pronouncer
     @Environment(\.modelContext) private var context
     @Environment(Store.self) private var store
+    @Environment(Unlock.self) private var unlock
     @AppStorage(Pref.soundOn) private var soundOn = true
     @State private var recorded = false
     @State private var showRating = false
@@ -133,6 +134,16 @@ struct ChallengeView: View {
         .sheet(isPresented: $showFeedback) {
             FeedbackView(source: .rating, stars: feedbackStars)
         }
+        // The earned unlock, celebrated where it was won. A sheet rather than a toast:
+        // this is the rarest thing that happens in the app and the only reward that
+        // isn't a number, so it gets the screen for a moment.
+        .sheet(isPresented: Binding(get: { unlock.justEarned },
+                                    set: { if !$0 { unlock.acknowledge() } })) {
+            EarnedUnlockCard(band: unlock.bandName, through: unlock.bandLast) {
+                unlock.acknowledge()
+            }
+            .presentationDetents([.medium])
+        }
         .sheet(isPresented: $showSharePrompt) {
             ShareSheetPrompt { showShareSheet = true }
         }
@@ -155,6 +166,14 @@ struct ChallengeView: View {
                                            "score": model.scorePercent,
                                            "stars": model.stars,
                                            "passed": model.passed])
+        // Before the prompts: this rung may have completed the sweep, and an unlock the
+        // learner just earned outranks anything we want from them.
+        unlock.refresh(context: context)
+        if unlock.justEarned {
+            Track.event("earned_first_group", ["lesson": lesson.number, "index": model.index])
+            return   // the celebration is the only thing on screen this time
+        }
+
         // Order matters and is the whole point: the rating gets first refusal, and the
         // share nudge only runs if it declined. Two sheets stacked on one passed rung
         // reads as begging, and Apple rate-limits the rating to a handful a year while

@@ -16,7 +16,7 @@ actually is.
 
 ## Tab structure
 
-`RootView` (`nihongo/RootView.swift`) is a 4-tab `TabView`:
+`RootView` (`nihongo/RootView.swift`) is a 5-tab `TabView`:
 
 ```
 TabView
@@ -24,7 +24,8 @@ TabView
 ├─ Kana      → KanaBrowserView      → KanaQuizModeView → {Flashcards|Classic|Swipe|Listening|Write}
 ├─ Lessons   → LessonListView       → SelectModeView    → {Vocab List|Flashcards|Train|Learn}
 │                                                       + Challenge ladder (rungs 1…N)
-└─ Settings  → SettingsView         (languages, premium, legal, feedback)
+├─ Progress  → StatsView            (streak, days, challenges, kana) → BookmarksView
+└─ Settings  → SettingsView         (languages, premium, reminders, legal, feedback)
 ```
 
 Every tab is wrapped in `RootView.banner(_:_:)`, which stacks a `BannerAd` below
@@ -49,14 +50,14 @@ chart — is compiled ahead of time by `scripts/build-minna-data.py` from the
 
 Defined in `nihongo/Store/Store.swift` (`Gating` enum):
 
-- **Lessons 1–7 are free forever** (`Gating.freeLessonLimit = 7`). Lessons 8–50
+- **Lessons 1–5 are free forever** (`Gating.freeLessonLimit = 5`). Lessons 6–50
   are premium.
 - **Kana (all of it — browser + every quiz mode) is always free.** There is no
   Kana gating anywhere in the code.
 - **One whole-lesson rule.** A locked lesson's practice modes and challenges are
   simply locked; the row opens the paywall instead of navigating (`SelectModeView`
   is where that is enforced). The earlier 5-card-trial design is gone: a free user
-  can *finish* lessons 1–7 — fill the progress bar, earn the stars — and meets the
+  can *finish* lessons 1–5 — fill the progress bar, earn the stars — and meets the
   paywall carrying that momentum, rather than being cut off mid-practice by a card
   quota.
 - **One exception, and only one: the meaning preview.** On a locked lesson, "Play
@@ -86,9 +87,10 @@ including the price maths and why plan names never come from App Store Connect, 
 
 Detailed in `06-monetization.md`; the shape of it:
 
-- **AdMob banners** (`nihongo/Ads/AdBanner.swift`) — one per tab, four in total
-  (`AdSlot.today/.kana/.lessons/.about`; the enum's other three names are unused
-  leftovers that still key `Secrets.plist`), hidden entirely for premium users. The SDK
+- **AdMob banners** (`nihongo/Ads/AdBanner.swift`) — one per tab, five in total
+  (`AdSlot.today/.progress/.kana/.lessons/.about`; the enum's other three names are
+  unused leftovers), hidden entirely for premium users. Progress had shared Today's
+  unit until the two were split, which blended their impressions into one report. The SDK
   is wrapped in `#if canImport(GoogleMobileAds)` so the app builds and runs before the
   package is even added to the project; without it (or without `Secrets.plist`) DEBUG
   builds render a placeholder label instead of a real ad.

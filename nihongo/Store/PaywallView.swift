@@ -43,6 +43,24 @@ struct PaywallView: View {
                         .font(.subheadline).foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
 
+                    // The other way through, on the screen that asks for money. Not a
+                    // leak: someone good enough to three-star five lessons was never the
+                    // marginal buyer, and telling them the door exists is what makes the
+                    // paywall feel like a choice rather than a wall.
+                    if let band = Gating.earnableGroup {
+                        Label {
+                            Text(L.t("Or earn it: three-star every challenge in lessons 1–%@ and all of %@ is free.",
+                                     "\(Gating.freeLessonLimit)", L.t(band.name)))
+                        } icon: {
+                            Image(systemName: "star.circle.fill").foregroundStyle(Color.streak)
+                        }
+                        .font(.footnote)
+                        .multilineTextAlignment(.leading)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12))
+                    }
+
                     features
 
                     if store.isLoadingProducts || !store.didAttemptLoad {
@@ -122,28 +140,34 @@ struct PaywallView: View {
 
     private var features: some View {
         VStack(alignment: .leading, spacing: 12) {
-            feature("All 50 lessons unlocked")
-            feature("Every challenge, from lesson 1 to 50")
-            feature("No ads, ever")
+            // Interpolated from `Course`, never written out. These two said "50" for both
+            // apps, so the JLPT paywall promised 50 lessons of a 201-lesson course — on
+            // the one screen where a wrong number is a refund request.
+            feature(L.t("All %@ lessons unlocked", "\(Course.current.lessonCount)"))
+            feature(L.t("Every challenge, from lesson 1 to %@", "\(Course.current.lessonCount)"))
+            feature(L.t("No ads, ever"))
             // Both of these were wrong. "Flashcards, Learn, quizzes & listening" named two
             // modes that no longer exist — Quiz and Listening became the Challenge ladder
             // and Train — and "Native audio for every word" claimed native speakers when the
             // clips are `say -v Kyoko`, with two sentence templates having none at all.
             // Neither is a claim worth making on the screen that asks for money: what the
             // audio is *for* sells better than who recorded it, and it happens to be true.
-            feature("Flashcards, Train, Learn and the full ladder")
-            feature("Audio in every practice and learning task, to help it stick")
-            feature("Study offline, anywhere")
+            feature(L.t("Flashcards, Train, Learn and the full ladder"))
+            feature(L.t("Audio in every practice and learning task, to help it stick"))
+            feature(L.t("Study offline, anywhere"))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 4)
     }
 
-    private func feature(_ key: String) -> some View {
+    /// Takes already-localized text, not a key: two of these need a number interpolated
+    /// in, and a `feature(key, args…)` overload alongside `feature(key)` is exactly the
+    /// ambiguity that lets a caller pass a key where text is wanted and ship the raw key.
+    private func feature(_ text: String) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
                 .foregroundStyle(Theme.correct)
-            Text(L.t(key)).font(.subheadline)
+            Text(text).font(.subheadline)
             Spacer(minLength: 0)
         }
     }

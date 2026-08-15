@@ -155,40 +155,68 @@ struct VocabRow: View {
     @Environment(\.pronouncer) private var pronouncer
 
     var body: some View {
-        Button {
-            pronouncer.speak(vocab)
-            Track.event("play_vocab", ["lesson": vocab.lesson])
-        } label: {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(vocab.kana).font(.headline)
-                    if vocab.displaysKanji {
-                        Text(vocab.kanji).font(.subheadline).foregroundStyle(.secondary)
+        // Star and speak button are **siblings**, not an overlay over the row.
+        //
+        // The star used to be `.overlay(alignment: .topTrailing)`, which takes no layout
+        // space — so it floated at the row's top-right corner and its position depended
+        // on the row's height. A two-line row (kanji shown) left it hovering above the
+        // speaker; a one-line row was short enough that it landed straight on top of it.
+        // A real slot in the stack makes it centre with everything else at every height.
+        HStack(spacing: 8) {
+            Button {
+                pronouncer.speak(vocab)
+                Track.event("play_vocab", ["lesson": vocab.lesson])
+            } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(vocab.kana).font(.headline)
+                        if vocab.displaysKanji {
+                            Text(vocab.kanji).font(.subheadline).foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(vocab.translation)
+                            .font(.subheadline)
+                            .multilineTextAlignment(.trailing)
+                        if showLesson {
+                            Text("L\(vocab.lesson)").font(.caption2).foregroundStyle(.tertiary)
+                        }
                     }
                 }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(vocab.translation)
-                        .font(.subheadline)
-                        .multilineTextAlignment(.trailing)
-                    if showLesson {
-                        Text("L\(vocab.lesson)").font(.caption2).foregroundStyle(.tertiary)
-                    }
-                }
-                Image(systemName: "speaker.wave.2")
-                    .font(.caption).foregroundStyle(Theme.accent)
+                .contentShape(Rectangle())
             }
-            .contentShape(Rectangle())
+            // Plain style so the words read as text, not as a link. The default button
+            // style tints its whole label with the accent color, and that tint beats a
+            // `.foregroundStyle(.primary)` applied inside the label — only the style
+            // change actually keeps the vocabulary black. The speaker opts back in below.
+            .buttonStyle(.plain)
+
+            // Speaker over star, in one narrow column.
+            //
+            // This only works now that `BookmarkStars` is a constant width — one glyph
+            // plus a numeral rather than one glyph per tier. Stacked, the old variable-
+            // width star row couldn't centre against the speaker: at tier 3 it was twice
+            // the speaker's width and spilled out of the column. Two fixed-width icons
+            // centre on each other at any row height and any tier.
+            //
+            // Two sibling buttons, never nested: nested buttons in a `List` row make the
+            // whole row ambiguous to hit, and tapping a star must not also play audio.
+            VStack(spacing: 6) {
+                Button {
+                    pronouncer.speak(vocab)
+                    Track.event("play_vocab", ["lesson": vocab.lesson])
+                } label: {
+                    Image(systemName: "speaker.wave.2")
+                        .font(.caption).foregroundStyle(Theme.accent)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                BookmarkStars(vocab: vocab)
+            }
+            .frame(width: 28)
         }
-        // Outside the speak button, not inside it: nested buttons in a `List` row make
-        // the whole row ambiguous to hit, and tapping a star must never also play audio.
-        .overlay(alignment: .topTrailing) { BookmarkStars(vocab: vocab) }
-        // Plain style so the words read as text, not as a link. The default button
-        // style tints its whole label with the accent color, and that tint beats a
-        // `.foregroundStyle(.primary)` applied inside the label — only the style
-        // change actually keeps the vocabulary black. The speaker icon opts back in
-        // to the accent explicitly above.
-        .buttonStyle(.plain)
     }
 }
 

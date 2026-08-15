@@ -5,6 +5,7 @@ struct SelectModeView: View {
     let lesson: Lesson
     @AppStorage(Pref.translationLanguage) private var language = VocabStore.deviceDefaultLanguage
     @Environment(Store.self) private var store
+    @Environment(Unlock.self) private var unlock
     @Environment(\.modelContext) private var context
     @State private var showPaywall = false
     /// Which row opened the paywall — a locked mode or a locked challenge rung. Both used
@@ -18,7 +19,10 @@ struct SelectModeView: View {
 
     /// The one place lesson gating is enforced: locked rows open the paywall instead of
     /// navigating, so no practice screen has to police access itself.
-    private var locked: Bool { Gating.isLocked(lesson: lesson.number, isPremium: store.isPremium) }
+    private var locked: Bool {
+        Gating.isLocked(lesson: lesson.number, isPremium: store.isPremium,
+                        earnedFirstGroup: unlock.earnedFirstGroup)
+    }
 
     private var challengeCount: Int { Challenge.count(wordCount: current.entries.count) }
 
@@ -62,7 +66,10 @@ struct SelectModeView: View {
                 }
                 .font(Theme.title(.footnote))
             } footer: {
-                Text(L.t("Clear every challenge to master the lesson."))
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(L.t("Clear every challenge to master the lesson."))
+                    earnHint
+                }
             }
         }
         .navigationTitle(L.t("Lesson %@", "\(lesson.number)"))
@@ -76,9 +83,40 @@ struct SelectModeView: View {
         }
     }
 
+    /// The offer, stated where the work happens.
+    ///
+    /// Shown on the free lessons only, and only to non-premium users: on a locked lesson
+    /// it would read as a taunt, and to a subscriber it describes something they already
+    /// have. It disappears the moment it's won — an achieved goal left on screen stops
+    /// being encouragement and starts being clutter.
+    @ViewBuilder
+    private var earnHint: some View {
+        if !store.isPremium, !unlock.earnedFirstGroup, lesson.number <= Gating.freeLessonLimit,
+           let band = Gating.earnableGroup, unlock.totalRungs > 0 {
+            VStack(alignment: .leading, spacing: 6) {
+                Label {
+                    Text(L.t("Three-star every challenge in lessons 1–%@ and all of %@ unlocks, free.",
+                             "\(Gating.freeLessonLimit)", L.t(band.name)))
+                } icon: {
+                    Image(systemName: "lock.open").foregroundStyle(Color.streak)
+                }
+                // The number is the point: a bar with a count turns "some day" into
+                // "four more", which is the difference between a nice idea and a plan.
+                ProgressView(value: Double(unlock.swept), total: Double(unlock.totalRungs))
+                    .tint(Color.streak)
+                Text(L.t("%@ / %@ three-starred", "\(unlock.swept)", "\(unlock.totalRungs)"))
+                    .monospacedDigit()
+            }
+            .padding(.top, 2)
+        }
+    }
+
     /// Re-read on every appear so a challenge finished and popped back updates its row.
     private func reloadResults() {
         results = ChallengeResult.byIndex(lesson: lesson.number, context: context)
+        // A rung finished on the pushed screen may have completed the sweep, and this
+        // view is what draws the locks — so the two have to be re-read together.
+        unlock.refresh(context: context)
     }
 
     /// A rung of the ladder: locked by premium, locked by progress, or playable.

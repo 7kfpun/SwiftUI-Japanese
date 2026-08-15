@@ -112,6 +112,44 @@ final class ChallengeResult {
         return Set(rows.filter(\.isPassed).map(\.id)).count
     }
 
+    /// Three stars on every rung of lessons 1…`Gating.freeLessonLimit`, which earns the
+    /// course's first band free — see `Gating.hasEarnedFirstGroup`.
+    ///
+    /// One fetch for all of it, deduped by `id` first: a sync merge can leave two rows
+    /// for one rung, and counting both would let four three-starred rungs pass for five.
+    static func hasEarnedFirstGroup(context: ModelContext) -> Bool {
+        let limit = Gating.freeLessonLimit
+        guard limit >= 1 else { return false }
+
+        let rows = (try? context.fetch(FetchDescriptor<ChallengeResult>())) ?? []
+        var best: [String: ChallengeResult] = [:]
+        for row in rows where row.lesson <= limit {
+            best[row.id] = best[row.id].map { better($0, row) } ?? row
+        }
+
+        var rungs: [Int: Int] = [:]
+        var swept: [Int: Int] = [:]
+        for lesson in 1...limit {
+            rungs[lesson] = Challenge.count(wordCount: VocabStore.lesson(lesson).entries.count)
+            swept[lesson] = best.values.filter { $0.lesson == lesson && $0.stars >= 3 }.count
+        }
+        return Gating.hasEarnedFirstGroup(rungs: rungs, threeStarred: swept)
+    }
+
+    /// How much of the earned unlock is done — for the progress line that tells people
+    /// the offer exists. Returns (three-starred rungs, total rungs) over the free lessons.
+    static func firstGroupProgress(context: ModelContext) -> (swept: Int, total: Int) {
+        let limit = Gating.freeLessonLimit
+        guard limit >= 1 else { return (0, 0) }
+        let rows = (try? context.fetch(FetchDescriptor<ChallengeResult>())) ?? []
+        var best: [String: ChallengeResult] = [:]
+        for row in rows where row.lesson <= limit {
+            best[row.id] = best[row.id].map { better($0, row) } ?? row
+        }
+        let total = (1...limit).reduce(0) { $0 + Challenge.count(wordCount: VocabStore.lesson($1).entries.count) }
+        return (best.values.filter { $0.stars >= 3 }.count, total)
+    }
+
     /// The lowest rung not yet passed, or nil once the whole ladder is cleared —
     /// where the Today deck points its study cards.
     static func firstUnpassed(total: Int, results: [Int: ChallengeResult]) -> Int? {

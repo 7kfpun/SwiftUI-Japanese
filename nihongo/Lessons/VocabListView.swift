@@ -136,6 +136,7 @@ struct VocabListView: View {
     @State private var player = LessonPlayer()
     @State private var showPaywall = false
     @Environment(Store.self) private var store
+    @Environment(Unlock.self) private var unlock
 
     // Re-resolve by lesson number so meanings update immediately when the language changes.
     private var entries: [Vocab] { VocabStore.lesson(lesson.number, language).entries }
@@ -145,7 +146,8 @@ struct VocabListView: View {
     ///
     /// The Vocab List itself stays free at every lesson. This gates one button on it.
     private var meaningLocked: Bool {
-        Gating.isLocked(lesson: lesson.number, isPremium: store.isPremium)
+        Gating.isLocked(lesson: lesson.number, isPremium: store.isPremium,
+                        earnedFirstGroup: unlock.earnedFirstGroup)
     }
 
     var body: some View {

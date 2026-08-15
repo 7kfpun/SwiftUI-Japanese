@@ -34,7 +34,7 @@ Today, Flashcards, Train and Kana Swipe all want. The tour teaches the app's one
 navigation idiom while explaining the app. Paging is **clamped, not wrapped**: a
 forward swipe off card 5 finishes, exactly as the button does.
 
-## The five cards
+## The six cards
 
 | # | Teaches | Asks | Field |
 |---|---|---|---|
@@ -43,6 +43,19 @@ forward swipe off card 5 finishes, exactly as the button does.
 | 3 | The four Learn modes, tap-to-preview | — | — |
 | 4 | The Challenge ladder: 10 questions a rung, 80% to pass, up to 3 stars, pass one and the next opens | Studied Minna no Nihongo before? | `textbook_lesson` |
 | 5 | Today deals exactly the next rung's words; same deck on Lock Screen, Home Screen, Watch | Why are you learning? | `goal` |
+| 6 | Daily reminders — what arrives, and that nothing does once you're done | Remind me / Not now | — (see below) |
+
+**Card 4 also carries the earned unlock** — "three-star every challenge in lessons 1–5
+and all of Beginning 1 / N5 unlocks, free" — in a tinted panel rather than another grey
+caption. It sits on the card that explains the stars, which is the one moment the reader
+already knows what three stars costs, and *before* anyone has met a paywall.
+
+**Card 6 answers rather than pages.** It has no Next button and its forward swipe is
+blocked: iOS raises the system permission alert once per install and a refusal is
+permanent, so a soft ask comes first and only a yes reaches
+`UNUserNotificationCenter`. A third way off the card would let someone finish the tour
+without answering, leaving the ask to fire again later as if never shown. See
+`NotificationOptIn`, whose other caller is a streak reaching seven days.
 
 Every sample on every card is built from `VocabStore.lesson(1, language).entries`
 — never a hardcoded word — so the tour shows what lesson 1 will actually show, in
@@ -56,7 +69,7 @@ distinct kanji.
 **No pricing, premium or free-lesson limit is mentioned anywhere in the five
 cards.** A deliberate product decision, not an omission. Consequence: a free
 user's first paywall encounter is passing lesson 3's last rung and finding lesson
-8 locked (`Gating.freeLessonLimit = 7`).
+6 locked (`Gating.freeLessonLimit = 5`).
 
 ### Card 3 — tap to preview
 

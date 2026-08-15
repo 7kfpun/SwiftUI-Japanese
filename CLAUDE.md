@@ -108,13 +108,25 @@ first and follow its index; it is kept current and is the fastest way in.
 Each of these was wrong in shipped copy and had to be corrected across 17 languages.
 Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
 
-- **Lessons 1–7 are free** (`Gating.freeLessonLimit = 7`), one whole-lesson rule. There is
-  **exactly one** partial trial and no others: on a locked lesson, "Play with meanings"
-  reads `Gating.freeMeaningPreview` (7) words and then shows the paywall
-  (`Gating.wordsToRead`). Plain "Play all" — Japanese only — stays free on every lesson,
-  and Vocab List itself is free everywhere. **Do not state a free-lesson count** in App
-  Store or website copy — the product decision is that a visitor assumes it's free and
-  meets the paywall having already got value. Still make clear a paid unlock exists.
+- **Lessons 1–5 are free** (`Gating.freeLessonLimit = 5`), plus **two documented ways
+  past that**, and no others:
+  - **Earned:** three stars on *every* challenge of lessons 1–5 opens the whole first
+    band free — Minna's "Beginning 1" (to lesson 13), JLPT's "N5" (to 19). Three stars
+    means a clean 100% (`Challenge.stars`), so it is a real bar; a pass would be none,
+    since the ladder already needs one to advance. `Gating.hasEarnedFirstGroup` decides
+    it, `Unlock` carries it, and every `Gating.isLocked` caller must pass
+    `earnedFirstGroup` — the parameter defaults to `false` so an un-plumbed gate fails
+    *closed*.
+  - **Previewed:** on a locked lesson "Play with meanings" reads
+    `Gating.freeMeaningPreview` (7) words, then the paywall (`Gating.wordsToRead`).
+
+  Plain "Play all" — Japanese only — stays free on every lesson, and Vocab List itself is
+  free everywhere. **Do not state a free-lesson count** in App Store or website copy — the
+  product decision is that a visitor assumes it's free and meets the paywall having
+  already got value. Still make clear a paid unlock exists.
+- **Never hardcode a lesson count in UI copy.** The paywall said "All 50 lessons" in both
+  apps, promising 50 of JLPT's 201 on the screen that asks for money. Interpolate
+  `Course.current.lessonCount`; `Gating.freeLessonLimit` likewise.
 - **Four practice modes** per lesson — Vocab List, Flashcards, Train, Learn — **plus the
   Challenge ladder**. There is no `QuizView.swift`; Quiz and Listening became the ladder
   and `TrainModel`. Kana has five modes, one of which is Listening.

@@ -5,6 +5,9 @@ import SwiftData
 struct nihongoApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var store = Store()
+    /// The achievement route past the paywall, beside the entitlement one. Both are
+    /// consulted at every gate — see `Gating.isLocked`.
+    @State private var unlock = Unlock()
     @State private var router = Router()
     private let pronouncer = AudioPronouncer()
 
@@ -41,6 +44,7 @@ struct nihongoApp: App {
                 .tint(Theme.accent)
                 .environment(\.pronouncer, pronouncer)
                 .environment(store)
+                .environment(unlock)
                 .environment(router)
                 .onOpenURL(perform: handle)
         }
@@ -76,7 +80,8 @@ struct nihongoApp: App {
             // Today keeps showing words for lessons a free user can't yet test on, so
             // this link can legitimately name a locked lesson. Those stop at the
             // Lessons list rather than dead-ending one screen deeper on the paywall.
-            if Gating.isLocked(lesson: n, isPremium: store.isPremium) {
+            if Gating.isLocked(lesson: n, isPremium: store.isPremium,
+                               earnedFirstGroup: unlock.earnedFirstGroup) {
                 router.openLessonList()
             } else {
                 // The widget carries no language of its own — it renders whatever the

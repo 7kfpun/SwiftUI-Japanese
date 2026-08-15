@@ -100,13 +100,17 @@ struct BookmarkStars: View {
             stars = next
             Track.event("bookmark", ["lesson": vocab.lesson, "stars": next ?? 0])
         } label: {
-            // One glyph when unsaved, `stars` of them when saved — so the tier is
-            // readable at a glance down a list without counting anything twice.
+            // One glyph and a numeral, never one glyph per tier.
+            //
+            // Three repeated stars is a variable-width control, and in a list row that
+            // means nothing lines up: at tier 3 it overflowed its column and pushed into
+            // the translation, at tier 0 it left a gap. A single star plus "2" is a fixed
+            // width at every tier, reads without counting, and stays legible at caption
+            // size where three glyphs blur into one shape.
             HStack(spacing: 1) {
+                Image(systemName: stars == nil ? "star" : "star.fill")
                 if let stars {
-                    ForEach(0..<stars, id: \.self) { _ in Image(systemName: "star.fill") }
-                } else {
-                    Image(systemName: "star")
+                    Text("\(stars)").font(.caption2.weight(.semibold)).monospacedDigit()
                 }
             }
             .font(.caption)

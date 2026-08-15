@@ -45,9 +45,45 @@ enum Gating {
     /// whole lesson and then charge for it — `previewStopsShortOfEveryLesson` guards that.
     static let freeMeaningPreview = 7
 
+    /// The band earned by mastering the free lessons — Minna's "Beginning 1" (13
+    /// lessons), JLPT's "N5" (19). Always `groups.first`: the reward has to be the
+    /// stretch that *follows* the free lessons, or it unlocks nothing new.
+    static var earnableGroup: Course.Group? { Course.current.groups.first }
+
+    /// Three stars on every challenge of lessons 1…`freeLessonLimit`.
+    ///
+    /// Three stars, not merely passed: `Challenge.stars` gives three only for a clean
+    /// 100%, so this is a real bar, and clearing it is a fair claim on more of the
+    /// course. Passing would be no bar at all — the ladder already requires a pass to
+    /// advance, so every free-lesson finisher would qualify by simply finishing.
+    ///
+    /// Pure, so it can be tested without a store. `rungs[lesson]` is how many challenges
+    /// that lesson has; `threeStarred[lesson]` how many of them are cleanly swept.
+    static func hasEarnedFirstGroup(rungs: [Int: Int], threeStarred: [Int: Int]) -> Bool {
+        guard freeLessonLimit >= 1 else { return false }
+        return (1...freeLessonLimit).allSatisfy { lesson in
+            // A lesson with no known rung count hasn't been proven mastered — it has
+            // only failed to be measured, which is not the same thing.
+            guard let total = rungs[lesson], total > 0 else { return false }
+            return threeStarred[lesson] == total
+        }
+    }
+
+    /// The highest lesson playable without paying.
+    static func freeThrough(earnedFirstGroup: Bool) -> Int {
+        guard earnedFirstGroup, let band = earnableGroup else { return freeLessonLimit }
+        // `max`, not just `band.last`: if a course ever set `freeLessonLimit` beyond its
+        // first band, earning it must never take lessons away.
+        return max(freeLessonLimit, band.last)
+    }
+
     /// True when a lesson needs premium (everything but Vocab List).
-    static func isLocked(lesson number: Int, isPremium: Bool) -> Bool {
-        !isPremium && number > freeLessonLimit
+    ///
+    /// `earnedFirstGroup` defaults to false so a caller that hasn't looked it up fails
+    /// *closed* — showing a lock that a tap can clear, rather than opening a lesson that
+    /// hasn't been earned.
+    static func isLocked(lesson number: Int, isPremium: Bool, earnedFirstGroup: Bool = false) -> Bool {
+        !isPremium && number > freeThrough(earnedFirstGroup: earnedFirstGroup)
     }
 
     /// How many of a lesson's `count` words "Play all" reads.

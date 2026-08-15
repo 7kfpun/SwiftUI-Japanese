@@ -165,6 +165,33 @@ struct IntroView: View {
         }
     }
 
+    /// "You can unlock this for free" — the loudest thing on the card, on purpose.
+    ///
+    /// Given its own tinted panel and a bold headline rather than another grey caption,
+    /// because it is the only line in the whole tour that gives something away. Buried in
+    /// the secondary text under two other captions it would be read as terms and skipped.
+    @ViewBuilder
+    private var earnCallout: some View {
+        if let band = Gating.earnableGroup {
+            VStack(spacing: 6) {
+                Label {
+                    Text(L.t("Unlock more, for free"))
+                        .font(Theme.title(.subheadline, weight: .bold))
+                } icon: {
+                    Image(systemName: "lock.open.fill").foregroundStyle(Color.streak)
+                }
+                Text(L.t("Three-star every challenge in lessons 1–%@ and all of %@ unlocks, free.",
+                         "\(Gating.freeLessonLimit)", L.t(band.name)))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+            .background(Color.streak.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+        }
+    }
+
     // MARK: - Card 6 · Reminders
 
     /// The soft opt-in. Answering either way finishes the tour, and **only a yes reaches
@@ -363,6 +390,12 @@ struct IntroView: View {
             Text(L.t("Pass one and the next opens."))
                 .font(.footnote).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+
+            // The earned unlock, stated on the card that explains the stars — the one
+            // moment the reader already knows what "three stars" costs. Deliberately
+            // *before* anyone has met a paywall: arriving at a lock already knowing
+            // there's a way through it is a different experience from being sold to.
+            earnCallout
 
             question(L.t("Studied Minna no Nihongo before?"))
 

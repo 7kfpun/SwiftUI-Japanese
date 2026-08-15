@@ -82,7 +82,11 @@ platform :ios do
   lane :privacy do |options|
     app = app_config(options)
     upload_app_privacy_details_to_app_store(
-      username: "kf@voltra.org",
+      # The Apple ID that owns the developer account. This lane rides Apple's *private*
+      # web API — App Privacy has no App Store Connect API endpoint — so it authenticates
+      # with an Apple ID password and 2FA rather than the .p8 key every other lane uses.
+      # That is also why it can only be run by a human at a terminal.
+      username: ENV["FASTLANE_USER"] || "7kfpun@gmail.com",
       app_identifier: app[:identifier],
       json_path: app[:privacy],
     )

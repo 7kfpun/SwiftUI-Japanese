@@ -91,6 +91,8 @@ All via `Track.screen`, i.e. `nihongo_2026_screen` filtered by its `name` param.
 | `kana_quiz_swipe` | — |
 | `kana_flashcard` | — |
 | `kana_write` | — |
+| `progress` | — |
+| `bookmarks` | — |
 | `settings` | — |
 | `legal` | `doc` |
 
@@ -105,7 +107,7 @@ first on `today` or `kana` with no preceding row.
 ### First launch (`nihongo/Intro`, `nihongo/Survey.swift`)
 | Event | Params |
 |---|---|
-| `intro_card` | `card` (1…5, the `Intro.Card` raw value) |
+| `intro_card` | `card` (1…6, the `Intro.Card` raw value) |
 | `intro_skip` | `card` — where they bailed |
 | `intro_mode_peek` | `mode` — the canonical English `titleKey`, never the localized title |
 | `intro_done` | `knows_kana`, `textbook_lesson`, `goal` |
@@ -210,6 +212,8 @@ from any other cold launch.
 | `locked_mode` | `mode` (`flashcards`/`train`/`learn`), `lesson` |
 | `locked_challenge` | `lesson`, `index` |
 | `locked_read_all` | `lesson`, `heard` |
+| `earned_first_group` | `lesson`, `index` — the rung that completed the sweep |
+| `bookmark` | `lesson`, `stars` (0 = removed) |
 | `interstitial_shown` | — |
 | `ad_failed` | `error` |
 
@@ -224,6 +228,11 @@ all three purchase events. Four values, all stable ASCII keys:
 | `locked_challenge` | a locked ladder rung (`SelectModeView`) |
 | `read_all_meanings` | the meaning preview running out (`VocabListView`) |
 | `settings` | the Premium row in Settings |
+
+Worth remembering when reading conversion: **the paywall is not the only way past the
+lock.** Three-starring lessons 1–5 opens the course's first band free
+(`earned_first_group`), so a cohort can stop hitting `paywall_shown` without ever
+converting — that is the feature working, not a funnel leak.
 
 `lesson` rides alongside it wherever a lesson triggered it, which separates "lesson 8
 stops people" from "people don't buy". The finer `locked_*` events say *what* was wanted

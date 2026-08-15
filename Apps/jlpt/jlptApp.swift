@@ -13,6 +13,9 @@ import SwiftData
 struct jlptApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var store = Store()
+    /// The achievement route past the paywall, beside the entitlement one. Both are
+    /// consulted at every gate — see `Gating.isLocked`.
+    @State private var unlock = Unlock()
     @State private var router = Router()
     private let pronouncer = AudioPronouncer()
 
@@ -47,6 +50,7 @@ struct jlptApp: App {
                 .tint(Theme.accent)
                 .environment(\.pronouncer, pronouncer)
                 .environment(store)
+                .environment(unlock)
                 .environment(router)
                 .onOpenURL(perform: handle)
         }
@@ -70,7 +74,8 @@ struct jlptApp: App {
         case "challenge":
             guard let n = int("lesson"), Course.current.hasLesson(n) else { return }
             Track.event("widget_challenge_open", ["lesson": n, "index": int("index") ?? 0])
-            if Gating.isLocked(lesson: n, isPremium: store.isPremium) {
+            if Gating.isLocked(lesson: n, isPremium: store.isPremium,
+                               earnedFirstGroup: unlock.earnedFirstGroup) {
                 router.openLessonList()
             } else {
                 let language = UserDefaults.standard.string(forKey: Pref.translationLanguage)

@@ -1,6 +1,6 @@
 # 06 — Monetization: store, paywall, rating, ads
 
-Two revenue paths, one entitlement flag. `Store.isPremium` unlocks lessons 4–50 *and*
+Two revenue paths, one entitlement flag. `Store.isPremium` unlocks lessons 6–50 *and*
 removes every ad, so there is exactly one thing to buy and one boolean to check.
 
 | File | Owns |
@@ -35,23 +35,28 @@ Renaming either side breaks restores for one cohort or sales for the other.
 `"3m"` in analytics and `…premium.lifetime` as `"lifetime"` — the analytics tier and the
 product ID are deliberately *not* the same string.
 
-## Gating: one rule, no trial
+## Gating: one rule, two documented ways past it
 
 ```swift
 enum Gating {
-    static let freeLessonLimit = 7
-    static func isLocked(lesson number: Int, isPremium: Bool) -> Bool {
-        !isPremium && number > freeLessonLimit
+    static var freeLessonLimit: Int { Course.current.freeLessonLimit }   // 5, both courses
+
+    static func isLocked(lesson number: Int, isPremium: Bool,
+                         earnedFirstGroup: Bool = false) -> Bool {
+        !isPremium && number > freeThrough(earnedFirstGroup: earnedFirstGroup)
     }
 }
 ```
 
-**Lessons 1–7 are free in full** — every practice mode, every rung of the ladder — and
-8–50 need premium. There is no card quota and no per-mode allowance: a free user can
+`earnedFirstGroup` defaults to `false` so a caller that hasn't looked it up fails
+**closed** — a lock a tap can clear, never a lesson handed out unearned.
+
+**Lessons 1–5 are free in full** — every practice mode, every rung of the ladder — and
+6–50 need premium. There is no card quota and no per-mode allowance: a free user can
 *finish* the early lessons, fill the progress bar, earn the stars, and meets the paywall
 carrying that momentum instead of being cut off mid-practice.
 
-Four exemptions, all deliberate:
+Five exemptions, all deliberate:
 
 - **Vocab List is free on every lesson** (`SelectModeView.swift:33` navigates it
   unconditionally), so browsing and search never lock.
@@ -61,6 +66,14 @@ Four exemptions, all deliberate:
   them is what premium buys. Both entry points that could dead-end a free user (the
   Today capsule, the widget's "Ready for Challenge N?" link) stop at the Lessons list
   when the lesson is locked, rather than one screen deeper on a paywall.
+- **The first band can be earned rather than bought** — three stars on every challenge
+  of lessons 1…`freeLessonLimit` opens Minna's "Beginning 1" (13 lessons) or JLPT's "N5"
+  (19), free. Three stars is a clean 100%, so it is a real bar; a pass would be none,
+  because the ladder already requires one to advance. Decided by
+  `Gating.hasEarnedFirstGroup`, carried by the `Unlock` observable beside `Store`, and
+  surfaced in three places so it isn't a secret: the Challenge section footer on a free
+  lesson (with a progress bar), a line on the paywall itself, and a one-time celebration
+  that suppresses the rating and share prompts for that run.
 - **"Play with meanings" previews rather than refuses** — the one partial trial in the
   app. On a locked lesson it reads `Gating.freeMeaningPreview` (7) words in full and
   *then* shows the paywall. Plain "Play all" (Japanese only) is free on every lesson and
@@ -72,7 +85,7 @@ to police access itself. `VocabListView` is the **only** other enforcement point
 is the exception above, not a second rule — the Vocab List itself stays free and only the
 one playback mode is gated (`Gating.wordsToRead`).
 
-`PremiumTests` pins all of it: `gatingRules` walks all 50 lessons and the 7/8 boundary,
+`PremiumTests` pins all of it: `gatingRules` walks all 50 lessons and the 5/6 boundary,
 `plainReadAllIsFreeEvenOnALockedLesson` pins that the Japanese-only mode is never cut
 short, and `previewStopsShortOfEveryLesson` pins that the preview is smaller than the
 smallest lesson in the course — otherwise a "preview" would play the whole lesson and
@@ -207,10 +220,16 @@ Two mechanics that look incidental and aren't:
 Everything AdMob is behind `#if canImport(GoogleMobileAds)`, so the app builds and runs
 before the package is added, and every call site gates on `!store.isPremium`.
 
-**Banners.** `AdSlot` (`AdConfig.swift:5`) declares seven slot names inherited from the
-RN config, but only four are wired today — `RootView.banner(_:_:)` attaches one per tab:
-`.today`, `.kana`, `.lessons`, `.about`. `selectMode`, `vocabList` and `search` are
-unused names, kept because they key `Secrets.plist` and the production unit IDs.
+**Banners.** `AdSlot` (`AdConfig.swift:5`) declares eight slot names, but only five are
+wired — `RootView.banner(_:_:)` attaches one per tab: `.today`, `.progress`, `.kana`,
+`.lessons`, `.about`. `selectMode`, `vocabList` and `search` are unused names inherited
+from the RN config.
+
+**A new slot needs a key in *both* apps' `Secrets.plist`.** `AdSlot` and `RootView` are
+shared, so adding a case creates the slot in Minna and JLPT at once, and
+`AdConfig.banner(_:)` falls back to Google's public **test** unit for any slot with no
+key. That fallback is deliberate — a missing key should fail visibly — but visible still
+means shipped, so create the AdMob units as part of building the screen.
 
 - **The banner lives in a plain `VStack`, not `.safeAreaInset`** (`RootView.swift:61`).
   A screen pushed onto a `NavigationStack` doesn't see an ancestor's safe-area inset, so

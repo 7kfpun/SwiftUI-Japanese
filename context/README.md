@@ -21,8 +21,8 @@ Read this folder cold-start, in roughly this order:
 | `05-shared-and-audio.md` | Cross-cutting pieces: the `Pronouncer`/`Speech` audio seam, the shared quiz/flashcard/swipe components, `CardPager`, and the two independent language settings. |
 | `06-monetization.md` | `Gating` and the free tier, the product lineup and its legacy IDs, the paywall's price maths, the rating prompt's star-row-before-Apple design, and every ad slot and throttle. |
 | `07-ux-ui.md` | The visual language: color tokens (dynamic light/dark), the typography rules and their measurements, the Tinder-like swipe pattern shared across five screens, and a few non-obvious layout decisions. |
-| `08-analytics.md` | The `Track` API, the full event catalog, and the paywall source-attribution pattern. |
-| `09-intro-and-survey.md` | The five-card first-launch tour and the three questions it asks; the `survey_intro` Firestore collection, its write-only security rules, and the App Check setup that guards them — the app's only server write. |
+| `08-analytics.md` | The `Track` API, the full event catalog, the paywall source-attribution pattern, Firebase Performance, and the three kinds of notification. |
+| `09-intro-and-survey.md` | The six-card first-launch tour and the three questions it asks; the `survey_intro` Firestore collection, its write-only security rules, and the App Check setup that guards them — the app's only server write. |
 
 `02` and `06` were split out of `00`/`04` because both subjects were smeared
 across several files and each is load-bearing enough to contradict quietly.

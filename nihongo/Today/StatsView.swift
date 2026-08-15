@@ -18,6 +18,7 @@ struct StatsView: View {
     @State private var daysStudied = 0
     @State private var challengesPassed = 0
     @State private var kanaLearned = 0
+    @State private var bookmarkCount = 0
 
     /// Every rung of every lesson in this course. Arithmetic over the bundled data, so it
     /// follows `Course.current` — 50 lessons of Minna or 201 of JLPT — with no constant
@@ -35,38 +36,55 @@ struct StatsView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
+            // Always a `List`, even with nothing studied yet. The empty state used to
+            // replace the whole screen, which took Bookmarks with it — and bookmarks are
+            // filled from the Vocab List, free on every lesson and needing no challenge
+            // at all. Someone could save a dozen words and then find no way back to them.
+            List {
                 if daysStudied == 0 {
-                    empty
+                    Section {
+                        empty
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                    }
                 } else {
-                    List {
-                        // The streak is the reason to come back, so it gets the top of
-                        // the screen rather than a row among five equals.
-                        Section {
-                            StreakHero(streak: streak)
-                                .listRowInsets(EdgeInsets())
-                                .listRowBackground(Color.clear)
-                        }
-                        row("trophy", L.t("Best streak"), "\(streak.best)")
-                        row("calendar", L.t("Days studied"), "\(daysStudied)")
-                        row("checkmark.seal", L.t("Challenges passed"),
-                            "\(challengesPassed) / \(challengesTotal)")
-                        row("character.book.closed", L.t("Kana learned"),
-                            "\(kanaLearned) / \(kanaTotal)")
+                    // The streak is the reason to come back, so it gets the top of
+                    // the screen rather than a row among five equals.
+                    Section {
+                        StreakHero(streak: streak)
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                    }
+                    row("trophy", L.t("Best streak"), "\(streak.best)")
+                    row("calendar", L.t("Days studied"), "\(daysStudied)")
+                    row("checkmark.seal", L.t("Challenges passed"),
+                        "\(challengesPassed) / \(challengesTotal)")
+                    row("character.book.closed", L.t("Kana learned"),
+                        "\(kanaLearned) / \(kanaTotal)")
+                }
 
-                        // The shelf belongs with the rest of "what's mine" rather than
-                        // on a tab of its own — it's a place you go on purpose, not one
-                        // you need in front of you.
-                        Section {
-                            NavigationLink {
-                                BookmarksView()
-                            } label: {
-                                Label {
-                                    Text(L.t("Bookmarks"))
-                                        .font(Theme.title(.body, weight: .regular))
-                                } icon: {
-                                    Image(systemName: "star").foregroundStyle(Theme.accent)
-                                }
+                // The shelf belongs with the rest of "what's mine" rather than on a tab
+                // of its own — it's a place you go on purpose, not one you need in front
+                // of you. Shown unconditionally: it is the only route to saved words.
+                Section {
+                    NavigationLink {
+                        BookmarksView()
+                    } label: {
+                        HStack {
+                            Label {
+                                Text(L.t("Bookmarks"))
+                                    .font(Theme.title(.body, weight: .regular))
+                            } icon: {
+                                Image(systemName: "star").foregroundStyle(Theme.accent)
+                            }
+                            Spacer(minLength: 12)
+                            // The count is what makes the row worth showing on an
+                            // otherwise-empty screen: it says whether there's anything
+                            // behind it before you tap.
+                            if bookmarkCount > 0 {
+                                Text("\(bookmarkCount)")
+                                    .font(.body.weight(.semibold).monospacedDigit())
+                                    .foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -129,6 +147,10 @@ struct StatsView: View {
         challengesPassed = Dictionary(results.map { ($0.id, $0) },
                                       uniquingKeysWith: ChallengeResult.better)
             .values.filter(\.isPassed).count
+
+        // Deduped by word, matching `Bookmark.all` — a merge can leave two rows for one
+        // word, and counting both would promise more on the shelf than it holds.
+        bookmarkCount = Bookmark.all(context: context).count
 
         let kana = (try? context.fetch(FetchDescriptor<KanaResult>())) ?? []
         // Same dedupe, by kana: the most recent row for each is the one that counts.

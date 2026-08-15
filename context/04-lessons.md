@@ -30,10 +30,17 @@ own doc (`02-challenge-ladder.md`); this one covers everything around it.
   "Ready for Challenge N?" link can push a lesson into a tab the user isn't on. Row taps
   append to the same path, so a deep link and a tap leave the user in the same place with
   a working back button either way.
-- `VocabRow` (also reused by search results and `VocabListView`) shows
-  kana/kanji on the left, translation (+ `L<n>` badge when `showLesson`) on the
-  right, and a speaker icon; tapping the whole row speaks the word and logs
-  `play_vocab`. It uses `.buttonStyle(.plain)` deliberately: the default style tints the
+- `VocabRow` (also reused by search results, `VocabListView` and `BookmarksView`) shows
+  kana/kanji on the left, translation (+ `L<n>` badge when `showLesson`) in the middle,
+  and a fixed 28pt trailing column holding the speaker over the bookmark star; tapping
+  the row or the speaker speaks the word and logs `play_vocab`.
+- **The star is a sibling in that column, never an overlay.** It was
+  `.overlay(alignment: .topTrailing)`, which takes no layout space, so its position
+  followed the row's height: a two-line row (kanji shown) left it hovering above the
+  speaker and a one-line row put it straight on top. It is also **one glyph plus a
+  numeral** (`★2`), not one glyph per tier — three repeated stars is a variable-width
+  control, and in a list that means nothing lines up. Both are separate buttons: tapping
+  a star must never also play audio. It uses `.buttonStyle(.plain)` deliberately: the default style tints the
   whole label with the accent colour and beats a `.foregroundStyle(.primary)` applied
   inside, so only the style change keeps the vocabulary reading as text rather than as a
   link.
@@ -50,8 +57,15 @@ Re-resolves the lesson from the current `Pref.translationLanguage` on push, so
 switching the Meanings language mid-session and re-entering a lesson shows the new
 language immediately.
 
-**This is the one place lesson gating is enforced** — a locked row opens the
-paywall instead of navigating, so no practice screen has to police access itself.
+**This is the one place lesson gating is enforced for the practice modes and the
+ladder** — a locked row opens the paywall instead of navigating, so no practice screen
+has to police access itself. (`VocabListView` is the only other enforcement point, and
+only for reading meanings aloud — see `06-monetization.md`.)
+
+On a **free** lesson the Challenge section's footer also carries the earned unlock: the
+offer, a progress bar and an `n / m three-starred` count. It is hidden once won, for
+subscribers, and on locked lessons — where it would read as a taunt rather than an
+offer.
 
 ## §1 Vocab List (`Lessons/VocabListView.swift`)
 
@@ -171,7 +185,7 @@ An unattempted-but-open rung shows its number and three empty stars — no padlo
 | Learn | locked |
 | Challenge (every rung) | locked |
 
-**One whole-lesson rule.** Lessons 1–`Gating.freeLessonLimit` (7) are free in full —
+**One whole-lesson rule.** Lessons 1–`Gating.freeLessonLimit` (5) are free in full —
 every mode, every rung — and the rest are locked outright. The earlier per-mode
 card/page/question quotas are gone: a free user can *finish* the early lessons, fill the
 progress bar and earn the stars, then meet the paywall carrying that momentum instead of
