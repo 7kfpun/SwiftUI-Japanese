@@ -1,7 +1,7 @@
 # Japanese Daily 每日日本語 — working rules
 
 Native SwiftUI + SwiftData iOS app teaching the Minna no Nihongo vocabulary (50
-lessons, 2089 words) and the kana syllabaries, in 17 UI languages, with a widget
+lessons, 2089 words) and the kana syllabaries, in 18 UI languages, with a widget
 and an Apple Watch app. `context/` documents how it works — read `context/README.md`
 first and follow its index; it is kept current and is the fastest way in.
 
@@ -38,6 +38,7 @@ first and follow its index; it is kept current and is the fastest way in.
 |---|---|
 | `nihongo/Resources/MinnaData.json`, `KanaChart.json`, `Resources/audio/{vocab,kana}/` | `scripts/build-minna-data.py` ← `minna/` submodule |
 | `Apps/jlpt/Resources/JLPTData.json`, `Resources/audio/` | `scripts/build-jlpt-data.py` ← the same submodule's `jlpt/` half |
+| `nihongo/Resources/audio/cheer/` | `scripts/build-minna-data.py` ← the submodule's `voices/cheer-<voice>-<key>.m4a` |
 | `web/**` (except `privacy.html`, `terms.html`) | `scripts/build-web.py` — all copy lives in its `T` dict |
 | `fastlane/minna/screenshots/**` | `fastlane/generate_framed_screenshots.py` ← `fastlane/minna/screenshot_raw/` |
 
@@ -47,7 +48,7 @@ first and follow its index; it is kept current and is the fastest way in.
   import `FirebaseAnalytics`. Event names and param keys are `lower_snake_case`.
 - **Server writes: `Survey` only** (`nihongo/Survey.swift`), the app's *only* server
   write. Everything else is on-device or in the user's own iCloud.
-- **Strings: `L.t(...)` only**, with an entry in `nihongo/UIStrings.json` for **all 17
+- **Strings: `L.t(...)` only**, with an entry in `nihongo/UIStrings.json` for **all 18
   languages**. English-only additions fail the suite. Run `check-i18n-parity` after any
   string change. Developer-only surfaces (Diagnostics) are deliberately unlocalised.
 - **Typography and colour: `Theme` only.** No literal fonts or colours at call sites.
@@ -103,12 +104,12 @@ first and follow its index; it is kept current and is the fastest way in.
 - **Green and red are exclusive to answer feedback.** Selection state is a
   `Theme.accent` **border**, never a fill.
 - **Dynamic Type everywhere.** No fixed point sizes for text (the two documented
-  `Theme.display` slots aside), and no fixed-height frames — 17 languages, and German,
+  `Theme.display` slots aside), and no fixed-height frames — 18 languages, and German,
   Vietnamese and Burmese run long.
 - Cards sit *lighter* than the screen in both appearances; a `Theme.surface` element on
   a `Theme.surface` card is invisible. Inset panes use `Theme.canvas`.
 - **SF Symbols only for anything functional** — icons, controls, list rows, tab items.
-  They scale with Dynamic Type, follow the appearance, and render in all 17 languages
+  They scale with Dynamic Type, follow the appearance, and render in all 18 languages
   for free, which is the whole reason for the rule.
   The single exception is `nihongo/Illustrations.xcassets`: hand-drawn SVGs from
   [koboyo](https://koboyo.com/icons) (free for commercial use, no attribution) used as
@@ -118,7 +119,7 @@ first and follow its index; it is kept current and is the fastest way in.
 
 ## Product facts copy must not get wrong
 
-Each of these was wrong in shipped copy and had to be corrected across 17 languages.
+Each of these was wrong in shipped copy and had to be corrected across 18 languages.
 Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
 
 - **Lessons 1–5 are free** (`Gating.freeLessonLimit = 5`), plus **two documented ways
@@ -140,9 +141,17 @@ Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
 - **Never hardcode a lesson count in UI copy.** The paywall said "All 50 lessons" in both
   apps, promising 50 of JLPT's 201 on the screen that asks for money. Interpolate
   `Course.current.lessonCount`; `Gating.freeLessonLimit` likewise.
-- **Four practice modes** per lesson — Vocab List, Flashcards, Train, Learn — **plus the
-  Challenge ladder**. There is no `QuizView.swift`; Quiz and Listening became the ladder
-  and `TrainModel`. Kana has five modes, one of which is Listening.
+- **Five practice modes** per lesson — Vocab List, Flashcards, Train, Match, Learn —
+  **plus the Challenge ladder**. Match (`MatchView.swift`) is the newest: five words
+  against five shuffled meanings, tap a pair to clear it, endless. There is no
+  `QuizView.swift`; Quiz and Listening became the ladder and `TrainModel`. Kana has five
+  modes, one of which is Listening.
+
+  The count is stated in copy in four places and they drift apart silently: the intro
+  headline (`"Five ways through a lesson."` in `UIStrings.json`, ×18 languages),
+  `Intro.Mode` (whose order `IntroTests` pins against `SelectModeView`'s), every
+  `fastlane/*/metadata/*/description.txt`, and `scripts/build-web.py`'s `T` dict. Adding
+  a sixth mode means all four.
 - **All the audio is synthesised, never native-speaker recordings — so never claim
   "native audio"**, whatever the voice. The two courses use different engines:
   - **Minna: VOICEVOX** (neural). `whitecul` is the default for vocab and kana;
@@ -171,6 +180,18 @@ Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
 - **No third-party trademark in the App Store name or subtitle** (Guideline 5.2). The
   textbook name stays out of every user-visible store field; the website keeps it to the
   meta description and one FAQ answer.
+- **A UI language is not automatically an App Store locale, and six of ours aren't.**
+  App Store Connect ships a fixed storefront list (`deliver/lib/deliver/languages.rb`,
+  `ALL_LANGUAGES`); **Nepali, Bengali, Tamil, Telugu, Burmese and Filipino are not on
+  it.** Adding one of those to the app is a `UIStrings.json` + `MinnaData.json` job and
+  **stops there — do not create a `fastlane/*/metadata/<code>/` folder for it.** There is
+  no storefront to receive it, so the copy would be written, translated and reviewed for
+  a field that cannot exist. `fastlane/minna/metadata/ta/` is the cautionary case: it was
+  written anyway and `deliver` silently drops it on every push.
+- **Adding a UI language dates the store copy.** Every `description.txt` in both apps
+  states the interface language count in its own words ("18 languages", "18 種語言",
+  "१८ भाषा"), so a new language makes 18 files wrong at once. Grep the count across
+  `fastlane/*/metadata/*/description.txt` whenever `UIStrings.json` gains a language.
 
 ## Documentation
 

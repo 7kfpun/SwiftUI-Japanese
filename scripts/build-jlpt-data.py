@@ -8,7 +8,7 @@ shared part would be three lines of json.load.
 
 Outputs under Apps/jlpt/Resources/ (both git-ignored):
   - JLPTData.json          201 lessons across N5…N1; meanings in whichever languages
-                           the submodule ships (today en + zh-Hant — see LANGS).
+                           the submodule ships (today en, zh, zh-Hant, vi — see LANGS).
   - audio/<id>.m4a         Kyoko clips, named by the entry's content-hash id — which
                            is already globally unique and already `Vocab.key`, so no
                            lesson prefix is needed the way minna's slugs need one.

@@ -48,6 +48,8 @@ struct TodayView: View {
     @State private var streak = Streak(days: [])
     /// The soft opt-in, raised once the streak has earned it — see `NotificationOptIn`.
     @State private var showNotificationOptIn = false
+    /// Whether the card was answered, so its dismissal can be told from its two buttons.
+    @State private var optInAnswered = false
 
     private var current: Vocab? { picks.indices.contains(index) ? picks[index] : picks.first }
 
@@ -103,8 +105,18 @@ struct TodayView: View {
             }
             // A sheet rather than an alert: this is an offer with a rationale, and an
             // alert's two bare buttons can't carry the reason it's worth a yes.
-            .sheet(isPresented: $showNotificationOptIn) {
+            // A swipe down is a third exit and, unlike the two buttons, it records no ask —
+            // so the card comes back on the next appear. Kept as its own name rather than
+            // folded into `notification_opt_in` with `accepted: false`: a decline is one
+            // person deciding once, while this can fire repeatedly at the same person, and
+            // averaging the two together would quietly wreck the accept rate.
+            .sheet(isPresented: $showNotificationOptIn, onDismiss: {
+                guard !optInAnswered else { optInAnswered = false; return }
+                Track.event("notification_opt_in_dismissed",
+                            ["source": "streak", "streak": streak.current])
+            }) {
                 NotificationOptInCard { wantsReminders in
+                    optInAnswered = true
                     NotificationOptIn.recordAsked()
                     Track.event("notification_opt_in",
                                 ["source": "streak", "accepted": wantsReminders,

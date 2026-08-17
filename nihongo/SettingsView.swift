@@ -52,7 +52,7 @@ struct SettingsView: View {
                         }
                     } else {
                         Button(L.t("Unlock all lessons")) { showPaywall = true }
-                        Button(L.t("Restore Purchases")) { Task { await store.restore() } }
+                        Button(L.t("Restore Purchases")) { Task { await store.restore(source: "settings") } }
                     }
                 } header: {
                     // Section headers keep the size and secondary colour a grouped list

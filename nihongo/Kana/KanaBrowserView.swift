@@ -118,7 +118,13 @@ struct KanaBrowserView: View {
                     .accessibilityLabel(L.t(Self.tileScripts[tileScript].name))
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    Button(L.t("Quiz")) { showQuiz = true; Track.event("kana_quiz_open") }
+                    // `table` for the same reason `kana_table` carries it: the quiz opens
+                    // on whichever chart is on screen, so without it the event can't say
+                    // whether anyone quizzes past Seion.
+                    Button(L.t("Quiz")) {
+                        showQuiz = true
+                        Track.event("kana_quiz_open", ["table": table.rawValue])
+                    }
                 }
             }
             .confirmationDialog(L.t("Clear all learned kana?"),
@@ -135,9 +141,13 @@ struct KanaBrowserView: View {
     }
 
     private func clearAll() {
+        // Read before the delete, obviously — and worth reporting: wiping three tiles is
+        // a tidy-up, wiping ninety is someone starting the chart over, and the bare event
+        // could not tell those apart.
+        let cleared = results.count
         try? context.delete(model: KanaResult.self)
         try? context.save()
-        Track.event("kana_clear")
+        Track.event("kana_clear", ["cleared": cleared])
     }
 }
 

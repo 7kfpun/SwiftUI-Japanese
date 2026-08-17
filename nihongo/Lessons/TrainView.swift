@@ -347,7 +347,15 @@ struct TrainView: View {
     private func decide(_ side: Int) {
         guard model.picked == nil, model.options.count > side else { return }
         model.choose(side)
-        Track.event("train_answer", ["correct": model.isCorrectOption(side), "lesson": lessonNumber])
+        // `from`/`to` ride along here and nowhere else, because Train is the one mode whose
+        // question the learner reshapes — an answer in kana→meaning is not the same
+        // exercise as the same word in audio→kana, and without the pair the correct rate
+        // averages the two into a number that describes neither. Both are `VForm.label`,
+        // stable ASCII keys, never the localized on-screen text.
+        Track.event("train_answer", ["correct": model.isCorrectOption(side),
+                                     "lesson": lessonNumber,
+                                     "from": model.from.label,
+                                     "to": model.to.label])
         withAnimation(.spring(duration: 0.2)) { lastCorrect = model.isCorrectOption(side) }
         withAnimation(.easeOut(duration: 0.25)) { drag.width = side == 1 ? 700 : -700 }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

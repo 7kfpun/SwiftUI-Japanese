@@ -61,6 +61,11 @@ struct FlashcardScreen<Element, Face: View>: View {
     private let revealLabel: String
     private let summary: (Int) -> String
     private let trackName: String?
+    /// Merged into this screen's own two events. It exists so the caller can name what the
+    /// deck is *of* — the lesson number, for the vocab deck — which this screen has no way
+    /// to know: it is generic over its element and holds nothing but cards. Kana passes
+    /// none, because a kana deck is the whole chart and there is nothing to distinguish.
+    private let trackParams: [String: Any]
     private let reportItem: ((Element) -> Feedback.Item)?
     private let face: (Element, Bool) -> Face
 
@@ -75,6 +80,7 @@ struct FlashcardScreen<Element, Face: View>: View {
          revealLabel: String,
          summary: @escaping (Int) -> String,
          trackName: String? = nil,
+         trackParams: [String: Any] = [:],
          speak: @escaping (Element) -> Void,
          report: ((Element) -> Feedback.Item)? = nil,
          @ViewBuilder face: @escaping (Element, Bool) -> Face) {
@@ -83,6 +89,7 @@ struct FlashcardScreen<Element, Face: View>: View {
         self.revealLabel = revealLabel
         self.summary = summary
         self.trackName = trackName
+        self.trackParams = trackParams
         self.speak = speak
         self.reportItem = report
         self.face = face
@@ -222,14 +229,22 @@ struct FlashcardScreen<Element, Face: View>: View {
     private func grade(right: Bool) {
         guard !animating else { return }
         animating = true
-        if let n = trackName { Track.event("\(n)_grade", ["known": right]) }
+        // `flashcard_grade` / `kana_flashcard_grade` — the name already says which deck,
+        // which is why this stays two names rather than one with a param.
+        if let n = trackName {
+            Track.event("\(n)_grade", trackParams.merging(["known": right]) { a, _ in a })
+        }
         withAnimation(.easeOut(duration: 0.25)) { drag.width = right ? 700 : -700 }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
             if right { deck.know() } else { deck.dontKnow() }
             revealed = false
             drag = .zero
             animating = false
-            if deck.isDone, let n = trackName { Track.event("\(n)_done") }
+            // `total` because a finished deck of 12 and a finished deck of 60 are not the
+            // same achievement, and `_done` carried nothing at all to tell them apart.
+            if deck.isDone, let n = trackName {
+                Track.event("\(n)_done", trackParams.merging(["total": deck.total]) { a, _ in a })
+            }
             autoPlay()
         }
     }

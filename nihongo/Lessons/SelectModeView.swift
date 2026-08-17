@@ -34,8 +34,11 @@ struct SelectModeView: View {
             //
             // Rows run shallow → deep, the order you'd actually study new material:
             // meet the words (Vocab List), recognise them (Flashcards), choose under a
-            // gentle 50/50 ask (Train, audio prompts included), then produce them from
-            // tiles (Learn) — the last stop before the Challenge ladder tests you.
+            // gentle 50/50 ask (Train, audio prompts included), hold five pairs at once
+            // (Match), then produce them from tiles (Learn) — the last stop before the
+            // Challenge ladder tests you. Match sits after Train because five-against-five
+            // is a wider net than a coin flip, and before Learn because recognising a
+            // pairing is still easier than producing the reading from nothing.
             Section {
                 // Vocab List is free on every lesson — browsing and search stay open.
                 NavigationLink { VocabListView(lesson: current) } label: {
@@ -46,6 +49,8 @@ struct SelectModeView: View {
                      subtitle: L.t("Swipe right if you know it")) { FlashcardView(lesson: current) }
                 mode(key: "train", icon: "arrow.left.arrow.right", title: L.t("Train"),
                      subtitle: L.t("Swipe to the right answer")) { TrainView(lesson: current) }
+                mode(key: "match", icon: "link", title: L.t("Match"),
+                     subtitle: L.t("Pair each word with its meaning")) { MatchView(lesson: current) }
                 mode(key: "learn", icon: "square.grid.2x2", title: L.t("Learn"),
                      subtitle: L.t("Rebuild the reading from tiles")) { LearnView(lesson: current) }
             } header: {

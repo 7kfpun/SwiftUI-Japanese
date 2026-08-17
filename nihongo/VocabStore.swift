@@ -108,6 +108,17 @@ enum VocabStore {
             ?? Bundle.main.url(forResource: name, withExtension: "m4a")
     }
 
+    /// Resolve a cheer's clip, e.g. "sugoi" → "cheer-sugoi.m4a" (or `-kenzaki`).
+    ///
+    /// Same naming rule and same fallback as `audioURL`: the default voice's clips carry
+    /// no suffix, and a voice missing a phrase drops to the default rather than to live
+    /// TTS. JLPT bundles the Minna-built set, so both voices are present in both apps.
+    static func cheerAudioURL(_ key: String, voice: Speech.Voice = .default) -> URL? {
+        guard !key.isEmpty else { return nil }
+        return Bundle.main.url(forResource: "cheer-\(key)" + voice.suffix, withExtension: "m4a")
+            ?? Bundle.main.url(forResource: "cheer-\(key)", withExtension: "m4a")
+    }
+
     /// Resolve a kana's pre-generated Kyoko clip, e.g. "ka" → "kana-ka.m4a".
     static func kanaAudioURL(_ romaji: String) -> URL? {
         guard !romaji.isEmpty else { return nil }

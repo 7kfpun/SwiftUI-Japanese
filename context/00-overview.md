@@ -139,7 +139,7 @@ changed. See `build-and-deploy-web` skill.
 - **First launch**: a five-card intro tour that also asks three questions —
   see `09-intro-and-survey.md`.
 - **Settings**: separate app-UI language vs. vocabulary-translation language
-  (17 languages each), premium management, legal docs, feedback link. Two hidden
+  (18 languages each), premium management, legal docs, feedback link. Two hidden
   developer affordances on the version footer: 7 taps toggles analytics
   exclusion, long-press replays the intro.
 - **Audio**: all 2089 words have a pre-generated VOICEVOX (`whitecul`) clip, plus a

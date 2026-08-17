@@ -160,7 +160,7 @@ proxy's own: `UINavigationBar.appearance()` is a recorder, not a live object, so
 reading `.standardAppearance` back off it returns an empty appearance and the
 mutate-and-put-back shape would silently drop the bar's default background.
 
-### What the 17 languages actually get
+### What the 18 languages actually get
 
 SF Rounded covers Latin (including Vietnamese's stacked diacritics), Cyrillic
 and Greek — 2785 glyphs, verified with CoreText against every character in
@@ -177,7 +177,7 @@ iOS 26 ships rounded variants for exactly five scripts — Latin/Cyrillic/Greek
 Myanmar, CJK, Hangul or any Indic script, so there is nothing friendlier to
 switch those nine to without bundling a font. Where a rounded variant *does*
 exist the cascade picks it up automatically (a rounded base resolves Hebrew to
-`SFHebrewRounded`, not `SFHebrew`), so adding Arabic or Hebrew to the 17 later
+`SFHebrewRounded`, not `SFHebrew`), so adding Arabic or Hebrew to the 18 later
 would get a rounded heading for free.
 
 ### Line heights per script, and what that costs a fixed-height box
@@ -210,7 +210,7 @@ Two results that contradict the obvious guess:
   make on purpose rather than a bug to patch.
 
 Consequence for the two shrink-to-fit answer controls, which hold *translations*
-and therefore meet all 17 scripts:
+and therefore meet all 18 scripts:
 
 - **`QuizOptionButton`** — `OptionGrid` rows are a fixed 74pt, so the text box is
   154.5×54pt. `minimumScaleFactor` is **0.65**, not 0.5: at 0.5 the worst glosses

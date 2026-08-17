@@ -153,7 +153,7 @@ struct FeedbackView: View {
     }
 
     /// One chip per row rather than a grid: these labels are sentences, and in the longer
-    /// of the 17 languages a two-column grid re-flows into a ragged 2 + 2 with a hole. A
+    /// of the 18 languages a two-column grid re-flows into a ragged 2 + 2 with a hole. A
     /// single column also gives every option the same width, which is what makes four
     /// chips read as one set of choices.
     ///

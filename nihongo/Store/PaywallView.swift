@@ -75,7 +75,7 @@ struct PaywallView: View {
                     }
 
                     Button(L.t("Restore Purchases")) {
-                        Task { await store.restore() }
+                        Task { await store.restore(source: source) }
                     }
                     .font(.footnote)
                     .padding(.top, 4)
@@ -136,6 +136,11 @@ struct PaywallView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
+        // A `paywall_shown` that could never convert — no products, so no button to buy
+        // with. Counted separately because it is otherwise indistinguishable from a user
+        // who looked and declined, and it is the one paywall outcome that is our fault:
+        // offline, StoreKit unavailable, or products not approved in App Store Connect.
+        .onAppear { Track.event("paywall_unavailable", params) }
     }
 
     private var features: some View {

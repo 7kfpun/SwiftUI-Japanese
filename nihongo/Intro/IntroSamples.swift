@@ -33,6 +33,7 @@ struct IntroModeSample: View {
         case .vocabList:  return 0
         case .flashcards: return 3
         case .train:      return 4
+        case .match:      return 8
         case .learn:      return 6
         }
     }
@@ -43,10 +44,45 @@ struct IntroModeSample: View {
             case .vocabList:  vocabList
             case .flashcards: flashcard
             case .train:      train
+            case .match:      match
             case .learn:      learn
             }
         }
         .frame(maxWidth: .infinity)
+    }
+
+    /// Match — two short columns with one pair already joined.
+    ///
+    /// Three rows rather than the real mode's five: the card has to fit under a headline
+    /// and a chip grid, and the point being made is the *shape* of the task, which three
+    /// rows carry as well as five. The columns are deliberately out of step with each
+    /// other, because two columns in the same order wouldn't look like a puzzle.
+    private var match: some View {
+        let rows = Array(entries.dropFirst(offset).prefix(3))
+        let meanings = rows.reversed()      // never the same order as the words
+        return HStack(alignment: .top, spacing: 8) {
+            VStack(spacing: 6) {
+                ForEach(rows, id: \.id) { chip($0.kana, japanese: true, joined: $0.id == rows.first?.id) }
+            }
+            VStack(spacing: 6) {
+                ForEach(Array(meanings), id: \.id) { chip($0.translation, japanese: false, joined: $0.id == rows.first?.id) }
+            }
+        }
+    }
+
+    /// One Match tile. `joined` marks the single pair shown as already cleared — the
+    /// accent border is the same selection language the real mode uses, and green stays
+    /// where it belongs, on actual answer feedback.
+    private func chip(_ text: String, japanese: Bool, joined: Bool) -> some View {
+        Text(text)
+            .font(japanese ? Theme.jp(15) : .system(.caption, weight: .medium))
+            .lineLimit(1)
+            .frame(maxWidth: .infinity, minHeight: 30)
+            .padding(.horizontal, 4)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
+            .overlay(RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(Theme.accent, lineWidth: joined ? 1.5 : 0))
+            .opacity(joined ? 1 : 0.55)
     }
 
     /// Vocab List — three real rows of the list itself. `VocabRow` already *is* this

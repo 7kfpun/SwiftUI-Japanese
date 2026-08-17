@@ -64,6 +64,16 @@ struct ChallengeView: View {
                                      picked: model.picked,
                                      isAnswer: question.isCorrect(i)) {
                         model.choose(i)
+                        // One `answer` event per selection, the same shape every practice
+                        // surface logs. `from`/`to` because the ladder's whole design is
+                        // forms hardening as you climb — per-form accuracy is the readout.
+                        // No word id or text: the answer stream is volume, not content.
+                        Track.event("answer", ["screen": "challenge",
+                                               "lesson": lesson.number,
+                                               "index": model.index,
+                                               "from": question.from.label,
+                                               "to": question.to.label,
+                                               "correct": question.isCorrect(i)])
                         if soundOn || question.from.isAudio { pronouncer.speak(question.answer, voice: question.voice) }
                     }
                 }
@@ -308,11 +318,19 @@ private struct ChallengeResultView: View {
     let retry: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.pronouncer) private var pronouncer
+    /// Unlike a question's audio — where the clip *is* the question and so always plays —
+    /// a cheer is commentary, and commentary respects the sound switch.
+    @AppStorage(Pref.soundOn) private var soundOn = true
+    /// Chosen once, on appear. Nil until then, and nil forever if the pools were empty.
+    @State private var phrase: Cheer?
 
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
-                StarRow(stars: model.stars, size: 34)
+                // The one place a StarRow celebrates. A miss lands nothing — `land`
+                // returns on zero stars — so the animation can only ever mark a pass.
+                StarRow(stars: model.stars, size: 34, celebrates: true)
                     .padding(.top, 12)
 
                 Text("\(model.scorePercent)%")
@@ -324,6 +342,8 @@ private struct ChallengeResultView: View {
                      : L.t("%@% needed to pass — try again.", "\(Challenge.passScore)"))
                     .font(Theme.title(.headline))
                     .multilineTextAlignment(.center)
+
+                if let phrase { cheerLine(phrase) }
 
                 if !model.missed.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
@@ -352,6 +372,45 @@ private struct ChallengeResultView: View {
                 }
             }
             .padding(.vertical, 8)
+        }
+        .onAppear(perform: cheer)
+    }
+
+    /// The phrase, in Japanese, with its reading and meaning under it.
+    ///
+    /// `Theme.jp` for the Japanese — the face follows the content's script, and this line
+    /// is Japanese on every one of the 17 interface languages. The gloss reads as a
+    /// caption rather than as a second headline, because the phrase is the thing being
+    /// learned and the English is only there to make it stick.
+    @ViewBuilder
+    private func cheerLine(_ phrase: Cheer) -> some View {
+        VStack(spacing: 4) {
+            Text(phrase.text)
+                .font(Theme.jp(28))
+            Text("\(phrase.romaji) · \(L.t(phrase.meaning))")
+                .font(Theme.title(.footnote, weight: .regular))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    /// Pick once on appear, then draw it and — only if sound is on — say it.
+    ///
+    /// Picked into state rather than re-read per redraw: a phrase that changed on every
+    /// layout pass would be unreadable. And picked *regardless* of the sound switch,
+    /// because the text is the part being taught; muting the app shouldn't cost a learner
+    /// the phrase, only the voice.
+    ///
+    /// The speech delay lets the push transition finish — `speak` stops whatever is
+    /// playing, so firing immediately would clip the last question's audio and talk over
+    /// the screen sliding in.
+    private func cheer() {
+        guard let choice = Cheer.next(passed: model.passed) else { return }
+        phrase = choice
+        guard soundOn else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            pronouncer.speak(cheer: choice)
         }
     }
 
@@ -394,6 +453,20 @@ private struct ChallengeResultView: View {
 struct StarRow: View {
     let stars: Int
     var size: CGFloat = 13
+    /// Whether the earned stars land one at a time when the row appears.
+    ///
+    /// Off by default, and deliberately *not* inferred from `stars == 3`: the ladder
+    /// draws a row on every rung, so stars bouncing as rows scroll into view would read
+    /// as noise rather than as a reward for having just done something.
+    var celebrates = false
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// One counter per star; bumping one is what fires its bounce.
+    @State private var landed = [0, 0, 0]
+    /// Bumped when the third star lands, which is the only thing that carries a haptic.
+    /// Kept separate from `landed` so Reduce Motion can suppress the bounce without
+    /// suppressing the haptic too.
+    @State private var perfected = 0
 
     var body: some View {
         HStack(spacing: 2) {
@@ -401,9 +474,39 @@ struct StarRow: View {
                 Image(systemName: i <= stars ? "star.fill" : "star")
                     .font(.system(size: size))
                     .foregroundStyle(i <= stars ? Color.yellow : Color.secondary.opacity(0.35))
+                    .symbolEffect(.bounce, value: landed[i - 1])
             }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(L.t("%@ of 3 stars", "\(stars)"))
+        .sensoryFeedback(.success, trigger: perfected)
+        .onAppear(perform: land)
     }
+
+    /// Left to right, one every `stagger` seconds, with the third carrying the haptic —
+    /// sequential rather than all at once because three stars arriving together is a
+    /// single event, while three arriving in order is a *count*, and counting up is the
+    /// part that feels earned. The lead-in lets the screen settle first, so the stars
+    /// land on a still page rather than during the push transition.
+    ///
+    /// Reduce Motion drops the stagger, not the reward: the row simply draws already
+    /// filled and the haptic still marks a clean run. The setting is about movement, and
+    /// silently withholding the feedback as well would make it a worse result rather
+    /// than a calmer one.
+    private func land() {
+        guard celebrates, stars > 0 else { return }
+        guard !reduceMotion else {
+            if stars >= 3 { perfected += 1 }
+            return
+        }
+        for i in 0..<min(stars, landed.count) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + leadIn + Double(i) * stagger) {
+                landed[i] += 1
+                if i == 2 { perfected += 1 }
+            }
+        }
+    }
+
+    private let leadIn = 0.25
+    private let stagger = 0.18
 }

@@ -96,6 +96,18 @@ enum Gating {
         guard mode == .withMeaning, isLocked else { return count }
         return min(freeMeaningPreview, count)
     }
+
+    /// Whether "Play all" may start over at the top and keep going indefinitely.
+    ///
+    /// Everything except the locked meanings preview, and deliberately the *same*
+    /// condition that truncates the list in `wordsToRead` rather than "was the list cut
+    /// short" — a preview has to reach an end for the paywall to follow it, and one that
+    /// repeated forever would hand a locked lesson the paid mode for free. Phrased on the
+    /// rule and not on the resulting count so it stays right even if a course ever ships
+    /// a lesson shorter than `freeMeaningPreview`, where nothing would be cut at all.
+    static func loopsForever(mode: ReadMode, isLocked: Bool) -> Bool {
+        !(mode == .withMeaning && isLocked)
+    }
 }
 
 /// StoreKit 2 premium store. No server / shared-secret receipt validation — transactions
@@ -191,10 +203,60 @@ final class Store {
     }
 
     /// Restore prior purchases (incl. the legacy RN lifetime unlock) on this Apple ID.
-    func restore() async {
-        try? await AppStore.sync()
+    /// The four ways a Restore tap can end. Reported as `outcome` on `restore`.
+    ///
+    /// The old event logged only `premium` — the entitlement *after* the tap — which
+    /// cannot answer the one question worth asking. Someone already subscribed reported
+    /// `premium: true` identically to someone whose restore genuinely recovered a
+    /// purchase, and a cancelled sign-in reported `premium: false` identically to an
+    /// Apple ID that never bought anything. Those two pairs need opposite support
+    /// replies, so the event has to separate them.
+    enum RestoreOutcome: String {
+        /// Already entitled — the tap changed nothing, and nothing was wrong.
+        case alreadyPremium = "already_premium"
+        /// Not entitled before, entitled now. The restore did its job.
+        case restored
+        /// `AppStore.sync()` succeeded and found nothing: wrong Apple ID, or a purchase
+        /// that was never made. **This is what most "restore is broken" reports are.**
+        case nothingFound = "nothing_found"
+        /// `sync()` threw — a cancelled Apple ID prompt, or no network.
+        case failed
+    }
+
+    /// Restore prior purchases (incl. the legacy RN lifetime unlock) on this Apple ID.
+    ///
+    /// `source` distinguishes the paywall's Restore — a step inside a purchase decision —
+    /// from Settings', which is usually someone who has just reinstalled. The same tap
+    /// means different things there and the fix for a failure differs too.
+    @discardableResult
+    func restore(source: String) async -> RestoreOutcome {
+        let wasPremium = isPremium
+
+        var syncFailed: String?
+        do {
+            try await AppStore.sync()
+        } catch {
+            // Deliberately not `try?`: the throw is the single most informative thing
+            // that can happen here, and swallowing it made a cancelled sign-in
+            // indistinguishable from an account with no purchases.
+            syncFailed = "\(error)"
+        }
         await refreshEntitlement()
-        Track.event("restore", ["premium": isPremium])
+
+        let outcome: RestoreOutcome
+        if syncFailed != nil          { outcome = .failed }
+        else if wasPremium            { outcome = .alreadyPremium }
+        else if isPremium             { outcome = .restored }
+        else                          { outcome = .nothingFound }
+
+        var params: [String: Any] = ["outcome": outcome.rawValue,
+                                     "source": source,
+                                     "premium": isPremium]
+        // The message, never anything identifying — it names the failure mode
+        // (cancelled, offline) which is exactly what a support reply turns on.
+        if let syncFailed { params["error"] = syncFailed }
+        Track.event("restore", params)
+        return outcome
     }
 
     /// Apple's native manage-subscriptions sheet — where users switch tier (1m↔3m↔6m

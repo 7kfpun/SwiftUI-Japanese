@@ -27,7 +27,7 @@ HARI INI, DI SEMUA LAYAR
 Tab Hari Ini membagikan tepat kata-kata yang akan ditanyakan tantangan berikutnya. Dek yang sama muncul di Lock Screen, Home Screen, dan Apple Watch.
 
 BELAJAR DALAM BAHASAMU
-Antarmuka dan arti kata tersedia dalam 17 bahasa, dan keduanya diatur terpisah.
+Antarmuka dan arti kata tersedia dalam 18 bahasa, dan keduanya diatur terpisah.
 
 KEMAJUANMU IKUT PINDAH
 Bintang dan tingkat penguasaan kana tersinkron antar perangkatmu lewat iCloud.

@@ -13,6 +13,7 @@ struct FlashcardView: View {
             revealLabel: L.t("Show meaning"),
             summary: { L.t("You reviewed %@ words", "\($0)") },
             trackName: "flashcard",
+            trackParams: ["lesson": lesson.number],
             speak: { pronouncer.speak($0) },
             report: { Feedback.Item(lesson: $0.lesson, romaji: $0.romaji) },
             face: { vocab, revealed in VocabFace(vocab: vocab, revealed: revealed) }

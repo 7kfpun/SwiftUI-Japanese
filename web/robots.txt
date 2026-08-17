@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://japanesedaily.wahthefox.com/sitemap.xml

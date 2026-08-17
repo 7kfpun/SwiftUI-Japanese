@@ -72,13 +72,13 @@ enum Intro {
         }
     }
 
-    /// The four Learn modes card 3 previews, in `SelectModeView`'s shallow → deep order.
+    /// The five Learn modes card 3 previews, in `SelectModeView`'s shallow → deep order.
     ///
     /// Titles, subtitles and icons are the *same* strings and symbols the real mode rows
     /// use — deliberately not intro-specific copy, so the tour teaches the labels the
     /// learner will meet again a tap later. Nothing new to translate here.
     enum Mode: String, CaseIterable, Identifiable {
-        case vocabList, flashcards, train, learn
+        case vocabList, flashcards, train, match, learn
 
         var id: String { rawValue }
         var titleKey: String {
@@ -86,6 +86,7 @@ enum Intro {
             case .vocabList:  return "Vocab List"
             case .flashcards: return "Flashcards"
             case .train:      return "Train"
+            case .match:      return "Match"
             case .learn:      return "Learn"
             }
         }
@@ -94,6 +95,7 @@ enum Intro {
             case .vocabList:  return "Browse & hear all words"
             case .flashcards: return "Swipe right if you know it"
             case .train:      return "Swipe to the right answer"
+            case .match:      return "Pair each word with its meaning"
             case .learn:      return "Rebuild the reading from tiles"
             }
         }
@@ -102,6 +104,7 @@ enum Intro {
             case .vocabList:  return "list.bullet"
             case .flashcards: return "rectangle.on.rectangle.angled"
             case .train:      return "arrow.left.arrow.right"
+            case .match:      return "link"
             case .learn:      return "square.grid.2x2"
             }
         }

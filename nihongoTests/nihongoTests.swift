@@ -679,6 +679,71 @@ struct PremiumTests {
         // And it must leave something behind to buy — a one-word remainder is not an offer.
         #expect(smallest - Gating.freeMeaningPreview >= 5)
     }
+
+    /// The locked meanings preview is the one thing that must never loop. Its paywall
+    /// hangs off playback *ending*, so a looping preview would both skip the ask and read
+    /// the paid mode aloud forever — the premium feature, free, on a locked lesson.
+    ///
+    /// Plain "Play all" loops on every lesson, locked or not, because it was always free.
+    @Test func lockedMeaningPreviewNeverLoops() {
+        #expect(!Gating.loopsForever(mode: .withMeaning, isLocked: true))
+        #expect(Gating.loopsForever(mode: .withMeaning, isLocked: false))
+        #expect(Gating.loopsForever(mode: .japanese, isLocked: true))
+        #expect(Gating.loopsForever(mode: .japanese, isLocked: false))
+        // The rule is the same one that truncates the list: whatever is cut short must be
+        // exactly what is denied a loop, or one of the two is a way round the other.
+        for count in [3, 7, 17, 63] {
+            let cut = Gating.wordsToRead(mode: .withMeaning, count: count, isLocked: true) < count
+            #expect(cut || !Gating.loopsForever(mode: .withMeaning, isLocked: true))
+        }
+    }
+}
+
+// MARK: - Lesson playback sequencing
+
+/// The wrap in `LessonPlayer`. Only the pure step function is reachable without audio and
+/// a screen, which is why it exists — the rest is delegate callbacks.
+struct LessonPlayerTests {
+    /// Mid-list, looping changes nothing: the next word is the next word.
+    @Test func advancesThroughTheListRegardlessOfLooping() {
+        for loops in [true, false] {
+            #expect(LessonPlayer.step(after: 0, count: 5, loops: loops) == .next(1))
+            #expect(LessonPlayer.step(after: 3, count: 5, loops: loops) == .next(4))
+        }
+    }
+
+    /// The last word wraps when looping and ends when not. This is the whole feature.
+    @Test func lastWordWrapsOnlyWhenLooping() {
+        #expect(LessonPlayer.step(after: 4, count: 5, loops: true) == .wrap)
+        #expect(LessonPlayer.step(after: 4, count: 5, loops: false) == .end)
+        // A one-word list is still a lap: it wraps onto itself rather than stopping.
+        #expect(LessonPlayer.step(after: 0, count: 1, loops: true) == .wrap)
+        #expect(LessonPlayer.step(after: 0, count: 1, loops: false) == .end)
+    }
+
+    /// An empty list ends even when looping — a wrap with nothing to play is a silent
+    /// spin the user cannot tell apart from a hang.
+    @Test func emptyListNeverWraps() {
+        #expect(LessonPlayer.step(after: 0, count: 0, loops: true) == .end)
+        #expect(LessonPlayer.step(after: 0, count: 0, loops: false) == .end)
+    }
+
+    /// Laps run forever: every wrap lands back on word 0 and the next pass behaves like
+    /// the first, so nothing accumulates that could stop playback after a few rounds.
+    @Test func loopingRepeatsIndefinitely() {
+        let count = 4
+        var i = 0
+        var laps = 0
+        for _ in 0..<(count * 10) {
+            switch LessonPlayer.step(after: i, count: count, loops: true) {
+            case .next(let n): i = n
+            case .wrap:        i = 0; laps += 1
+            case .end:         Issue.record("looping playback reached an end at \(i)")
+            }
+        }
+        #expect(laps == 10)
+        #expect(i == 0)
+    }
 }
 
 // MARK: - Ads configuration
@@ -1360,6 +1425,23 @@ struct LocalizationTests {
         return try JSONDecoder().decode([String: [String: String]].self, from: Data(contentsOf: url))
     }
 
+    /// The Challenge cheers are drawn, not just spoken, so each gloss owes all 17
+    /// languages. A missing one doesn't crash — `L.t` hands back the key — so it ships as
+    /// silent English in sixteen languages, which is precisely the failure that only a
+    /// test catches. The Japanese itself must *not* be in the table: it is content in the
+    /// language being learned and stays Japanese in every locale.
+    @Test func cheerGlossesAreTranslatedEverywhere() throws {
+        let table = try table()
+        for (lang, strings) in table {
+            for phrase in Cheer.passed + Cheer.missed {
+                #expect(strings[phrase.meaning] != nil,
+                        "\(lang) has no gloss for \(phrase.text) (\(phrase.meaning))")
+                #expect(strings[phrase.text] == nil,
+                        "\(lang) translates the Japanese \(phrase.text) — it should not")
+            }
+        }
+    }
+
     @Test func uiStringsCoverEveryLanguageAndKey() throws {
         let table = try table()
         // The UI list is UIStrings' own key set, and every meaning language must have a
@@ -1642,6 +1724,75 @@ struct ChallengeTests {
         }
     }
 
+    /// Match deals unambiguous rounds, clears a pair only on a real match, and never ends.
+    @Test func matchDealsUnambiguousRoundsForever() {
+        let words = VocabStore.lesson(1).entries
+        let model = MatchModel(vocab: words)
+
+        #expect(model.left.count == MatchModel.pairsPerRound)
+        #expect(model.right.count == model.left.count)
+        // Same words both sides, different order — two columns in step aren't a puzzle.
+        #expect(Set(model.left.map(\.id)) == Set(model.right.map(\.id)))
+        #expect(model.left.map(\.id) != model.right.map(\.id))
+
+        // No two tiles may read alike on either side, or one pairing is arbitrary and the
+        // resulting miss is the app's fault rather than the learner's.
+        #expect(Set(model.left.map(\.text)).count == model.left.count)
+        #expect(Set(model.right.map(\.text)).count == model.right.count)
+
+        // A wrong pair scores an attempt, clears nothing, and blocks further taps until
+        // it's dismissed — otherwise a fast tapper racks up misses on a frozen board.
+        let firstID = model.left[0].id
+        let wrongRight = model.right.firstIndex { $0.id != firstID }!
+        model.pick(side: .left, index: 0)
+        model.pick(side: .right, index: wrongRight)
+        #expect(model.wrong)
+        #expect(model.matched == 0)
+        #expect(model.attempts == 1)
+        model.pick(side: .left, index: 1)
+        #expect(model.pickedLeft == 0)          // ignored while the miss is showing
+        model.clearMiss()
+        #expect(!model.wrong && model.pickedLeft == nil)
+
+        // Clearing every pair flags the round done but does NOT deal — the deal waits
+        // for the view (`dealNext`), so the fifth match keeps its board long enough to
+        // speak its word and show its flash instead of being swallowed by its own
+        // success. In the gap, taps are ignored. Then dealing brings a fresh board:
+        // the mode is rehearsal, and rehearsal has no last question.
+        let firstRound = model.rounds
+        for _ in 0..<MatchModel.pairsPerRound {
+            let l = model.left.firstIndex { !$0.cleared }!
+            let r = model.right.firstIndex { $0.id == model.left[l].id }!
+            model.pick(side: .left, index: l)
+            model.pick(side: .right, index: r)
+        }
+        #expect(model.matched == MatchModel.pairsPerRound)
+        #expect(model.roundCleared)
+        #expect(model.rounds == firstRound)               // board still the old one
+        #expect(model.word(id: model.left[0].id) != nil)  // the word is still speakable
+        let attemptsBefore = model.attempts
+        model.pick(side: .left, index: 0)
+        #expect(model.attempts == attemptsBefore)         // gap taps score nothing
+        model.dealNext()
+        #expect(model.rounds == firstRound + 1)
+        #expect(!model.roundCleared)
+        #expect(model.left.allSatisfy { !$0.cleared })    // a brand-new board
+    }
+
+    /// A lesson smaller than a round still deals, and an empty one doesn't spin forever.
+    @Test func matchSurvivesPoolsSmallerThanARound() {
+        let words = VocabStore.lesson(1).entries
+        let tiny = MatchModel(vocab: Array(words.prefix(2)))
+        #expect(tiny.left.count == 2)
+
+        // The degenerate case: `allSatisfy` is vacuously true on an empty board, so
+        // without a guard clearing the last pair would deal forever.
+        let empty = MatchModel(vocab: [])
+        #expect(empty.left.isEmpty && empty.right.isEmpty)
+        empty.pick(side: .left, index: 0)     // must not trap on an out-of-range index
+        #expect(empty.attempts == 0)
+    }
+
     /// Stars follow the documented bands, and nothing below the pass mark scores one.
     @Test func starBands() {
         #expect(Challenge.stars(score: 100) == 3)
@@ -1651,6 +1802,50 @@ struct ChallengeTests {
         #expect(Challenge.stars(score: Challenge.passScore) == 1)
         #expect(Challenge.stars(score: Challenge.passScore - 1) == 0)
         #expect(Challenge.stars(score: 0) == 0)
+    }
+
+    /// The spoken reaction never repeats itself back to back, and every phrase can name a
+    /// clip file. "Varied" that can say the same thing twice running is exactly the case a
+    /// listener notices, so the no-repeat rule is the part worth pinning.
+    @Test func cheersVaryAndCanNameAClip() {
+        for pool in [Cheer.passed, Cheer.missed] {
+            #expect(pool.count >= 2)      // one phrase can only ever repeat
+            for phrase in pool {
+                let next = Cheer.pick(from: pool, avoiding: phrase)
+                #expect(next != phrase)
+                #expect(next.map(pool.contains) == true)
+            }
+        }
+
+        // Keys become `cheer-<key>.m4a`, so they must be unique across both pools and
+        // safe as filenames — a collision would give two phrases the same clip.
+        let all = Cheer.passed + Cheer.missed
+        let keys = all.map(\.key)
+        #expect(Set(keys).count == keys.count)
+        #expect(keys.allSatisfy { !$0.isEmpty && $0.allSatisfy { $0.isLowercase || $0 == "-" } })
+        #expect(all.allSatisfy { !$0.text.isEmpty })
+        #expect(all.allSatisfy { !$0.meaning.isEmpty })
+
+        // Kana only. The generator synthesises `text` verbatim and bare kanji is
+        // ambiguous to a TTS engine (角 is *kado* or *tsuno*), so a kanji slipping in
+        // here is a clip that says the wrong word — with nothing on screen to show it.
+        #expect(all.allSatisfy { !$0.text.contains { ("\u{4E00}"..."\u{9FFF}").contains($0) } })
+
+        // The reading is derived from the key, so it must survive the round trip.
+        #expect(all.allSatisfy { !$0.romaji.contains("-") && !$0.romaji.isEmpty })
+
+        // Every phrase must have a clip in *both* voices. The keys are the filenames the
+        // build script derives by globbing the submodule, so renaming one here without
+        // renaming the clip drops that phrase to live TTS — audible only as one reaction
+        // in sixteen sounding like the system voice, which nobody would report.
+        for phrase in all {
+            #expect(VocabStore.cheerAudioURL(phrase.key, voice: .default) != nil,
+                    "no default-voice clip for \(phrase.key)")
+            let alt = VocabStore.cheerAudioURL(phrase.key, voice: .alternate)
+            #expect(alt != nil)
+            #expect(alt?.lastPathComponent.contains(Speech.Voice.alternate.suffix) == true,
+                    "\(phrase.key) fell back to the default voice — the alternate is missing")
+        }
     }
 
     /// Generated questions are always answerable: bounded in number, four distinct
@@ -1943,15 +2138,18 @@ struct IntroTests {
     /// subtitles, its SF Symbols. If any of those strings is renamed there, this fails
     /// here rather than silently falling back to the raw key on the intro card.
     @Test func modeChipsReuseSelectModeStrings() throws {
-        #expect(Intro.Mode.allCases == [.vocabList, .flashcards, .train, .learn])
+        // Order is `SelectModeView`'s shallow → deep order, and the tour must not drift
+        // from it: the chips exist to teach the labels the learner meets a tap later.
+        #expect(Intro.Mode.allCases == [.vocabList, .flashcards, .train, .match, .learn])
         #expect(Intro.Mode.allCases.map(\.titleKey)
-                == ["Vocab List", "Flashcards", "Train", "Learn"])
+                == ["Vocab List", "Flashcards", "Train", "Match", "Learn"])
         #expect(Intro.Mode.allCases.map(\.subtitleKey)
                 == ["Browse & hear all words", "Swipe right if you know it",
-                    "Swipe to the right answer", "Rebuild the reading from tiles"])
+                    "Swipe to the right answer", "Pair each word with its meaning",
+                    "Rebuild the reading from tiles"])
         #expect(Intro.Mode.allCases.map(\.icon)
                 == ["list.bullet", "rectangle.on.rectangle.angled",
-                    "arrow.left.arrow.right", "square.grid.2x2"])
+                    "arrow.left.arrow.right", "link", "square.grid.2x2"])
         for mode in Intro.Mode.allCases {
             #expect(UIImage(systemName: mode.icon) != nil, "missing SF Symbol \(mode.icon)")
         }
@@ -1974,7 +2172,7 @@ struct IntroTests {
                  "All of Kana is free.",
                  "The chart, the quizzes, and drawing a kana to have your strokes scored.",
                  "Do you read kana already?",
-                 "Four ways through a lesson.", "Many ways to learn. All of them fun.",
+                 "Five ways through a lesson.", "Many ways to learn. All of them fun.",
                  "Challenge", "Challenge %@", "Best %@%", "Beat Challenge %@ to unlock",
                  "%@ questions a rung", "%@% to pass, up to three stars",
                  "Pass one and the next opens.",

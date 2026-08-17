@@ -1,6 +1,87 @@
 import SwiftUI
 import AVFoundation
 
+/// A short reaction to a finished challenge — praise for a pass, encouragement for a
+/// miss — spoken *and* shown, in Japanese with its reading and meaning.
+///
+/// **Three fields because they answer to different rules.** `text` is content in the
+/// language being learned, like a vocabulary word: it stays Japanese in every locale and
+/// belongs nowhere near `UIStrings.json`. `key` is a filename and a reading. `meaning` is
+/// interface, so it goes through `L.t` and owes all 18 languages like every other string.
+///
+/// Showing all three is what turns sixteen decorations into sixteen phrases a learner
+/// actually ends up knowing — they arrive at the one moment their sense is unmistakable,
+/// which is worth more than the same words met on a list.
+struct Cheer: Equatable {
+    /// **Kana only, no kanji.** Partly because a beginner meeting these dozens of times
+    /// should meet phrases they could plausibly read, and partly because the generator
+    /// synthesises from exactly this string: bare kanji is ambiguous to a TTS engine
+    /// (see the submodule's `generate-audio` skill, "synthesise from kana, never kanji").
+    let text: String
+    /// Romaji reading, which doubles as the stem of a bundled clip (`cheer-<key>.m4a`).
+    /// The clips come from the submodule's `voices/cheer-<voice>-<key>.m4a` via
+    /// `build-minna-data.py`, which derives the key by globbing — so renaming one here
+    /// without renaming the clip drops that phrase to live TTS, which
+    /// `cheersVaryAndCanNameAClip` is there to catch. Hyphens separate words, so `romaji`
+    /// renders it without a second copy of the reading.
+    let key: String
+    /// English source string for the gloss, passed through `L.t` — so this one field
+    /// *is* interface and does owe all 18 languages, unlike `text`.
+    let meaning: String
+
+    /// The reading as it's shown: `yoku-dekimashita` → `yoku dekimashita`.
+    var romaji: String { key.replacingOccurrences(of: "-", with: " ") }
+
+    /// After a pass. Eight ways to say it rather than one: a learner clears several rungs
+    /// in a sitting, so a short list is a catchphrase by the third one, and praise you can
+    /// predict has stopped being praise. はなまる is the flower-circle a Japanese teacher
+    /// draws on perfect work — no learner will know it the first time, which is rather
+    /// the point of putting it where its meaning is unmistakable.
+    static let passed = [
+        Cheer(text: "すごい",         key: "sugoi",            meaning: "Amazing"),
+        Cheer(text: "よくできました",  key: "yoku-dekimashita", meaning: "Well done"),
+        Cheer(text: "いいですね",      key: "ii-desu-ne",       meaning: "Nice"),
+        Cheer(text: "やったね",       key: "yatta-ne",         meaning: "You did it"),
+        Cheer(text: "じょうずですね",  key: "jouzu-desu-ne",    meaning: "You're good at this"),
+        Cheer(text: "かんぺき",       key: "kanpeki",          meaning: "Perfect"),
+        Cheer(text: "そのちょうし",    key: "sono-choushi",     meaning: "That's the spirit"),
+        Cheer(text: "はなまる",       key: "hanamaru",         meaning: "Full marks"),
+    ]
+
+    /// After a miss. Encouragement, never correction — the screen already lists the words
+    /// to review, so the voice's only job is to make trying again feel ordinary. がんばろう
+    /// is the inclusive form of がんばって ("let's keep going"), which is why both are here:
+    /// eight rungs of being told to try harder wants at least one voice standing alongside.
+    static let missed = [
+        Cheer(text: "がんばって",      key: "ganbatte",        meaning: "Keep at it"),
+        Cheer(text: "おしい",         key: "oshii",           meaning: "So close"),
+        Cheer(text: "だいじょうぶ",    key: "daijoubu",        meaning: "It's all right"),
+        Cheer(text: "もういちど",      key: "mou-ichido",      meaning: "Once more"),
+        Cheer(text: "つぎはできる",    key: "tsugi-wa-dekiru", meaning: "You'll get it next time"),
+        Cheer(text: "あきらめないで",  key: "akiramenaide",    meaning: "Don't give up"),
+        Cheer(text: "もうすこし",      key: "mou-sukoshi",     meaning: "A little further"),
+        Cheer(text: "がんばろう",      key: "ganbarou",        meaning: "Let's keep going"),
+    ]
+
+    /// Pick one, never the one just used. Pure, so the no-repeat rule is testable —
+    /// "varied" that can repeat immediately is the case people actually notice.
+    static func pick(from phrases: [Cheer], avoiding last: Cheer?) -> Cheer? {
+        (phrases.filter { $0 != last }.randomElement() ?? phrases.randomElement())
+    }
+
+    /// The last of each kind, so a pass and a miss don't silence each other — they are
+    /// separate pools and a repeat across them isn't a repeat to the ear.
+    @MainActor private static var last: [Bool: Cheer] = [:]
+
+    @MainActor
+    static func next(passed: Bool) -> Cheer? {
+        guard let choice = pick(from: passed ? Self.passed : missed, avoiding: last[passed])
+        else { return nil }
+        last[passed] = choice
+        return choice
+    }
+}
+
 /// Word-pronunciation seam: every "tap to hear" path goes through it, so no view knows
 /// how a word is played. `AudioPronouncer` (below) is the real one — bundled `say -v
 /// Kyoko` clips with live `AVSpeechSynthesizer` as the fallback; `SilentPronouncer` is
@@ -8,6 +89,7 @@ import AVFoundation
 protocol Pronouncer {
     func speak(_ vocab: Vocab, voice: Speech.Voice)
     func speak(kana: K)
+    func speak(cheer: Cheer)
     func stop()
 }
 
@@ -21,6 +103,7 @@ extension Pronouncer {
 struct SilentPronouncer: Pronouncer {
     func speak(_ vocab: Vocab, voice: Speech.Voice) {}
     func speak(kana: K) {}
+    func speak(cheer: Cheer) {}
     func stop() {}
 }
 
@@ -155,6 +238,31 @@ final class AudioPronouncer: Pronouncer {
         } else {
             Track.audioMissing("kana-\(kana.romaji)")
             speakLive(kana.hiragana)
+        }
+    }
+
+    /// Same clip-then-synthesiser order as everything else, with a **random voice**.
+    ///
+    /// Both voices are bundled for every phrase, so two readings of eight phrases is
+    /// sixteen distinct reactions for no extra work. Unlike the Challenge ladder — where
+    /// alternating voices is what stops a listening rung being passable by recognising
+    /// the waveform — here it is purely variety, and `cheerAudioURL` falls back to the
+    /// default voice, so a course shipping one voice degrades to eight rather than
+    /// breaking.
+    ///
+    /// No `audioMissing` event, unlike the two above: that signal is calibrated for a
+    /// handful of missing words in thousands, and sixteen phrases would drown it.
+    func speak(cheer: Cheer) {
+        stop()
+        PlaybackSession.activate()
+        if let url = VocabStore.cheerAudioURL(cheer.key, voice: .random()),
+           let p = try? AVAudioPlayer(contentsOf: url) {
+            player = p
+            p.volume = 1
+            p.prepareToPlay()
+            p.play()
+        } else {
+            speakLive(cheer.text)
         }
     }
 

@@ -74,12 +74,26 @@ final class StudyDay {
         let today = stamp(calendar: calendar)
         let descriptor = FetchDescriptor<StudyDay>(predicate: #Predicate { $0.day == today })
         let rows = (try? context.fetch(descriptor)) ?? []
+        let firstAnswerToday = rows.isEmpty
         if let row = rows.max(by: { $0.answers < $1.answers }) {
             row.answers += 1
         } else {
             context.insert(StudyDay(day: today, answers: 1))
         }
         try? context.save()
+
+        // The habit loop the whole app is built around, and nothing reported it. Retention
+        // in Firebase is measured in *opens*, which this app deliberately doesn't count as
+        // studying — so "how many people come back and actually answer something" and the
+        // shape of the streak distribution were both invisible.
+        //
+        // Only on the day's first answer, so it is one row per studied day rather than one
+        // per question, and only then is the extra fetch paid. `streak` is a behavioural
+        // count, not an identifier: it says how long this run is, and nothing about who.
+        if firstAnswerToday {
+            let streak = Self.streak(context: context, calendar: calendar)
+            Track.event("study_day", ["streak": streak.current, "best": streak.best])
+        }
 
         // Today is now studied, so any reminder still pending for tonight has become a
         // nag. Re-planning here rather than only on launch is what makes the reminder
@@ -188,7 +202,7 @@ struct Streak: Equatable {
 ///
 /// The flame is filled only once today is done, so the badge distinguishes "you're on a
 /// run" from "you're on a run and it's still open" without a second line of text — which
-/// matters more than it sounds across 17 languages, several of which run long.
+/// matters more than it sounds across 18 languages, several of which run long.
 /// Amber. Deliberately not green or red — those are answer feedback and nothing else —
 /// and deliberately not `Theme.accent`, so a streak at risk reads as a different kind of
 /// message from every other accented control on the screen. It is also simply the colour

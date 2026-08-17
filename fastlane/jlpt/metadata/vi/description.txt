@@ -24,7 +24,7 @@ GIỮ CHUỖI NGÀY HỌC
 Một ngày được tính khi bạn trả lời điều gì đó, không phải khi bạn mở ứng dụng. Tab Tiến độ cho thấy chuỗi hiện tại, kỷ lục của bạn, số ngày đã học, và bạn đã leo được bao xa trên thang.
 
 HỌC BẰNG NGÔN NGỮ CỦA BẠN
-Giao diện có 17 ngôn ngữ. Nghĩa của từ có tiếng Anh, tiếng Trung giản thể và phồn thể, và tiếng Việt.
+Giao diện có 18 ngôn ngữ. Nghĩa của từ có tiếng Anh, tiếng Trung giản thể và phồn thể, và tiếng Việt.
 
 TIẾN ĐỘ ĐI THEO BẠN
 Sao và mức thành thạo kana đồng bộ giữa các thiết bị của bạn qua iCloud.

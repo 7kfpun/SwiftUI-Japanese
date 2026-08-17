@@ -321,14 +321,17 @@ struct IntroView: View {
     /// titles, subtitles and icons — meeting the real labels here is the point.
     private var modesCard: some View {
         VStack(spacing: 10) {
-            Text(L.t("Four ways through a lesson."))
+            Text(L.t("Five ways through a lesson."))
                 .font(Theme.title(.title3))
                 .multilineTextAlignment(.center).minimumScaleFactor(0.6)
 
-            // Exactly two columns, not `chipColumns`' adaptive width. The four mode names
-            // are short enough that an adaptive grid fits *three* of them on a 6.9" screen,
-            // leaving a ragged 3 + 1 with a hole beside the last chip; two columns give a
-            // square 2 × 2 on every device.
+            // Exactly two columns, not `chipColumns`' adaptive width. The mode names are
+            // short enough that an adaptive grid fits *three* on a 6.9" screen and then
+            // reflows differently on a 5.4", so the layout would depend on the device.
+            // Five chips can't fill a rectangle in any column count but 1 or 5, so the
+            // trailing hole is now unavoidable — two columns at least make it a regular
+            // 2 + 2 + 1 that reads as a list, rather than an adaptive grid that changes
+            // shape between phones.
             LazyVGrid(columns: Self.modeColumns, spacing: 8) {
                 ForEach(Intro.Mode.allCases) { mode in
                     IntroChip(text: mode.title, icon: mode.icon, selected: peek == mode) {
@@ -355,7 +358,7 @@ struct IntroView: View {
             //
             // A minimum, never a fixed height: the four samples are matched in content
             // volume so switching chips doesn't jump the card, but a long gloss in one of
-            // the 17 languages still has to be able to grow.
+            // the 18 languages still has to be able to grow.
             IntroModeSample(mode: peek, entries: entries)
                 .frame(maxWidth: .infinity, minHeight: 150)
                 .padding(10)

@@ -37,7 +37,15 @@ final class Interstitial {
         guard ad == nil, !loading else { return }
         loading = true
         defer { loading = false }
-        ad = try? await InterstitialAd.load(with: AdConfig.interstitial, request: Request())
+        do {
+            // Deliberately not `try?`. A load that never fills is invisible from the
+            // other side — `showIfReady` simply finds no ad and returns — so an
+            // interstitial unit that no-fills every time looks exactly like a user who
+            // never reached a break. The banner's `ad_failed` had this and this didn't.
+            ad = try await InterstitialAd.load(with: AdConfig.interstitial, request: Request())
+        } catch {
+            Track.event("interstitial_failed", ["error": error.localizedDescription])
+        }
     }
 
     func showIfReady() {

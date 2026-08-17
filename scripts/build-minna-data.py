@@ -2,13 +2,16 @@
 """Compile the `minna` submodule into bundled app resources (fast incremental builds).
 Source of truth = ./minna/ (git submodule). Re-run after `git submodule update`.
 
-Outputs under nihongo/Resources/ (audio git-ignored, MinnaData.json tracked):
-  - MinnaData.json                    one file: 50 lessons + 17 languages; each
+Outputs under nihongo/Resources/ (all git-ignored — regenerated, never committed):
+  - MinnaData.json                    one file: 50 lessons + 18 languages; each
                                       entry's `audio` = bundled clip basename.
   - audio/vocab/<lesson>-<slug>.m4a   Kyoko clips, flat + unique so the synchronized
                                       group bundles them as individual (incrementally
                                       copied) resources without name collisions.
   - audio/kana/kana-<romaji>.m4a      one clip per kana cell.
+  - audio/cheer/cheer-<key>.m4a       the Challenge result screen's spoken reactions,
+                                      one per phrase in `Cheer` (Pronouncer.swift),
+                                      in both voices like vocab.
 
 The vocab/kana split is a *target membership* boundary, not organisation. The
 `nihongo` folder is listed by the jlpt target too, and 22MB of Minna vocab clips
@@ -17,11 +20,11 @@ so they need a folder the pbxproj can name. Kana is shared by both apps and stay
 included. Subfolders inside a synchronized group flatten into the bundle root, so
 `Bundle.main.url(forResource:)` is unaffected by the extra level.
 """
-import json, os, shutil
+import glob, json, os, shutil
 REPO = os.path.join(os.path.dirname(__file__), "..")
 # The submodule holds two independent datasets side by side — minna/ (this app's 50
 # lessons, joined on romaji) and jlpt/ (7972 words, joined on a content-hash id and
-# translated into only en + zh-Hant). Only the first is bundled.
+# translated into only en, zh, zh-Hant and vi). Only the first is bundled.
 #
 # Two bases, deliberately: data files are read from SRC (one level down), but the
 # `audio.<voice>` values inside them are stored relative to the submodule *root* and
@@ -32,7 +35,7 @@ SRC  = os.path.join(SUB, "minna")
 ROOT = os.path.join(REPO, "nihongo", "Resources")
 VOCAB_DST = os.path.join(ROOT, "audio", "vocab")
 KANA_DST  = os.path.join(ROOT, "audio", "kana")
-LANGS = ["en", "zh", "zh-Hant", "vi", "de", "th", "my", "es", "fr", "ru", "bn", "hi", "ta", "te", "fil", "id", "ko"]
+LANGS = ["en", "zh", "zh-Hant", "vi", "de", "th", "my", "es", "fr", "ru", "bn", "hi", "ta", "te", "ne", "fil", "id", "ko"]
 
 # Voices. The submodule ships three for minna: `kyoko` (macOS `say`, concatenative) and
 # two VOICEVOX neural voices. VOICEVOX is a generation ahead on naturalness and pitch
@@ -108,8 +111,27 @@ for group in kana["data"].values():
         else:
             kana_missing.append(e["romaji"])
 
+# Cheer clips: the Challenge result screen's spoken reactions. Flat in `voices/` rather
+# than per-lesson, because they belong to no lesson — the keys are `Cheer.key` in
+# nihongo/Pronouncer.swift. Derived by globbing rather than from a list kept here: a
+# second copy of the phrase list is a copy that drifts, and the Swift side already owns
+# it. Same naming rule as vocab, so `Speech.Voice.suffix` addresses the alternate and
+# nothing outside that type has to know two voices exist.
+CHEER_DST = os.path.join(ROOT, "audio", "cheer")
+os.makedirs(CHEER_DST, exist_ok=True)
+cheer_made, cheer_alt = 0, 0
+for src in sorted(glob.glob(os.path.join(SUB, "voices", f"cheer-{PRIMARY}-*.m4a"))):
+    key = os.path.basename(src)[len(f"cheer-{PRIMARY}-"):-len(".m4a")]
+    shutil.copyfile(src, os.path.join(CHEER_DST, f"cheer-{key}.m4a"))
+    cheer_made += 1
+    alt = os.path.join(SUB, "voices", f"cheer-{ALT}-{key}.m4a")
+    if os.path.exists(alt):
+        shutil.copyfile(alt, os.path.join(CHEER_DST, f"cheer-{key}{ALT_SUFFIX}.m4a"))
+        cheer_alt += 1
+
 msg = (f"MinnaData.json {os.path.getsize(dst)//1024}KB | entries={sum(len(l['entries']) for l in lessons)}"
-       f" | {PRIMARY} clips={audio_copied} | {ALT} clips={alt_copied} | kana clips={kana_made}")
+       f" | {PRIMARY} clips={audio_copied} | {ALT} clips={alt_copied} | kana clips={kana_made}"
+       f" | cheer clips={cheer_made}+{cheer_alt}")
 if kana_missing:
     msg += f" | MISSING kana ({len(kana_missing)}): {','.join(kana_missing)}"
 print(msg)

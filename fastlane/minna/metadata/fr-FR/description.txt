@@ -27,7 +27,7 @@ AUJOURD'HUI, SUR TOUS LES ÉCRANS
 L'onglet Aujourd'hui distribue exactement les mots que ton prochain défi va demander. Le même paquet s'affiche sur l'écran verrouillé, l'écran d'accueil et l'Apple Watch.
 
 APPRENDS DANS TA LANGUE
-L'interface et le sens des mots existent en 17 langues, et tu les règles séparément.
+L'interface et le sens des mots existent en 18 langues, et tu les règles séparément.
 
 TA PROGRESSION TE SUIT
 Étoiles et maîtrise des kana se synchronisent entre tes appareils via iCloud.

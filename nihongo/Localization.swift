@@ -21,7 +21,7 @@ enum L {
         "en",                                   // default and universal fallback
         "zh", "zh-Hant",                        // China, then Taiwan and Hong Kong
         "id", "ko", "vi", "th", "fil", "my",    // the rest of the Asian learner base
-        "hi", "bn", "ta", "te",                 // the subcontinent, kept as a block
+        "hi", "bn", "ta", "te", "ne",           // the subcontinent, kept as a block
         "es", "fr", "de", "ru",                 // Europe and the Americas
     ]
 
@@ -39,9 +39,9 @@ enum L {
     /// The UI languages, read out of `UIStrings.json` itself.
     ///
     /// Deliberately **not** `VocabStore.availableLanguages`, which it used to be. The
-    /// two lists were the same 17 codes while Minna was the only course, so one could
-    /// stand in for the other — but JLPT ships meanings in two languages against the
-    /// same 17-language UI. Defining the UI list in terms of the vocab list would have
+    /// two lists were the same 18 codes while Minna was the only course, so one could
+    /// stand in for the other — but JLPT ships meanings in four languages against the
+    /// same 18-language UI. Defining the UI list in terms of the vocab list would have
     /// silently dropped a JLPT user's Vietnamese *interface* because the dataset has no
     /// Vietnamese *meanings*. They are separate questions and are now separate lists —
     /// but they share `languageOrder`, so they still read as one family.

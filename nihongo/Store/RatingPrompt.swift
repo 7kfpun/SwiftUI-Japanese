@@ -111,6 +111,12 @@ enum RatingPrompt {
     @MainActor static func requestAppStoreReview() {
         guard let scene = UIApplication.shared.foregroundScene else { return }
         AppStore.requestReview(in: scene)
+        // The last countable step of the rating funnel. Apple reports nothing back — not
+        // whether the sheet appeared, not what was written — so this is only "we asked",
+        // and that is exactly why it's worth having: `rating_given` with 4★+ minus this
+        // is the number of hand-offs lost to a missing scene, and the gap between this
+        // and the App Store's own review count is Apple's throttle at work.
+        Track.event("review_requested")
     }
 }
 

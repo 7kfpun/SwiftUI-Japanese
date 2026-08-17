@@ -12,12 +12,20 @@ enum ReadMode: String {
 
 /// Plays a whole lesson end-to-end (the old "Read All" mode), advancing on each
 /// clip's completion. Bundled Kyoko clip first, TTS fallback when a clip is absent.
+///
+/// Playback loops by default: the list is meant to run in the background while someone
+/// washes up, and stopping after one pass turned that into a two-minute session. The one
+/// caller that must *not* loop is the locked meanings preview — see `loops`.
 @MainActor
 @Observable
 final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDelegate {
     private(set) var currentIndex: Int?
     private(set) var isPlaying = false
     private(set) var mode: ReadMode = .japanese
+
+    /// Which pass through the list is playing: 1 on the first, 2 after the first wrap.
+    /// Reset by `start`, so a fresh tap counts from one again.
+    private(set) var lap = 1
 
     /// Which half of the current word is playing. `withMeaning` plays two utterances per
     /// entry, so "did the audio finish" is no longer the same question as "is this word
@@ -29,7 +37,21 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
     /// who taps stop hasn't reached the end, and the meaning preview hangs a paywall off
     /// this — putting one on screen because someone chose to stop would be the same
     /// interruption the whole-lesson rule exists to avoid.
+    ///
+    /// A looping player never reaches an end, so this only ever fires for `loops == false`.
     var onFinished: (() -> Void)?
+
+    /// Called on each wrap back to the first word, with the lap now starting (2, 3, …).
+    /// The player doesn't know which lesson it is holding, so the analytics event is the
+    /// caller's to send — the same split as `onFinished`.
+    var onLap: ((Int) -> Void)?
+
+    /// Whether the end of the list wraps back to the start instead of stopping.
+    ///
+    /// `Gating.loopsForever` is what decides it. Only the locked meanings preview sets
+    /// this false, and it must stay false there: the preview's paywall hangs off
+    /// `onFinished`, which a looping player never reaches.
+    private var loops = true
 
     private var entries: [Vocab] = []
     private var meaningLocale = Speech.meaningLocale(VocabStore.defaultLanguage)
@@ -47,16 +69,18 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
     /// The toolbar collapses to a single stop button while playing, so in practice this
     /// is only ever called from a stopped state. The restart branch is kept because the
     /// alternative — silently doing nothing — is the worse failure if that ever changes.
-    func toggle(_ list: [Vocab], mode: ReadMode, language: String) {
+    func toggle(_ list: [Vocab], mode: ReadMode, language: String, loops: Bool = true) {
         let wasPlayingSameMode = isPlaying && self.mode == mode
         if isPlaying { stop() }
         guard !wasPlayingSameMode else { return }
-        start(list, mode: mode, language: language)
+        start(list, mode: mode, language: language, loops: loops)
     }
 
-    private func start(_ list: [Vocab], mode: ReadMode, language: String) {
+    private func start(_ list: [Vocab], mode: ReadMode, language: String, loops: Bool) {
         entries = list
         self.mode = mode
+        self.loops = loops
+        lap = 1
         meaningLocale = Speech.meaningLocale(language)
         PlaybackSession.activate()
         isPlaying = true
@@ -69,6 +93,27 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
         part = .japanese
         player?.delegate = nil; player?.stop(); player = nil
         if synth.isSpeaking { synth.stopSpeaking(at: .immediate) }
+    }
+
+    /// What playback does once word `i` of a `count`-word list has been read.
+    ///
+    /// Pure and `nonisolated` so the wrap can be tested without audio, a view or a main
+    /// actor — the sequencing is the part that has to be right, and everything around it
+    /// needs a running screen to exercise.
+    enum Step: Equatable {
+        /// Read this word next.
+        case next(Int)
+        /// The list ran out and playback loops: start over at word 0, one lap further on.
+        case wrap
+        /// The list ran out and playback doesn't loop: this is the end.
+        case end
+    }
+
+    nonisolated static func step(after i: Int, count: Int, loops: Bool) -> Step {
+        if i + 1 < count { return .next(i + 1) }
+        // `count > 0` so an empty list can't wrap onto itself forever, silently, with
+        // nothing to play and no way for the user to tell it apart from a hang.
+        return loops && count > 0 ? .wrap : .end
     }
 
     private func play(_ i: Int) {
@@ -111,7 +156,20 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
     private func advance(from i: Int, after delay: TimeInterval) {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
             guard let self, self.isPlaying, self.currentIndex == i else { return }
-            self.play(i + 1)
+            switch Self.step(after: i, count: self.entries.count, loops: self.loops) {
+            case .next(let n):
+                self.play(n)
+            case .wrap:
+                self.lap += 1
+                self.onLap?(self.lap)
+                // After the callback: it can't stop playback today, but if one ever does
+                // (a cap, a paywall) the guard is what keeps this from playing anyway.
+                if self.isPlaying { self.play(0) }
+            case .end:
+                // `play` past the end is still how the finish runs, so `onFinished` and
+                // its paywall keep firing from exactly one place.
+                self.play(i + 1)
+            }
         }
     }
 
@@ -195,9 +253,9 @@ struct VocabListView: View {
         .sheet(isPresented: $showPaywall) {
             PaywallView(source: "read_all_meanings", lesson: lesson.number)
         }
-        // `onFinished` closes over this view, which owns the player — clearing it here
+        // The callbacks close over this view, which owns the player — clearing them here
         // breaks that cycle, and stops a paywall arriving on a screen already left.
-        .onDisappear { player.stop(); player.onFinished = nil }
+        .onDisappear { player.stop(); player.onFinished = nil; player.onLap = nil }
     }
 
     private func play(_ mode: ReadMode) {
@@ -209,14 +267,25 @@ struct VocabListView: View {
         // "Preview" means literally that the list was cut short, so the paywall can only
         // follow playback the user didn't get all of.
         let isPreview = limit < entries.count
+        // Everything loops except the locked meanings preview, which has to reach an end
+        // for its paywall to follow. Asked of `Gating` rather than derived from
+        // `isPreview` so the paid mode can't be handed over by a lesson short enough that
+        // nothing got cut.
+        let loops = Gating.loopsForever(mode: mode, isLocked: meaningLocked)
 
         player.onFinished = isPreview ? {
             Track.event("locked_read_all", ["lesson": lesson.number,
                                             "heard": list.count])
             showPaywall = true
         } : nil
+        // Whether anyone listens past one pass is the question this feature is a bet on,
+        // so the lap is the param that matters — one row per wrap, not one per session.
+        player.onLap = loops ? { lap in
+            Track.event("read_all_loop", ["lesson": lesson.number, "mode": mode.rawValue,
+                                          "lap": lap])
+        } : nil
 
-        player.toggle(list, mode: mode, language: language)
+        player.toggle(list, mode: mode, language: language, loops: loops)
         if player.isPlaying {
             Track.event("read_all", ["lesson": lesson.number, "mode": mode.rawValue,
                                      "preview": isPreview])

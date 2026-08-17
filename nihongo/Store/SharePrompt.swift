@@ -78,6 +78,9 @@ struct ShareSheetPrompt: View {
     /// the system share sheet from a view that is on its way out drops it silently.
     let onShare: () -> Void
     @Environment(\.dismiss) private var dismiss
+    /// Whether the share button was the way out, so the dismissal event can say which of
+    /// the three exits this was.
+    @State private var accepted = false
 
     var body: some View {
         VStack(spacing: 20) {
@@ -94,6 +97,10 @@ struct ShareSheetPrompt: View {
                 .multilineTextAlignment(.center)
 
             Button {
+                accepted = true
+                // The same name Settings' row logs, with the other `source`, so "how many
+                // people opened a share sheet" is one event grouped by where it came from.
+                Track.event("share_opened", ["source": "prompt"])
                 dismiss()
                 // A beat, so the share sheet rises after this one has gone rather than
                 // fighting it for the presentation slot.
@@ -114,6 +121,13 @@ struct ShareSheetPrompt: View {
         }
         .padding(28)
         .presentationDetents([.height(360)])
+        // `onDisappear`, not the "Not now" button — the same lesson `PaywallView` records.
+        // Swiping the sheet away is a third exit, and counting only the button would make
+        // `accepted` a rate over an undercounted denominator. `share_prompt_shown` fires
+        // from `ChallengeView` and had no counterpart at all until this.
+        .onDisappear {
+            Track.event("share_prompt_dismissed", ["accepted": accepted])
+        }
     }
 }
 

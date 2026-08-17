@@ -115,8 +115,14 @@ struct LearnView: View {
         // land on the card already showing.
         .onAppear { autoPlay(); Track.screen("learn", ["lesson": lessonNumber]) }
         .onChange(of: model.state) {
-            if model.state == .correct { Track.event("learn_answer", ["correct": true]) }
-            else if model.state == .wrong { Track.event("learn_answer", ["correct": false]) }
+            // `lesson` alongside `correct`, matching `train_answer`. Without it Learn was
+            // the one practice mode whose difficulty couldn't be read per lesson — the
+            // number is right there in `lessonNumber` and was simply never passed.
+            if model.state == .correct {
+                Track.event("learn_answer", ["correct": true, "lesson": lessonNumber])
+            } else if model.state == .wrong {
+                Track.event("learn_answer", ["correct": false, "lesson": lessonNumber])
+            }
         }
     }
 
