@@ -45,8 +45,8 @@ This writes:
 
 | Output | Tracked? |
 |---|---|
-| `nihongo/Resources/MinnaData.json` | yes — 50 lessons + 17 languages, one file |
-| `nihongo/Resources/KanaChart.json` | yes — `minna/vocab/kana.json` copied verbatim |
+| `nihongo/Resources/MinnaData.json` | **no**, git-ignored — 50 lessons + 18 languages, regenerated every run |
+| `nihongo/Resources/KanaChart.json` | **no**, git-ignored — `minna/vocab/kana.json` copied verbatim |
 | `nihongo/Resources/audio/vocab/*.m4a` | **no**, git-ignored — regenerated every run. Two per word: the `PRIMARY` voice under the bare name, and `ALT` with a `-<voice>` suffix for the Challenge ladder. |
 | `nihongo/Resources/audio/kana/*.m4a` | **no**, git-ignored — shared by both apps |
 
@@ -54,14 +54,18 @@ The second dataset has its own script, `scripts/build-jlpt-data.py` → `Apps/jl
 (`JLPTData.json` + `audio/<id>.m4a`, both git-ignored). Run it after the same
 `git submodule update`; it reads `minna/jlpt/` and touches nothing under `nihongo/`.
 
-(The script's own docstring says "7 languages". It's stale — `LANGS` in the same
-file lists 17. Don't propagate the 7.)
+(Language counts quoted anywhere — docstrings, docs, this file — go stale;
+`LANGS` in each build script is the ground truth. Derive, don't quote.)
 
 Watch the script's one summary line. It looks like
 
 ```
-MinnaData.json 1609KB | entries=2089 | whitecul clips=2089 | kenzaki clips=2089 | kana clips=102
+MinnaData.json <size>KB | entries=<n> | whitecul clips=<n> | kenzaki clips=<n> | kana clips=<n> | cheer clips=<n>+<n>
 ```
+
+The exact numbers move with the data — what matters is that `entries` equals both
+voices' clip counts, and that nothing is 0 (a zero here is the silent path-join
+failure this skill exists to catch).
 
 and it grows a ` | MISSING kana (n): …` suffix when a kana romaji in
 `minna/vocab/kana.json` has no clip for the voice `PRIMARY` names. That is an upstream data
@@ -85,8 +89,8 @@ read the bundled data too.
 
 What each canary is actually protecting, in `DataTests`:
 
-- **`generatedDataShape`** — `allVocab().count == 2089`,
-  `filter { $0.audio != nil }.count == 2089` (every word now has a clip; the two
+- **`generatedDataShape`** — pins the exact entry count and that every entry has
+  a clip; read the current numbers from the test itself, not from any doc (the two
   `～` placeholders got theirs upstream in `13675e0`. `CLAUDE.md` states clip
   coverage as a product fact, so this is copy-relevant, not just a test number),
   and `lessons().map(\.number) == Array(1...50)`.
@@ -97,13 +101,14 @@ What each canary is actually protecting, in `DataTests`:
   breaks screens, not just counts.
 - **`vocabClipIsNamedAndDecodes`** — the flat `<lesson>-<slug>` naming scheme
   (`1-watashi`), and that the file actually decodes as audio.
-- **`translationsSwitchWithLanguage`** — every one of the 17 languages resolves a
+- **`translationsSwitchWithLanguage`** — every one of the 18 languages resolves a
   non-empty translation for every entry of lesson 1.
 
 If a count assertion fails, that is usually the data genuinely having changed.
 **Update the assertion deliberately and change all its readers together.** The
-entry count 2089 is quoted in `CLAUDE.md`, `context/01-data-model.md`,
-`context/00-overview.md` and the website's `T` dict (`scripts/build-web.py`); the
+pinned entry count is also quoted in `CLAUDE.md`, `context/01-data-model.md`,
+`context/00-overview.md` and the website's `T` dict (`scripts/build-web.py`) —
+grep the old number to find every reader; the
 *clip* count is quoted everywhere except `build-web.py`, which only ever states
 how many **words** there are. Never relax an assertion to `>=` to make a red
 suite green.
@@ -129,9 +134,10 @@ don't. `CLAUDE.md`'s first hard rule holds here: **tests only**, never
 `xcodebuild build` and never a simulator launch. Ask the user to check in Xcode
 instead.
 
-Never commit the regenerated files either — `MinnaData.json` and `KanaChart.json`
-are tracked and *will* show up in `git status` after every run, which makes
-"just commit the data" a very natural mistake. Stage if asked; the user commits.
+Nothing this script writes is tracked: all four outputs are git-ignored, so a
+correct run leaves `git status` clean (only the `minna` submodule pointer moves
+when it was updated). Generated data appearing in `git status` means the
+`.gitignore` broke — investigate, don't stage.
 
 ## If `xcodebuild test` flakes
 

@@ -97,6 +97,11 @@ extension Course {
                 "com.kfpun.nihongo.premium.1m",
                 "com.kfpun.nihongo.premium.3M",
                 "com.kfpun.nihongo.premium.6M",
+                // Uppercase like 3M/6M and for the same reason: the lowercase `12m` was
+                // burned by the RN app and lives in `legacy` below. Created in ASC
+                // 2026-08 (group 20499759); the paywall needs no changes — rows render
+                // whatever loads, sorted by price, and `tierLabel` derives "12m".
+                "com.kfpun.nihongo.premium.12M",
             ],
             legacy: [
                 "com.kfpun.nihongo.premium.3m",

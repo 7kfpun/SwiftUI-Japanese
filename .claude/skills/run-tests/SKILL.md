@@ -15,8 +15,10 @@ xcodebuild test -scheme nihongo -project nihongo.xcodeproj \
   -only-testing:nihongoTests
 ```
 
-Run from the repo root. That destination id is the project's pinned iPhone 17
-Pro (iOS 26.5) simulator — the deployment target is iOS 26.5 and older
+Run from the repo root. That destination id is the pinned iPhone 17 Pro
+(iOS 26.5) simulator **on this machine** — anywhere else (CI, another Mac) it
+won't exist; substitute `-destination "platform=iOS Simulator,name=iPhone 17 Pro"`.
+The deployment target is iOS 26.5 and older
 simulators (e.g. iPhone 15 / iOS 17.4) are *ineligible* for this scheme, so
 don't substitute a different `-destination` without checking
 `xcodebuild -showdestinations -scheme nihongo -project nihongo.xcodeproj`
@@ -110,11 +112,12 @@ A new failure after your change means something in that area regressed, not that
 the test is wrong — several of these suites are deliberate canaries and are
 supposed to be annoying:
 
-- `DataTests.generatedDataShape` pins 2089 entries / 2089 audio clips. If it
+- `DataTests.generatedDataShape` pins the exact entry and clip counts (read the
+  current numbers from the test, not from here). If it
   fails, the bundled data changed — see the `refresh-data` skill, and update the
   numbers deliberately rather than relaxing the assertion.
 - `LocalizationTests` fails on an English-only string, a lost `%@`, or an
-  unescaped `%` — four of its five tests are that check — see the
+  unescaped `%` — most of its tests are that check — see the
   `check-i18n-parity` skill.
 - `SurveyTests.contextKeysMatchThePublishedRules` fails when `Survey.Context`
   and `firestore.rules` disagree. That is not a test to edit alone: it means the

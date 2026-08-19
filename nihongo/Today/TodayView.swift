@@ -265,7 +265,10 @@ struct TodayView: View {
             let total = Challenge.count(wordCount: VocabStore.lesson(n, language).entries.count)
             if (passed[n]?.count ?? 0) < total { return n }
         }
-        return 50   // every challenge cleared — keep reviewing the last lesson
+        // Every challenge cleared — keep reviewing the last lesson. The course's own
+        // count, never a literal: 50 was right for Minna only by coincidence, and in
+        // the JLPT app it parked a finished learner's deck and widget on lesson 50 of 201.
+        return Course.current.lessonCount
     }
 
     /// Publish the deck to the App Group so the widget cycles the same words.

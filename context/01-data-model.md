@@ -46,11 +46,11 @@ python3 scripts/build-minna-data.py
 
 It reads `minna/` and writes into `nihongo/Resources/`:
 
-- **`MinnaData.json`** (tracked in git) — one JSON file: `languages`
+- **`MinnaData.json`** (git-ignored, regenerated) — one JSON file: `languages`
   (the 18 codes), `lessons` (50 × `{number, entries}`, each entry has
   `kanji/kana/romaji/dictionary?/useKana?/audio?`), and `translations`
   (`lang → lessonNumber(as string) → romaji → text`).
-- **`KanaChart.json`** (tracked) — `minna/vocab/kana.json` copied **verbatim**:
+- **`KanaChart.json`** (git-ignored, regenerated) — `minna/vocab/kana.json` copied **verbatim**:
   grid position (`row`/`col`), romaji, hiragana/katakana stroke counts, and
   audio paths for every kana cell, grouped by `seion`/`dakuon`/`youon`.
 - **`Resources/audio/vocab/<lesson>-<slug>.m4a`** — every vocab word's default clip
@@ -84,12 +84,12 @@ Counted from `MinnaData.json`, not from memory:
 | Languages | 18 |
 | Resolved translation strings | 35 513 |
 
-**The `7` in the source comments is wrong.** `Localization.swift:8` says "The 7
-languages we ship" and `VocabStore.swift:51-52` says "not all 7" / "7×2089". The
-shipped set is **17** (`en, zh, zh-Hant, vi, de, th, my, es, fr, ru, bn, hi, ta,
-te, fil, id, ko`), which is what `MinnaData.json`, `UIStrings.json` and
-`LocalizationTests.uiStringsCoverEveryLanguageAndKey` all agree on. The comments
-are stale from an earlier release; the numbers here are the data's.
+The shipped set is **18** (`en, zh, zh-Hant, vi, de, th, my, es, fr, ru, bn,
+hi, ta, te, ne, fil, id, ko` — Nepali joined 2026-08), which is what
+`MinnaData.json`, `UIStrings.json` and
+`LocalizationTests.uiStringsCoverEveryLanguageAndKey` all agree on. A language
+count quoted anywhere else — code comments, store copy, the website — is a
+snapshot that goes stale; these files are the ground truth.
 
 ## Swift models
 
@@ -196,6 +196,8 @@ Three storage tiers, and nothing crosses between them:
 | "Rating already asked" | `UserDefaults` via `Pref` | One-shot flag, `06-monetization.md` |
 | Kana mastery (`KanaResult`) | **CloudKit-backed SwiftData** | One row per romaji, upserted on every answer |
 | Challenge progress (`ChallengeResult`) | **CloudKit-backed SwiftData** | One row per rung, best-only — `02-challenge-ladder.md` |
+| Saved words (`Bookmark`) | **CloudKit-backed SwiftData** | One row per starred word, newest wins on merge |
+| Study days (`StudyDay`) | **CloudKit-backed SwiftData** | One `yyyymmdd` row per studied day — the streak's raw data |
 | Today's deck | **nothing** | Derived from progress on every appear; see below |
 | Today's snapshot for the widget/watch | App Group `UserDefaults` + WatchConnectivity | `Shared/TodayShared.swift` — a cache of a derived value, not state |
 

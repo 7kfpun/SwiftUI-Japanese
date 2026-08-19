@@ -7,7 +7,7 @@ Crashlytics**. To keep this repo open-source, no real keys are committed:
 |------|------------------|--------------------|
 | Firebase config | `config/GoogleService-Info.example.plist` | `nihongo/GoogleService-Info.plist` |
 | AdMob unit IDs  | `config/Secrets.example.plist` + Google **test** IDs baked into `AdConfig.swift` | `nihongo/Secrets.plist` |
-| AdMob app ID    | Google **test** app ID in the target's `GADApplicationIdentifier` build setting | override locally |
+| AdMob app ID    | The **real** `ca-app-pub-…~…` ID, committed in each target's Info.plist (`GADApplicationIdentifier`) — it ships in every binary, so it isn't a secret; the per-slot *unit* IDs are | — |
 
 **A fresh clone builds and runs with no setup**: SDK code is behind
 `#if canImport(...)`, so before the packages are added the banners are empty and
@@ -24,9 +24,9 @@ Firebase is skipped. Once the packages are added, ads (test IDs) and Firebase
    - Firebase console → download `GoogleService-Info.plist` → copy to `nihongo/GoogleService-Info.plist`
    - `cp config/Secrets.example.plist nihongo/Secrets.plist` and fill in your real `ca-app-pub-…/…` banner units
 
-3. **Real AdMob app ID**: set the target build setting
-   `GADApplicationIdentifier` (currently Google's test app ID) to your real
-   `ca-app-pub-…~…` iOS app ID.
+3. **AdMob app ID**: already set — `GADApplicationIdentifier` in each target's
+   Info.plist carries the real `ca-app-pub-…~…` iOS app ID. Only the per-slot
+   unit IDs in `Secrets.plist` are yours to fill.
 
 4. **Crashlytics dSYMs**: add a *Run Script* build phase (after *Copy Bundle Resources*):
    ```sh

@@ -230,7 +230,7 @@ struct FlashcardScreen<Element, Face: View>: View {
         guard !animating else { return }
         animating = true
         // `flashcard_grade` / `kana_flashcard_grade` — the name already says which deck,
-        // which is why this stays two names rather than one with a param.
+        // and `known` is the learner's own verdict, not a marked answer.
         if let n = trackName {
             Track.event("\(n)_grade", trackParams.merging(["known": right]) { a, _ in a })
         }

@@ -145,10 +145,10 @@ it as a bug. Shipping it means adding Tamil in App Store Connect first.
 
 `fil` used to sit in the same state and was removed outright — store metadata and
 rendered screenshots both. Note this is the *store* locale only: `fil` remains one
-of the app's 17 **UI** languages in `nihongo/UIStrings.json`, and the promo site
+of the app's **UI** languages in `nihongo/UIStrings.json`, and the promo site
 still builds a Filipino page. Don't propagate this removal to either.
 
-Note there is a `ja` localization with no counterpart in the app's own 17 UI
+Note there is a `ja` localization with no counterpart in the app's own UI
 languages — Japanese store text for a Japanese-learning app. Don't "fix" that
 asymmetry either.
 

@@ -1,6 +1,6 @@
 ---
 name: build-and-deploy-web
-description: Regenerate the promo website (web/, 17 localized pages) from scripts/build-web.py, verify the generated HTML/inline JS is well-formed, then deploy to Firebase Hosting scoped to --only hosting. Use whenever scripts/build-web.py or its `T` copy dict is edited, a new localized page is needed, or the user asks to "update the website" / "deploy the site" / "push the promo page" / "change the landing page copy". Also read this before any `firebase deploy` in this repo — firebase.json declares firestore.rules too, so an unscoped deploy publishes security rules by accident.
+description: Regenerate the promo website (web/, one localized page per app language) from scripts/build-web.py, verify the generated HTML/inline JS is well-formed, then deploy to Firebase Hosting scoped to --only hosting. Use whenever scripts/build-web.py or its `T` copy dict is edited, a new localized page is needed, or the user asks to "update the website" / "deploy the site" / "push the promo page" / "change the landing page copy". Also read this before any `firebase deploy` in this repo — firebase.json declares firestore.rules too, so an unscoped deploy publishes security rules by accident.
 when_to_use: build the website, deploy the website, update the promo site, publish web changes, firebase deploy, rebuild web pages, edit landing page copy, update the FAQ on the site, promo page translations, firebase hosting
 allowed-tools: Bash
 ---
@@ -23,12 +23,12 @@ Run from the **repo root**:
 python3 scripts/build-web.py --all
 ```
 
-`--all` rebuilds all 17 locales — the English root `web/index.html` plus 16
-folders (`zh`, `zh-Hant`, `vi`, `de`, `th`, `my`, `es`, `fr`, `ru`, `bn`, `hi`,
-`ta`, `te`, `fil`, `id`, `ko`), the same language set as
-`VocabStore.availableLanguages`. **A bare `python3 scripts/build-web.py` with no
+`--all` rebuilds every locale in the script's `LANG_META` table — the English
+root `web/index.html` plus one folder per other locale, and `web/sitemap.xml` +
+`web/robots.txt`. Derive the locale list from `LANG_META`, not from memory; it
+tracks the app's language set and grows with it. **A bare `python3 scripts/build-web.py` with no
 flag only rebuilds English** — the `else` branch at the bottom of the script
-says "translations paused", which is stale: all 17 locales are fully translated
+says "translations paused", which is stale: all 18 locales are fully translated
 in the `T` dict. Use `--all` unless you specifically only want to touch the
 English page.
 
@@ -39,20 +39,22 @@ optional nothing-else is the whole CLI. Step 2 below is the substitute.
 Two things the generator reads, so both must exist and be current first:
 
 - `nihongo/Resources/MinnaData.json` — the interactive quiz's Lesson 1 words and
-  their per-language meanings (`load_quiz_words`). It's git-tracked, but if you
-  just cleaned it, run `make data` (see the `refresh-data` skill) before this.
+  their per-language meanings (`load_quiz_words`). It is **git-ignored and
+  regenerated**, so on a fresh clone or after `make clean` it doesn't exist —
+  run `make data` (see the `refresh-data` skill) before this.
 - `nihongo/UIStrings.json` — a handful of shared strings (`Correct!`, `Next`,
   `Privacy Policy`, …) are borrowed straight from the app so web and app agree
   (`load_app_strings`). A locale missing from it falls back to `en` silently.
 
-**Copy lives in the `T` dict only** (one `dict(...)` per locale, 54 keys each,
-around line 1303). You don't need a parity check for it: the page is built with
+**Copy lives in the `T` dict only** — one `dict(...)` per locale, every locale
+carrying the same key set (`grep -n '^T = {' scripts/build-web.py` finds it).
+You don't need a parity check for it: the page is built with
 `string.Template.substitute`, so a key missing from one locale raises `KeyError`
 and the build fails loudly on that locale. Running `--all` *is* the parity check.
 
 ## 2. Verify before deploying
 
-The generator is one big f-string/Template assembly over 17 languages — it's
+The generator is one big f-string/Template assembly over 18 languages — it's
 easy for a template edit to silently unbalance a tag or break inline JS in
 one locale while looking fine in English. Check both:
 
@@ -76,7 +78,7 @@ print('$f', 'OK' if not diff else diff)
 done
 ```
 
-Spot-check a handful of locales (not all 17 every time) — English plus 2–3
+Spot-check a handful of locales (not every one every time) — English plus 2–3
 non-Latin-script ones (CJK, Thai/Burmese) tend to expose template-substitution
 bugs that Latin-script locales don't.
 
@@ -160,6 +162,6 @@ Project is `kf-nihongo` (see `.firebaserc`); `firebase.json` points hosting's
   for Minna, `say -v Kyoko`
   TTS), and the textbook's name is confined to the meta description and one FAQ
   answer (Guideline 5.2).
-- Editing copy in `T` means editing it in **all 17 locales**, same as
+- Editing copy in `T` means editing it in **every locale**, same as
   `UIStrings.json`. The English-only half-edit is the usual mistake; the build
   won't catch it, because every key still exists.

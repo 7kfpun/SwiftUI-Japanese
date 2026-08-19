@@ -14,7 +14,7 @@ Read this folder cold-start, in roughly this order:
 | Doc | Read this for |
 |---|---|
 | `00-overview.md` | The big picture: tab structure, premium model, monetization, the promo website, current shipped state. Start here. |
-| `01-data-model.md` | Where the vocab/kana/audio data comes from (`minna` submodule → `scripts/build-minna-data.py` → bundled JSON), the Swift types that consume it (`Vocab`, `K`, `VocabStore`), and the three-tier persistence split — every `Pref` key, and the two CloudKit-backed `@Model`s. |
+| `01-data-model.md` | Where the vocab/kana/audio data comes from (`minna` submodule → `scripts/build-minna-data.py` → bundled JSON), the Swift types that consume it (`Vocab`, `K`, `VocabStore`), and the three-tier persistence split — every `Pref` key, and the four CloudKit-backed `@Model`s. |
 | `02-challenge-ladder.md` | The app's core mechanic: rung sizing, the sliding review window, form tiering, star bands, the unlock chain, best-only persistence and the CloudKit merge resolver. |
 | `03-kana.md` | The Kana tab: browser (its rotating tile-script button and the font-follows-script rule) and its 5 quiz modes — including the handwriting-scoring math behind Write. |
 | `04-lessons.md` | The Lessons tab: browse/search, and the **four** untested practice modes per lesson (Vocab List/Flashcards/Train/Learn) plus where the ladder sits. Read with `02`. |

@@ -165,10 +165,10 @@ mutate-and-put-back shape would silently drop the bar's default background.
 SF Rounded covers Latin (including Vietnamese's stacked diacritics), Cyrillic
 and Greek — 2785 glyphs, verified with CoreText against every character in
 `nihongo/UIStrings.json`. Fully rounded: **en, de, es, fr, vi, ru, fil, id**.
-The other nine (zh, zh-Hant, th, my, bn, hi, ta, te, ko) render their digits,
+The other ten (zh, zh-Hant, th, my, bn, hi, ne, ta, te, ko) render their digits,
 Latin and punctuation rounded and fall back per-script for the rest — to
-PingFang, Thonburi, Myanmar Sangam, SF Bangla / Devanagari / Tamil / Telugu and
-Apple SD Gothic Neo respectively. **Every fallback is the same face those
+PingFang, Thonburi, Myanmar Sangam, SF Bangla / Devanagari (hi and ne share it) /
+Tamil / Telugu and Apple SD Gothic Neo respectively. **Every fallback is the same face those
 scripts already use under the plain system font**, so no non-Latin language
 changes appearance and nothing anywhere renders as tofu.
 
@@ -182,8 +182,10 @@ would get a rounded heading for free.
 
 ### Line heights per script, and what that costs a fixed-height box
 
-Measured with CoreText over every string in `UIStrings.json` and all 35 513
-vocabulary translations in `MinnaData.json`. Line box = ascent + descent +
+Measured with CoreText over every string in `UIStrings.json` and all 37 602
+vocabulary translations in `MinnaData.json` (re-measured when Nepali joined as
+the 18th language: its line box and tallest ink are identical to Hindi's —
+both are Devanagari — so the table did not move). Line box = ascent + descent +
 leading, which is the baseline-to-baseline distance SwiftUI's `Text` uses.
 
 | Script | Line box @17pt | vs Latin | Headroom to its own ink |
@@ -216,12 +218,16 @@ and therefore meet all 18 scripts:
   154.5×54pt. `minimumScaleFactor` is **0.65**, not 0.5: at 0.5 the worst glosses
   rendered at 8.5pt (Burmese) and 8.8pt (German, Vietnamese); 0.65 holds every
   language at ≥11.2pt. The price is 46 glosses that tail-truncate instead of
-  shrinking rather than 14 — 0.13% of the data instead of 0.04%.
+  shrinking rather than 14 — 0.12% of the data instead of 0.04%. Re-measured for
+  Nepali, the 18th language: Devanagari runs tall, not wide, and its worst gloss
+  fits at 0.68 (11.5pt) — above the floor, no gloss truncating, extremes still
+  Burmese/German/Vietnamese — so the floor is unchanged.
 - **`SwipeOptionChip`** — `minHeight`, not a fixed height, so it may grow;
   `lineLimit(4)` and `minimumScaleFactor(0.6)` let it. At the old `(3, 0.4)` the
   worst cases in en/fr/de/vi/my all bottomed out on the 8pt floor because three
   lines was all they were allowed; `(4, 0.6)` never renders below 12pt and moves
-  the tail-truncating share only from 0.08% to 0.16%.
+  the tail-truncating share only from 0.08% to 0.15%. Nepali clears this one even
+  more comfortably — its worst gloss fits at 0.72 (14.3pt), so the floor holds.
 
 ## The Tinder-like swipe UI — one shared visual language, several screens
 

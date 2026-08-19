@@ -36,12 +36,12 @@ resources:
 minna/                         (submodule — source of truth)
   vocab/{1..50}.json           kanji / kana / romaji
   en|zh|zh-Hant|vi|de|th|my/   translations, keyed by romaji
-  audio/kyoko/{lesson}/*.m4a   pronunciation clips
+  audio/{voice}/{lesson}/*.m4a pronunciation clips (VOICEVOX whitecul + kenzaki, kyoko)
         │
         │  scripts/build-minna-data.py   (via `make data`)
         ▼
 nihongo/Resources/
-  MinnaData.json               one file: all lessons + 7 languages
+  MinnaData.json               one file: all lessons + 18 languages
   audio/{lesson}-{slug}.m4a    flat, uniquely-named clips
 ```
 
@@ -71,7 +71,7 @@ xcodebuild test -scheme nihongo -only-testing:nihongoTests \
 ## Settings
 
 Two independent language pickers in the app's **Settings** tab:
-- **App language** — the interface (7 languages).
+- **App language** — the interface (18 languages).
 - **Vocabulary language** — what Japanese words are translated into.
 
 ## Ads & analytics (optional)

@@ -1154,22 +1154,16 @@ $switcher_block
   start();
 })();
 </script>
-<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 <script>
 (function () {
   "use strict";
-  if (typeof THREE === "undefined") return;
   var container = document.getElementById("kana-bg");
   if (!container) return;
 
-  function webglAvailable() {
-    try {
-      var c = document.createElement("canvas");
-      return !!(window.WebGLRenderingContext &&
-        (c.getContext("webgl") || c.getContext("experimental-webgl")));
-    } catch (e) { return false; }
-  }
-  if (!webglAvailable()) return;
+  var canvas = document.createElement("canvas");
+  var ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  container.appendChild(canvas);
 
   var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -1188,60 +1182,40 @@ $switcher_block
 
   var JP_FONT = '"Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans CJK JP", "Meiryo", sans-serif';
 
-  function makeTextTexture(text, color, isWord) {
-    var canvas = document.createElement("canvas");
-    var size = 256;
-    canvas.width = isWord ? size * Math.max(2, text.length * 0.6) : size;
-    canvas.height = size;
-    var ctx = canvas.getContext("2d");
-    ctx.fillStyle = color;
-    ctx.font = "600 " + Math.floor(size * 0.62) + "px " + JP_FONT;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, canvas.width / 2, canvas.height / 2 + size * 0.03);
-    var tex = new THREE.CanvasTexture(canvas);
-    tex.anisotropy = 2;
-    return { texture: tex, aspect: canvas.width / canvas.height };
+  var DPR = Math.min(window.devicePixelRatio || 1, 2);
+  var W = 1, H = 1;
+  function resize() {
+    W = container.clientWidth || 1;
+    H = container.clientHeight || 1;
+    canvas.width = Math.round(W * DPR);
+    canvas.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   }
 
-  var scene = new THREE.Scene();
-  var camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
-  camera.position.z = 14;
-
-  var renderer;
-  try {
-    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-  } catch (e) { return; }
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  container.appendChild(renderer.domElement);
-
-  var sprites = [];
   function rand(min, max) { return min + Math.random() * (max - min); }
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+  var sprites = [];
   function addSprite(text, isWord) {
     var useAccent = isWord ? Math.random() < 0.7 : Math.random() < 0.2;
-    var color = useAccent ? ACCENT : pick(GRAYS);
-    var t = makeTextTexture(text, color, isWord);
-    var material = new THREE.SpriteMaterial({
-      map: t.texture,
-      transparent: true,
-      opacity: isWord ? rand(0.5, 0.8) : rand(0.25, 0.6),
-      depthWrite: false
-    });
-    var sprite = new THREE.Sprite(material);
-    var scale = isWord ? rand(1.6, 2.4) : rand(0.7, 1.5);
-    sprite.scale.set(scale * t.aspect, scale, 1);
-    sprite.position.set(rand(-13, 13), rand(-8, 8), rand(-8, 6));
-    sprite.userData = {
-      vx: rand(-0.05, 0.05),
-      vy: rand(0.02, 0.09) * (Math.random() < 0.5 ? 1 : -1),
+    // depth stands in for the old z axis: distant glyphs render
+    // smaller, fainter, and parallax less with the pointer.
+    var depth = rand(0.35, 1);
+    sprites.push({
+      text: text,
+      color: useAccent ? ACCENT : pick(GRAYS),
+      size: (isWord ? rand(0.055, 0.085) : rand(0.028, 0.06)) * (0.5 + depth),
+      opacity: (isWord ? rand(0.5, 0.8) : rand(0.25, 0.6)) * (0.55 + depth * 0.45),
+      depth: depth,
+      x: rand(-1.05, 1.05),
+      y: rand(-1.05, 1.05),
+      vx: rand(-0.004, 0.004),
+      vy: rand(0.0015, 0.007) * (Math.random() < 0.5 ? 1 : -1),
+      rot: 0,
       spin: rand(-0.15, 0.15),
       wobblePhase: rand(0, Math.PI * 2),
       wobbleSpeed: rand(0.2, 0.6)
-    };
-    scene.add(sprite);
-    sprites.push(sprite);
+    });
   }
 
   var kanaPool = HIRAGANA.concat(KATAKANA);
@@ -1250,61 +1224,68 @@ $switcher_block
   for (var i = 0; i < kanaCount; i++) addSprite(pick(kanaPool), false);
   WORDS.forEach(function (w) { addSprite(w, true); });
 
-  function resize() {
-    var w = container.clientWidth || 1;
-    var h = container.clientHeight || 1;
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
+  var camX = 0, camY = 0, targetX = 0, targetY = 0;
+
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (var i = 0; i < sprites.length; i++) {
+      var s = sprites[i];
+      var wob = Math.sin(t * s.wobbleSpeed + s.wobblePhase) * 0.008;
+      var px = (s.x + wob - camX * 0.08 * s.depth + 1) / 2 * W;
+      var py = (s.y + camY * 0.06 * s.depth + 1) / 2 * H;
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.rotate(s.rot);
+      ctx.globalAlpha = s.opacity;
+      ctx.fillStyle = s.color;
+      ctx.font = "600 " + Math.max(10, Math.round(s.size * H)) + "px " + JP_FONT;
+      ctx.fillText(s.text, 0, 0);
+      ctx.restore();
+    }
   }
+
   resize();
   window.addEventListener("resize", function () {
     resize();
-    if (reducedMotion) renderer.render(scene, camera);
+    if (reducedMotion) draw(0);
   });
 
-  var targetX = 0, targetY = 0;
-  if (!reducedMotion) {
-    window.addEventListener("mousemove", function (e) {
-      targetX = (e.clientX / window.innerWidth - 0.5) * 2;
-      targetY = (e.clientY / window.innerHeight - 0.5) * 2;
-    }, { passive: true });
-  }
-
   if (reducedMotion) {
-    renderer.render(scene, camera);
+    draw(0);
     return;
   }
 
-  var clock = new THREE.Clock();
-  var BOUND_X = 14, BOUND_Y = 9;
+  window.addEventListener("mousemove", function (e) {
+    targetX = (e.clientX / window.innerWidth - 0.5) * 2;
+    targetY = (e.clientY / window.innerHeight - 0.5) * 2;
+  }, { passive: true });
 
-  function animate() {
+  var last = null;
+  function animate(now) {
     requestAnimationFrame(animate);
-    var dt = Math.min(clock.getDelta(), 0.05);
-    var t = clock.elapsedTime;
+    if (last === null) last = now;
+    var dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
 
     for (var i = 0; i < sprites.length; i++) {
       var s = sprites[i];
-      var u = s.userData;
-      s.position.x += u.vx * dt * 3;
-      s.position.y += u.vy * dt * 3;
-      s.position.x += Math.sin(t * u.wobbleSpeed + u.wobblePhase) * 0.002;
-      s.material.rotation += u.spin * dt;
-
-      if (s.position.y > BOUND_Y) s.position.y = -BOUND_Y;
-      if (s.position.y < -BOUND_Y) s.position.y = BOUND_Y;
-      if (s.position.x > BOUND_X) s.position.x = -BOUND_X;
-      if (s.position.x < -BOUND_X) s.position.x = BOUND_X;
+      s.x += s.vx * dt * 3;
+      s.y += s.vy * dt * 3;
+      s.rot += s.spin * dt;
+      if (s.y > 1.1) s.y = -1.1;
+      if (s.y < -1.1) s.y = 1.1;
+      if (s.x > 1.1) s.x = -1.1;
+      if (s.x < -1.1) s.x = 1.1;
     }
 
-    camera.position.x += (targetX * 1.2 - camera.position.x) * 0.04;
-    camera.position.y += (-targetY * 0.8 - camera.position.y) * 0.04;
-    camera.lookAt(0, 0, 0);
+    camX += (targetX - camX) * 0.04;
+    camY += (targetY - camY) * 0.04;
 
-    renderer.render(scene, camera);
+    draw(now / 1000);
   }
-  animate();
+  requestAnimationFrame(animate);
 })();
 </script>
 </body>
@@ -1317,7 +1298,7 @@ T = {
 "en": dict(
     autonym="English",
     title="Japanese Daily 每日日本語 — Learn Japanese, a little every day",
-    desc="Learn Japanese daily: all 50 Minna no Nihongo lessons — 2,089 words with meanings in 18 languages, Hiragana & Katakana with audio, flashcards, stroke-order handwriting practice and scored challenges. Free on iPhone & iPad.",
+    desc="Learn Japanese daily: all 50 Minna no Nihongo lessons — 2,089 words in 18 languages, Hiragana & Katakana with audio, JLPT N5–N4. Free on iPhone & iPad.",
     kicker="a little every day",
     tagline="2,089 words, the complete Hiragana and Katakana tables, flashcards, handwriting practice and a scored challenge ladder — all in one beautiful iOS app.",
     hero_alt="Screenshot of the Japanese Daily app showing the word of the day",
@@ -1488,7 +1469,7 @@ T = {
 "vi": dict(
     autonym="Tiếng Việt",
     title="Japanese Daily 每日日本語 — Học tiếng Nhật mỗi ngày một chút",
-    desc="Học tiếng Nhật mỗi ngày: trọn 50 bài Minna no Nihongo — 2.089 từ kèm nghĩa trong 18 ngôn ngữ, bảng Hiragana & Katakana có âm thanh, thẻ ghi nhớ, luyện viết được chấm theo thứ tự nét và các bậc thử thách có điểm — miễn phí trên iPhone & iPad.",
+    desc="Học tiếng Nhật mỗi ngày: trọn 50 bài Minna no Nihongo — 2.089 từ trong 18 ngôn ngữ, Hiragana & Katakana có âm thanh. Miễn phí trên iPhone & iPad.",
     kicker="mỗi ngày một chút",
     tagline="2.089 từ, trọn bảng Hiragana và Katakana, thẻ ghi nhớ, luyện viết theo thứ tự nét và thang thử thách có điểm — tất cả trong một ứng dụng iOS tuyệt đẹp.",
     hero_alt="Ảnh chụp màn hình ứng dụng Japanese Daily hiển thị thẻ từ vựng của hôm nay",
@@ -1545,7 +1526,7 @@ T = {
 "de": dict(
     autonym="Deutsch",
     title="Japanese Daily 每日日本語 — Jeden Tag ein bisschen Japanisch",
-    desc="Jeden Tag Japanisch lernen: alle 50 Lektionen von Minna no Nihongo — 2.089 Wörter mit Bedeutungen in 18 Sprachen, Hiragana & Katakana mit Audio, Karteikarten, Schreibübungen mit Strichfolge-Bewertung und bewertete Challenges. Kostenlos für iPhone & iPad.",
+    desc="Jeden Tag Japanisch lernen: alle 50 Lektionen von Minna no Nihongo — 2.089 Wörter in 18 Sprachen, Hiragana & Katakana mit Audio. Kostenlos für iPhone & iPad.",
     kicker="jeden Tag ein bisschen",
     tagline="2.089 Wörter, die kompletten Hiragana- und Katakana-Tabellen, Karteikarten, Schreibübungen und eine bewertete Challenge-Leiter — alles in einer schönen iOS-App.",
     hero_alt="Screenshot der Japanese-Daily-App mit dem Wort des Tages",
@@ -1602,7 +1583,7 @@ T = {
 "th": dict(
     autonym="ไทย",
     title="Japanese Daily 每日日本語 — เรียนภาษาญี่ปุ่นวันละนิด",
-    desc="เรียนภาษาญี่ปุ่นทุกวัน: ครบ 50 บทของ Minna no Nihongo — 2,089 คำพร้อมความหมาย 18 ภาษา ตารางฮิรางานะ-คาตาคานะพร้อมเสียง บัตรคำ ฝึกเขียนที่ให้คะแนนตามลำดับขีดจริง และด่านท้าทายที่มีคะแนน — ฟรีบน iPhone และ iPad",
+    desc="เรียนภาษาญี่ปุ่นทุกวัน: ครบ 50 บทของ Minna no Nihongo — 2,089 คำใน 18 ภาษา ฮิรางานะ-คาตาคานะพร้อมเสียง ฟรีบน iPhone และ iPad",
     kicker="วันละนิดทุกวัน",
     tagline="2,089 คำ ตารางคานะครบชุด บัตรคำ ฝึกเขียนตามลำดับขีด และด่านท้าทายที่มีคะแนน — ครบในแอป iOS ที่สวยงามแอปเดียว",
     hero_alt="ภาพหน้าจอแอป Japanese Daily แสดงการ์ดคำศัพท์ของวันนี้",
@@ -1659,7 +1640,7 @@ T = {
 "my": dict(
     autonym="မြန်မာ",
     title="Japanese Daily 每日日本語 — နေ့စဉ် ဂျပန်စာ နည်းနည်းစီ",
-    desc="နေ့တိုင်း ဂျပန်စာလေ့လာပါ — Minna no Nihongo သင်ခန်းစာ ၅၀ လုံး၊ ဘာသာစကား ၁၈ မျိုးဖြင့် အနက်ပါသော စကားလုံး ၂,၀၈၉ လုံး၊ အသံပါ ဟီရာဂနာ/ခတခနာဇယား၊ ကတ်ပြားများ၊ စာလုံးရေးအစဉ်အတိုင်း အမှတ်ပေးသည့် ရေးလေ့ကျင့်ခန်းနှင့် အမှတ်ပေး စိန်ခေါ်မှုအဆင့်များ — iPhone/iPad တွင် အခမဲ့။",
+    desc="နေ့တိုင်း ဂျပန်စာ — Minna no Nihongo သင်ခန်းစာ ၅၀၊ ဘာသာစကား ၁၈ မျိုးဖြင့် စကားလုံး ၂,၀၈၉၊ အသံပါ ဟီရာဂနာနှင့် ခတခနာ။ iPhone/iPad တွင် အခမဲ့။",
     kicker="နေ့တိုင်း နည်းနည်းစီ",
     tagline="စကားလုံး ၂,၀၈၉ လုံး၊ ကာနာဇယားအပြည့်အစုံ၊ ကတ်ပြားများ၊ ရေးလေ့ကျင့်ခန်းနှင့် အမှတ်ပေး စိန်ခေါ်မှုအဆင့်များ — လှပသော iOS အက်ပ်တစ်ခုတည်းတွင်။",
     hero_alt="Japanese Daily အက်ပ်၏ ယနေ့စကားလုံးကတ် မျက်နှာပြင်ဓာတ်ပုံ",
@@ -1716,7 +1697,7 @@ T = {
 "es": dict(
     autonym="Español",
     title="Japanese Daily 每日日本語 — Aprende japonés, un poco cada día",
-    desc="Aprende japonés cada día: las 50 lecciones de Minna no Nihongo — 2.089 palabras con significados en 18 idiomas, hiragana y katakana con audio, tarjetas, escritura puntuada por orden de trazos y retos con nota. Gratis en iPhone y iPad.",
+    desc="Aprende japonés cada día: las 50 lecciones de Minna no Nihongo — 2.089 palabras en 18 idiomas, hiragana y katakana con audio. Gratis en iPhone y iPad.",
     kicker="un poco cada día",
     tagline="2.089 palabras, las tablas completas de hiragana y katakana, tarjetas, práctica de escritura y una escalera de retos con nota — todo en una preciosa app para iOS.",
     hero_alt="Captura de pantalla de la app Japanese Daily mostrando la palabra del día",
@@ -1772,8 +1753,8 @@ T = {
 ),
 "fr": dict(
     autonym="Français",
-    title="Japanese Daily 每日日本語 — Apprenez le japonais, un peu chaque jour",
-    desc="Apprenez le japonais chaque jour : les 50 leçons de Minna no Nihongo — 2 089 mots traduits en 18 langues, hiragana et katakana en audio, cartes mémo, écriture notée sur l'ordre des traits et défis notés. Gratuit sur iPhone et iPad.",
+    title="Japanese Daily 每日日本語 — Le japonais, un peu chaque jour",
+    desc="Apprenez le japonais chaque jour : les 50 leçons de Minna no Nihongo — 2 089 mots en 18 langues, hiragana et katakana en audio. Gratuit sur iPhone et iPad.",
     kicker="un peu chaque jour",
     tagline="2 089 mots, les tableaux complets de hiragana et katakana, des cartes mémo, l'écriture à la main et une échelle de défis notés — le tout dans une belle app iOS.",
     hero_alt="Capture d'écran de l'application Japanese Daily montrant le mot du jour",
@@ -1830,7 +1811,7 @@ T = {
 "ru": dict(
     autonym="Русский",
     title="Japanese Daily 每日日本語 — учите японский понемногу каждый день",
-    desc="Учите японский каждый день: все 50 уроков Minna no Nihongo — 2089 слов с переводом на 18 языков, хирагана и катакана с озвучкой, карточки, прописи с оценкой по порядку черт и испытания с оценкой. Бесплатно на iPhone и iPad.",
+    desc="Учите японский каждый день: все 50 уроков Minna no Nihongo — 2089 слов на 18 языках, хирагана и катакана с озвучкой. Бесплатно на iPhone и iPad.",
     kicker="понемногу каждый день",
     tagline="2089 слов, полные таблицы хираганы и катаканы, карточки, прописи и лестница испытаний с оценкой — всё в одном красивом iOS-приложении.",
     hero_alt="Скриншот приложения Japanese Daily со словом дня",
@@ -1887,7 +1868,7 @@ T = {
 "bn": dict(
     autonym="বাংলা",
     title="Japanese Daily 每日日本語 — প্রতিদিন কিছুটা জাপানি শিখুন",
-    desc="প্রতিদিন জাপানি শিখুন: Minna no Nihongo-র সব ৫০টি পাঠ — ১৮টি ভাষায় অর্থসহ ২,০৮৯টি শব্দ, অডিওসহ হিরাগানা ও কাতাকানা, ফ্ল্যাশকার্ড, আসল স্ট্রোক অর্ডারে নম্বর দেওয়া হাতের লেখা অনুশীলন এবং নম্বরসহ চ্যালেঞ্জ — আইফোন ও আইপ্যাডে ফ্রি।",
+    desc="প্রতিদিন জাপানি শিখুন: Minna no Nihongo-র ৫০টি পাঠ — ১৮টি ভাষায় অর্থসহ ২,০৮৯টি শব্দ, অডিওসহ হিরাগানা ও কাতাকানা। আইফোন ও আইপ্যাডে ফ্রি।",
     kicker="প্রতিদিন একটু একটু",
     tagline="২,০৮৯টি শব্দ, সম্পূর্ণ হিরাগানা ও কাতাকানা টেবিল, ফ্ল্যাশকার্ড, হাতের লেখা অনুশীলন এবং নম্বরসহ চ্যালেঞ্জের সিঁড়ি — একটি সুন্দর iOS অ্যাপে সবকিছু।",
     hero_alt="আজকের শব্দের কার্ড দেখাচ্ছে এমন Japanese Daily অ্যাপের স্ক্রিনশট",
@@ -1944,7 +1925,7 @@ T = {
 "hi": dict(
     autonym="हिन्दी",
     title="Japanese Daily 每日日本語 — हर दिन थोड़ा जापानी सीखें",
-    desc="हर दिन जापानी सीखें: Minna no Nihongo के सभी 50 पाठ — 18 भाषाओं में अर्थ के साथ 2,089 शब्द, ऑडियो के साथ हिरागाना और कातकाना, फ़्लैशकार्ड, असली स्ट्रोक क्रम पर अंक देने वाला लेखन अभ्यास और अंकों वाली चुनौतियाँ — iPhone और iPad पर मुफ़्त।",
+    desc="हर दिन जापानी सीखें: Minna no Nihongo के सभी 50 पाठ — 18 भाषाओं में अर्थ के साथ 2,089 शब्द, ऑडियो के साथ हिरागाना और कातकाना। iPhone और iPad पर मुफ़्त।",
     kicker="हर दिन थोड़ा-थोड़ा",
     tagline="2,089 शब्द, पूरी हिरागाना-कातकाना टेबल, फ़्लैशकार्ड, लिखने का अभ्यास और अंकों वाली चुनौतियों की सीढ़ी — सब एक सुंदर iOS ऐप में।",
     hero_alt="आज के शब्द का कार्ड दिखाता Japanese Daily ऐप का स्क्रीनशॉट",
@@ -2000,8 +1981,8 @@ T = {
 ),
 "ta": dict(
     autonym="தமிழ்",
-    title="Japanese Daily 每日日本語 — ஒவ்வொரு நாளும் சிறிது ஜப்பானிய மொழி கற்போம்",
-    desc="ஜப்பானியம் தினமும் கற்கவும்: Minna no Nihongo-வின் 50 பாடங்கள் — 18 மொழிகளில் பொருளுடன் 2,089 சொற்கள், ஒலியுடன் ஹிரகானா & கடகானா, ஃப்ளாஷ்கார்டுகள், உண்மையான கோட்டு வரிசைக்கு மதிப்பெண் தரும் கையெழுத்துப் பயிற்சி மற்றும் மதிப்பெண் சவால்கள் — iPhone & iPad-இல் இலவசம்.",
+    title="Japanese Daily 每日日本語 — தினமும் சிறிது ஜப்பானியம்",
+    desc="ஜப்பானியம் தினமும் கற்கவும்: Minna no Nihongo-வின் 50 பாடங்கள் — 18 மொழிகளில் 2,089 சொற்கள், ஒலியுடன் ஹிரகானா & கடகானா. iPhone & iPad-இல் இலவசம்.",
     kicker="ஒவ்வொரு நாளும் சிறிது",
     tagline="2,089 சொற்கள், முழுமையான ஹிரகானா-கடகானா அட்டவணைகள், ஃப்ளாஷ்கார்டுகள், கையெழுத்துப் பயிற்சி மற்றும் மதிப்பெண் தரும் சவால் ஏணி — அனைத்தும் ஒரு அழகான iOS செயலியில்.",
     hero_alt="இன்றைய சொல் அட்டையைக் காட்டும் Japanese Daily செயலியின் திரைப்பிடிப்பு",
@@ -2058,7 +2039,7 @@ T = {
 "te": dict(
     autonym="తెలుగు",
     title="Japanese Daily 每日日本語 — ప్రతిరోజూ కొంచెం జపనీస్ నేర్చుకోండి",
-    desc="ప్రతిరోజూ జపనీస్ నేర్చుకోండి: Minna no Nihongo 50 పాఠాలు — 18 భాషల్లో అర్థాలతో 2,089 పదాలు, ఆడియోతో హిరగానా & కటకానా, ఫ్లాష్‌కార్డ్‌లు, నిజమైన స్ట్రోక్ క్రమానికి మార్కులు ఇచ్చే రాత సాధన మరియు మార్కుల సవాళ్లు — iPhone & iPad‌లో ఉచితం.",
+    desc="ప్రతిరోజూ జపనీస్ నేర్చుకోండి: Minna no Nihongo 50 పాఠాలు — 18 భాషల్లో అర్థాలతో 2,089 పదాలు, ఆడియోతో హిరగానా & కటకానా. iPhone & iPad‌లో ఉచితం.",
     kicker="ప్రతిరోజూ కొంచెం కొంచెం",
     tagline="2,089 పదాలు, పూర్తి హిరగానా-కటకానా పట్టికలు, ఫ్లాష్‌కార్డ్‌లు, రాత సాధన మరియు మార్కులిచ్చే సవాళ్ల నిచ్చెన — అన్నీ ఒక అందమైన iOS యాప్‌లో.",
     hero_alt="ఈరోజు పదం కార్డును చూపే Japanese Daily యాప్ స్క్రీన్‌షాట్",
@@ -2115,7 +2096,7 @@ T = {
 "ne": dict(
     autonym="नेपाली",
     title="Japanese Daily 每日日本語 — हरेक दिन थोरै-थोरै जापानी सिक्नुहोस्",
-    desc="हरेक दिन जापानी सिक्नुहोस्: Minna no Nihongo का सबै 50 पाठ — 18 भाषामा अर्थसहित 2,089 शब्द, अडियोसहित हिरागाना र काताकाना, फ्ल्यासकार्ड, वास्तविक स्ट्रोक क्रमअनुसार अंक दिने लेखन अभ्यास र अंकसहितका च्यालेन्ज — iPhone र iPad मा निःशुल्क।",
+    desc="हरेक दिन जापानी सिक्नुहोस्: Minna no Nihongo का सबै 50 पाठ — 18 भाषामा अर्थसहित 2,089 शब्द, अडियोसहित हिरागाना र काताकाना। iPhone र iPad मा निःशुल्क।",
     kicker="हरेक दिन थोरै-थोरै",
     tagline="2,089 शब्द, पूरा हिरागाना र काताकाना तालिका, फ्ल्यासकार्ड, लेखन अभ्यास र अंक दिने च्यालेन्ज खुड्किला — सबै एउटै सुन्दर iOS एपमा।",
     hero_alt="आजको शब्द देखाइरहेको Japanese Daily एपको स्क्रिनसट",
@@ -2172,7 +2153,7 @@ T = {
 "fil": dict(
     autonym="Filipino",
     title="Japanese Daily 每日日本語 — Matuto ng Japanese, kaunti bawat araw",
-    desc="Matuto ng Japanese araw-araw: lahat ng 50 aralin ng Minna no Nihongo — 2,089 salita na may kahulugan sa 18 wika, hiragana at katakana na may audio, flashcards, pagsasanay sa pagsulat na may puntos ayon sa tunay na stroke order, at mga hamon na may puntos. Libre sa iPhone at iPad.",
+    desc="Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,089 salita sa 18 wika, hiragana at katakana na may audio. Libre sa iPhone at iPad.",
     kicker="kaunti bawat araw",
     tagline="2,089 salita, kumpletong talahanayan ng hiragana at katakana, flashcards, pagsasanay sa pagsulat, at hagdan ng mga hamon na may puntos — lahat sa isang magandang iOS app.",
     hero_alt="Screenshot ng Japanese Daily app na nagpapakita ng salita ngayong araw",
@@ -2228,8 +2209,8 @@ T = {
 ),
 "id": dict(
     autonym="Bahasa Indonesia",
-    title="Japanese Daily 每日日本語 — Belajar bahasa Jepang, sedikit setiap hari",
-    desc="Belajar bahasa Jepang setiap hari: seluruh 50 pelajaran Minna no Nihongo — 2.089 kata dengan arti dalam 18 bahasa, hiragana & katakana beraudio, kartu kilas, latihan menulis yang dinilai menurut urutan goresan asli, dan tantangan bernilai. Gratis di iPhone & iPad.",
+    title="Japanese Daily 每日日本語 — Bahasa Jepang, sedikit tiap hari",
+    desc="Belajar bahasa Jepang tiap hari: 50 pelajaran Minna no Nihongo — 2.089 kata dalam 18 bahasa, hiragana & katakana beraudio. Gratis di iPhone & iPad.",
     kicker="sedikit setiap hari",
     tagline="2.089 kata, tabel hiragana dan katakana lengkap, kartu kilas, latihan menulis, dan tangga tantangan bernilai — semua dalam satu aplikasi iOS yang indah.",
     hero_alt="Tangkapan layar aplikasi Japanese Daily yang menampilkan kata hari ini",

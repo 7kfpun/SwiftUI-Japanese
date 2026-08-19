@@ -107,8 +107,8 @@ struct KanaSwipeQuizView: View {
     private func decide(_ side: Int) {
         guard model.picked == nil, model.options.count > side else { return }
         model.choose(side, context: context)
-        // Its own name, like the other two kana quizzes — a swipe between two options is a
-        // different exercise from picking one of four, and the name says so on its own.
+        // Its own name, like the other two kana quizzes — a swipe between two options is
+        // a different exercise from picking one of four, and the name says so on its own.
         Track.event("kana_swipe_answer", ["correct": model.isCorrectOption(side)])
         withAnimation(.spring(duration: 0.2)) { lastCorrect = model.isCorrectOption(side) }
         withAnimation(.easeOut(duration: 0.25)) { drag.width = side == 1 ? 700 : -700 }

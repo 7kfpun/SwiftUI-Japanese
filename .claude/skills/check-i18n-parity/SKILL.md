@@ -1,6 +1,6 @@
 ---
 name: check-i18n-parity
-description: Add, rename or remove a localized UI string end to end — L.t(...) at the call site, an entry in all 17 language maps of nihongo/UIStrings.json, the %@ placeholder and %% percent-escaping rules — then verify parity. Use for any user-facing text change in nihongo/*.swift, any direct edit to nihongo/UIStrings.json, and whenever LocalizationTests fails. A missing key never crashes and never looks obviously broken; it quietly under-translates one language, so only checking catches it.
+description: Add, rename or remove a localized UI string end to end — L.t(...) at the call site, an entry in every language map of nihongo/UIStrings.json, the %@ placeholder and %% percent-escaping rules — then verify parity. Use for any user-facing text change in nihongo/*.swift, any direct edit to nihongo/UIStrings.json, and whenever LocalizationTests fails. A missing key never crashes and never looks obviously broken; it quietly under-translates one language, so only checking catches it.
 when_to_use: add a new UI string, add a localized string, new button label, change UI text, check translations, verify UIStrings, i18n parity, localization check, missing translation key, LocalizationTests failing, unescaped percent, placeholder mismatch, translate this string
 allowed-tools: Bash, Read, Edit
 ---
@@ -8,7 +8,15 @@ allowed-tools: Bash, Read, Edit
 # Adding and checking a localized UI string
 
 `nihongo/UIStrings.json` is the app's own UI text — buttons, titles, toggles —
-one map per language, **17 languages, currently 150 keys each**. It is a
+one map per language. Don't trust any quoted count of languages or keys — derive
+both from the file itself:
+
+```sh
+python3 -c "import json; d=json.load(open('nihongo/UIStrings.json')); \
+print(len(d), 'languages x', len(d['en']), 'keys')"
+```
+
+It is a
 **different file** from the vocabulary translations (`minna/<lang>/{1..50}.json`,
 compiled into `MinnaData.json`'s `translations` map — see
 `context/01-data-model.md`). Don't confuse the two when someone says "check
@@ -28,9 +36,10 @@ users you'll never hear from. Checking is the only detector.
    `"Save %@%"`, `"Lesson %@"`, `"Beat Challenge %@ to unlock"`. There is no
    separate identifier scheme, and `en`'s value is normally the key again (the
    two differ only where escaping applies, rule 4).
-3. **All 17 maps, in the same edit**: `en`, `zh`, `zh-Hant`, `vi`, `de`, `th`,
-   `my`, `es`, `fr`, `ru`, `bn`, `hi`, `ta`, `te`, `fil`, `id`, `ko` — exactly
-   `VocabStore.availableLanguages`. Write a **real translation** for each; a copy
+3. **Every language map, in the same edit.** The file's own top-level keys are
+   the list — derive it (`python3 -c "import json; print(sorted(json.load(open(
+   'nihongo/UIStrings.json'))))"`) rather than working from a remembered set,
+   which goes stale every time a language ships. Write a **real translation** for each; a copy
    of the English text passes every check and is the failure this whole workflow
    exists to prevent. English-only additions fail the suite.
 4. **A literal `%` must be written `%%` in the value.** `L.t(_:_:)` (the varargs
@@ -58,7 +67,8 @@ print('langs', len(d), '| keys', len(base), '|',
 "
 ```
 
-Expect `langs 17`. On `PARITY FAIL`, find exactly which language/key diverges,
+`langs` must equal the file's language count — whatever it is today — and every
+map must match `en`'s key set. On `PARITY FAIL`, find exactly which language/key diverges,
 and catch the three failures the suite checks separately in one pass:
 
 ```sh
@@ -85,7 +95,7 @@ print('done')
 
 ## Then let the suite agree
 
-`LocalizationTests` spends **four of its five tests** on this file, each catching
+`LocalizationTests` spends most of its tests on this file, each catching
 a different mistake — a green parity script is not a green suite:
 
 | Test | Catches |

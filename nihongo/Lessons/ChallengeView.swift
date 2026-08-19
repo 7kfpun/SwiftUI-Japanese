@@ -64,16 +64,15 @@ struct ChallengeView: View {
                                      picked: model.picked,
                                      isAnswer: question.isCorrect(i)) {
                         model.choose(i)
-                        // One `answer` event per selection, the same shape every practice
-                        // surface logs. `from`/`to` because the ladder's whole design is
-                        // forms hardening as you climb — per-form accuracy is the readout.
+                        // One event per selection, its own name like every mode's.
+                        // `from`/`to` because the ladder's whole design is forms
+                        // hardening as you climb — per-form accuracy is the readout.
                         // No word id or text: the answer stream is volume, not content.
-                        Track.event("answer", ["screen": "challenge",
-                                               "lesson": lesson.number,
-                                               "index": model.index,
-                                               "from": question.from.label,
-                                               "to": question.to.label,
-                                               "correct": question.isCorrect(i)])
+                        Track.event("challenge_answer", ["lesson": lesson.number,
+                                                         "index": model.index,
+                                                         "from": question.from.label,
+                                                         "to": question.to.label,
+                                                         "correct": question.isCorrect(i)])
                         if soundOn || question.from.isAudio { pronouncer.speak(question.answer, voice: question.voice) }
                     }
                 }
@@ -348,14 +347,28 @@ private struct ChallengeResultView: View {
                 if !model.missed.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(L.t("Review these")).font(Theme.title(.subheadline))
+                        // Each row plays its word — these are the words just missed, and
+                        // hearing one again right here is the cheapest rep it will ever
+                        // get. Ignores the sound toggle like every explicit tap does:
+                        // auto-play respects the setting, a deliberate tap is the ask.
                         ForEach(uniqueMissed, id: \.id) { word in
-                            HStack {
-                                Text(word.kana).font(Theme.jp(20))
-                                Spacer()
-                                Text(word.translation)
-                                    .font(.subheadline).foregroundStyle(.secondary)
-                                    .multilineTextAlignment(.trailing)
+                            Button {
+                                pronouncer.speak(word)
+                            } label: {
+                                HStack(spacing: 10) {
+                                    Image(systemName: "speaker.wave.2")
+                                        .font(.footnote)
+                                        .foregroundStyle(Theme.accent)
+                                    Text(word.kana).font(Theme.jp(20))
+                                    Spacer()
+                                    Text(word.translation)
+                                        .font(.subheadline).foregroundStyle(.secondary)
+                                        .multilineTextAlignment(.trailing)
+                                }
                             }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(word.kana)
+                            .accessibilityHint(L.t("Tap any word to hear it."))
                         }
                     }
                     .padding()
@@ -402,16 +415,15 @@ private struct ChallengeResultView: View {
     /// because the text is the part being taught; muting the app shouldn't cost a learner
     /// the phrase, only the voice.
     ///
-    /// The speech delay lets the push transition finish — `speak` stops whatever is
-    /// playing, so firing immediately would clip the last question's audio and talk over
-    /// the screen sliding in.
+    /// Spoken immediately, not after a settle delay: the voice and the screen are one
+    /// moment, and even 0.4s apart reads as the app lagging rather than reacting. The
+    /// cost is that `speak` stops the final answer's playback mid-word — acceptable,
+    /// because the result appearing *is* the event now, and the cheer is the sound of it.
     private func cheer() {
         guard let choice = Cheer.next(passed: model.passed) else { return }
         phrase = choice
         guard soundOn else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            pronouncer.speak(cheer: choice)
-        }
+        pronouncer.speak(cheer: choice)
     }
 
     @ViewBuilder

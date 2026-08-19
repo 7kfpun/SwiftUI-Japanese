@@ -169,8 +169,9 @@ Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
   All 2089 Minna words and all 7972 JLPT words have a clip. Live `AVSpeechSynthesizer`
   remains the fallback — it covers bare kana tiles, and any future course shipping no
   clips — so "every word has a clip" is true of *this* data, not a guarantee.
-- **Subscriptions sold: 1, 3, 6 months + lifetime.** 12-month is legacy and
-  unpurchasable, honoured only for restores. Product IDs are case-sensitive, immutable,
+- **Subscriptions sold: 1, 3, 6, 12 months + lifetime.** The 12-month returned 2026-08
+  as uppercase `12M`; the lowercase `12m` stays legacy, honoured only for restores.
+  Product IDs are case-sensitive, immutable,
   and unique per *team* forever — a deleted one is reserved and can never be recreated.
   **The two apps' IDs differ on purpose and must not be "aligned":** minna uses uppercase
   `3M`/`6M` (the lowercase ones were burned by the RN app) and `premium.lifetime`; JLPT

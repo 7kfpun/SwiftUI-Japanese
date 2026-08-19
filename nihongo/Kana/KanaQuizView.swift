@@ -157,8 +157,8 @@ struct KanaQuizView: View {
                                  font: optionFont) {
                     model.choose(i, context: context)
                     // One event name per mode, not one name with a `mode` param: the three
-                    // kana quizzes are different exercises — read it, hear it, choose
-                    // between two — and a name you can read straight off the console beats
+                    // Its own name per quiz — read it and hear it are different
+                    // exercises, and a name you can read straight off the console beats
                     // one that has to be split by a param before it says anything. No
                     // `lesson`: kana belongs to a chart, not a lesson, so the param is
                     // absent rather than sent as a meaningless 0.

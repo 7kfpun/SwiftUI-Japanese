@@ -120,12 +120,14 @@ struct QuizOptionButton: View {
                 // 0.65, not 0.5. The rows are a fixed 74pt (see `OptionGrid`) and the
                 // longest Minna glosses are sentence-length parentheticals, so the floor is
                 // what actually gets rendered for the tail of the data. Measured with
-                // CoreText over all 35 513 translations in the 17 languages: at 0.5 the
+                // CoreText over all 37 602 translations in the 18 languages: at 0.5 the
                 // worst cases land at 8.5pt (Burmese) and 8.8pt (German, Vietnamese) — below
                 // anything readable — while 0.65 holds every language at 11.2pt or better.
                 // The cost is 46 glosses that tail-truncate instead of shrinking rather than
-                // 14, i.e. 0.13% of the data instead of 0.04%: a clipped tail on a
-                // sentence-long gloss beats 8pt text on all four buttons.
+                // 14, i.e. 0.12% of the data instead of 0.04%: a clipped tail on a
+                // sentence-long gloss beats 8pt text on all four buttons. Nepali (18th)
+                // was re-measured against this box: Devanagari runs tall, not wide, and
+                // its worst gloss fits at 0.68 — above the floor, adding no truncation.
                 .minimumScaleFactor(0.65)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(10)
@@ -215,10 +217,11 @@ struct SwipeOptionChip: View {
                     // Wrap first, shrink second. The chip has a `minHeight`, not a fixed
                     // height, so a long gloss is allowed to make it taller — but
                     // `lineLimit(3)` capped it before it could, and 0.4 of `.title3` is 8pt.
-                    // Measured over all 35 513 translations: at (3, 0.4) the worst cases in
-                    // English, French, German, Vietnamese and Burmese all bottomed out at
-                    // the 8pt floor; at (4, 0.6) nothing renders below 12pt and the share
-                    // that tail-truncates instead only moves from 0.08% to 0.16%.
+                    // Measured over all 37 602 translations in the 18 languages: at (3, 0.4)
+                    // the worst cases in English, French, German, Vietnamese and Burmese all
+                    // bottomed out at the 8pt floor; at (4, 0.6) nothing renders below 12pt
+                    // and the share that tail-truncates instead only moves from 0.08% to
+                    // 0.15%. Nepali's worst gloss fits at 0.72, well above the floor.
                     .minimumScaleFactor(0.6)
                     .lineLimit(4)
                     .multilineTextAlignment(.center)

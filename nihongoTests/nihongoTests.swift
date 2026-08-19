@@ -569,6 +569,23 @@ struct PremiumTests {
         #expect(minna.isDisjoint(with: jlpt))
     }
 
+    /// Minna's list, pinned like JLPT's above and for the same reason: a wrong ID means
+    /// `Product.products(for:)` silently returns fewer plans and the paywall renders
+    /// what it got. The 12-month is the uppercase `12M` created 2026-08 — the lowercase
+    /// `12m` is the RN app's burned ID and must stay in `legacy`, never here.
+    @Test func minnaProductIDsMatchAppStoreConnect() {
+        let p = Course.minna.products
+        #expect(p.lifetime == "com.kfpun.nihongo.premium.lifetime")
+        #expect(p.subscriptions == [
+            "com.kfpun.nihongo.premium.1m",
+            "com.kfpun.nihongo.premium.3M",
+            "com.kfpun.nihongo.premium.6M",
+            "com.kfpun.nihongo.premium.12M",
+        ])
+        #expect(p.legacy.contains("com.kfpun.nihongo.premium.12m"))
+        #expect(!p.subscriptions.contains("com.kfpun.nihongo.premium.12m"))
+    }
+
     /// Mastering the free lessons opens the course's first band without paying.
     ///
     /// Three stars, not a pass: `Challenge.stars` awards three only for a clean 100%, so

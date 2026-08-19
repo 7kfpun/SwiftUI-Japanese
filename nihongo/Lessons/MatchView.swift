@@ -200,8 +200,7 @@ struct MatchView: View {
         // two tiles were wrong, short enough that it never feels like a penalty.
         .onChange(of: model.wrong) {
             guard model.wrong else { return }
-            Track.event("answer", ["screen": "match", "lesson": lessonNumber,
-                                   "correct": false])
+            Track.event("match_answer", ["lesson": lessonNumber, "correct": false])
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
                 withAnimation(.easeOut(duration: 0.15)) { model.clearMiss() }
             }
@@ -211,8 +210,7 @@ struct MatchView: View {
         // same word — an id that doesn't change wouldn't re-fire.
         .onChange(of: model.matched) {
             guard let id = model.lastMatched else { return }
-            Track.event("answer", ["screen": "match", "lesson": lessonNumber,
-                                   "correct": true])
+            Track.event("match_answer", ["lesson": lessonNumber, "correct": true])
             withAnimation(.easeOut(duration: 0.15)) { flashID = id }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                 // A later match may already be flashing; only clear our own.

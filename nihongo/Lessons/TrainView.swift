@@ -347,11 +347,12 @@ struct TrainView: View {
     private func decide(_ side: Int) {
         guard model.picked == nil, model.options.count > side else { return }
         model.choose(side)
-        // `from`/`to` ride along here and nowhere else, because Train is the one mode whose
-        // question the learner reshapes — an answer in kana→meaning is not the same
-        // exercise as the same word in audio→kana, and without the pair the correct rate
-        // averages the two into a number that describes neither. Both are `VForm.label`,
-        // stable ASCII keys, never the localized on-screen text.
+        // Its own name, like every mode — one event name per thing that happened, never
+        // one generic name split by a param. `from`/`to` ride along here and on the
+        // ladder, the two surfaces whose question changes shape: an answer in
+        // kana→meaning is not the same exercise as audio→kana, and without the pair the
+        // correct rate averages the two into a number that describes neither. Both are
+        // `VForm.label`, stable ASCII keys, never the localized on-screen text.
         Track.event("train_answer", ["correct": model.isCorrectOption(side),
                                      "lesson": lessonNumber,
                                      "from": model.from.label,

@@ -12,7 +12,14 @@ final class LearnModel {
     private(set) var answer: [String] = []
     private(set) var state: AnswerState = .inProgress
 
-    var current: Vocab { vocab[index] }
+    /// Guarded like `TrainModel` and `MatchModel`: a bad data regeneration must degrade
+    /// (an unplayable screen) rather than crash — and Learn was the one mode that trapped.
+    var current: Vocab {
+        vocab.indices.contains(index)
+            ? vocab[index]
+            : Vocab(lesson: 0, kanji: "", kana: "", romaji: "", dictionary: nil,
+                    useKana: false, translation: "", audio: nil, key: nil)
+    }
     var target: String { cleanWord(current.kana) }
     /// Some entries are sentence-length and exceed the tile cap (e.g. L14). Bail gracefully.
     var isPlayable: Bool { !tiles.isEmpty || target.count <= 15 }
@@ -46,9 +53,9 @@ final class LearnModel {
     }
 
     func clearAnswer() { answer = []; state = .inProgress }
-    func next()   { index = (index + 1) % vocab.count; loadTiles() }
-    func prev()   { index = (index - 1 + vocab.count) % vocab.count; loadTiles() }
-    func random() { index = Int.random(in: 0..<vocab.count); loadTiles() }
+    func next()   { guard !vocab.isEmpty else { return }; index = (index + 1) % vocab.count; loadTiles() }
+    func prev()   { guard !vocab.isEmpty else { return }; index = (index - 1 + vocab.count) % vocab.count; loadTiles() }
+    func random() { guard !vocab.isEmpty else { return }; index = Int.random(in: 0..<vocab.count); loadTiles() }
 }
 
 struct LearnView: View {
@@ -115,9 +122,6 @@ struct LearnView: View {
         // land on the card already showing.
         .onAppear { autoPlay(); Track.screen("learn", ["lesson": lessonNumber]) }
         .onChange(of: model.state) {
-            // `lesson` alongside `correct`, matching `train_answer`. Without it Learn was
-            // the one practice mode whose difficulty couldn't be read per lesson — the
-            // number is right there in `lessonNumber` and was simply never passed.
             if model.state == .correct {
                 Track.event("learn_answer", ["correct": true, "lesson": lessonNumber])
             } else if model.state == .wrong {
