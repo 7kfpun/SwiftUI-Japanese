@@ -28,13 +28,15 @@ struct ChallengeView: View {
     @State private var feedbackStars = 0
 
     private let lesson: Lesson
-    private let index: Int
     private let total: Int
+    /// The rung this view was pushed for. `@State`, not `let`, because the result screen
+    /// can walk forward to the next rung without popping — see `advanceToNext`.
+    @State private var index: Int
 
     init(lesson: Lesson, index: Int, total: Int) {
         self.lesson = lesson
-        self.index = index
         self.total = total
+        _index = State(initialValue: index)
         _model = State(initialValue: Self.makeModel(lesson: lesson, index: index, total: total))
     }
 
@@ -51,6 +53,39 @@ struct ChallengeView: View {
     private func restart() {
         model = Self.makeModel(lesson: lesson, index: index, total: total)
         recorded = false
+    }
+
+    /// Move on to the next rung without leaving the screen.
+    ///
+    /// The ladder's forward step used to cost a pop, a scan of the mode list and a push —
+    /// three taps to continue the loop the whole product is built on, on the screen where
+    /// momentum is highest. This rebuilds the model one rung up instead, exactly as
+    /// `restart` rebuilds it in place; `navigationTitle` reads `model.index`, so the title
+    /// follows for free, and `onAppear`'s `challenge_start` doesn't re-fire because the
+    /// view never disappeared — `advanceToNext` logs its own.
+    ///
+    /// Still a *button*, never automatic: `Router.openLesson` documents why dropping
+    /// someone into a scored test they didn't choose "produces abandons, not attempts",
+    /// and that reasoning holds just as well one rung later.
+    private func advanceToNext() {
+        guard model.passed, index < total else { return }
+        Track.event("challenge_next", ["lesson": lesson.number,
+                                       "from_index": index,
+                                       "stars": model.stars])
+        index += 1
+        model = Self.makeModel(lesson: lesson, index: index, total: total)
+        recorded = false
+    }
+
+    /// The forward step handed to the result screen, or nil on a lesson's last rung.
+    ///
+    /// Spelled out with an explicit type rather than inlined as a ternary at the call
+    /// site: `cond ? someMethod : nil` gives the type checker a method reference and an
+    /// untyped nil to reconcile inside a ViewBuilder, and it gives up — surfacing as an
+    /// "ambiguous use of toolbar(content:)" error thirty lines away.
+    private var nextAction: (() -> Void)? {
+        guard model.index < total else { return nil }
+        return { advanceToNext() }
     }
 
     var body: some View {
@@ -78,7 +113,8 @@ struct ChallengeView: View {
                 }
                 nextButton
             } else {
-                ChallengeResultView(model: model, lesson: lesson, total: total, retry: restart)
+                ChallengeResultView(model: model, lesson: lesson, total: total,
+                                    retry: restart, next: nextAction)
             }
         }
         .padding()
@@ -160,7 +196,8 @@ struct ChallengeView: View {
         // this app's wrapper; the modifier form is used rather than a `ShareLink` because
         // the trigger is a button inside a sheet that no longer exists by then.
         .shareSheet(isPresented: $showShareSheet,
-                    items: [SharePrompt.appStoreURL, SharePrompt.shareText()])
+                    items: [SharePrompt.appStoreURL(campaign: .prompt),
+                                            SharePrompt.shareText(campaign: .prompt)])
     }
 
     /// Persist the result once. Guarded because `isDone` can re-fire on redraws and a
@@ -315,6 +352,10 @@ private struct ChallengeResultView: View {
     let lesson: Lesson
     let total: Int
     let retry: () -> Void
+    /// Advance to the next rung in place. Nil on the last rung of a lesson, which is
+    /// what makes "Lesson complete!" the end of the road rather than a button that
+    /// walks off the end of the ladder.
+    let next: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.pronouncer) private var pronouncer
@@ -376,12 +417,15 @@ private struct ChallengeResultView: View {
                     .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
                 }
 
-                // Retry leads after a miss — the words to fix are right there on
-                // screen. After a pass it stays available but steps back, so the
-                // forward path is obvious while chasing the third star is still easy.
+                // After a pass the forward step leads and everything else steps back:
+                // continuing is the common intent, and it used to be the only one that
+                // cost a pop and a hunt. After a miss, retry leads instead — the words to
+                // fix are right there on screen — and no forward button is offered at
+                // all, because the next rung isn't unlocked yet.
                 VStack(spacing: 10) {
+                    if model.passed, let next { nextButton(next) }
                     retryButton(prominent: !model.passed)
-                    doneButton(prominent: model.passed)
+                    doneButton(prominent: model.passed && model.index >= total)
                 }
             }
             .padding(.vertical, 8)
@@ -424,6 +468,21 @@ private struct ChallengeResultView: View {
         phrase = choice
         guard soundOn else { return }
         pronouncer.speak(cheer: choice)
+    }
+
+    /// The forward step. Prominent, and worded as encouragement rather than navigation —
+    /// "Next challenge" describes the app's structure, "Keep the run going" describes
+    /// what the learner is actually doing, and this is the one screen where they've just
+    /// earned the right to hear it.
+    @ViewBuilder
+    private func nextButton(_ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(L.t("Keep going — Challenge %@", "\(model.index + 1)"),
+                  systemImage: "arrow.right.circle.fill")
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
     }
 
     @ViewBuilder

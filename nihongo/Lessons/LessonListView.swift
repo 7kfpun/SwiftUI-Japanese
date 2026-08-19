@@ -16,6 +16,13 @@ struct LessonListView: View {
 
     private static let groups = Course.current.groups
 
+    /// Search hits for the current query.
+    ///
+    /// **Evaluate this once per body pass**, into a `let`, and use that for both the rows
+    /// and the count — see `body`. Each call rebuilds the flattened corpus and lowercases
+    /// four fields per entry, which is ~8k allocations for Minna and ~32k for JLPT; read
+    /// as a computed property from three places it ran that three times per keystroke and
+    /// stuttered the keyboard.
     private var results: [Vocab] { searchVocab(query, in: VocabStore.allVocab(language)) }
 
     var body: some View {
@@ -44,14 +51,16 @@ struct LessonListView: View {
                             }
                         }
                     } else {
+                        // One evaluation, shared by the rows and the header count.
+                        let hits = results
                         Section {
-                            ForEach(results) { v in
+                            ForEach(hits) { v in
                                 VocabRow(vocab: v, showLesson: true)
                             }
                         } header: {
                             // Spelled out rather than `Section(_ title:)` so the count
                             // can take the section-header face like every other header.
-                            Text(L.t("%@ results", "\(results.count)"))
+                            Text(L.t("%@ results", "\(hits.count)"))
                                 .font(Theme.title(.footnote))
                         }
                     }
@@ -67,11 +76,15 @@ struct LessonListView: View {
             .textInputAutocapitalization(.never)
             .onChange(of: query) {
                 searchDebounce?.cancel()
-                let q = query, count = results.count
+                let q = query
                 searchDebounce = Task {
                     try? await Task.sleep(for: .milliseconds(600))
                     guard !Task.isCancelled, !q.isEmpty else { return }
-                    Track.event("search_vocab", ["query_length": q.count, "results": count])
+                    // Counted *inside* the debounce. Reading `results.count` here cost a
+                    // whole extra corpus pass on every keystroke, to fill a param on an
+                    // event that only fires once the typing stops.
+                    Track.event("search_vocab", ["query_length": q.count,
+                                                 "results": searchVocab(q, in: VocabStore.allVocab(language)).count])
                 }
             }
         }

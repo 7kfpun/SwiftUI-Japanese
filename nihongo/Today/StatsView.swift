@@ -24,7 +24,7 @@ struct StatsView: View {
     /// follows `Course.current` — 50 lessons of Minna or 201 of JLPT — with no constant
     /// to keep in step.
     private var challengesTotal: Int {
-        VocabStore.lessons().reduce(0) { $0 + Challenge.count(wordCount: $1.entries.count) }
+        (1...Course.current.lessonCount).reduce(0) { $0 + Challenge.count(wordCount: VocabStore.wordCount($1)) }
     }
 
     /// Distinct kana cells in the chart, counted rather than hardcoded: the chart is
@@ -107,7 +107,7 @@ struct StatsView: View {
                 .scaledToFit()
                 .frame(maxWidth: 180)
                 .foregroundStyle(Theme.accent.opacity(0.7))
-            Text(L.t("Answer anything to start a streak."))
+            Text(L.t("Take a challenge or a kana quiz to start a streak."))
                 .font(Theme.title(.subheadline, weight: .regular))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

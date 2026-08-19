@@ -133,9 +133,78 @@ struct DataTests {
     /// The share text must carry *this* app's listing. Two apps, two listings, and a
     /// recommendation pointing at the other one would look like it worked.
     @Test func shareLinkPointsAtThisCoursesListing() {
-        #expect(SharePrompt.appStoreURL.absoluteString == Course.current.appStoreURL)
-        #expect(SharePrompt.shareText().contains(Course.current.appStoreURL))
+        #expect(SharePrompt.appStoreURL().absoluteString == Course.current.appStoreURL)
         #expect(Course.minna.appStoreURL != Course.jlpt.appStoreURL)
+
+        // Every share carries a campaign token, and every token still resolves to this
+        // course's listing — a tagged link that pointed at the other app, or dropped the
+        // path while adding the query, would look fine and send installs elsewhere.
+        for campaign in [SharePrompt.Campaign.prompt, .settings] {
+            let url = SharePrompt.appStoreURL(campaign: campaign)
+            #expect(url.absoluteString.hasPrefix(Course.current.appStoreURL))
+            #expect(SharePrompt.shareText(campaign: campaign).contains(url.absoluteString))
+
+            let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+            #expect(items.first { $0.name == "ct" }?.value == campaign.rawValue)
+            // Apple caps `ct` at 40 characters and silently truncates past it, which
+            // would merge two campaigns into one row in App Analytics.
+            #expect(campaign.rawValue.count <= 40)
+            // `utm_*` is inert on apps.apple.com — if one ever appears here it means
+            // someone reached for the Google convention and got no reporting at all.
+            #expect(!items.contains { $0.name.hasPrefix("utm_") })
+        }
+
+        // Distinct tokens, or the whole exercise reports one undifferentiated number.
+        #expect(SharePrompt.Campaign.prompt.rawValue != SharePrompt.Campaign.settings.rawValue)
+    }
+
+    /// The analytics profile carries what only the app knows, and nothing that could
+    /// identify anyone.
+    ///
+    /// A predecessor of this app shipped fifteen user properties duplicating dimensions
+    /// GA4 collects on its own (device model, OS, screen, locale, app version) plus a
+    /// `user_id` and a `deviceId` both holding `identifierForVendor`. Both mistakes are
+    /// worth a test: the duplicates spend from a hard cap of 25 properties, and the
+    /// identifier is the thing this codebase exists not to send.
+    @Test func analyticsProfileSegmentsWithoutIdentifying() {
+        let p = Track.profile(uiLanguage: "zh-Hant", meaningLanguage: "vi",
+                              knowsKana: "both", goal: "travel", earnedFirstGroup: true)
+
+        #expect(p["ui_language"] == "zh-Hant")
+        // The two language settings are independent by design; collapsing them into one
+        // property would lose the configuration this app is unusual for supporting.
+        #expect(p["meaning_language"] == "vi")
+        #expect(p["knows_kana"] == "both")
+        #expect(p["learning_goal"] == "travel")
+        #expect(p["earned_first_group"] == "true")
+
+        // A skipped intro answer is its own segment, not a missing key.
+        let skipped = Track.profile(uiLanguage: "en", meaningLanguage: "en",
+                                    knowsKana: nil, goal: nil, earnedFirstGroup: false)
+        #expect(skipped["knows_kana"] == "unanswered")
+        #expect(skipped["learning_goal"] == "unanswered")
+        #expect(skipped["earned_first_group"] == "false")
+        #expect(Set(p.keys) == Set(skipped.keys))     // same shape either way
+
+        // GA4 caps a value at 36 characters and truncates silently past it.
+        let long = Track.profile(uiLanguage: String(repeating: "x", count: 80),
+                                 meaningLanguage: "en", knowsKana: nil, goal: nil,
+                                 earnedFirstGroup: false)
+        #expect(long["ui_language"]?.count == 36)
+        #expect(p.values.allSatisfy { $0.count <= 36 })
+
+        // Nothing here may name or resemble an identifier, and nothing may duplicate a
+        // dimension GA4 already collects for free.
+        let forbidden = ["user_id", "device_id", "deviceid", "instance_id", "instanceid",
+                         "idfv", "idfa", "vendor_id", "install_id",
+                         "device_model", "os_version", "app_version", "app_build",
+                         "screen_width", "screen_height", "locale", "timezone", "country"]
+        for name in p.keys {
+            #expect(!forbidden.contains(name), "\(name) is an identifier or a GA4 duplicate")
+            // lower_snake_case, per the house rule.
+            #expect(name == name.lowercased())
+            #expect(!name.contains(" "))
+        }
     }
 
     @Test func meaningLocalesAreSpeakableTags() {
@@ -584,6 +653,40 @@ struct PremiumTests {
         ])
         #expect(p.legacy.contains("com.kfpun.nihongo.premium.12m"))
         #expect(!p.subscriptions.contains("com.kfpun.nihongo.premium.12m"))
+    }
+
+    /// `premium_tier` reports one of five plan labels, and nothing else.
+    ///
+    /// The label names the plan, not the SKU: the burned 2019 IDs differ from the current
+    /// lineup only in case, and folding each onto its current twin is deliberate. What
+    /// this pins is that the *set* stays closed — a new product whose ID ends in anything
+    /// unexpected would quietly introduce a sixth label that no dashboard is grouped by.
+    @Test func premiumTierUsesTheFivePlanLabels() {
+        let p = Course.minna.products
+        let expected: Set<String> = ["1m", "3m", "6m", "12m", "lifetime"]
+
+        #expect(Store.tierLabel(p.lifetime) == "lifetime")
+        // Case-folded onto one bucket on purpose — a legacy 12-month subscriber and a new
+        // one are the same plan to every question this label answers.
+        #expect(Store.tierLabel("com.kfpun.nihongo.premium.12M") == "12m")
+        #expect(Store.tierLabel("com.kfpun.nihongo.premium.12m") == "12m")
+
+        // `Course.current` only: `tierLabel` compares against the *running* course's
+        // lifetime ID, so JLPT's `premium.forever` only reads as "lifetime" in a JLPT
+        // build. Checking the other course's IDs here would assert against a mapping
+        // that never happens.
+        let labels = Set(PremiumProduct.all.map(Store.tierLabel))
+        #expect(labels.isSubset(of: expected), "unexpected tier label in \(labels)")
+        #expect(labels.allSatisfy { $0 == $0.lowercased() })
+
+        // Simultaneous entitlements resolve to one stable answer. `currentEntitlements`
+        // promises no order, so this used to depend on which arrived last.
+        #expect(Store.tier(from: []) == "none")
+        let both = [p.subscriptions[0], p.lifetime]
+        #expect(Store.tier(from: both) == "lifetime")
+        #expect(Store.tier(from: both.reversed()) == "lifetime")
+        let subs = Array(p.subscriptions.prefix(2))
+        #expect(Store.tier(from: subs) == Store.tier(from: subs.reversed()))
     }
 
     /// Mastering the free lessons opens the course's first band without paying.

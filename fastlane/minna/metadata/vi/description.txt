@@ -5,10 +5,11 @@ Học tiếng Nhật một cách thông minh — kana, từ vựng và luyện n
 KANA — TRỌN BỘ, MIỄN PHÍ
 Bảng hiragana và katakana đầy đủ, cùng năm cách luyện: thẻ ghi nhớ, trắc nghiệm bốn đáp án, trắc nghiệm vuốt, luyện nghe và viết tay — viết một chữ kana và được chấm theo thứ tự nét thật, tính cả số nét. Mỗi ô đều nhớ lần trước bạn làm thế nào.
 
-50 BÀI, BỐN CÁCH LUYỆN
+Minna 50 BÀI, NĂM CÁCH LUYỆN
 • Danh sách từ — xem và nghe từng từ
 • Thẻ ghi nhớ — vuốt để tách những từ đã thuộc
 • Luyện nhanh — chọn nhanh giữa hai đáp án
+• Ghép cặp — nối mỗi từ với nghĩa của nó
 • Học — ghép cách đọc từ các ô kana
 
 RỒI CHỨNG MINH: THANG THỬ THÁCH
@@ -20,14 +21,14 @@ Học vào bất kỳ ngày nào và chuỗi của bạn dài thêm. Đồng h�
 ĐÁNH DẤU TỪ KHÓ NHỚ
 Chạm ngôi sao bên cạnh từ bất kỳ — một, hai hoặc ba lần — và từ đó vào mục Đã lưu, xếp nhóm theo mức độ còn phải luyện.
 
-ÂM THANH TỰ NHIÊN
-Mọi từ và mọi kana đều được đọc rõ ràng. Chạm vào đâu cũng nghe được, hoặc để cả bài tự phát, rảnh tay.
+ÂM THANH RÕ RÀNG CHO MỌI TỪ
+Mỗi từ và mỗi kana đều có bản ghi riêng, đọc bằng giọng tổng hợp rõ ràng. Chạm vào đâu cũng nghe được, hoặc để cả bài tự phát, rảnh tay.
 
 HÔM NAY, TRÊN MỌI MÀN HÌNH
 Thẻ Hôm nay chia đúng những từ mà thử thách kế tiếp sẽ hỏi. Cũng bộ thẻ đó nằm trên Màn hình khoá, Màn hình chính và Apple Watch.
 
 HỌC BẰNG NGÔN NGỮ CỦA BẠN
-Giao diện và nghĩa của từ có 18 ngôn ngữ, và bạn đặt riêng từng thứ.
+Giao diện và nghĩa của từ có 19 ngôn ngữ, và bạn đặt riêng từng thứ.
 
 TIẾN ĐỘ ĐI THEO BẠN
 Sao và mức thuộc kana được đồng bộ giữa các thiết bị của bạn qua iCloud.

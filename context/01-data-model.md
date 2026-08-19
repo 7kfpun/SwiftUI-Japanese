@@ -16,7 +16,7 @@ minna/
   vocab/kana.json        the kana chart: grid layout (row/col), stroke counts, audio paths
   audio/<voice>/…        source clips per voice (kyoko, kenzaki, whitecul), by relative path
   en|zh|zh-Hant|vi|de|th|my|es|fr|ru|bn|hi|ta|te|fil|id|ko/{1..50}.json
-                         translations, keyed by romaji — 18 languages total
+                         translations, keyed by romaji — 19 languages total
 ```
 
 `romaji` is the join key between a lesson's `vocab/{n}.json` and its translation
@@ -47,7 +47,7 @@ python3 scripts/build-minna-data.py
 It reads `minna/` and writes into `nihongo/Resources/`:
 
 - **`MinnaData.json`** (git-ignored, regenerated) — one JSON file: `languages`
-  (the 18 codes), `lessons` (50 × `{number, entries}`, each entry has
+  (the 19 codes), `lessons` (50 × `{number, entries}`, each entry has
   `kanji/kana/romaji/dictionary?/useKana?/audio?`), and `translations`
   (`lang → lessonNumber(as string) → romaji → text`).
 - **`KanaChart.json`** (git-ignored, regenerated) — `minna/vocab/kana.json` copied **verbatim**:
@@ -81,7 +81,7 @@ Counted from `MinnaData.json`, not from memory:
 | Vocab entries | 2089 |
 | Entries with a bundled clip | 2089 (all of them) |
 | Words per lesson | 17 (min) – 63 (max) |
-| Languages | 18 |
+| Languages | 19 |
 | Resolved translation strings | 35 513 |
 
 The shipped set is **18** (`en, zh, zh-Hant, vi, de, th, my, es, fr, ru, bn,
@@ -278,7 +278,7 @@ fail loudly if `build-minna-data.py`'s output shape changes. `DataTests` pins: e
 2089 vocab entries across lessons 1…50, all of them with a bundled audio clip,
 globally-unique `Vocab.id`, at least 4 distinct kana readings per lesson (a quiz needs 4
 options), one named clip that actually decodes, a bundled clip for *every* kana cell, and
-non-empty translations for lesson 1 in all 18 languages. `KanaTests` pins the 46/25/33
+non-empty translations for lesson 1 in all 19 languages. `KanaTests` pins the 46/25/33
 chart counts and the 74-entry pools; `KanaSketchTests.strokeCountsCoverEveryDrawableKana`
 pins a stroke count on every drawable cell.
 

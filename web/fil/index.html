@@ -14,7 +14,7 @@
 </script>
 
 <title>Japanese Daily 每日日本語 — Matuto ng Japanese, kaunti bawat araw</title>
-<meta name="description" content="Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,089 salita sa 18 wika, hiragana at katakana na may audio. Libre sa iPhone at iPad.">
+<meta name="description" content="Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,089 salita sa 19 wika, hiragana at katakana na may audio. Libre sa iPhone at iPad.">
 <link rel="icon" href="/img/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="icon" href="/img/icon-512.png" sizes="512x512" type="image/png">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
@@ -29,6 +29,7 @@
 <link rel="alternate" hreflang="my" href="https://japanesedaily.wahthefox.com/my/">
 <link rel="alternate" hreflang="es" href="https://japanesedaily.wahthefox.com/es/">
 <link rel="alternate" hreflang="fr" href="https://japanesedaily.wahthefox.com/fr/">
+<link rel="alternate" hreflang="it" href="https://japanesedaily.wahthefox.com/it/">
 <link rel="alternate" hreflang="ru" href="https://japanesedaily.wahthefox.com/ru/">
 <link rel="alternate" hreflang="bn" href="https://japanesedaily.wahthefox.com/bn/">
 <link rel="alternate" hreflang="hi" href="https://japanesedaily.wahthefox.com/hi/">
@@ -42,7 +43,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Japanese Daily 每日日本語">
 <meta property="og:title" content="Japanese Daily 每日日本語 — Matuto ng Japanese, kaunti bawat araw">
-<meta property="og:description" content="Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,089 salita sa 18 wika, hiragana at katakana na may audio. Libre sa iPhone at iPad.">
+<meta property="og:description" content="Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,089 salita sa 19 wika, hiragana at katakana na may audio. Libre sa iPhone at iPad.">
 <meta property="og:url" content="https://japanesedaily.wahthefox.com/fil/">
 <meta property="og:locale" content="fil_PH">
 <meta property="og:locale:alternate" content="en_US">
@@ -54,6 +55,7 @@
 <meta property="og:locale:alternate" content="my_MM">
 <meta property="og:locale:alternate" content="es_ES">
 <meta property="og:locale:alternate" content="fr_FR">
+<meta property="og:locale:alternate" content="it_IT">
 <meta property="og:locale:alternate" content="ru_RU">
 <meta property="og:locale:alternate" content="bn_BD">
 <meta property="og:locale:alternate" content="hi_IN">
@@ -70,7 +72,7 @@
 <meta property="og:image:alt" content="Ang Japanese Daily app sa iPhone — ang talahanayan ng kana, ang salita ngayong araw at isang flashcard ng bokabularyo.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Japanese Daily 每日日本語 — Matuto ng Japanese, kaunti bawat araw">
-<meta name="twitter:description" content="Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,089 salita sa 18 wika, hiragana at katakana na may audio. Libre sa iPhone at iPad.">
+<meta name="twitter:description" content="Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,089 salita sa 19 wika, hiragana at katakana na may audio. Libre sa iPhone at iPad.">
 <meta name="twitter:image" content="https://japanesedaily.wahthefox.com/img/og-card.png">
 <meta name="twitter:image:alt" content="Ang Japanese Daily app sa iPhone — ang talahanayan ng kana, ang salita ngayong araw at isang flashcard ng bokabularyo.">
 <script type="application/ld+json">
@@ -80,7 +82,7 @@
   "name": "Japanese Daily 每日日本語",
   "operatingSystem": "iOS",
   "applicationCategory": "EducationalApplication",
-  "description": "Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,089 salita sa 18 wika, hiragana at katakana na may audio. Libre sa iPhone at iPad.",
+  "description": "Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,089 salita sa 19 wika, hiragana at katakana na may audio. Libre sa iPhone at iPad.",
   "inLanguage": "fil",
   "image": "https://japanesedaily.wahthefox.com/img/og-card.png",
   "url": "https://japanesedaily.wahthefox.com/fil/",
@@ -118,7 +120,7 @@
       "name": "Anong mga wika ang suportado?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Ang bokabularyo at ang interface mismo ng app ay available sa 18 wika, mula English at Spanish hanggang Vietnamese, Hindi, at Korean — piliin lang ang wikang iniisip mo."
+        "text": "Ang bokabularyo at ang interface mismo ng app ay available sa 19 wika, mula English at Spanish hanggang Vietnamese, Hindi, at Korean — piliin lang ang wikang iniisip mo."
       }
     },
     {
@@ -232,6 +234,18 @@
     font-weight: 600;
     color: var(--accent);
     margin-top: 0.4rem;
+  }
+  /* Inside the h1 so the page's strongest heading contains the words people
+     actually search for — the brand alone matched nothing but the brand. Visible
+     and readable, never hidden text, which search engines treat as spam. */
+  .hero h1 .h1-sub {
+    display: block;
+    font-size: clamp(1rem, 2.2vw, 1.25rem);
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.35;
+    color: var(--fg-muted);
+    margin-top: 0.7rem;
   }
   .hero p.tagline {
     margin: 1.4rem auto 0;
@@ -819,6 +833,7 @@
       <span class="hero-kicker"><span class="jp">毎日、少しずつ</span> — kaunti bawat araw</span>
       <h1>Japanese Daily
         <span class="jp-name jp">每日日本語</span>
+        <span class="h1-sub">Matuto ng Hapon: hiragana, katakana at JLPT N5–N4</span>
       </h1>
       <p class="tagline">2,089 salita, kumpletong talahanayan ng hiragana at katakana, flashcards, pagsasanay sa pagsulat, at hagdan ng mga hamon na may puntos — lahat sa isang magandang iOS app.</p>
       <div class="cta">
@@ -868,7 +883,7 @@
     <article class="frow">
       <div class="fcopy">
         <span class="fnum">02</span>
-        <h3>Bokabularyo sa 18 wika</h3>
+        <h3>Bokabularyo sa 19 wika</h3>
         <p>Matuto sa wikang iniisip mo — Filipino, English, Chinese, Spanish, at higit pa.</p>
       </div>
       <div class="fviz">
@@ -1041,7 +1056,7 @@
       </details>
       <details class="faq-item">
         <summary>Anong mga wika ang suportado?</summary>
-        <p>Ang bokabularyo at ang interface mismo ng app ay available sa 18 wika, mula English at Spanish hanggang Vietnamese, Hindi, at Korean — piliin lang ang wikang iniisip mo.</p>
+        <p>Ang bokabularyo at ang interface mismo ng app ay available sa 19 wika, mula English at Spanish hanggang Vietnamese, Hindi, at Korean — piliin lang ang wikang iniisip mo.</p>
       </details>
       <details class="faq-item">
         <summary>Base ba ito sa isang tunay na aklat-aralin?</summary>
@@ -1078,6 +1093,7 @@
       <a href="/my/">မြန်မာ</a>
       <a href="/es/">Español</a>
       <a href="/fr/">Français</a>
+      <a href="/it/">Italiano</a>
       <a href="/ru/">Русский</a>
       <a href="/bn/">বাংলা</a>
       <a href="/hi/">हिन्दी</a>

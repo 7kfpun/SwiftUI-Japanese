@@ -14,7 +14,7 @@
 </script>
 
 <title>Japanese Daily 每日日本語 — Aprende japonés, un poco cada día</title>
-<meta name="description" content="Aprende japonés cada día: las 50 lecciones de Minna no Nihongo — 2.089 palabras en 18 idiomas, hiragana y katakana con audio. Gratis en iPhone y iPad.">
+<meta name="description" content="Aprende japonés cada día: las 50 lecciones de Minna no Nihongo — 2.089 palabras en 19 idiomas, hiragana y katakana con audio. Gratis en iPhone y iPad.">
 <link rel="icon" href="/img/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="icon" href="/img/icon-512.png" sizes="512x512" type="image/png">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
@@ -29,6 +29,7 @@
 <link rel="alternate" hreflang="my" href="https://japanesedaily.wahthefox.com/my/">
 <link rel="alternate" hreflang="es" href="https://japanesedaily.wahthefox.com/es/">
 <link rel="alternate" hreflang="fr" href="https://japanesedaily.wahthefox.com/fr/">
+<link rel="alternate" hreflang="it" href="https://japanesedaily.wahthefox.com/it/">
 <link rel="alternate" hreflang="ru" href="https://japanesedaily.wahthefox.com/ru/">
 <link rel="alternate" hreflang="bn" href="https://japanesedaily.wahthefox.com/bn/">
 <link rel="alternate" hreflang="hi" href="https://japanesedaily.wahthefox.com/hi/">
@@ -42,7 +43,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Japanese Daily 每日日本語">
 <meta property="og:title" content="Japanese Daily 每日日本語 — Aprende japonés, un poco cada día">
-<meta property="og:description" content="Aprende japonés cada día: las 50 lecciones de Minna no Nihongo — 2.089 palabras en 18 idiomas, hiragana y katakana con audio. Gratis en iPhone y iPad.">
+<meta property="og:description" content="Aprende japonés cada día: las 50 lecciones de Minna no Nihongo — 2.089 palabras en 19 idiomas, hiragana y katakana con audio. Gratis en iPhone y iPad.">
 <meta property="og:url" content="https://japanesedaily.wahthefox.com/es/">
 <meta property="og:locale" content="es_ES">
 <meta property="og:locale:alternate" content="en_US">
@@ -53,6 +54,7 @@
 <meta property="og:locale:alternate" content="th_TH">
 <meta property="og:locale:alternate" content="my_MM">
 <meta property="og:locale:alternate" content="fr_FR">
+<meta property="og:locale:alternate" content="it_IT">
 <meta property="og:locale:alternate" content="ru_RU">
 <meta property="og:locale:alternate" content="bn_BD">
 <meta property="og:locale:alternate" content="hi_IN">
@@ -70,7 +72,7 @@
 <meta property="og:image:alt" content="La app Japanese Daily en iPhone: la tabla de kana, la palabra del día y una tarjeta de vocabulario.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Japanese Daily 每日日本語 — Aprende japonés, un poco cada día">
-<meta name="twitter:description" content="Aprende japonés cada día: las 50 lecciones de Minna no Nihongo — 2.089 palabras en 18 idiomas, hiragana y katakana con audio. Gratis en iPhone y iPad.">
+<meta name="twitter:description" content="Aprende japonés cada día: las 50 lecciones de Minna no Nihongo — 2.089 palabras en 19 idiomas, hiragana y katakana con audio. Gratis en iPhone y iPad.">
 <meta name="twitter:image" content="https://japanesedaily.wahthefox.com/img/og-card.png">
 <meta name="twitter:image:alt" content="La app Japanese Daily en iPhone: la tabla de kana, la palabra del día y una tarjeta de vocabulario.">
 <script type="application/ld+json">
@@ -80,7 +82,7 @@
   "name": "Japanese Daily 每日日本語",
   "operatingSystem": "iOS",
   "applicationCategory": "EducationalApplication",
-  "description": "Aprende japonés cada día: las 50 lecciones de Minna no Nihongo — 2.089 palabras en 18 idiomas, hiragana y katakana con audio. Gratis en iPhone y iPad.",
+  "description": "Aprende japonés cada día: las 50 lecciones de Minna no Nihongo — 2.089 palabras en 19 idiomas, hiragana y katakana con audio. Gratis en iPhone y iPad.",
   "inLanguage": "es",
   "image": "https://japanesedaily.wahthefox.com/img/og-card.png",
   "url": "https://japanesedaily.wahthefox.com/es/",
@@ -118,7 +120,7 @@
       "name": "¿Qué idiomas admite?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Tanto el vocabulario como la interfaz de la app están disponibles en 18 idiomas, desde inglés y español hasta vietnamita, hindi y coreano — elige el idioma en el que piensas."
+        "text": "Tanto el vocabulario como la interfaz de la app están disponibles en 19 idiomas, desde inglés y español hasta vietnamita, hindi y coreano — elige el idioma en el que piensas."
       }
     },
     {
@@ -232,6 +234,18 @@
     font-weight: 600;
     color: var(--accent);
     margin-top: 0.4rem;
+  }
+  /* Inside the h1 so the page's strongest heading contains the words people
+     actually search for — the brand alone matched nothing but the brand. Visible
+     and readable, never hidden text, which search engines treat as spam. */
+  .hero h1 .h1-sub {
+    display: block;
+    font-size: clamp(1rem, 2.2vw, 1.25rem);
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.35;
+    color: var(--fg-muted);
+    margin-top: 0.7rem;
   }
   .hero p.tagline {
     margin: 1.4rem auto 0;
@@ -819,6 +833,7 @@
       <span class="hero-kicker"><span class="jp">毎日、少しずつ</span> — un poco cada día</span>
       <h1>Japanese Daily
         <span class="jp-name jp">每日日本語</span>
+        <span class="h1-sub">Aprende japonés: hiragana, katakana y JLPT N5–N4</span>
       </h1>
       <p class="tagline">2.089 palabras, las tablas completas de hiragana y katakana, tarjetas, práctica de escritura y una escalera de retos con nota — todo en una preciosa app para iOS.</p>
       <div class="cta">
@@ -868,7 +883,7 @@
     <article class="frow">
       <div class="fcopy">
         <span class="fnum">02</span>
-        <h3>Vocabulario en 18 idiomas</h3>
+        <h3>Vocabulario en 19 idiomas</h3>
         <p>Aprende en el idioma en el que piensas — español, inglés, 中文, français y más.</p>
       </div>
       <div class="fviz">
@@ -1041,7 +1056,7 @@
       </details>
       <details class="faq-item">
         <summary>¿Qué idiomas admite?</summary>
-        <p>Tanto el vocabulario como la interfaz de la app están disponibles en 18 idiomas, desde inglés y español hasta vietnamita, hindi y coreano — elige el idioma en el que piensas.</p>
+        <p>Tanto el vocabulario como la interfaz de la app están disponibles en 19 idiomas, desde inglés y español hasta vietnamita, hindi y coreano — elige el idioma en el que piensas.</p>
       </details>
       <details class="faq-item">
         <summary>¿Se basa en un libro de texto real?</summary>
@@ -1078,6 +1093,7 @@
       <a href="/my/">မြန်မာ</a>
       <a href="/es/" aria-current="true">Español</a>
       <a href="/fr/">Français</a>
+      <a href="/it/">Italiano</a>
       <a href="/ru/">Русский</a>
       <a href="/bn/">বাংলা</a>
       <a href="/hi/">हिन्दी</a>

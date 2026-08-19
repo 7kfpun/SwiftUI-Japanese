@@ -24,7 +24,7 @@ KEEP THE STREAK
 A day counts when you answer something, not when you open the app. The Progress tab shows your streak, your record, the days you've studied, and how far up the ladder you've climbed.
 
 STUDY IN YOUR LANGUAGE
-The interface is available in 18 languages. Word meanings are in English, Simplified and Traditional Chinese, and Vietnamese.
+The interface is available in 19 languages. Word meanings are in English, Simplified and Traditional Chinese, and Vietnamese.
 
 YOUR PROGRESS FOLLOWS YOU
 Stars and kana mastery sync across your devices through iCloud.

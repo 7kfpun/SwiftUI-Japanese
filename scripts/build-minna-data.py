@@ -35,7 +35,7 @@ SRC  = os.path.join(SUB, "minna")
 ROOT = os.path.join(REPO, "nihongo", "Resources")
 VOCAB_DST = os.path.join(ROOT, "audio", "vocab")
 KANA_DST  = os.path.join(ROOT, "audio", "kana")
-LANGS = ["en", "zh", "zh-Hant", "vi", "de", "th", "my", "es", "fr", "ru", "bn", "hi", "ta", "te", "ne", "fil", "id", "ko"]
+LANGS = ["en", "zh", "zh-Hant", "vi", "de", "th", "my", "es", "fr", "ru", "bn", "hi", "ta", "te", "ne", "it", "fil", "id", "ko"]
 
 # Voices. The submodule ships three for minna: `kyoko` (macOS `say`, concatenative) and
 # two VOICEVOX neural voices. VOICEVOX is a generation ahead on naturalness and pitch

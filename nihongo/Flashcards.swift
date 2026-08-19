@@ -126,13 +126,36 @@ struct FlashcardScreen<Element, Face: View>: View {
         }
     }
 
+    /// Mastered / remaining / total, built the same way `ScoreBadge` builds its counts.
+    ///
+    /// **`Image` + `Text`, never `Label`.** A `Label` in a toolbar's principal slot picks
+    /// up `.iconOnly` from the toolbar's own label style, so the numbers silently
+    /// vanished and the header read as two bare icons and a stray "/ 35". The capsule and
+    /// `fixedSize` come from `ScoreBadge` too — this sits in the same slot on the same
+    /// kind of screen, and a counter the toolbar is free to compress is one that will be.
     private var progress: some View {
         HStack(spacing: 14) {
-            Label("\(deck.mastered)", systemImage: "checkmark.circle.fill").foregroundStyle(Theme.correct)
-            Label("\(deck.remaining)", systemImage: "rectangle.stack.fill").foregroundStyle(Theme.accent)
-            Text("/ \(deck.total)").foregroundStyle(.secondary)
+            stat("checkmark", deck.mastered, Theme.correct)
+            stat("rectangle.stack.fill", deck.remaining, Theme.accent)
+            Text("/ \(deck.total)")
+                .font(.footnote.weight(.medium).monospacedDigit())
+                .foregroundStyle(.secondary)
         }
-        .font(.subheadline.weight(.semibold).monospacedDigit())
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
+        .background(Capsule().fill(Color(.tertiarySystemFill)))
+        .fixedSize()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(deck.mastered) done, \(deck.remaining) left, \(deck.total) total")
+    }
+
+    private func stat(_ icon: String, _ n: Int, _ color: Color) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: icon).imageScale(.small)
+            Text("\(n)").monospacedDigit()
+        }
+        .font(.footnote.weight(.semibold))
+        .foregroundStyle(color)
     }
 
     /// The peek stack is a static backdrop — only `topCard` moves. Applying the

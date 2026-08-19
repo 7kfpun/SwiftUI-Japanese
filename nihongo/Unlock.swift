@@ -36,6 +36,18 @@ final class Unlock {
         let earned = ChallengeResult.hasEarnedFirstGroup(context: context)
         if earned && !earnedFirstGroup { justEarned = true }
         earnedFirstGroup = earned
+
+        // The analytics profile is refreshed from here because this is the one place that
+        // runs often *and* holds the only value not in `UserDefaults` — everything else is
+        // read straight off the defaults below. `Track.setProfile` skips unchanged values,
+        // so calling it on every Today appear costs nothing.
+        let defaults = UserDefaults.standard
+        Track.setProfile(uiLanguage: L.current,
+                         meaningLanguage: defaults.string(forKey: Pref.translationLanguage)
+                             ?? VocabStore.deviceDefaultLanguage,
+                         knowsKana: defaults.string(forKey: Pref.knowsKana),
+                         goal: defaults.string(forKey: Pref.goal),
+                         earnedFirstGroup: earned)
     }
 
     func acknowledge() { justEarned = false }

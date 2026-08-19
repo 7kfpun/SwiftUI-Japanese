@@ -209,7 +209,8 @@ struct DiagnosticsView: View {
                 ShareSheetPrompt { showShareSheet = true }
             }
             .shareSheet(isPresented: $showShareSheet,
-                        items: [SharePrompt.appStoreURL, SharePrompt.shareText()])
+                        items: [SharePrompt.appStoreURL(campaign: .prompt),
+                                            SharePrompt.shareText(campaign: .prompt)])
         }
     }
 

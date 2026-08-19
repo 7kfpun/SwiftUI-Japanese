@@ -49,7 +49,7 @@ enum VocabStore {
     /// the build script's `LANGS`/`ORDER` happened to be, and the meanings picker sitting
     /// in a different order from the interface picker made two lists of the same
     /// languages look unrelated. See `L.languageOrder`.
-    static var availableLanguages: [String] { L.ordered(data.languages) }
+    static let availableLanguages: [String] = L.ordered(data.languages)
 
     private static func build(_ language: String) -> [Lesson] {
         // Fall back to English wholesale rather than per-entry: a stored preference can
@@ -107,6 +107,22 @@ enum VocabStore {
         return Bundle.main.url(forResource: name + voice.suffix, withExtension: "m4a")
             ?? Bundle.main.url(forResource: name, withExtension: "m4a")
     }
+
+    /// How many words lesson `n` holds, read straight off the decoded data.
+    ///
+    /// Deliberately **not** `lesson(n).entries.count`. A word count doesn't depend on
+    /// the meanings language, but that spelling does — it builds the whole language's
+    /// `Vocab` array to read one number. Every caller that wanted it (rung counts,
+    /// progress totals) passed no language at all, so they defaulted to `"en"` and made
+    /// a Vietnamese user construct, and permanently retain, a second English corpus they
+    /// never read. This touches no translation and constructs no `Vocab`.
+    ///
+    /// Out-of-range returns 0 rather than trapping: the callers loop over
+    /// `Course.lessonCount`, and a course/dataset drift should degrade, not crash.
+    static func wordCount(_ n: Int) -> Int { wordCounts[n] ?? 0 }
+
+    private static let wordCounts: [Int: Int] =
+        Dictionary(uniqueKeysWithValues: data.lessons.map { ($0.number, $0.entries.count) })
 
     /// Resolve a cheer's clip, e.g. "sugoi" → "cheer-sugoi.m4a" (or `-kenzaki`).
     ///

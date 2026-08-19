@@ -238,6 +238,71 @@ enum Track {
         #endif
     }
 
+    /// The four things about a learner that **Firebase cannot work out for itself**,
+    /// pushed as user properties so any event can be segmented by them.
+    ///
+    /// The bar for adding one here is exactly that: GA4 already collects device model,
+    /// OS version, screen size, app version and build, country, and the *device* language
+    /// automatically, as dimensions. Re-sending those as user properties buys nothing and
+    /// spends from a hard budget of 25 per project — a predecessor of this app shipped
+    /// fifteen such duplicates. What is *not* automatic is what the learner chose.
+    ///
+    /// - `ui_language` / `meaning_language`: the two settings are deliberately
+    ///   independent and both deliberately differ from the device locale — a Taiwanese
+    ///   phone reading Vietnamese meanings is a real and invisible-to-GA4 configuration.
+    /// - `knows_kana` / `learning_goal`: answered in the intro, until now sent once as
+    ///   `intro_done` params and so unusable as a segment afterwards.
+    /// - `earned_first_group`: splits free users into two populations that behave nothing
+    ///   alike — those who took the free unlock path and those who met the paywall.
+    ///
+    /// **No identifier, ever.** Not `user_id`, not `identifierForVendor`, not a minted
+    /// install id. Every value here is a coarse attribute shared by many people; none of
+    /// them joins two rows to one person. `Analytics.setUserID` is called nowhere in this
+    /// codebase and must stay that way.
+    ///
+    /// Idempotent: unchanged values are skipped, so callers may fire it as often as is
+    /// convenient — `Unlock.refresh` does, on every Today appear.
+    static func setProfile(uiLanguage: String,
+                           meaningLanguage: String,
+                           knowsKana: String?,
+                           goal: String?,
+                           earnedFirstGroup: Bool) {
+        let values = profile(uiLanguage: uiLanguage, meaningLanguage: meaningLanguage,
+                             knowsKana: knowsKana, goal: goal,
+                             earnedFirstGroup: earnedFirstGroup)
+        guard values != lastProfile else { return }
+        lastProfile = values
+        #if canImport(FirebaseAnalytics)
+        if FirebaseApp.app() != nil {
+            for (name, value) in values { Analytics.setUserProperty(value, forName: name) }
+        }
+        #endif
+    }
+
+    /// The properties `setProfile` will send. Pure, and separated from the sending so the
+    /// naming and the fallbacks can be tested — Firebase isn't configured under test, so
+    /// anything folded into the call itself would be verified by nothing.
+    static func profile(uiLanguage: String,
+                        meaningLanguage: String,
+                        knowsKana: String?,
+                        goal: String?,
+                        earnedFirstGroup: Bool) -> [String: String] {
+        // GA4 truncates a user-property value past 36 characters, which would silently
+        // merge two segments. Nothing here is close today; the clamp is what keeps that
+        // true if a goal or language code ever grows.
+        func clamped(_ v: String) -> String { String(v.prefix(36)) }
+        return ["ui_language": clamped(uiLanguage),
+                "meaning_language": clamped(meaningLanguage),
+                // "unanswered" rather than omitting the key: a property never set is
+                // indistinguishable in GA4 from one whose owner skipped the question,
+                // and those are different populations.
+                "knows_kana": clamped(knowsKana ?? "unanswered"),
+                "learning_goal": clamped(goal ?? "unanswered"),
+                "earned_first_group": earnedFirstGroup ? "true" : "false"]
+    }
+
+    private static var lastProfile: [String: String] = [:]
+
     /// Per-device analytics opt-out (Settings' hidden long-press toggle) — persists
     /// across launches via `Pref.analyticsExcluded` and also applies immediately,
     /// so switching it off mid-session stops collection right away.

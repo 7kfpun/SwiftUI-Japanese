@@ -1,7 +1,7 @@
 # Japanese Daily 每日日本語 — working rules
 
 Native SwiftUI + SwiftData iOS app teaching the Minna no Nihongo vocabulary (50
-lessons, 2089 words) and the kana syllabaries, in 18 UI languages, with a widget
+lessons, 2089 words) and the kana syllabaries, in 19 UI languages, with a widget
 and an Apple Watch app. `context/` documents how it works — read `context/README.md`
 first and follow its index; it is kept current and is the fastest way in.
 
@@ -48,7 +48,7 @@ first and follow its index; it is kept current and is the fastest way in.
   import `FirebaseAnalytics`. Event names and param keys are `lower_snake_case`.
 - **Server writes: `Survey` only** (`nihongo/Survey.swift`), the app's *only* server
   write. Everything else is on-device or in the user's own iCloud.
-- **Strings: `L.t(...)` only**, with an entry in `nihongo/UIStrings.json` for **all 18
+- **Strings: `L.t(...)` only**, with an entry in `nihongo/UIStrings.json` for **all 19
   languages**. English-only additions fail the suite. Run `check-i18n-parity` after any
   string change. Developer-only surfaces (Diagnostics) are deliberately unlocalised.
 - **Typography and colour: `Theme` only.** No literal fonts or colours at call sites.
@@ -104,12 +104,12 @@ first and follow its index; it is kept current and is the fastest way in.
 - **Green and red are exclusive to answer feedback.** Selection state is a
   `Theme.accent` **border**, never a fill.
 - **Dynamic Type everywhere.** No fixed point sizes for text (the two documented
-  `Theme.display` slots aside), and no fixed-height frames — 18 languages, and German,
+  `Theme.display` slots aside), and no fixed-height frames — 19 languages, and German,
   Vietnamese and Burmese run long.
 - Cards sit *lighter* than the screen in both appearances; a `Theme.surface` element on
   a `Theme.surface` card is invisible. Inset panes use `Theme.canvas`.
 - **SF Symbols only for anything functional** — icons, controls, list rows, tab items.
-  They scale with Dynamic Type, follow the appearance, and render in all 18 languages
+  They scale with Dynamic Type, follow the appearance, and render in all 19 languages
   for free, which is the whole reason for the rule.
   The single exception is `nihongo/Illustrations.xcassets`: hand-drawn SVGs from
   [koboyo](https://koboyo.com/icons) (free for commercial use, no attribution) used as
@@ -119,7 +119,7 @@ first and follow its index; it is kept current and is the fastest way in.
 
 ## Product facts copy must not get wrong
 
-Each of these was wrong in shipped copy and had to be corrected across 18 languages.
+Each of these was wrong in shipped copy and had to be corrected across 19 languages.
 Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
 
 - **Lessons 1–5 are free** (`Gating.freeLessonLimit = 5`), plus **two documented ways
@@ -148,7 +148,7 @@ Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
   modes, one of which is Listening.
 
   The count is stated in copy in four places and they drift apart silently: the intro
-  headline (`"Five ways through a lesson."` in `UIStrings.json`, ×18 languages),
+  headline (`"Five ways through a lesson."` in `UIStrings.json`, ×19 languages),
   `Intro.Mode` (whose order `IntroTests` pins against `SelectModeView`'s), every
   `fastlane/*/metadata/*/description.txt`, and `scripts/build-web.py`'s `T` dict. Adding
   a sixth mode means all four.
@@ -190,7 +190,7 @@ Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
   a field that cannot exist. `fastlane/minna/metadata/ta/` is the cautionary case: it was
   written anyway and `deliver` silently drops it on every push.
 - **Adding a UI language dates the store copy.** Every `description.txt` in both apps
-  states the interface language count in its own words ("18 languages", "18 種語言",
+  states the interface language count in its own words ("19 languages", "18 種語言",
   "१८ भाषा"), so a new language makes 18 files wrong at once. Grep the count across
   `fastlane/*/metadata/*/description.txt` whenever `UIStrings.json` gains a language.
 

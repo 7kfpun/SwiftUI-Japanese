@@ -160,7 +160,7 @@ proxy's own: `UINavigationBar.appearance()` is a recorder, not a live object, so
 reading `.standardAppearance` back off it returns an empty appearance and the
 mutate-and-put-back shape would silently drop the bar's default background.
 
-### What the 18 languages actually get
+### What the 19 languages actually get
 
 SF Rounded covers Latin (including Vietnamese's stacked diacritics), Cyrillic
 and Greek — 2785 glyphs, verified with CoreText against every character in
@@ -212,7 +212,7 @@ Two results that contradict the obvious guess:
   make on purpose rather than a bug to patch.
 
 Consequence for the two shrink-to-fit answer controls, which hold *translations*
-and therefore meet all 18 scripts:
+and therefore meet all 19 scripts:
 
 - **`QuizOptionButton`** — `OptionGrid` rows are a fixed 74pt, so the text box is
   154.5×54pt. `minimumScaleFactor` is **0.65**, not 0.5: at 0.5 the worst glosses

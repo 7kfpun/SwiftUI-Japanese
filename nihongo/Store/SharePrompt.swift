@@ -9,17 +9,51 @@ import SwiftUI
 /// a moment (a just-passed rung) and must never share an *occasion*: see `ChallengeView`,
 /// where the rating gets first refusal.
 enum SharePrompt {
+    /// Where a shared link came from, as an App Store campaign token.
+    ///
+    /// **`ct`, not `utm_*`.** `apps.apple.com` ignores `utm_` parameters entirely — those
+    /// are a Google Analytics convention and nothing on Apple's side reads them, so a
+    /// `utm_source` on a store link is decoration. The parameter App Store Connect
+    /// actually reports on is `ct` (campaign token), under App Analytics → Campaigns,
+    /// where it attributes impressions, downloads and even later proceeds.
+    ///
+    /// The token names the *surface*, never the person: every user sharing from the
+    /// nudge sends the identical string, so it groups traffic without becoming an
+    /// identifier — the rule against minting one holds here as everywhere else.
+    ///
+    /// Values are lowercase, stable and short. Apple caps `ct` at 40 characters and
+    /// treats it as an opaque string, so renaming one splits its history in two; add a
+    /// case rather than re-wording an existing one.
+    enum Campaign: String {
+        /// The in-app nudge after a passed rung.
+        case prompt = "app_share_prompt"
+        /// The Settings row, tapped deliberately rather than offered.
+        case settings = "app_share_settings"
+    }
+
     /// The listing to send people to. Course-specific: the two apps are two listings, and
     /// a JLPT user recommending the Minna app would be the kind of mistake nobody reports.
-    static var appStoreURL: URL {
-        URL(string: Course.current.appStoreURL)!
+    ///
+    /// `campaign` is appended as `ct`. Nil yields the bare listing URL, which is what
+    /// anything that isn't a share should use.
+    static func appStoreURL(campaign: Campaign? = nil) -> URL {
+        let base = URL(string: Course.current.appStoreURL)!
+        guard let campaign,
+              var components = URLComponents(url: base, resolvingAgainstBaseURL: false)
+        else { return base }
+        // Appended rather than assigned: the listing URLs carry no query today, but a
+        // future one might, and silently dropping it would be a broken link nobody tests.
+        components.queryItems = (components.queryItems ?? []) + [
+            URLQueryItem(name: "ct", value: campaign.rawValue)
+        ]
+        return components.url ?? base
     }
 
     /// What actually gets shared — one line and the link. Deliberately not a paragraph:
     /// this lands in a message someone is writing to a friend, and a wall of marketing
     /// copy is something they'd have to delete before sending.
-    static func shareText() -> String {
-        "\(L.t("Learn Japanese with me")) — \(appStoreURL.absoluteString)"
+    static func shareText(campaign: Campaign) -> String {
+        "\(L.t("Learn Japanese with me")) — \(appStoreURL(campaign: campaign).absoluteString)"
     }
 
     // MARK: - The nudge
@@ -134,7 +168,8 @@ struct ShareSheetPrompt: View {
 /// A row that raises the system share sheet. Used in Settings.
 struct ShareAppLink: View {
     var body: some View {
-        ShareLink(item: SharePrompt.appStoreURL, message: Text(SharePrompt.shareText())) {
+        ShareLink(item: SharePrompt.appStoreURL(campaign: .settings),
+                  message: Text(SharePrompt.shareText(campaign: .settings))) {
             Label(L.t("Share the app"), systemImage: "square.and.arrow.up")
         }
         .simultaneousGesture(TapGesture().onEnded {

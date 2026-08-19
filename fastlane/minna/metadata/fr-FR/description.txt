@@ -5,10 +5,11 @@ Apprends le japonais intelligemment — kana, vocabulaire et écoute — en quel
 MAÎTRISE LES KANA — TOUS, GRATUITEMENT
 Les tableaux complets des hiragana et des katakana, et cinq façons de les travailler : cartes, quiz à quatre choix, quiz par glissement, écoute et écriture manuscrite — trace un kana et reçois une note sur le vrai ordre des traits, nombre de traits compris. Chaque case retient comment tu t'en es sorti.
 
-50 LEÇONS, QUATRE FAÇONS DE S'ENTRAÎNER
+Minna 50 LEÇONS, CINQ FAÇONS DE S'ENTRAÎNER
 • Liste de vocabulaire — parcours et écoute chaque mot
 • Cartes — glisse pour mettre de côté ce que tu sais
 • Entraînement — un 50/50 rapide entre deux réponses
+• Associer — relie chaque mot à son sens
 • Apprendre — reconstitue la lecture à partir de tuiles kana
 
 ET MAINTENANT, PROUVE-LE : L'ÉCHELLE DE DÉFIS
@@ -20,14 +21,14 @@ GARDEZ LA SÉRIE
 MARQUEZ CE QUI RÉSISTE
 Touchez l'étoile à côté d'un mot — une, deux ou trois fois — et il rejoint les Favoris, classé selon le travail qu'il demande encore.
 
-AUDIO NATUREL
-Chaque mot et chaque kana prononcés clairement. Touche ce que tu veux pour l'entendre, ou laisse défiler une leçon entière, mains libres.
+UN SON CLAIR POUR CHAQUE MOT
+Chaque mot et chaque kana ont leur propre extrait, dit par une voix de synthèse claire. Touche ce que tu veux pour l'entendre, ou laisse défiler une leçon entière, mains libres.
 
 AUJOURD'HUI, SUR TOUS LES ÉCRANS
 L'onglet Aujourd'hui distribue exactement les mots que ton prochain défi va demander. Le même paquet s'affiche sur l'écran verrouillé, l'écran d'accueil et l'Apple Watch.
 
 APPRENDS DANS TA LANGUE
-L'interface et le sens des mots existent en 18 langues, et tu les règles séparément.
+L'interface et le sens des mots existent en 19 langues, et tu les règles séparément.
 
 TA PROGRESSION TE SUIT
 Étoiles et maîtrise des kana se synchronisent entre tes appareils via iCloud.

@@ -1,0 +1,1 @@
+hiragana,katakana,giapponese,nihongo,vocabolario,flashcard,ascolto,scrittura,romaji,offline,kanji

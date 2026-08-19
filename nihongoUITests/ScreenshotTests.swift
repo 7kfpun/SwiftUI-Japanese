@@ -88,7 +88,7 @@ final class ScreenshotTests: XCTestCase {
     func test08Lessons() throws {
         openTab("Lessons")
         guard wait(app.staticTexts["Lesson 1"]) else { return }
-        shot("08-lessons")
+        shot("00-lessons")
     }
 
     @MainActor

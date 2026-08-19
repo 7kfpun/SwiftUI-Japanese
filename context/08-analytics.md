@@ -176,6 +176,27 @@ network) is Performance's automatic instrumentation.
 
 ## User properties
 
-`user_type` (premium/free) and `premium_tier` (lifetime/1m/3m/6m/12m/none), set by
-`Track.setPremium` from `Store.refreshEntitlement`. Capped resources: GA4 allows 25
-user properties and 50 event-scoped custom dimensions per project.
+| Property | Values | Set by |
+|---|---|---|
+| `user_type` | premium / free | `setPremium`, from `Store.refreshEntitlement` |
+| `premium_tier` | lifetime / 1m / 3m / 6m / 12m / none | same |
+| `ui_language` | the chosen interface language | `setProfile`, from `Unlock.refresh` |
+| `meaning_language` | the chosen meanings language | same |
+| `knows_kana` | none / hiragana / both / unanswered | same |
+| `learning_goal` | travel / jlpt / work / culture / other / unanswered | same |
+| `earned_first_group` | true / false | same |
+
+**The bar for adding one: GA4 must not already know it.** Device model, OS version,
+screen size, app version and build, country and the *device* language are collected
+automatically as dimensions — re-sending them as user properties buys nothing and spends
+from a cap of 25 per project. (The RN predecessor shipped fifteen such duplicates, plus a
+`user_id` and `deviceId` both holding `identifierForVendor`. Neither is portable here:
+`Analytics.setUserID` is called nowhere in this codebase and must stay that way.)
+
+`Track.profile(...)` is pure and `analyticsProfileSegmentsWithoutIdentifying` pins the
+names, the `unanswered` fallbacks and the 36-char clamp — Firebase isn't configured under
+test, so anything folded into the send itself would be verified by nothing.
+
+Caps: 25 user properties, values ≤36 chars (truncated silently past it), 50 event-scoped
+custom dimensions per project. User properties are forward-only — they don't apply to
+events already sent.

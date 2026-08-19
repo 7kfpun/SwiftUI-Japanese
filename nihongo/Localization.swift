@@ -22,7 +22,7 @@ enum L {
         "zh", "zh-Hant",                        // China, then Taiwan and Hong Kong
         "id", "ko", "vi", "th", "fil", "my",    // the rest of the Asian learner base
         "hi", "bn", "ta", "te", "ne",           // the subcontinent, kept as a block
-        "es", "fr", "de", "ru",                 // Europe and the Americas
+        "es", "fr", "it", "de", "ru",           // Europe and the Americas
     ]
 
     /// Sorts `codes` into `languageOrder`, appending anything unlisted alphabetically.

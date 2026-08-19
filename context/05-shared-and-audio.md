@@ -122,7 +122,7 @@ options only need to be comfortably tappable.
 
 ### The two shrink-to-fit answer controls
 
-Both hold *translations*, so both meet all 18 scripts, and both had their floors raised
+Both hold *translations*, so both meet all 19 scripts, and both had their floors raised
 from measurements over all 35 513 translations (full derivation in `07-ux-ui.md`):
 
 - **`QuizOptionButton`** — `minimumScaleFactor(0.65)`, not 0.5. At 0.5 the worst glosses
@@ -189,13 +189,13 @@ split. A re-entrancy guard (`animating`) ignores a swipe started mid-animation.
 
 There are deliberately **two separate language settings**, both `@AppStorage`. They are
 **separate lists, not the same list twice** — Minna offers **18** codes for each, but
-JLPT ships 18 UI languages against only four meaning languages, so one can never be
+JLPT ships 19 UI languages against only four meaning languages, so one can never be
 defined in terms of the other. They share `L.languageOrder`, which is what keeps the two
 pickers reading as one family:
 
 - `Pref.appLanguage` — the app's own UI text (tab labels, buttons, screen titles),
   resolved through `L.t(_:)` (`nihongo/Localization.swift`) against the bundled
-  `UIStrings.json` (218 keys × 18 languages). Falls back English → the key itself if a
+  `UIStrings.json` (218 keys × 19 languages). Falls back English → the key itself if a
   translation is missing, which is why `LocalizationTests` checks key parity and format
   placeholders rather than trusting the compiler. `RootView` keys its whole tree on
   `.id(appLanguage)` so switching it rebuilds the UI instantly instead of needing a

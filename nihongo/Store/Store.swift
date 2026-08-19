@@ -161,17 +161,33 @@ final class Store {
     /// Premium if any premium product is currently entitled — an active subscription or
     /// the owned lifetime unlock.
     func refreshEntitlement() async {
-        var premium = false
-        var tier = "none"
+        var entitled: [String] = []
         for await result in Transaction.currentEntitlements {
             guard case .verified(let t) = result, t.revocationDate == nil,
                   PremiumProduct.all.contains(t.productID) else { continue }
-            premium = true
-            tier = Self.tierLabel(t.productID)
+            entitled.append(t.productID)
         }
-        isPremium = premium
-        self.tier = tier
-        Track.setPremium(premium, tier: tier)
+
+        isPremium = !entitled.isEmpty
+        tier = Self.tier(from: entitled)
+        Track.setPremium(isPremium, tier: tier)
+    }
+
+    /// One label for a set of simultaneous entitlements.
+    ///
+    /// Holding more than one is ordinary — a lifetime bought after subscribing, or an old
+    /// subscription still running alongside it — and `currentEntitlements` is an async
+    /// sequence with no promised order. Assigning the label inside the loop meant the
+    /// last one seen won, so the same account could report a different tier on each
+    /// launch and look like it was churning when nothing had changed.
+    ///
+    /// Lifetime outranks everything: it is permanent, so someone holding both is a
+    /// lifetime owner whose subscription is incidental. Otherwise sorted, purely so the
+    /// answer is stable rather than incidental.
+    nonisolated static func tier(from entitled: [String]) -> String {
+        if entitled.isEmpty { return "none" }
+        if entitled.contains(PremiumProduct.lifetime) { return "lifetime" }
+        return entitled.sorted().first.map(tierLabel) ?? "none"
     }
 
     /// `source` is the paywall entry point that led here — see `PaywallView.source`. It
@@ -268,7 +284,18 @@ final class Store {
     }
 
     /// Short tier label from a product ID (…premium.3M → "3m", lifetime → "lifetime").
-    private static func tierLabel(_ id: String) -> String {
+    ///
+    /// **Five labels, and only five**: `1m`, `3m`, `6m`, `12m`, `lifetime`. The label
+    /// names the *plan*, not the SKU — the burned 2019 IDs differ from the current lineup
+    /// only in case (`3m` vs `3M`), and lowercasing folds each onto its current twin
+    /// deliberately. A legacy six-month subscriber and a new one are the same thing to
+    /// every question this label answers, so they belong in the same bucket; a
+    /// case-sensitive analytics value would be a reporting accident anyway.
+    ///
+    /// Where the distinction *does* matter — new sales versus restores — the events
+    /// already carry it without help: `purchase_success` only ever fires for a
+    /// purchasable product, and `restore` reports its own outcome.
+    nonisolated static func tierLabel(_ id: String) -> String {
         id == PremiumProduct.lifetime ? "lifetime"
             : (id.components(separatedBy: ".").last ?? id).lowercased()
     }

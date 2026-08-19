@@ -67,6 +67,7 @@ versioned CDN frameit itself downloads from — see
 fastlane's frameit/lib/frameit/frame_downloader.rb for reference).
 """
 import os
+import shutil
 import sys
 import urllib.parse
 import urllib.request
@@ -117,6 +118,13 @@ TEAL = (15, 176, 191)
 # pasted, and how wide it must be resized to, before the frame art is
 # layered on top.
 DEVICES = {
+    # Apple Watch Series 10, 416x496 — the size ASC wants, and the size the raw
+    # capture already is. `raw_dir="watch"` because the shot lives beside the phone
+    # and iPad captures rather than among them, and `frame=None` selects the
+    # frameless path in `process`. Headline only: at 416px wide a subtitle under a
+    # headline leaves the screen no room, so `COPY` gives this key an empty one.
+    "watch": dict(canvas=(416, 496), frame=None, raw_dir="watch",
+                  off=(0, 0), off_w=416),
     "6.9": dict(canvas=(1320, 2868), frame="Apple iPhone 17 Pro Max Silver.png",
                 off=(75, 66), off_w=1320),
     "6.3": dict(canvas=(1206, 2622), frame="Apple iPhone 17 Pro Silver.png",
@@ -151,6 +159,7 @@ DEVICES = {
 #   14-paywall           - best practice: never lead with your paywall
 LOCALES = {
     "en-US": {
+        "01-watch-today": ("On your wrist", ""),
         "01-today": ("Track your progress", "Every day, at a glance"),
         "02-kana-table": ("Hiragana & Katakana", "The complete kana charts"),
         "03-kana-flashcards": ("Kana flashcards", "Flip, listen, remember"),
@@ -162,12 +171,13 @@ LOCALES = {
         # the three, so they must say the same thing.
         "06-kana-listening": ("Listening practice", "Every kana spoken, to help it stick"),
         "07-kana-write": ("Write practice", "Real stroke order, real memory"),
-        "08-lessons": ("50 Minna no Nihongo lessons", "Every lesson, right on your phone"),
-        "09-vocab-list": ("We speak your language", "Every word explained in 17 languages"),
+        "00-lessons": ("50 Minna no Nihongo lessons", "Every lesson, right on your phone"),
+        "09-vocab-list": ("We speak your language", "Every word explained in 19 languages"),
         "11-lesson-learn": ("Learn mode", "Swipe through new words with audio"),
         "12-lesson-quiz": ("Lesson quizzes", "Check what you've really learned"),
     },
     "de-DE": {
+        "01-watch-today": ("Am Handgelenk", ""),
         "01-today": ("Verfolge deinen Fortschritt", "Jeden Tag auf einen Blick"),
         "02-kana-table": ("Hiragana & Katakana", "Die kompletten Kana-Tabellen"),
         "03-kana-flashcards": ("Kana-Karteikarten", "Umdrehen, hören, merken"),
@@ -178,32 +188,34 @@ LOCALES = {
         # unbreakable 26-character token, 140% of the text column, and word wrapping has
         # nowhere to break it — it shipped clipped at both edges. Keeping the title as a
         # separate phrase after a colon lets it wrap at real spaces.
-        "08-lessons": ("Minna no Nihongo: 50 Lektionen", "Jede Lektion direkt auf deinem Handy"),
-        "09-vocab-list": ("Wir sprechen deine Sprache", "Jedes Wort erklärt in 17 Sprachen"),
+        "00-lessons": ("Minna no Nihongo: 50 Lektionen", "Jede Lektion direkt auf deinem Handy"),
+        "09-vocab-list": ("Wir sprechen deine Sprache", "Jedes Wort erklärt in 19 Sprachen"),
         "11-lesson-learn": ("Lernmodus", "Neue Wörter mit Audio durchblättern"),
         "12-lesson-quiz": ("Lektionsquiz", "Prüfe, was du wirklich gelernt hast"),
     },
     "zh-Hant": {
+        "01-watch-today": ("戴在手腕上", ""),
         "01-today": ("追蹤你的學習進度", "每天一目了然"),
         "02-kana-table": ("五十音", "完整的平假名與片假名表"),
         "03-kana-flashcards": ("五十音字卡", "翻牌、聆聽、記住"),
         "04-kana-quiz-classic": ("五十音測驗", "一個一個考考自己"),
         "06-kana-listening": ("聽力練習", "每個假名都朗讀，聽了就記住"),
         "07-kana-write": ("書寫練習", "正確筆順，真正記住"),
-        "08-lessons": ("50 課大家的日本語課程", "每一課都在你的手機裡"),
-        "09-vocab-list": ("我們懂你的語言", "17 種語言，逐字講解"),
+        "00-lessons": ("50 課大家的日本語課程", "每一課都在你的手機裡"),
+        "09-vocab-list": ("我們懂你的語言", "19 種語言，逐字講解"),
         "11-lesson-learn": ("學習模式", "滑動瀏覽新單字並聽發音"),
         "12-lesson-quiz": ("課程測驗", "檢查你真正學到了什麼"),
     },
     "ru": {
+        "01-watch-today": ("На запястье", ""),
         "01-today": ("Следи за прогрессом", "Каждый день — как на ладони"),
         "02-kana-table": ("Хирагана и катакана", "Полные таблицы каны"),
         "03-kana-flashcards": ("Карточки каны", "Переверни, послушай, запомни"),
         "04-kana-quiz-classic": ("Тесты по кане", "Проверь себя знак за знаком"),
         "06-kana-listening": ("Тренировка слуха", "Каждый знак озвучен — и запомнится"),
         "07-kana-write": ("Учись писать", "Настоящий порядок черт"),
-        "08-lessons": ("50 уроков Minna no Nihongo", "Каждый урок — в твоём телефоне"),
-        "09-vocab-list": ("Говорим на твоём языке", "Каждое слово — на 17 языках"),
+        "00-lessons": ("50 уроков Minna no Nihongo", "Каждый урок — в твоём телефоне"),
+        "09-vocab-list": ("Говорим на твоём языке", "Каждое слово — на 19 языках"),
         "11-lesson-learn": ("Режим изучения", "Новые слова с озвучкой"),
         "12-lesson-quiz": ("Тесты по уроку", "Проверь, что ты правда выучил"),
     },
@@ -213,14 +225,15 @@ LOCALES = {
     # would be drawn as two separate advancing glyphs and come out mangled,
     # whereas the precomposed forms are single glyphs that need no shaping.
     "vi": {
+        "01-watch-today": ("Ngay trên cổ tay", ""),
         "01-today": ("Theo dõi tiến độ", "Mỗi ngày, chỉ một cái nhìn"),
         "02-kana-table": ("Hiragana & Katakana", "Bảng chữ kana đầy đủ"),
         "03-kana-flashcards": ("Thẻ ghi nhớ kana", "Lật, nghe, ghi nhớ"),
         "04-kana-quiz-classic": ("Trắc nghiệm kana", "Tự kiểm tra từng chữ kana"),
         "06-kana-listening": ("Luyện nghe", "Kana nào cũng có âm thanh, nhớ lâu"),
         "07-kana-write": ("Luyện viết", "Thứ tự nét đúng, nhớ lâu hơn"),
-        "08-lessons": ("50 bài Minna no Nihongo", "Trọn bộ bài học trong túi bạn"),
-        "09-vocab-list": ("Nói đúng tiếng của bạn", "Mỗi từ giải nghĩa bằng 17 thứ tiếng"),
+        "00-lessons": ("50 bài Minna no Nihongo", "Trọn bộ bài học trong túi bạn"),
+        "09-vocab-list": ("Nói đúng tiếng của bạn", "Mỗi từ giải nghĩa bằng 19 thứ tiếng"),
         "11-lesson-learn": ("Chế độ học", "Lướt qua từ mới kèm âm thanh"),
         "12-lesson-quiz": ("Trắc nghiệm bài học", "Kiểm tra bạn thật sự nhớ gì"),
     },
@@ -228,14 +241,15 @@ LOCALES = {
     # canvas on its own — see the wrap="word" note in LOCALE_TYPOGRAPHY for why
     # that matters, and run `--check` after editing any of it.
     "th": {
+        "01-watch-today": ("บนข้อมือคุณ", ""),
         "01-today": ("ติดตามความก้าวหน้า", "เห็นทุกวันในหน้าเดียว"),
         "02-kana-table": ("ฮิรางานะ & คาตาคานะ", "ตารางคานะครบทุกตัว"),
         "03-kana-flashcards": ("บัตรคำคานะ", "พลิก ฟัง จำได้"),
         "04-kana-quiz-classic": ("แบบทดสอบคานะ", "ทดสอบตัวเองทีละตัว"),
         "06-kana-listening": ("ฝึกฟัง", "ทุกตัวคานะมีเสียงอ่าน จำได้แน่น"),
         "07-kana-write": ("ฝึกเขียน", "ลำดับเส้นถูกต้อง จำได้จริง"),
-        "08-lessons": ("50 บทเรียน Minna no Nihongo", "ครบทุกบทอยู่ในมือคุณ"),
-        "09-vocab-list": ("เราพูดภาษาของคุณ", "ทุกคำแปลครบ 17 ภาษา"),
+        "00-lessons": ("50 บทเรียน Minna no Nihongo", "ครบทุกบทอยู่ในมือคุณ"),
+        "09-vocab-list": ("เราพูดภาษาของคุณ", "ทุกคำแปลครบ 19 ภาษา"),
         "11-lesson-learn": ("โหมดเรียนรู้", "ปัดดูคำใหม่พร้อมเสียงอ่าน"),
         "12-lesson-quiz": ("แบบทดสอบบทเรียน", "ตรวจว่าคุณจำได้จริงไหม"),
     },
@@ -244,14 +258,15 @@ LOCALES = {
     # Quiz/Cartes mémo/Apprendre, Pagsusulit/Matuto, Kuis/Kartu kilas/Belajar),
     # so a screenshot caption and the screen under it use the same word.
     "es-ES": {
+        "01-watch-today": ("En tu muñeca", ""),
         "01-today": ("Sigue tu progreso", "Cada día, de un vistazo"),
         "02-kana-table": ("Hiragana y katakana", "Las tablas de kana completas"),
         "03-kana-flashcards": ("Tarjetas de kana", "Gira, escucha, recuerda"),
         "04-kana-quiz-classic": ("Test de kana", "Ponte a prueba kana a kana"),
         "06-kana-listening": ("Entrena el oído", "Cada kana con voz, para que se fije"),
         "07-kana-write": ("Escritura a mano", "Orden real de trazos, memoria real"),
-        "08-lessons": ("Minna no Nihongo: 50 lecciones", "Cada lección en tu bolsillo"),
-        "09-vocab-list": ("En tu idioma", "Cada palabra explicada en 17 idiomas"),
+        "00-lessons": ("Minna no Nihongo: 50 lecciones", "Cada lección en tu bolsillo"),
+        "09-vocab-list": ("En tu idioma", "Cada palabra explicada en 19 idiomas"),
         "11-lesson-learn": ("Modo Aprender", "Desliza palabras nuevas con voz"),
         "12-lesson-quiz": ("Test de la lección", "Comprueba lo que sabes de verdad"),
     },
@@ -259,26 +274,28 @@ LOCALES = {
     # carry the typographic apostrophe, but mixing the two across locales in one
     # file is how a stray one ends up somewhere that can't render it.
     "fr-FR": {
+        "01-watch-today": ("À ton poignet", ""),
         "01-today": ("Suis ta progression", "Chaque jour, d'un seul regard"),
         "02-kana-table": ("Hiragana et katakana", "Les tableaux de kana complets"),
         "03-kana-flashcards": ("Cartes mémo de kana", "Retourne, écoute, retiens"),
         "04-kana-quiz-classic": ("Quiz de kana", "Teste-toi, kana par kana"),
         "06-kana-listening": ("Entraîne ton oreille", "Chaque kana prononcé, pour l'ancrer"),
         "07-kana-write": ("Écriture à la main", "Le vrai ordre des traits"),
-        "08-lessons": ("Minna no Nihongo : 50 leçons", "Chaque leçon dans ta poche"),
-        "09-vocab-list": ("On parle ta langue", "Chaque mot en 17 langues"),
+        "00-lessons": ("Minna no Nihongo : 50 leçons", "Chaque leçon dans ta poche"),
+        "09-vocab-list": ("On parle ta langue", "Chaque mot en 19 langues"),
         "11-lesson-learn": ("Mode Apprendre", "Fais défiler les mots, avec le son"),
         "12-lesson-quiz": ("Quiz de la leçon", "Vérifie ce que tu sais vraiment"),
     },
     "id": {
+        "01-watch-today": ("Di pergelanganmu", ""),
         "01-today": ("Pantau kemajuan", "Setiap hari, sekali lihat"),
         "02-kana-table": ("Hiragana dan katakana", "Tabel kana yang lengkap"),
         "03-kana-flashcards": ("Kartu kilas kana", "Balik, dengar, ingat"),
         "04-kana-quiz-classic": ("Kuis kana", "Uji dirimu, satu per satu"),
         "06-kana-listening": ("Latihan menyimak", "Tiap kana ada suaranya"),
         "07-kana-write": ("Latihan menulis", "Urutan coretan yang sebenarnya"),
-        "08-lessons": ("Minna no Nihongo: 50 pelajaran", "Tiap pelajaran di sakumu"),
-        "09-vocab-list": ("Kami bicara bahasamu", "Tiap kata dalam 17 bahasa"),
+        "00-lessons": ("Minna no Nihongo: 50 pelajaran", "Tiap pelajaran di sakumu"),
+        "09-vocab-list": ("Kami bicara bahasamu", "Tiap kata dalam 19 bahasa"),
         "11-lesson-learn": ("Mode Belajar", "Geser kata baru, ada suaranya"),
         "12-lesson-quiz": ("Kuis pelajaran", "Cek yang benar-benar kamu kuasai"),
     },
@@ -287,25 +304,42 @@ LOCALES = {
     # to eight characters or fewer because wrap="char" would otherwise break a
     # headline mid-word to make it fit — see the ja entry in LOCALE_TYPOGRAPHY.
     "ja": {
+        "01-watch-today": ("手首の上で", ""),
         "01-today": ("進捗はひと目で", "毎日の学習を記録"),
         "02-kana-table": ("ひらがな・カタカナ", "全チャートを収録"),
         "03-kana-flashcards": ("フラッシュカード", "めくって、聴いて、覚える"),
         "04-kana-quiz-classic": ("かなクイズ", "1文字ずつ力試し"),
         "06-kana-listening": ("リスニング練習", "すべてのかなに音声つき"),
         "07-kana-write": ("手書き練習", "本物の筆順で採点"),
-        "08-lessons": ("みんなの日本語50課", "どの課もポケットの中に"),
-        "09-vocab-list": ("あなたの言語で", "全単語を17言語で解説"),
+        "00-lessons": ("みんなの日本語50課", "どの課もポケットの中に"),
+        "09-vocab-list": ("あなたの言語で", "全単語を19言語で解説"),
         "11-lesson-learn": ("学習モード", "新しい単語を音声つきでめくる"),
         "12-lesson-quiz": ("レッスンのクイズ", "本当に覚えたかを確認"),
     },
+    "it": {
+        "01-watch-today": ("Al tuo polso", ""),
+        "01-today": ("Segui i tuoi progressi", "Ogni giorno, a colpo d'occhio"),
+        "02-kana-table": ("Hiragana e Katakana", "Le tabelle kana complete"),
+        "03-kana-flashcards": ("Flashcard dei kana", "Gira, ascolta, memorizza"),
+        "04-kana-quiz-classic": ("Quiz sui kana", "Mettiti alla prova, kana per kana"),
+        "06-kana-listening": ("Esercizi di ascolto", "Ogni kana pronunciato, per ricordarlo"),
+        "07-kana-write": ("Esercizi di scrittura", "Ordine dei tratti autentico"),
+        # No textbook name, unlike the older locales above — see the note on Guideline
+        # 5.2 in CLAUDE.md. A screenshot headline is a user-visible store field.
+        "00-lessons": ("50 lezioni di giapponese", "Ogni lezione, sul tuo telefono"),
+        "09-vocab-list": ("Parliamo la tua lingua", "Ogni parola spiegata in 19 lingue"),
+        "11-lesson-learn": ("Modalità Learn", "Scorri tra le parole nuove con l'audio"),
+        "12-lesson-quiz": ("Quiz delle lezioni", "Verifica ciò che hai imparato"),
+    },
     "ko": {
+        "01-watch-today": ("손목 위에서", ""),
         "01-today": ("진도를 한눈에", "매일의 학습을 기록"),
         "02-kana-table": ("히라가나·가타카나", "가나 표 전체 수록"),
         "03-kana-flashcards": ("가나 플래시카드", "넘기고, 듣고, 기억하기"),
         "04-kana-quiz-classic": ("가나 퀴즈", "한 글자씩 확인하기"),
         "06-kana-listening": ("듣기 연습", "모든 가나에 음성 제공"),
         "07-kana-write": ("손글씨 연습", "실제 획순으로 채점"),
-        "08-lessons": ("Minna no Nihongo 50과", "모든 레슨이 주머니 속에"),
+        "00-lessons": ("Minna no Nihongo 50과", "모든 레슨이 주머니 속에"),
         "09-vocab-list": ("당신의 언어로", "모든 단어를 17개 언어로"),
         "11-lesson-learn": ("학습 모드", "새 단어를 음성과 함께 넘기기"),
         "12-lesson-quiz": ("레슨 퀴즈", "정말 익혔는지 확인"),
@@ -359,7 +393,7 @@ JLPT_LOCALES = {
         "04-kana-quiz-classic": ("Kana quizzes", "Test yourself, kana by kana"),
         "06-kana-listening": ("Listening practice", "Every kana spoken, to help it stick"),
         "07-kana-write": ("Write practice", "Real stroke order, real memory"),
-        "08-lessons": ("201 lessons, N5 to N1", "7,972 words in teaching order"),
+        "00-lessons": ("201 lessons, N5 to N1", "7,972 words in teaching order"),
         "09-vocab-list": ("Hear every word", "All 7,972, spoken and explained"),
         "11-lesson-learn": ("Learn mode", "Swipe through new words with audio"),
         "12-lesson-quiz": ("Lesson quizzes", "Check what you've really learned"),
@@ -371,7 +405,7 @@ JLPT_LOCALES = {
         "04-kana-quiz-classic": ("五十音測驗", "一個一個考考自己"),
         "06-kana-listening": ("聽力練習", "每個假名都朗讀，聽了就記住"),
         "07-kana-write": ("書寫練習", "正確筆順，真正記住"),
-        "08-lessons": ("201 課，N5 到 N1", "7,972 個單字，依教學順序"),
+        "00-lessons": ("201 課，N5 到 N1", "7,972 個單字，依教學順序"),
         "09-vocab-list": ("每個單字都能聽", "全部 7,972 個，有發音也有解釋"),
         "11-lesson-learn": ("學習模式", "滑動瀏覽新單字並聽發音"),
         "12-lesson-quiz": ("課程測驗", "檢查你真正學到了什麼"),
@@ -554,17 +588,30 @@ def compose_device(raw_shot: Image.Image, frame_path: str, off_x, off_y, off_w) 
 
 def process(locale, key, dev_key, dev):
     # Resolved per call, so `--app` reaches it — see the note in DEVICES.
-    raw_path = os.path.join(IPAD_RAW_DIR if dev.get("ipad") else RAW_DIR, f"{key}.png")
+    if dev.get("raw_dir"):
+        base = os.path.join(os.path.dirname(RAW_DIR), dev["raw_dir"])
+    else:
+        base = IPAD_RAW_DIR if dev.get("ipad") else RAW_DIR
+    raw_path = os.path.join(base, f"{key}.png")
     if not os.path.exists(raw_path):
         return None
     raw = Image.open(raw_path)
 
     W, H = dev["canvas"]
-    frame_path = ensure_frame(dev["frame"])
-    off_x, off_y = dev["off"]
-    off_w = dev["off_w"]
-
-    device_img = compose_device(raw, frame_path, off_x, off_y, off_w)
+    if dev.get("frame"):
+        device_img = compose_device(raw, ensure_frame(dev["frame"]),
+                                    *dev["off"], dev["off_w"])
+    else:
+        # Frameless: no frameit asset exists for the watch, and a bezel drawn at this
+        # size would swallow the screen. Just round the corners, as the physical
+        # display does, and let the gradient behind it read as the device edge.
+        shot = raw.convert("RGBA")
+        radius = round(shot.width * 0.22)      # the watch is far rounder than a phone
+        mask = Image.new("L", shot.size, 0)
+        ImageDraw.Draw(mask).rounded_rectangle([0, 0, shot.width - 1, shot.height - 1],
+                                               radius=radius, fill=255)
+        shot.putalpha(mask)
+        device_img = shot
 
     bg = make_gradient(W, H, BLUE, TEAL).convert("RGBA")
     draw = ImageDraw.Draw(bg)
@@ -719,6 +766,8 @@ if __name__ == "__main__":
     for locale, copy in targets.items():
         if locale_filter and locale != locale_filter:
             continue
+
+
         for key in copy:
             if key_filter and key_filter not in key:
                 continue

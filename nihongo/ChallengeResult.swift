@@ -130,7 +130,7 @@ final class ChallengeResult {
         var rungs: [Int: Int] = [:]
         var swept: [Int: Int] = [:]
         for lesson in 1...limit {
-            rungs[lesson] = Challenge.count(wordCount: VocabStore.lesson(lesson).entries.count)
+            rungs[lesson] = Challenge.count(wordCount: VocabStore.wordCount(lesson))
             swept[lesson] = best.values.filter { $0.lesson == lesson && $0.stars >= 3 }.count
         }
         return Gating.hasEarnedFirstGroup(rungs: rungs, threeStarred: swept)
@@ -146,7 +146,7 @@ final class ChallengeResult {
         for row in rows where row.lesson <= limit {
             best[row.id] = best[row.id].map { better($0, row) } ?? row
         }
-        let total = (1...limit).reduce(0) { $0 + Challenge.count(wordCount: VocabStore.lesson($1).entries.count) }
+        let total = (1...limit).reduce(0) { $0 + Challenge.count(wordCount: VocabStore.wordCount($1)) }
         return (best.values.filter { $0.stars >= 3 }.count, total)
     }
 
