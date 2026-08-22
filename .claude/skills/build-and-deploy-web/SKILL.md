@@ -114,16 +114,16 @@ The working CLI is the npx cache copy (v15.26.0, logged in as
 
 ```sh
 FB=/Users/kf/.npm/_npx/7750544ccf494d8b/node_modules/.bin/firebase
-$FB deploy --only hosting
+$FB deploy --only hosting:main
 ```
 
-`npx --no-install firebase-tools deploy --only hosting` resolves to the same
+`npx --no-install firebase-tools deploy --only hosting:main` resolves to the same
 binary and works too; prefer the explicit path, and always pass `--no-install`
 to npx so a cache miss fails fast instead of silently pulling a different
 version. `$FB login:list` prints the logged-in account from the local credential
 store; if a deploy hangs on auth, `$FB login --reauth`.
 
-**`--only hosting` is mandatory, not tidiness.** `firebase.json` declares two
+**`--only hosting:main` is mandatory, not tidiness.** `firebase.json` declares two
 products now:
 
 ```json
@@ -140,7 +140,7 @@ event. Scope every deploy.
 Validate without publishing anything:
 
 ```sh
-$FB deploy --only hosting --dry-run
+$FB deploy --only hosting:main --dry-run
 ```
 
 Project is `kf-nihongo` (see `.firebaserc`); `firebase.json` points hosting's
@@ -151,7 +151,7 @@ Project is `kf-nihongo` (see `.firebaserc`); `firebase.json` points hosting's
 - `web/privacy.html` / `web/terms.html` are hand-maintained App Store
   compliance pages, not generated — if the user wants their content changed,
   edit them directly and they'll deploy as static files via the same
-  `deploy --only hosting`, unaffected by `build-web.py`.
+  `deploy --only hosting:main`, unaffected by `build-web.py`.
 - Don't deploy without regenerating first if you touched `build-web.py` —
   `web/*/index.html` is regular (tracked) source in git, not gitignored, so a
   stale regeneration is a real drift, not just a local build artifact.

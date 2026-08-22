@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bonsai JLPT — JLPT vocabulary from N5 to N1</title>
+<meta name="description" content="All five JLPT levels in one app: 7,972 words across 201 short lessons, N5 to N1. Five study modes, scored challenges, every word spoken — offline, no account.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#15161A">
+<link rel="icon" href="/img/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="/img/icon-512.png" sizes="512x512" type="image/png">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="canonical" href="https://jlpt-jp.web.app/">
+<link rel="alternate" hreflang="en" href="https://jlpt-jp.web.app/">
+<link rel="alternate" hreflang="zh-Hans" href="https://jlpt-jp.web.app/zh-Hans/">
+<link rel="alternate" hreflang="zh-Hant" href="https://jlpt-jp.web.app/zh-Hant/">
+<link rel="alternate" hreflang="vi" href="https://jlpt-jp.web.app/vi/">
+<link rel="alternate" hreflang="x-default" href="https://jlpt-jp.web.app/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Bonsai JLPT">
+<meta property="og:title" content="Bonsai JLPT — JLPT vocabulary from N5 to N1">
+<meta property="og:description" content="All five JLPT levels in one app: 7,972 words across 201 short lessons, N5 to N1. Five study modes, scored challenges, every word spoken — offline, no account.">
+<meta property="og:url" content="https://jlpt-jp.web.app/">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="zh_CN">
+<meta property="og:locale:alternate" content="zh_TW">
+<meta property="og:locale:alternate" content="vi_VN">
+<meta property="og:image" content="https://jlpt-jp.web.app/img/og-card.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Bonsai JLPT app icon beside the words: JLPT vocabulary, N5 to N1 — 201 lessons, 7,972 words.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Bonsai JLPT — JLPT vocabulary from N5 to N1">
+<meta name="twitter:description" content="All five JLPT levels in one app: 7,972 words across 201 short lessons, N5 to N1. Five study modes, scored challenges, every word spoken — offline, no account.">
+<meta name="twitter:image" content="https://jlpt-jp.web.app/img/og-card.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Bonsai JLPT",
+  "operatingSystem": "iOS",
+  "applicationCategory": "EducationalApplication",
+  "description": "All five JLPT levels in one app: 7,972 words across 201 short lessons, N5 to N1. Five study modes, scored challenges, every word spoken — offline, no account.",
+  "inLanguage": "en",
+  "image": "https://jlpt-jp.web.app/img/og-card.png",
+  "url": "https://jlpt-jp.web.app/",
+  "installUrl": "https://apps.apple.com/app/id6800220716",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
+<style>
+:root {
+  --bg: #15161A;
+  --panel: #1D1F25;
+  --ink: #F4F1EA;
+  --muted: #A5A199;
+  --line: rgba(255, 255, 255, 0.09);
+  --amber: #FFC24D;
+  --orange: #FFA500;
+  --grad: linear-gradient(120deg, #FFC24D 0%, #FFA500 55%, #FF8A00 100%);
+  --teal: #31C3CF;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Avenir Next", "Segoe UI Variable",
+               "Segoe UI", Roboto, sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+[lang="ja"] {
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP",
+               "Hiragino Sans", serif;
+}
+img { max-width: 100%; }
+a { color: var(--amber); }
+
+.wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+
+/* --- top bar ------------------------------------------------------------ */
+.top {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(21, 22, 26, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.top .wrap {
+  display: flex; align-items: center; gap: 12px;
+  padding-top: 10px; padding-bottom: 10px;
+}
+.brand {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--ink); text-decoration: none; font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.brand img { width: 28px; height: 28px; border-radius: 7px; display: block; }
+.top-cta {
+  margin-left: auto;
+  color: #1E1503; background: var(--grad);
+  text-decoration: none; font-weight: 700; font-size: 0.88em;
+  padding: 7px 16px; border-radius: 999px; white-space: nowrap;
+}
+
+/* --- masthead ------------------------------------------------------------ */
+.mast { padding: clamp(56px, 10vw, 120px) 0 clamp(40px, 6vw, 72px); }
+.kicker {
+  color: var(--muted); font-size: 0.95em; letter-spacing: 0.02em;
+  margin-bottom: 20px;
+}
+.kicker [lang="ja"] { color: var(--amber); font-size: 1.15em; }
+.kicker .sep { margin: 0 10px; opacity: 0.5; }
+h1 {
+  font-size: clamp(2.3rem, 6.5vw, 4.1rem);
+  line-height: 1.08; font-weight: 800; letter-spacing: -0.02em;
+  max-width: 18ch;
+}
+.grad {
+  background: var(--grad);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: var(--orange);
+}
+.lede {
+  color: var(--muted); font-size: clamp(1.05rem, 2vw, 1.25rem);
+  max-width: 56ch; margin-top: 24px;
+}
+.cta-row {
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  margin-top: 36px;
+}
+.cta {
+  display: inline-block; text-decoration: none;
+  color: #1E1503; background: var(--grad);
+  font-weight: 800; font-size: 1.02em;
+  padding: 15px 30px; border-radius: 999px;
+  box-shadow: 0 10px 34px rgba(255, 165, 0, 0.28);
+}
+.cta-note { color: var(--muted); font-size: 0.9em; }
+.stats {
+  display: flex; flex-wrap: wrap; gap: 16px 48px;
+  margin-top: clamp(40px, 6vw, 64px);
+  padding-top: 28px; border-top: 1px solid var(--line);
+}
+.stat strong {
+  display: block; font-size: clamp(1.9rem, 4vw, 2.6rem); font-weight: 800;
+  letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+  background: var(--grad);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: var(--orange);
+}
+.stat span { color: var(--muted); font-size: 0.9em; }
+
+/* --- sections ------------------------------------------------------------ */
+section { padding: clamp(48px, 8vw, 88px) 0; border-top: 1px solid var(--line); }
+h2 {
+  font-size: clamp(1.6rem, 3.6vw, 2.3rem); font-weight: 800;
+  letter-spacing: -0.015em; line-height: 1.15;
+}
+.section-sub { color: var(--muted); max-width: 60ch; margin-top: 12px; }
+
+/* --- the ladder ----------------------------------------------------------- */
+.rungs { list-style: none; margin-top: 24px; }
+.rung {
+  display: grid; grid-template-columns: minmax(110px, 190px) 1fr;
+  gap: 8px 32px; padding: clamp(28px, 4vw, 44px) 0;
+  border-top: 1px solid var(--line);
+}
+.rung:first-child { border-top: none; }
+.lvl {
+  font-size: clamp(3rem, 8vw, 5rem); font-weight: 900; line-height: 1;
+  letter-spacing: -0.03em;
+  background: var(--grad);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: var(--orange);
+  align-self: start;
+}
+.rung-meta {
+  color: var(--muted); font-size: 0.9em; letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.bar {
+  height: 6px; border-radius: 99px; background: var(--panel);
+  margin: 12px 0 14px; overflow: hidden;
+}
+.bar i { display: block; height: 100%; border-radius: 99px;
+         background: var(--grad); width: var(--w); }
+.rung-line { max-width: 58ch; }
+.words { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.words li {
+  display: grid; gap: 1px;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; padding: 12px 16px; min-width: 132px;
+}
+.wj { font-size: 1.45rem; line-height: 1.3; }
+.wk { color: var(--muted); font-size: 0.82em; }
+.wr { color: var(--muted); font-size: 0.74em; letter-spacing: 0.06em;
+      text-transform: uppercase; }
+.wm { color: var(--amber); font-size: 0.88em; margin-top: 5px; }
+
+/* --- modes + the challenge ladder ----------------------------------------- */
+.mode-row {
+  list-style: none; counter-reset: mode;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px; margin-top: 28px;
+}
+.mode {
+  counter-increment: mode;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 16px; padding: 18px 18px 16px;
+}
+.mode::before {
+  content: counter(mode);
+  display: inline-grid; place-items: center;
+  width: 26px; height: 26px; border-radius: 999px;
+  border: 1.5px solid var(--orange); color: var(--amber);
+  font-size: 0.8em; font-weight: 700; margin-bottom: 12px;
+}
+.mode h3 { font-size: 1.02em; font-weight: 700; }
+.mode p { color: var(--muted); font-size: 0.86em; margin-top: 4px; }
+.challenge {
+  margin-top: 26px; border-left: 3px solid var(--orange);
+  background: var(--panel); border-radius: 0 16px 16px 0;
+  padding: clamp(20px, 3vw, 30px) clamp(20px, 3.4vw, 34px);
+}
+.challenge h3 { font-size: 1.25em; font-weight: 800; letter-spacing: -0.01em; }
+.challenge p { color: var(--muted); margin-top: 10px; max-width: 68ch; }
+.challenge .earn { color: var(--amber); }
+
+/* --- facts ----------------------------------------------------------------- */
+.fact-list {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 26px 40px; margin-top: 30px;
+}
+.fact { border-top: 1px solid var(--line); padding-top: 14px; }
+.fact dt { color: var(--amber); font-weight: 700; }
+.fact dd { color: var(--muted); font-size: 0.94em; margin-top: 5px; }
+
+/* --- the sibling app, in its own colour ------------------------------------ */
+.chapter-card {
+  margin-top: 26px;
+  background: rgba(49, 195, 207, 0.07);
+  border: 1px solid rgba(49, 195, 207, 0.3);
+  border-radius: 20px; padding: clamp(22px, 3.4vw, 34px);
+}
+.chapter-card p { color: var(--muted); max-width: 66ch; }
+.chapter-card a {
+  display: inline-block; margin-top: 16px;
+  color: var(--teal); font-weight: 700; text-decoration: none;
+  border-bottom: 1.5px solid rgba(49, 195, 207, 0.5);
+}
+
+/* --- closing CTA + footer --------------------------------------------------- */
+.get { text-align: center; }
+.get img {
+  width: 84px; height: 84px; border-radius: 20px; margin-bottom: 26px;
+  box-shadow: 0 14px 44px rgba(255, 165, 0, 0.22);
+}
+.get h2 { max-width: 22ch; margin: 0 auto; }
+.get .cta { margin-top: 32px; }
+.get .cta-note { display: block; margin-top: 18px; }
+
+footer { border-top: 1px solid var(--line); padding: 40px 0 56px; }
+footer nav { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+footer a { color: var(--muted); text-decoration: none; font-size: 0.9em; }
+footer a:hover { color: var(--amber); }
+footer a[aria-current="true"] { color: var(--amber); }
+.legal { margin-top: 14px; }
+.fine { color: var(--muted); font-size: 0.78em; margin-top: 22px; max-width: 72ch; }
+
+/* --- reveal (JS adds .js; without it everything is simply visible) --------- */
+@media (prefers-reduced-motion: no-preference) {
+  .js .rung, .js .mode, .js .fact, .js .chapter-card {
+    opacity: 0; transform: translateY(14px);
+    transition: opacity 0.55s ease, transform 0.55s ease;
+  }
+  .js .rung .bar i { width: 0; transition: width 0.9s ease 0.25s; }
+  .js .seen { opacity: 1; transform: none; }
+  .js .seen .bar i { width: var(--w); }
+}
+
+@media (max-width: 620px) {
+  .rung { grid-template-columns: 1fr; }
+  .lvl { font-size: clamp(2.6rem, 13vw, 3.4rem); }
+  .top-cta { font-size: 0.8em; }
+}
+</style>
+</head>
+<body>
+
+<nav class="top" aria-label="Bonsai JLPT">
+<div class="wrap">
+<a class="brand" href="/"><img src="/img/icon-192.png" width="28" height="28" alt="">Bonsai JLPT</a>
+<a class="top-cta" href="https://apps.apple.com/app/id6800220716?ct=web_jlpt">Get the app</a>
+</div>
+</nav>
+
+<header class="mast">
+<div class="wrap">
+<p class="kicker"><span lang="ja">一語ずつ、頂上へ</span><span class="sep">—</span>one word at a time, to the summit</p>
+<h1>The whole JLPT vocabulary, <span class="grad">N5 to N1</span></h1>
+<p class="lede">You’ve decided to sit the test. Bonsai lays out the vocabulary of all five levels in teaching order — so the distance to N1 is something you can see, and shrink a little every day.</p>
+<div class="cta-row">
+<a class="cta" href="https://apps.apple.com/app/id6800220716?ct=web_jlpt">Download on the App Store</a>
+<span class="cta-note">Free to start · iPhone &amp; iPad · works offline</span>
+</div>
+<dl class="stats">
+<div class="stat"><strong>201</strong><span>short lessons</span></div>
+<div class="stat"><strong>7,972</strong><span>words</span></div>
+<div class="stat"><strong>5</strong><span>levels, N5 → N1</span></div>
+<div class="stat"><strong>19</strong><span>interface languages</span></div>
+</dl>
+</div>
+</header>
+
+<main>
+<section class="climb" id="climb" aria-label="One climb, five camps">
+<div class="wrap">
+<h2>One climb, five camps</h2>
+<p class="section-sub">Pick your level and the lesson list follows it. Each level below shows its true share of the climb — and a first taste of its words.</p>
+<ol class="rungs">
+<li class="rung" style="--w:9%">
+<div class="lvl" aria-hidden="true">N5</div>
+<div class="rung-body">
+<p class="rung-meta"><strong>N5</strong> · Lessons 1–19 · 718 words · 9% of the climb</p>
+<div class="bar" role="presentation"><i></i></div>
+<p class="rung-line">Greetings, numbers, the words of daily life — where everyone starts.</p>
+<ul class="words">
+<li>
+<span class="wj" lang="ja">私</span>
+<span class="wk" lang="ja">わたし</span>
+<span class="wr">watashi</span>
+<span class="wm">I, myself</span>
+</li>
+<li>
+<span class="wj" lang="ja">友達</span>
+<span class="wk" lang="ja">ともだち</span>
+<span class="wr">tomodachi</span>
+<span class="wm">friend</span>
+</li>
+<li>
+<span class="wj" lang="ja">学校</span>
+<span class="wk" lang="ja">がっこう</span>
+<span class="wr">gakkou</span>
+<span class="wm">a school</span>
+</li>
+</ul>
+</div>
+</li>
+<li class="rung" style="--w:8%">
+<div class="lvl" aria-hidden="true">N4</div>
+<div class="rung-body">
+<p class="rung-meta"><strong>N4</strong> · Lessons 20–37 · 668 words · 8% of the climb</p>
+<div class="bar" role="presentation"><i></i></div>
+<p class="rung-line">School, work, the neighbourhood — and the words that glue sentences together.</p>
+<ul class="words">
+<li>
+<span class="wj" lang="ja">試験</span>
+<span class="wk" lang="ja">しけん</span>
+<span class="wr">shiken</span>
+<span class="wm">an exam</span>
+</li>
+<li>
+<span class="wj" lang="ja">夢</span>
+<span class="wk" lang="ja">ゆめ</span>
+<span class="wr">yume</span>
+<span class="wm">a dream</span>
+</li>
+<li>
+<span class="wj" lang="ja">将来</span>
+<span class="wk" lang="ja">しょうらい</span>
+<span class="wr">shourai</span>
+<span class="wm">(in the) future</span>
+</li>
+</ul>
+</div>
+</li>
+<li class="rung" style="--w:27%">
+<div class="lvl" aria-hidden="true">N3</div>
+<div class="rung-body">
+<p class="rung-meta"><strong>N3</strong> · Lessons 38–93 · 2,139 words · 27% of the climb</p>
+<div class="bar" role="presentation"><i></i></div>
+<p class="rung-line">The long middle: the vocabulary that turns phrases into conversation.</p>
+<ul class="words">
+<li>
+<span class="wj" lang="ja">目的</span>
+<span class="wk" lang="ja">もくてき</span>
+<span class="wr">mokuteki</span>
+<span class="wm">purpose, goal, aim</span>
+</li>
+<li>
+<span class="wj" lang="ja">解決</span>
+<span class="wk" lang="ja">かいけつ</span>
+<span class="wr">kaiketsu</span>
+<span class="wm">settlement</span>
+</li>
+<li>
+<span class="wj" lang="ja">環境</span>
+<span class="wk" lang="ja">かんきょう</span>
+<span class="wr">kankyou</span>
+<span class="wm">environment, circumstance</span>
+</li>
+</ul>
+</div>
+</li>
+<li class="rung" style="--w:22%">
+<div class="lvl" aria-hidden="true">N2</div>
+<div class="rung-body">
+<p class="rung-meta"><strong>N2</strong> · Lessons 94–136 · 1,748 words · 22% of the climb</p>
+<div class="bar" role="presentation"><i></i></div>
+<p class="rung-line">Newspapers, meetings, opinions — Japanese the way adults actually use it.</p>
+<ul class="words">
+<li>
+<span class="wj" lang="ja">確率</span>
+<span class="wk" lang="ja">かくりつ</span>
+<span class="wr">kakuritsu</span>
+<span class="wm">probability</span>
+</li>
+<li>
+<span class="wj" lang="ja">主役</span>
+<span class="wk" lang="ja">しゅやく</span>
+<span class="wr">shuyaku</span>
+<span class="wm">leading part</span>
+</li>
+<li>
+<span class="wj" lang="ja">制作</span>
+<span class="wk" lang="ja">せいさく</span>
+<span class="wr">seisaku</span>
+<span class="wm">work (e.g., film, book)</span>
+</li>
+</ul>
+</div>
+</li>
+<li class="rung" style="--w:34%">
+<div class="lvl" aria-hidden="true">N1</div>
+<div class="rung-body">
+<p class="rung-meta"><strong>N1</strong> · Lessons 137–201 · 2,699 words · 34% of the climb</p>
+<div class="bar" role="presentation"><i></i></div>
+<p class="rung-line">Government, law, nuance. The summit — 2,699 words wide.</p>
+<ul class="words">
+<li>
+<span class="wj" lang="ja">概念</span>
+<span class="wk" lang="ja">がいねん</span>
+<span class="wr">gainen</span>
+<span class="wm">general idea, concept, notion</span>
+</li>
+<li>
+<span class="wj" lang="ja">理性</span>
+<span class="wk" lang="ja">りせい</span>
+<span class="wr">risei</span>
+<span class="wm">reason, sense</span>
+</li>
+<li>
+<span class="wj" lang="ja">措置</span>
+<span class="wk" lang="ja">そち</span>
+<span class="wr">sochi</span>
+<span class="wm">measure, step</span>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+</section>
+
+<section class="modes" id="modes" aria-label="Five ways into every lesson">
+<div class="wrap">
+<h2>Five ways into every lesson</h2>
+<p class="section-sub">A word rarely sticks the first time. Every lesson can be worked five ways, shallow to deep — and then the scoring starts.</p>
+<ol class="mode-row">
+<li class="mode">
+<h3>Vocab List</h3>
+<p>Browse &amp; hear all words</p>
+</li>
+<li class="mode">
+<h3>Flashcards</h3>
+<p>Swipe right if you know it</p>
+</li>
+<li class="mode">
+<h3>Train</h3>
+<p>Swipe to the right answer</p>
+</li>
+<li class="mode">
+<h3>Match</h3>
+<p>Pair each word with its meaning</p>
+</li>
+<li class="mode">
+<h3>Learn</h3>
+<p>Rebuild the reading from tiles</p>
+</li>
+</ol>
+<div class="challenge">
+<h3>Then sit the test in miniature</h3>
+<p>Every lesson ends in a ladder of challenges: ten questions a rung, 80% to pass, three stars for a perfect run. The rungs harden as you climb — first you recognise the word, then you recall it, and near the top you only hear it, spoken aloud with nothing on screen. Pass a rung and the next one opens.</p>
+<p class="earn">Sweep the opening lessons — three stars on every challenge — and the whole of N5 unlocks for good, free.</p>
+</div>
+</div>
+</section>
+
+<section class="facts" id="facts" aria-label="The fine print, up front">
+<div class="wrap">
+<h2>The fine print, up front</h2>
+<dl class="fact-list">
+<div class="fact">
+<dt>Works offline</dt>
+<dd>Every lesson, every word and every audio clip ships inside the app. Planes and subways welcome.</dd>
+</div>
+<div class="fact">
+<dt>Every word, spoken</dt>
+<dd>All 7,972 words — and every kana — carry their own audio clip in a clear synthesised voice.</dd>
+</div>
+<div class="fact">
+<dt>No account</dt>
+<dd>Nothing to sign up for and nothing to remember. Progress syncs privately between your devices through iCloud.</dd>
+</div>
+<div class="fact">
+<dt>Kana included, free</dt>
+<dd>A complete hiragana and katakana section with five drills of its own — free for everyone, no unlock needed.</dd>
+</div>
+<div class="fact">
+<dt>Meanings in your language</dt>
+<dd>Word meanings in English, Simplified Chinese, Traditional Chinese and Vietnamese; the interface speaks 19 languages — and you choose the two separately.</dd>
+</div>
+<div class="fact">
+<dt>Premium, sized to your test date</dt>
+<dd>Start free and see how it fits. Premium opens all 201 lessons — subscribe for 1, 3 or 6 months, or pay once and it’s yours forever.</dd>
+</div>
+</dl>
+</div>
+</section>
+
+<section class="chapter" id="chapter" aria-label="The next chapter">
+<div class="wrap">
+<h2>The next chapter</h2>
+<div class="chapter-card">
+<p>Bonsai JLPT comes from the maker of Japanese Daily — the teal app where many people meet their first Japanese words. That one gets beginners started; this one is built for the long climb, from your first N5 word to your last N1 lesson.</p>
+<a href="https://japanesedaily.wahthefox.com/">Meet Japanese Daily →</a>
+</div>
+</div>
+</section>
+
+<section class="get" id="get" aria-label="Download on the App Store">
+<div class="wrap">
+<img src="/img/icon-192.png" width="84" height="84" alt="">
+<h2>The test has a date. Start climbing today.</h2>
+<a class="cta" href="https://apps.apple.com/app/id6800220716?ct=web_jlpt">Download on the App Store</a>
+<span class="cta-note">Free to start · iPhone &amp; iPad · works offline</span>
+</div>
+</section>
+</main>
+
+<footer>
+<div class="wrap">
+<nav aria-label="Languages">
+<a href="/" hreflang="en" lang="en" aria-current="true">English</a>
+<a href="/zh-Hans/" hreflang="zh-Hans" lang="zh-Hans">简体中文</a>
+<a href="/zh-Hant/" hreflang="zh-Hant" lang="zh-Hant">繁體中文</a>
+<a href="/vi/" hreflang="vi" lang="vi">Tiếng Việt</a>
+</nav>
+<nav class="legal" aria-label="Legal">
+<a href="/privacy.html">Privacy Policy</a>
+<a href="/terms.html">Terms of Use</a>
+</nav>
+<p class="fine">Bonsai JLPT is an independent study app. The JLPT is administered by the Japan Foundation and JEES; this app is not affiliated with or endorsed by them. All audio is synthesised.</p>
+<p class="fine">© 2026 Bonsai JLPT · jlpt-jp.web.app</p>
+</div>
+</footer>
+
+<script>
+(function () {
+  if (!("IntersectionObserver" in window)) { return; }
+  document.documentElement.classList.add("js");
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("seen");
+        io.unobserve(entry.target);
+      }
+    });
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.1 });
+  var targets = document.querySelectorAll(".rung, .mode, .fact, .chapter-card");
+  targets.forEach(function (el) { io.observe(el); });
+})();
+</script>
+</body>
+</html>

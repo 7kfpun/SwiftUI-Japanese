@@ -6,6 +6,7 @@ import UIKit
 enum Ads {
     /// Warm up an interstitial so it's ready to show at the next break.
     static func preloadInterstitial() {
+        guard Course.current.adsEnabled else { return }
         #if canImport(GoogleMobileAds)
         Task { await Interstitial.shared.preload() }
         #endif
@@ -13,6 +14,7 @@ enum Ads {
 
     /// Show the interstitial if one is loaded and the throttle window has elapsed.
     static func showInterstitialIfReady() {
+        guard Course.current.adsEnabled else { return }
         #if canImport(GoogleMobileAds)
         Interstitial.shared.showIfReady()
         #endif

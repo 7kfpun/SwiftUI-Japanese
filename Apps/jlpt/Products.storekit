@@ -1,0 +1,98 @@
+{
+  "identifier": "4C9DAE3F",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "34.99",
+      "familyShareable": false,
+      "internalID": "1001",
+      "localizations": [
+        {
+          "description": "Unlock all lessons forever, ad-free.",
+          "displayName": "Lifetime",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.kfpun.jlptjp.premium.forever",
+      "referenceName": "Premium Forever",
+      "type": "NonConsumable"
+    }
+  ],
+  "settings": {},
+  "subscriptionGroups": [
+    {
+      "id": "21538370",
+      "localizations": [],
+      "name": "premium",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "2.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "1002",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Premium, billed monthly.",
+              "displayName": "1 Month",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "com.kfpun.jlptjp.premium.1m",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Premium 1 month",
+          "subscriptionGroupID": "21538370",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "6.99",
+          "familyShareable": false,
+          "groupNumber": 2,
+          "internalID": "1003",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Premium, billed every 3 months.",
+              "displayName": "3 Months",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "com.kfpun.jlptjp.premium.3m",
+          "recurringSubscriptionPeriod": "P3M",
+          "referenceName": "Premium 3 months",
+          "subscriptionGroupID": "21538370",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "11.99",
+          "familyShareable": false,
+          "groupNumber": 3,
+          "internalID": "1004",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Premium, billed every 6 months.",
+              "displayName": "6 Months",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "com.kfpun.jlptjp.premium.6m",
+          "recurringSubscriptionPeriod": "P6M",
+          "referenceName": "Premium 6 months",
+          "subscriptionGroupID": "21538370",
+          "type": "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 3,
+    "minor": 0
+  }
+}

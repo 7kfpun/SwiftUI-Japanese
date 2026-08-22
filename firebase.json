@@ -1,8 +1,16 @@
 {
-  "hosting": {
-    "public": "web",
-    "ignore": ["firebase.json", "**/.*"]
-  },
+  "hosting": [
+    {
+      "target": "main",
+      "public": "web",
+      "ignore": ["firebase.json", "**/.*"]
+    },
+    {
+      "target": "jlpt",
+      "public": "web-jlpt",
+      "ignore": ["firebase.json", "**/.*"]
+    }
+  ],
   "firestore": {
     "rules": "firestore.rules"
   }

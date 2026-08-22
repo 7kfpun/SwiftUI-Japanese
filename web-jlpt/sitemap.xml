@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://jlpt-jp.web.app/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://jlpt-jp.web.app/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://jlpt-jp.web.app/zh-Hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://jlpt-jp.web.app/zh-Hant/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://jlpt-jp.web.app/vi/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://jlpt-jp.web.app/"/>
+  </url>
+  <url>
+    <loc>https://jlpt-jp.web.app/zh-Hans/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://jlpt-jp.web.app/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://jlpt-jp.web.app/zh-Hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://jlpt-jp.web.app/zh-Hant/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://jlpt-jp.web.app/vi/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://jlpt-jp.web.app/"/>
+  </url>
+  <url>
+    <loc>https://jlpt-jp.web.app/zh-Hant/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://jlpt-jp.web.app/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://jlpt-jp.web.app/zh-Hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://jlpt-jp.web.app/zh-Hant/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://jlpt-jp.web.app/vi/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://jlpt-jp.web.app/"/>
+  </url>
+  <url>
+    <loc>https://jlpt-jp.web.app/vi/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://jlpt-jp.web.app/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://jlpt-jp.web.app/zh-Hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://jlpt-jp.web.app/zh-Hant/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://jlpt-jp.web.app/vi/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://jlpt-jp.web.app/"/>
+  </url>
+</urlset>

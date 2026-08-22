@@ -106,12 +106,22 @@ FONT_SUKHUMVIT = "/System/Library/Fonts/Supplemental/SukhumvitSet.ttc"
 FONT_HIRA_MARU = "/System/Library/Fonts/ヒラギノ丸ゴ ProN W4.ttc"
 FONT_APPLE_SD_GOTHIC = "/System/Library/Fonts/AppleSDGothicNeo.ttc"
 
-# Brand colors: BLUE sampled from nihongo/Assets.xcassets/AppIcon.appiconset/AppIcon.png,
-# TEAL read from nihongo/Assets.xcassets/AccentColor.colorset/Contents.json (also
-# hardcoded as --accent: #0FB0BF in scripts/build-web.py) — keeps the App Store
-# screenshots on-brand with the app icon and the marketing site.
-BLUE = (12, 83, 148)
-TEAL = (15, 176, 191)
+# Brand gradient, per app — the two ends of the background every headline sits on.
+#
+# **Per app deliberately.** Both apps build from one codebase and shipped the same teal;
+# App Review rejected the JLPT listing as too close to Minna. The screenshots are the
+# first thing a reviewer and a browser see, so they carry the difference first.
+#
+# minna: BLUE sampled from nihongo/Assets.xcassets/AppIcon.appiconset/AppIcon.png, TEAL
+# from its AccentColor.colorset (also --accent: #0FB0BF in scripts/build-web.py).
+# jlpt: a deep amber into orange, matching the #FFA500 accent that app now ships. Not
+# exactly #FFA500 at either end — a flat fill of the accent leaves white headline text
+# barely legible, so the gradient runs darker at the top where the text sits.
+GRADIENTS = {
+    "minna": ((12, 83, 148), (15, 176, 191)),
+    "jlpt":  ((150, 74, 0), (255, 165, 0)),
+}
+BLUE, TEAL = GRADIENTS["minna"]
 
 # Device targets. `off` / `off_w` come from frameit-frames' offsets.json: where
 # (in the frame PNG's own native pixel grid) the screenshot layer must be
@@ -388,6 +398,7 @@ LOCALES = {
 JLPT_LOCALES = {
     "en-US": {
         "01-today": ("Track your progress", "Every day, at a glance"),
+        "05-progress": ("Make it a habit", "Streak, stats and bookmarks in one place"),
         "02-kana-table": ("Hiragana & Katakana", "The complete kana charts"),
         "03-kana-flashcards": ("Kana flashcards", "Flip, listen, remember"),
         "04-kana-quiz-classic": ("Kana quizzes", "Test yourself, kana by kana"),
@@ -400,6 +411,7 @@ JLPT_LOCALES = {
     },
     "zh-Hant": {
         "01-today": ("追蹤你的學習進度", "每天一目了然"),
+        "05-progress": ("養成每日習慣", "連續天數、統計與書籤，一目了然"),
         "02-kana-table": ("五十音", "完整的平假名與片假名表"),
         "03-kana-flashcards": ("五十音字卡", "翻牌、聆聽、記住"),
         "04-kana-quiz-classic": ("五十音測驗", "一個一個考考自己"),
@@ -613,7 +625,7 @@ def process(locale, key, dev_key, dev):
         shot.putalpha(mask)
         device_img = shot
 
-    bg = make_gradient(W, H, BLUE, TEAL).convert("RGBA")
+    bg = make_gradient(W, H, *GRADIENTS[APP]).convert("RGBA")
     draw = ImageDraw.Draw(bg)
 
     title, subtitle = LOCALES[LOCALE_ALIASES.get(locale, locale)][key]

@@ -22,8 +22,8 @@ struct BannerAd: View {
     private static let screenshotMode = ProcessInfo.processInfo.arguments.contains("-SCREENSHOTS")
 
     var body: some View {
-        if store.isPremium || Self.screenshotMode {
-            EmptyView()   // premium removes ads
+        if !Course.current.adsEnabled || store.isPremium || Self.screenshotMode {
+            EmptyView()   // premium removes ads; a course can switch them off wholesale
         } else {
             adBody
         }

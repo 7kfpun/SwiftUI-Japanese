@@ -1,42 +1,45 @@
-Học tiếng Nhật thông minh hơn — kana, từ vựng và nghe hiểu — mỗi ngày vài phút.
+Bạn đã quyết định thi JLPT. Bonsai được tạo ra cho mọi thứ sau quyết định đó: từ vựng của cả năm cấp độ, xếp theo trình tự giảng dạy, để quãng đường đến N1 trở thành thứ bạn nhìn thấy được — và mỗi ngày thu ngắn thêm một chút.
 
-7.972 từ trong 201 bài học theo chủ đề, chia theo trình độ từ JLPT N5 lên đến N1. Hoàn toàn offline, không cần đăng ký.
+Trọn con đường, theo đúng trình tự
+7.972 từ trong 201 bài học ngắn, chia theo năm cấp độ của kỳ thi:
 
-THÀNH THẠO KANA — TOÀN BỘ, MIỄN PHÍ
-Bảng hiragana và katakana đầy đủ, cùng năm cách luyện: thẻ ghi nhớ, trắc nghiệm bốn đáp án, trắc nghiệm vuốt, luyện nghe, và viết tay — vẽ một chữ kana rồi được chấm theo đúng thứ tự nét, tính cả số nét. Mỗi ô đều nhớ kết quả của bạn.
+N5: 19 bài
+N4: 18 bài
+N3: 56 bài
+N2: 43 bài
+N1: 65 bài
 
-201 BÀI HỌC, BỐN CÁCH HỌC
-• Danh sách từ — xem và nghe mọi từ, hoặc phát cả bài mà không cần chạm
-• Thẻ ghi nhớ — vuốt để phân loại những gì bạn đã thuộc
-• Luyện tập — chọn nhanh giữa hai đáp án
-• Học — ghép lại cách đọc của từ từ các ô kana
+Chọn cấp độ của bạn, danh sách bài học sẽ theo đó. Mọi thứ hoạt động ngoại tuyến, không cần tạo tài khoản, và tiến độ được đồng bộ riêng tư giữa các thiết bị của bạn qua iCloud.
 
-RỒI CHỨNG MINH: THANG THỬ THÁCH
-Mỗi bài học là một cái thang. Mười câu mỗi bậc, đúng 80% để qua, tối đa ba sao. Qua bậc này thì bậc sau mở ra — và câu hỏi khó dần khi bạn leo lên, từ nhận mặt chữ đến nhớ lại, rồi đến nghe mà không có gợi ý nào trên màn hình.
+Năm góc tiếp cận cho mỗi bài học
+Một từ hiếm khi nhớ được ngay lần đầu, nên mỗi bài học có thể luyện theo năm cách: đọc danh sách từ vựng và nghe từng từ, phân loại thẻ ghi nhớ theo những gì bạn đã biết, lướt nhanh các vòng hai lựa chọn trong Train, ghép từ với nghĩa trong Match, và ráp lại cách đọc từ các ô kana trong Learn.
 
-NĂM TRÌNH ĐỘ, THEO THỨ TỰ HỌC
-N5 và N4 xây nền, N3 và N2 đưa bạn qua trung cấp, còn N1 chờ sẵn khi bạn đã sẵn sàng. Chọn một trình độ và danh sách bài học sẽ đi theo.
+Rồi thi thử một kỳ thi thu nhỏ
+Mỗi bài học kết thúc bằng một chiếc thang thử thách: mười câu hỏi mỗi bậc, 80% để qua, ba sao cho một lượt hoàn hảo. Các bậc khó dần khi bạn leo — đầu tiên bạn nhận ra từ, rồi phải tự nhớ ra nó, và gần đỉnh bạn chỉ được nghe, màn hình không hiện gì, đúng như cách phần Nghe của kỳ thi sẽ phát. Qua một bậc, bậc tiếp theo mới mở.
 
-ÂM THANH RÕ RÀNG CHO MỌI TỪ
-Cả 7.972 từ đều được đọc, và mọi chữ kana cũng vậy. Chạm vào đâu cũng nghe được.
+Ươm N5 miễn phí
+Quét sạch các bài học mở đầu — ba sao ở mọi thử thách của chúng — và trọn cấp độ N5, đủ 19 bài, được mở khóa vĩnh viễn, miễn phí. Quét sạch là một chuẩn cao. Đó chính là chủ đích: vượt được nó là bạn xứng đáng với cấp độ phía trên.
 
-GIỮ CHUỖI NGÀY HỌC
-Một ngày được tính khi bạn trả lời điều gì đó, không phải khi bạn mở ứng dụng. Tab Tiến độ cho thấy chuỗi hiện tại, kỷ lục của bạn, số ngày đã học, và bạn đã leo được bao xa trên thang.
+Mọi từ đều được đọc lên
+Cả 7.972 từ đều có đoạn âm thanh riêng bằng giọng tổng hợp rõ ràng, và mọi kana cũng vậy. Chạm vào một từ để nghe, hoặc để cả bài học tự phát liền mạch.
 
-HỌC BẰNG NGÔN NGỮ CỦA BẠN
-Giao diện có 19 ngôn ngữ. Nghĩa của từ có tiếng Anh, tiếng Trung giản thể và phồn thể, và tiếng Việt.
+Nghĩa của từ bằng ngôn ngữ của bạn
+Nghĩa của từ có bằng tiếng Anh, tiếng Trung giản thể, tiếng Trung phồn thể và tiếng Việt. Riêng giao diện nói được 19 ngôn ngữ, và bạn chọn hai thứ này độc lập với nhau.
 
-TIẾN ĐỘ ĐI THEO BẠN
-Sao và mức thành thạo kana đồng bộ giữa các thiết bị của bạn qua iCloud.
+Kana, khi bạn cần ôn lại
+Một khu vực hiragana và katakana đầy đủ với năm bài luyện riêng — thẻ ghi nhớ, trắc nghiệm bốn lựa chọn, trắc nghiệm vuốt, luyện nghe, và luyện viết được chấm theo đúng thứ tự nét. Tất cả miễn phí, luôn ở đó khi một cách đọc làm bạn vấp.
 
-MIỄN PHÍ ĐỂ BẮT ĐẦU
-Kana miễn phí toàn bộ, và bạn có thể bắt đầu các bài học mà không mất gì. Nâng lên Cao cấp để mở mọi bài học và gỡ quảng cáo — đăng ký, hoặc mua một lần dùng trọn đời.
+Chuỗi ngày học giữ bạn nghiêm túc
+Một ngày chỉ được tính khi bạn trả lời điều gì đó, chứ không phải chỉ mở ứng dụng. Tab Tiến độ giữ chuỗi ngày học, kỷ lục và chặng leo của bạn qua từng cấp độ — còn bộ thẻ Hôm nay, trên Màn hình khóa, Màn hình chính và Apple Watch, chia đúng những từ mà thử thách kế tiếp sẽ hỏi.
 
-Không đăng ký. Không cần internet. Cứ mở ra và học.
+Premium, vừa với ngày thi của bạn
+Bắt đầu không mất gì và xem Bonsai hợp với việc học của bạn đến đâu. Premium mở toàn bộ 201 bài học: đăng ký 1, 3 hoặc 6 tháng — kỳ thi còn xa bao nhiêu thì đăng ký bấy nhiêu — hoặc trả một lần và nó là của bạn mãi mãi.
 
-Có ý tưởng? Cài đặt → Gửi phản hồi.
+Bonsai JLPT là chương tiếp theo từ nhà làm ra Japanese Daily. Ứng dụng đó giúp người mới bắt đầu; ứng dụng này dành cho chặng leo dài — từ từ vựng N5 đầu tiên đến bài N1 cuối cùng.
 
-Cao cấp là gói đăng ký tự động gia hạn (1, 3, 6 hoặc 12 tháng) hoặc một lần mua Trọn đời. Gói đăng ký sẽ tự gia hạn trừ khi bạn huỷ ít nhất 24 giờ trước khi kỳ hiện tại kết thúc. Giá được hiển thị trong ứng dụng trước khi bạn mua, và bạn có thể quản lý hoặc huỷ bất cứ lúc nào trong phần cài đặt Apple ID.
+Có câu hỏi hay ý tưởng? Cài đặt → Gửi phản hồi. Mọi tin nhắn đều được đọc.
+
+Premium là gói đăng ký tự động gia hạn (1, 3 hoặc 6 tháng) hoặc gói mua một lần trọn đời. Gói đăng ký sẽ tự gia hạn trừ khi được hủy ít nhất 24 giờ trước khi chu kỳ hiện tại kết thúc. Giá được hiển thị trong ứng dụng trước khi bạn mua, và bạn có thể quản lý hoặc hủy bất cứ lúc nào trong cài đặt Apple ID.
 
 Điều khoản sử dụng (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Chính sách quyền riêng tư: https://japanesedaily.wahthefox.com/privacy.html
+Chính sách quyền riêng tư: https://jlpt-jp.web.app/privacy.html

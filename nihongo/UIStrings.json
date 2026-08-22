@@ -100,7 +100,7 @@
     "%@ months": "%@ months",
     "Pay once, yours forever": "Pay once, yours forever",
     "Ready for Challenge %@?": "Ready for Challenge %@?",
-    "Enjoying Japanese Daily?": "Enjoying Japanese Daily?",
+    "Enjoying %@?": "Enjoying %@?",
     "Tap a star to tell us how it's going.": "Tap a star to tell us how it's going.",
     "%@ stars": "%@ stars",
     "Not now": "Not now",
@@ -220,7 +220,8 @@
     "Let's keep going": "Let's keep going",
     "Match": "Match",
     "Pair each word with its meaning": "Pair each word with its meaning",
-    "Keep going — Challenge %@": "Keep going — Challenge %@"
+    "Keep going — Challenge %@": "Keep going — Challenge %@",
+    "Studied Japanese before?": "Studied Japanese before?"
   },
   "zh": {
     "Kana": "假名",
@@ -323,7 +324,7 @@
     "%@ months": "%@ 个月",
     "Pay once, yours forever": "一次付费，终身使用",
     "Ready for Challenge %@?": "准备好挑战 %@ 了吗？",
-    "Enjoying Japanese Daily?": "喜欢每日日语吗？",
+    "Enjoying %@?": "喜欢 %@ 吗？",
     "Tap a star to tell us how it's going.": "点一颗星，告诉我们你的感受。",
     "%@ stars": "%@ 星",
     "Not now": "暂时不用",
@@ -443,7 +444,8 @@
     "Let's keep going": "一起加油",
     "Match": "配对",
     "Pair each word with its meaning": "把每个单词和它的释义配对",
-    "Keep going — Challenge %@": "继续 — 挑战 %@"
+    "Keep going — Challenge %@": "继续 — 挑战 %@",
+    "Studied Japanese before?": "以前学过日语吗？"
   },
   "zh-Hant": {
     "Kana": "假名",
@@ -546,7 +548,7 @@
     "%@ months": "%@ 個月",
     "Pay once, yours forever": "一次付費，終身使用",
     "Ready for Challenge %@?": "準備好挑戰 %@ 了嗎？",
-    "Enjoying Japanese Daily?": "喜歡每日日語嗎？",
+    "Enjoying %@?": "喜歡 %@ 嗎？",
     "Tap a star to tell us how it's going.": "點一顆星，告訴我們你的感受。",
     "%@ stars": "%@ 星",
     "Not now": "暫時不用",
@@ -666,7 +668,8 @@
     "Let's keep going": "一起加油",
     "Match": "配對",
     "Pair each word with its meaning": "把每個單字和它的釋義配對",
-    "Keep going — Challenge %@": "繼續 — 挑戰 %@"
+    "Keep going — Challenge %@": "繼續 — 挑戰 %@",
+    "Studied Japanese before?": "以前學過日語嗎？"
   },
   "vi": {
     "Kana": "Kana",
@@ -769,7 +772,7 @@
     "%@ months": "%@ tháng",
     "Pay once, yours forever": "Trả một lần, dùng trọn đời",
     "Ready for Challenge %@?": "Sẵn sàng cho Thử thách %@?",
-    "Enjoying Japanese Daily?": "Bạn thấy Japanese Daily thế nào?",
+    "Enjoying %@?": "Bạn thấy %@ thế nào?",
     "Tap a star to tell us how it's going.": "Chạm vào một ngôi sao để cho chúng tôi biết.",
     "%@ stars": "%@ sao",
     "Not now": "Để sau",
@@ -889,7 +892,8 @@
     "Let's keep going": "Cùng cố gắng nào",
     "Match": "Ghép cặp",
     "Pair each word with its meaning": "Ghép mỗi từ với nghĩa của nó",
-    "Keep going — Challenge %@": "Tiếp tục — Thử thách %@"
+    "Keep going — Challenge %@": "Tiếp tục — Thử thách %@",
+    "Studied Japanese before?": "Bạn từng học tiếng Nhật chưa?"
   },
   "de": {
     "Kana": "Kana",
@@ -992,7 +996,7 @@
     "%@ months": "%@ Monate",
     "Pay once, yours forever": "Einmal zahlen, für immer behalten",
     "Ready for Challenge %@?": "Bereit für Herausforderung %@?",
-    "Enjoying Japanese Daily?": "Gefällt dir Japanese Daily?",
+    "Enjoying %@?": "Gefällt dir %@?",
     "Tap a star to tell us how it's going.": "Tippe auf einen Stern und sag uns, wie es läuft.",
     "%@ stars": "%@ Sterne",
     "Not now": "Jetzt nicht",
@@ -1112,7 +1116,8 @@
     "Let's keep going": "Weiter geht's",
     "Match": "Zuordnen",
     "Pair each word with its meaning": "Ordne jedem Wort seine Bedeutung zu",
-    "Keep going — Challenge %@": "Weiter — Challenge %@"
+    "Keep going — Challenge %@": "Weiter — Challenge %@",
+    "Studied Japanese before?": "Schon einmal Japanisch gelernt?"
   },
   "th": {
     "Kana": "คานะ",
@@ -1215,7 +1220,7 @@
     "%@ months": "%@ เดือน",
     "Pay once, yours forever": "จ่ายครั้งเดียว ใช้ได้ตลอดชีพ",
     "Ready for Challenge %@?": "พร้อมสำหรับด่านท้าทาย %@ หรือยัง",
-    "Enjoying Japanese Daily?": "ชอบ Japanese Daily ไหม",
+    "Enjoying %@?": "ชอบ %@ ไหม",
     "Tap a star to tell us how it's going.": "แตะดาวเพื่อบอกเราว่าเป็นอย่างไรบ้าง",
     "%@ stars": "%@ ดาว",
     "Not now": "ไว้ก่อน",
@@ -1335,7 +1340,8 @@
     "Let's keep going": "ไปต่อกันเถอะ",
     "Match": "จับคู่",
     "Pair each word with its meaning": "จับคู่คำกับความหมายของมัน",
-    "Keep going — Challenge %@": "ไปต่อ — แชลเลนจ์ %@"
+    "Keep going — Challenge %@": "ไปต่อ — แชลเลนจ์ %@",
+    "Studied Japanese before?": "เคยเรียนภาษาญี่ปุ่นมาก่อนไหม"
   },
   "my": {
     "Kana": "ကာနာ",
@@ -1438,7 +1444,7 @@
     "%@ months": "%@ လ",
     "Pay once, yours forever": "တစ်ကြိမ်ပေးချေ၊ တစ်သက်လုံးသုံးပါ",
     "Ready for Challenge %@?": "စိန်ခေါ်မှု %@ အတွက် အဆင်သင့်လား",
-    "Enjoying Japanese Daily?": "Japanese Daily ကို နှစ်သက်ပါသလား",
+    "Enjoying %@?": "%@ ကို ကြိုက်လား?",
     "Tap a star to tell us how it's going.": "ဘယ်လိုရှိလဲ ပြောပြရန် ကြယ်တစ်ပွင့်ကို နှိပ်ပါ။",
     "%@ stars": "ကြယ် %@ ပွင့်",
     "Not now": "ယခု မလိုပါ",
@@ -1558,7 +1564,8 @@
     "Let's keep going": "ဆက်သွားရအောင်",
     "Match": "တွဲပါ",
     "Pair each word with its meaning": "စကားလုံးတစ်ခုချင်းကို အဓိပ္ပာယ်နှင့် တွဲပါ",
-    "Keep going — Challenge %@": "ဆက်သွားပါ — စိန်ခေါ်မှု %@"
+    "Keep going — Challenge %@": "ဆက်သွားပါ — စိန်ခေါ်မှု %@",
+    "Studied Japanese before?": "ဂျပန်စာ လေ့လာဖူးလား?"
   },
   "es": {
     "Kana": "Kana",
@@ -1661,7 +1668,7 @@
     "%@ months": "%@ meses",
     "Pay once, yours forever": "Paga una vez, tuyo para siempre",
     "Ready for Challenge %@?": "¿Listo para el Reto %@?",
-    "Enjoying Japanese Daily?": "¿Te gusta Japanese Daily?",
+    "Enjoying %@?": "¿Te gusta %@?",
     "Tap a star to tell us how it's going.": "Toca una estrella para contarnos qué tal.",
     "%@ stars": "%@ estrellas",
     "Not now": "Ahora no",
@@ -1781,7 +1788,8 @@
     "Let's keep going": "Vamos a seguir",
     "Match": "Emparejar",
     "Pair each word with its meaning": "Empareja cada palabra con su significado",
-    "Keep going — Challenge %@": "Sigue — Desafío %@"
+    "Keep going — Challenge %@": "Sigue — Desafío %@",
+    "Studied Japanese before?": "¿Has estudiado japonés antes?"
   },
   "fr": {
     "Kana": "Kana",
@@ -1884,7 +1892,7 @@
     "%@ months": "%@ mois",
     "Pay once, yours forever": "Payez une fois, à vous pour toujours",
     "Ready for Challenge %@?": "Prêt pour le Défi %@ ?",
-    "Enjoying Japanese Daily?": "Vous aimez Japanese Daily ?",
+    "Enjoying %@?": "Tu aimes %@ ?",
     "Tap a star to tell us how it's going.": "Touchez une étoile pour nous dire ce que vous en pensez.",
     "%@ stars": "%@ étoiles",
     "Not now": "Pas maintenant",
@@ -2004,7 +2012,8 @@
     "Let's keep going": "On continue",
     "Match": "Associer",
     "Pair each word with its meaning": "Associe chaque mot à son sens",
-    "Keep going — Challenge %@": "Continue — Défi %@"
+    "Keep going — Challenge %@": "Continue — Défi %@",
+    "Studied Japanese before?": "Tu as déjà étudié le japonais ?"
   },
   "it": {
     "Kana": "Kana",
@@ -2107,7 +2116,7 @@
     "%@ months": "%@ mesi",
     "Pay once, yours forever": "Paghi una volta, è tuo per sempre",
     "Ready for Challenge %@?": "Pronto per la Sfida %@?",
-    "Enjoying Japanese Daily?": "Ti piace Japanese Daily?",
+    "Enjoying %@?": "Ti piace %@?",
     "Tap a star to tell us how it's going.": "Tocca una stella per dirci come va.",
     "%@ stars": "%@ stelle",
     "Not now": "Non ora",
@@ -2227,7 +2236,8 @@
     "Let's keep going": "Andiamo avanti",
     "Match": "Abbina",
     "Pair each word with its meaning": "Abbina ogni parola al suo significato",
-    "Keep going — Challenge %@": "Continua — Sfida %@"
+    "Keep going — Challenge %@": "Continua — Sfida %@",
+    "Studied Japanese before?": "Hai già studiato giapponese?"
   },
   "ru": {
     "Kana": "Кана",
@@ -2330,7 +2340,7 @@
     "%@ months": "%@ мес.",
     "Pay once, yours forever": "Один платёж — навсегда",
     "Ready for Challenge %@?": "Готовы к испытанию %@?",
-    "Enjoying Japanese Daily?": "Нравится Japanese Daily?",
+    "Enjoying %@?": "Нравится %@?",
     "Tap a star to tell us how it's going.": "Нажмите на звезду и расскажите, как вам.",
     "%@ stars": "%@ звёзд",
     "Not now": "Не сейчас",
@@ -2450,7 +2460,8 @@
     "Let's keep going": "Продолжаем",
     "Match": "Сопоставь",
     "Pair each word with its meaning": "Соедини каждое слово с его значением",
-    "Keep going — Challenge %@": "Дальше — испытание %@"
+    "Keep going — Challenge %@": "Дальше — испытание %@",
+    "Studied Japanese before?": "Уже изучал японский?"
   },
   "bn": {
     "Kana": "কানা",
@@ -2553,7 +2564,7 @@
     "%@ months": "%@ মাস",
     "Pay once, yours forever": "একবার দিন, চিরকাল আপনার",
     "Ready for Challenge %@?": "চ্যালেঞ্জ %@ এর জন্য প্রস্তুত?",
-    "Enjoying Japanese Daily?": "Japanese Daily ভালো লাগছে?",
+    "Enjoying %@?": "%@ কেমন লাগছে?",
     "Tap a star to tell us how it's going.": "কেমন লাগছে জানাতে একটি তারায় ট্যাপ করুন।",
     "%@ stars": "%@ তারা",
     "Not now": "এখন নয়",
@@ -2673,7 +2684,8 @@
     "Let's keep going": "চলো এগিয়ে যাই",
     "Match": "মেলাও",
     "Pair each word with its meaning": "প্রতিটি শব্দকে তার অর্থের সঙ্গে মেলাও",
-    "Keep going — Challenge %@": "চালিয়ে যাও — চ্যালেঞ্জ %@"
+    "Keep going — Challenge %@": "চালিয়ে যাও — চ্যালেঞ্জ %@",
+    "Studied Japanese before?": "আগে জাপানি পড়েছ?"
   },
   "hi": {
     "Kana": "काना",
@@ -2776,7 +2788,7 @@
     "%@ months": "%@ माह",
     "Pay once, yours forever": "एक बार भुगतान, हमेशा के लिए आपका",
     "Ready for Challenge %@?": "चुनौती %@ के लिए तैयार हैं?",
-    "Enjoying Japanese Daily?": "Japanese Daily पसंद आ रहा है?",
+    "Enjoying %@?": "%@ कैसा लग रहा है?",
     "Tap a star to tell us how it's going.": "कैसा लग रहा है, बताने के लिए एक तारे पर टैप करें।",
     "%@ stars": "%@ सितारे",
     "Not now": "अभी नहीं",
@@ -2896,7 +2908,8 @@
     "Let's keep going": "चलो आगे बढ़ें",
     "Match": "मिलान",
     "Pair each word with its meaning": "हर शब्द को उसके अर्थ से मिलाएँ",
-    "Keep going — Challenge %@": "आगे बढ़ें — चैलेंज %@"
+    "Keep going — Challenge %@": "आगे बढ़ें — चैलेंज %@",
+    "Studied Japanese before?": "पहले जापानी पढ़ी है?"
   },
   "ta": {
     "Kana": "கானா",
@@ -2999,7 +3012,7 @@
     "%@ months": "%@ மாதங்கள்",
     "Pay once, yours forever": "ஒருமுறை செலுத்து, என்றென்றும் உங்கள்",
     "Ready for Challenge %@?": "சவால் %@ க்கு தயாரா?",
-    "Enjoying Japanese Daily?": "Japanese Daily பிடித்திருக்கிறதா?",
+    "Enjoying %@?": "%@ பிடித்திருக்கிறதா?",
     "Tap a star to tell us how it's going.": "எப்படி இருக்கிறது என்று சொல்ல ஒரு நட்சத்திரத்தைத் தட்டவும்.",
     "%@ stars": "%@ நட்சத்திரங்கள்",
     "Not now": "இப்போது வேண்டாம்",
@@ -3119,7 +3132,8 @@
     "Let's keep going": "தொடர்ந்து செல்வோம்",
     "Match": "பொருத்து",
     "Pair each word with its meaning": "ஒவ்வொரு சொல்லையும் அதன் பொருளுடன் பொருத்துங்கள்",
-    "Keep going — Challenge %@": "தொடருங்கள் — சவால் %@"
+    "Keep going — Challenge %@": "தொடருங்கள் — சவால் %@",
+    "Studied Japanese before?": "முன்பு ஜப்பானியம் படித்திருக்கிறீர்களா?"
   },
   "te": {
     "Kana": "కానా",
@@ -3222,7 +3236,7 @@
     "%@ months": "%@ నెలలు",
     "Pay once, yours forever": "ఒకసారి చెల్లించండి, ఎప్పటికీ మీది",
     "Ready for Challenge %@?": "సవాలు %@ కు సిద్ధమా?",
-    "Enjoying Japanese Daily?": "Japanese Daily నచ్చిందా?",
+    "Enjoying %@?": "%@ నచ్చిందా?",
     "Tap a star to tell us how it's going.": "ఎలా ఉందో చెప్పడానికి ఒక నక్షత్రాన్ని నొక్కండి.",
     "%@ stars": "%@ నక్షత్రాలు",
     "Not now": "ఇప్పుడు వద్దు",
@@ -3342,7 +3356,8 @@
     "Let's keep going": "ముందుకు సాగుదాం",
     "Match": "జత చేయి",
     "Pair each word with its meaning": "ప్రతి పదాన్ని దాని అర్థంతో జత చేయండి",
-    "Keep going — Challenge %@": "కొనసాగించండి — ఛాలెంజ్ %@"
+    "Keep going — Challenge %@": "కొనసాగించండి — ఛాలెంజ్ %@",
+    "Studied Japanese before?": "ఇంతకుముందు జపనీస్ చదివారా?"
   },
   "ne": {
     "Kana": "काना",
@@ -3445,7 +3460,7 @@
     "%@ months": "%@ महिना",
     "Pay once, yours forever": "एक पटक तिर्नुहोस्, सधैंका लागि तपाईंको",
     "Ready for Challenge %@?": "च्यालेन्ज %@ का लागि तयार?",
-    "Enjoying Japanese Daily?": "Japanese Daily मन पर्‍यो?",
+    "Enjoying %@?": "%@ मन पर्दैछ?",
     "Tap a star to tell us how it's going.": "कस्तो लागिरहेको छ भन्न तारा थिच्नुहोस्।",
     "%@ stars": "%@ तारा",
     "Not now": "अहिले होइन",
@@ -3565,7 +3580,8 @@
     "Let's keep going": "जारी राखौं",
     "Match": "जोडा",
     "Pair each word with its meaning": "हरेक शब्दलाई त्यसको अर्थसँग जोड्नुहोस्",
-    "Keep going — Challenge %@": "अगाडि बढ्नुहोस् — च्यालेन्ज %@"
+    "Keep going — Challenge %@": "अगाडि बढ्नुहोस् — च्यालेन्ज %@",
+    "Studied Japanese before?": "पहिले जापानी पढ्नुभएको छ?"
   },
   "fil": {
     "Kana": "Kana",
@@ -3668,7 +3684,7 @@
     "%@ months": "%@ buwan",
     "Pay once, yours forever": "Bayad minsan, sa iyo habambuhay",
     "Ready for Challenge %@?": "Handa na sa Hamon %@?",
-    "Enjoying Japanese Daily?": "Nage-enjoy sa Japanese Daily?",
+    "Enjoying %@?": "Nagugustuhan mo ba ang %@?",
     "Tap a star to tell us how it's going.": "I-tap ang isang bituin para sabihin sa amin.",
     "%@ stars": "%@ bituin",
     "Not now": "Hindi muna",
@@ -3788,7 +3804,8 @@
     "Let's keep going": "Tuloy-tuloy lang",
     "Match": "Pagtambalin",
     "Pair each word with its meaning": "Itambal ang bawat salita sa kahulugan nito",
-    "Keep going — Challenge %@": "Ituloy — Challenge %@"
+    "Keep going — Challenge %@": "Ituloy — Challenge %@",
+    "Studied Japanese before?": "Nag-aral ka na ba ng Hapon?"
   },
   "id": {
     "Kana": "Kana",
@@ -3891,7 +3908,7 @@
     "%@ months": "%@ bulan",
     "Pay once, yours forever": "Bayar sekali, milikmu selamanya",
     "Ready for Challenge %@?": "Siap untuk Tantangan %@?",
-    "Enjoying Japanese Daily?": "Menikmati Japanese Daily?",
+    "Enjoying %@?": "Suka dengan %@?",
     "Tap a star to tell us how it's going.": "Ketuk bintang untuk memberi tahu kami.",
     "%@ stars": "%@ bintang",
     "Not now": "Nanti saja",
@@ -4011,7 +4028,8 @@
     "Let's keep going": "Ayo lanjutkan",
     "Match": "Cocokkan",
     "Pair each word with its meaning": "Cocokkan setiap kata dengan artinya",
-    "Keep going — Challenge %@": "Lanjut — Tantangan %@"
+    "Keep going — Challenge %@": "Lanjut — Tantangan %@",
+    "Studied Japanese before?": "Pernah belajar bahasa Jepang?"
   },
   "ko": {
     "Kana": "가나",
@@ -4114,7 +4132,7 @@
     "%@ months": "%@개월",
     "Pay once, yours forever": "한 번 결제, 평생 이용",
     "Ready for Challenge %@?": "챌린지 %@ 준비됐나요?",
-    "Enjoying Japanese Daily?": "Japanese Daily가 마음에 드시나요?",
+    "Enjoying %@?": "%@ 마음에 드시나요?",
     "Tap a star to tell us how it's going.": "별을 눌러 어떤지 알려주세요.",
     "%@ stars": "별 %@개",
     "Not now": "나중에",
@@ -4234,6 +4252,7 @@
     "Let's keep going": "함께 힘내요",
     "Match": "짝 맞추기",
     "Pair each word with its meaning": "각 단어를 뜻과 짝지으세요",
-    "Keep going — Challenge %@": "계속 — 챌린지 %@"
+    "Keep going — Challenge %@": "계속 — 챌린지 %@",
+    "Studied Japanese before?": "일본어를 배운 적이 있나요?"
   }
 }

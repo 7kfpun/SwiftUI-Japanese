@@ -1,41 +1,45 @@
-Learn Japanese the smart way — kana, vocabulary and listening — in a few minutes a day.
+You've decided to sit the JLPT. Bonsai is built for everything after that decision: the vocabulary of all five levels, laid out in teaching order, so the distance to N1 is something you can see — and shrink a little every day.
 
-7,972 words across 201 themed lessons, grouped by level from JLPT N5 all the way to N1. Fully offline, no sign-up.
+The whole climb, in order
+7,972 words across 201 short lessons, grouped into the five levels of the test:
 
-MASTER KANA — ALL OF IT, FREE
-The complete hiragana and katakana charts, plus five ways to drill them: flashcards, a four-option quiz, a swipe quiz, listening, and handwriting — draw a kana and get scored on real stroke order, stroke count included. Every tile remembers how you did.
+N5: 19 lessons
+N4: 18 lessons
+N3: 56 lessons
+N2: 43 lessons
+N1: 65 lessons
 
-201 LESSONS, FOUR WAYS TO STUDY
-• Vocab List — browse and hear every word, or play a whole lesson hands-free
-• Flashcards — swipe to sort what you know
-• Train — a quick 50/50 between two answers
-• Learn — rebuild a word's reading from kana tiles
+Pick your level and the lesson list follows it. Everything works offline, there is no account to create, and your progress syncs privately between your devices through iCloud.
 
-THEN PROVE IT: THE CHALLENGE LADDER
-Every lesson is a ladder. Ten questions a rung, 80% to pass, up to three stars. Clear one and the next opens — and the questions harden as you climb, from recognition to recall to audio with no visual cue.
+Five angles on every lesson
+A word rarely sticks the first time, so each lesson can be worked five ways: read the vocab list and hear every word, sort flashcards by what you already know, race two-choice rounds in Train, pair words with meanings in Match, and rebuild each reading from kana tiles in Learn.
 
-FIVE LEVELS, IN TEACHING ORDER
-N5 and N4 build the foundation, N3 and N2 carry you through intermediate, and N1 is there when you're ready for it. Pick a level and the lesson list follows it.
+Then sit the test in miniature
+Every lesson ends in a ladder of challenges: ten questions a rung, 80% to pass, three stars for a perfect run. The rungs harden as you climb — first you recognise the word, then you recall it, and near the top you only hear it, nothing on screen, the way the exam's listening section will play it. Pass a rung and the next one opens.
 
-CLEAR AUDIO ON EVERY WORD
-All 7,972 words are spoken, and so is every kana. Tap anything to hear it.
+Grow N5 for free
+Sweep the opening lessons — three stars on every one of their challenges — and the whole N5 level, all 19 lessons, unlocks for good, free. A clean sweep is a high bar. That's the point: clear it, and you've earned the level above.
 
-KEEP THE STREAK
-A day counts when you answer something, not when you open the app. The Progress tab shows your streak, your record, the days you've studied, and how far up the ladder you've climbed.
+Every word, spoken
+All 7,972 words carry their own audio clip in a clear synthesised voice, and so does every kana. Tap a word to hear it, or let a whole lesson play through hands-free.
 
-STUDY IN YOUR LANGUAGE
-The interface is available in 19 languages. Word meanings are in English, Simplified and Traditional Chinese, and Vietnamese.
+Meanings in your language
+Word meanings come in English, Simplified Chinese, Traditional Chinese and Vietnamese. The interface itself speaks 19 languages, and you choose the two separately.
 
-YOUR PROGRESS FOLLOWS YOU
-Stars and kana mastery sync across your devices through iCloud.
+Kana, for when you want a refresher
+A complete hiragana and katakana section with five drills of its own — flashcards, a four-option quiz, a swipe quiz, listening, and handwriting scored against real stroke order. All of it free, all of it there when a reading trips you up.
 
-FREE TO START
-Kana is free in full, and you can start on the lessons for nothing. Go Premium to unlock every lesson and remove ads — subscribe, or buy once for life.
+A streak that keeps you honest
+A day only counts once you've answered something, not just opened the app. The Progress tab holds your streak, your record and your climb through each level — and the Today deck, on your Lock Screen, Home Screen and Apple Watch, deals exactly the words your next challenge will ask.
 
-No sign-up. No internet needed. Just open and learn.
-Got ideas? Settings → Send feedback.
+Premium, sized to your test date
+Start for nothing and see how Bonsai fits your study. Premium opens all 201 lessons: subscribe for 1, 3 or 6 months — however far off the exam is — or pay once and it's yours forever.
 
-Premium is an auto-renewable subscription (1, 3, 6 or 12 months) or a one-time Lifetime purchase. Subscriptions renew unless cancelled at least 24 hours before the current period ends. Prices are shown in the app before you buy, and you can manage or cancel anytime in your Apple ID settings.
+Bonsai JLPT is the next chapter from the maker of Japanese Daily. That app gets beginners started; this one is for the long climb — from your first N5 word to your last N1 lesson.
+
+Questions or ideas? Settings → Send feedback. Every message gets read.
+
+Premium is an auto-renewable subscription (1, 3 or 6 months) or a one-time lifetime purchase. Subscriptions renew unless cancelled at least 24 hours before the current period ends. Prices are shown in the app before you buy, and you can manage or cancel anytime in your Apple ID settings.
 
 Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Privacy Policy: https://japanesedaily.wahthefox.com/privacy.html
+Privacy Policy: https://jlpt-jp.web.app/privacy.html

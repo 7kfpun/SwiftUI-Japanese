@@ -9,10 +9,17 @@ enum Theme {
         Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? dark : light })
     }
 
-    // Teal accent (iOSColors.tealBlue) — brightened in dark so it keeps its pop
-    // against dark surfaces instead of going muddy.
-    static let accent  = dynamic(UIColor(red: 0.06, green: 0.69, blue: 0.75, alpha: 1),
-                                 UIColor(red: 0.25, green: 0.78, blue: 0.84, alpha: 1))
+    /// The course's accent — teal for Minna, orange for JLPT. Brightened in dark so it
+    /// keeps its pop against dark surfaces instead of going muddy.
+    ///
+    /// Read from `Course` rather than fixed here: the two apps build from this one file
+    /// and shipping the same accent is what made them look like the same product.
+    static let accent = dynamic(UIColor(red: Course.current.accentLight.r,
+                                        green: Course.current.accentLight.g,
+                                        blue: Course.current.accentLight.b, alpha: 1),
+                                UIColor(red: Course.current.accentDark.r,
+                                        green: Course.current.accentDark.g,
+                                        blue: Course.current.accentDark.b, alpha: 1))
     // Feedback colors (#2ECC40 / #FF4136) — softened in dark so they read as
     // right/wrong without glowing neon on near-black.
     static let correct = dynamic(UIColor(red: 0.18, green: 0.80, blue: 0.25, alpha: 1),

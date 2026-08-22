@@ -400,7 +400,13 @@ struct IntroView: View {
             // there's a way through it is a different experience from being sold to.
             earnCallout
 
-            question(L.t("Studied Minna no Nihongo before?"))
+            // Minna's question names its textbook; the JLPT app must not — naming the
+            // other course's book in this binary is both a trademark surface and the
+            // sameness a 4.3 reviewer is looking for. The answers (and the recorded
+            // lesson number) mean the same thing under either wording.
+            question(Course.current.id == "minna"
+                     ? L.t("Studied Minna no Nihongo before?")
+                     : L.t("Studied Japanese before?"))
 
             VStack(spacing: 8) {
                 IntroChip(text: L.t("No, starting fresh"),

@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "kf-nihongo"
-  }
+  },
+  "targets": {
+    "kf-nihongo": {
+      "hosting": {
+        "main": [
+          "kf-nihongo"
+        ],
+        "jlpt": [
+          "jlpt-jp"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

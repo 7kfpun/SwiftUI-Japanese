@@ -37,7 +37,7 @@
 	<false/>
 	<!-- Without this the home screen reads "jlpt", the target name. -->
 	<key>CFBundleDisplayName</key>
-	<string>JLPT Daily</string>
+	<string>Bonsai JLPT</string>
 
 	<!-- Distinct from nihongo's `nihongo://`: iOS resolves a scheme claimed by two
 	     apps arbitrarily, so a shared one would let either app open the other's links. -->

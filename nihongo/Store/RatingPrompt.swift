@@ -135,7 +135,7 @@ struct RatingSheet: View {
                 .font(.system(size: 40))
                 .foregroundStyle(Theme.accent)
 
-            Text(L.t("Enjoying Japanese Daily?"))
+            Text(L.t("Enjoying %@?", Course.current.displayName))
                 .font(Theme.title(.title3))
                 .multilineTextAlignment(.center)
 

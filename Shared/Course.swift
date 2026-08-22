@@ -42,6 +42,29 @@ struct Course {
     /// nudge send people. Two apps, two listings: a JLPT user recommending the Minna app
     /// is the kind of mistake nobody would ever report.
     let appStoreURL: String
+
+    /// What this app calls itself where the UI must say its own name — the rating
+    /// prompt, above all. Shared strings said "Japanese Daily" in *both* binaries, which
+    /// put the other product's name inside this one: harmless-looking, but it is the
+    /// first thing a 4.3 reviewer comparing the two apps would screenshot.
+    let displayName: String
+
+    /// The app's one accent colour, as sRGB 0…1 for light and dark.
+    ///
+    /// **Per course, and that is the point.** The two apps ship from one codebase and
+    /// looked identical; App Review rejected JLPT as too close to Minna. The accent is
+    /// the single strongest signal that they are different products, so it cannot be a
+    /// shared constant — and neither can the per-target `AccentColor` asset, which must
+    /// be edited to match (it drives the tint of anything the system draws for us).
+    let accentLight: (r: Double, g: Double, b: Double)
+    let accentDark: (r: Double, g: Double, b: Double)
+    /// Whether this app shows ads at all — banners and interstitials together.
+    ///
+    /// A kill switch, checked at the two seams everything ad-shaped goes through
+    /// (`AdBanner.body`, `Ads.preload/show`). JLPT's were paused during the 2026-08
+    /// 4.3 resubmission and restored once the rebrand landed — the paywall promises
+    /// "no ads" as a Premium benefit, which only means something while ads show.
+    let adsEnabled: Bool
     let products: Products
     /// Shown by the widget, the watch app and the watch complications before the phone
     /// has ever published a snapshot — so nothing is ever blank. Course-specific: a
@@ -91,6 +114,10 @@ extension Course {
         appGroup: "group.com.kfpun.nihongo",
         cloudKitContainer: "iCloud.com.kfpun.nihongo",
         appStoreURL: "https://apps.apple.com/app/id1447639161",
+        displayName: "Japanese Daily",
+        accentLight: (0.06, 0.69, 0.75),          // teal — the original identity
+        accentDark:  (0.25, 0.78, 0.84),
+        adsEnabled: true,
         products: .init(
             lifetime: "com.kfpun.nihongo.premium.lifetime",
             subscriptions: [
@@ -147,6 +174,12 @@ extension Course {
         appGroup: "group.com.kfpun.jlptjp",
         cloudKitContainer: "iCloud.com.kfpun.jlptjp",
         appStoreURL: "https://apps.apple.com/app/id6800220716",
+        displayName: "Bonsai JLPT",
+        // #FFA500. The dark variant is lifted and slightly desaturated the same way
+        // minna's teal is: the flat hue goes muddy against near-black.
+        accentLight: (1.00, 0.647, 0.00),
+        accentDark:  (1.00, 0.72, 0.25),
+        adsEnabled: true,
         // These IDs deliberately do **not** mirror minna's, and both differences are
         // load-bearing. Product IDs are immutable and unique per *team* forever, so this
         // block records what App Store Connect actually holds — never an aspiration.
