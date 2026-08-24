@@ -8,6 +8,9 @@ Outputs under nihongo/Resources/ (all git-ignored — regenerated, never committ
   - audio/vocab/<lesson>-<slug>.m4a   Kyoko clips, flat + unique so the synchronized
                                       group bundles them as individual (incrementally
                                       copied) resources without name collisions.
+  - audio/examples/ex-<lesson>-<slug>.m4a  the word's example sentence, PRIMARY voice
+                                      only. `ex-` prefixed because the bundle is flat —
+                                      see the copy below.
   - audio/kana/kana-<romaji>.m4a      one clip per kana cell.
   - audio/cheer/cheer-<key>.m4a       the Challenge result screen's spoken reactions,
                                       one per phrase in `Cheer` (Pronouncer.swift),
@@ -35,6 +38,10 @@ SRC  = os.path.join(SUB, "minna")
 ROOT = os.path.join(REPO, "nihongo", "Resources")
 VOCAB_DST = os.path.join(ROOT, "audio", "vocab")
 KANA_DST  = os.path.join(ROOT, "audio", "kana")
+# Example-sentence clips, `PRIMARY` voice only. The alternate exists upstream but is
+# not copied: it is there so the Challenge ladder can alternate voices on a *listening*
+# rung, and no rung asks a sentence — a second copy would be 47MB for nothing.
+EXAMPLE_DST = os.path.join(ROOT, "audio", "examples")
 LANGS = ["en", "zh", "zh-Hant", "vi", "de", "th", "my", "es", "fr", "ru", "bn", "hi", "ta", "te", "ne", "it", "fil", "id", "ko"]
 
 # Voices. The submodule ships three for minna: `kyoko` (macOS `say`, concatenative) and
@@ -54,8 +61,9 @@ ALT = "kenzaki"
 ALT_SUFFIX = f"-{ALT}"
 os.makedirs(VOCAB_DST, exist_ok=True)
 os.makedirs(KANA_DST, exist_ok=True)
+os.makedirs(EXAMPLE_DST, exist_ok=True)
 
-lessons, audio_copied, alt_copied = [], 0, 0
+lessons, audio_copied, alt_copied, example_copied = [], 0, 0, 0
 for n in range(1, 51):
     data = json.load(open(f"{SRC}/vocab/{n}.json"))["data"]
     out = []
@@ -63,6 +71,18 @@ for n in range(1, 51):
         entry = {"kanji": e["kanji"], "kana": e["kana"], "romaji": e["romaji"]}
         if "dictionary" in e: entry["dictionary"] = e["dictionary"]
         if e.get("useKana"):  entry["useKana"] = True
+        # The example sentence: three index-aligned phrase arrays (one element per
+        # bunsetsu — kanji over kana over romaji, zipped into columns by the UI).
+        # Grammar-ceilinged upstream (a lesson-N sentence uses only lessons 1..N).
+        #
+        # The upstream `example.audio` paths are dropped and the clip is addressed by
+        # the *word's* own name instead — one clip per entry, same lesson and slug as
+        # its vocab clip, so `Vocab.audio` locates both and the JSON carries no second
+        # path. Nothing to keep in sync when a slug changes.
+        if e.get("example"):
+            ex = e["example"]
+            entry["example"] = {"kanji": ex["kanji"], "kana": ex["kana"],
+                                "romaji": ex["romaji"]}
         clips = e.get("audio") or {}
         rel = clips.get(PRIMARY)
         if rel:
@@ -81,11 +101,37 @@ for n in range(1, 51):
                     shutil.copyfile(os.path.join(SUB, alt_rel),
                                     os.path.join(VOCAB_DST, f"{name}{ALT_SUFFIX}.m4a"))
                     alt_copied += 1
+                # The sentence clip, under the same name in its own folder — so a word
+                # with a clip but no sentence recording simply has no file, and playback
+                # falls back to the synthesiser without needing a flag in the data.
+                #
+                # **`ex-` prefixed**, and that prefix is load-bearing. Xcode's
+                # synchronized folders add every resource individually and the bundle is
+                # therefore *flat*: `audio/vocab/1-watashi.m4a` and
+                # `audio/examples/1-watashi.m4a` would both want to be `1-watashi.m4a`
+                # at the root, and one would silently win — words playing sentences, or
+                # the reverse, with nothing in the data to show why. It is the same
+                # reason the kana and cheer clips carry `kana-` and `cheer-`.
+                ex_src = os.path.join(SUB, "minna", "audio", "examples", PRIMARY,
+                                      str(n), os.path.basename(rel))
+                if entry.get("example") and os.path.exists(ex_src):
+                    shutil.copyfile(ex_src, os.path.join(EXAMPLE_DST, f"ex-{name}.m4a"))
+                    example_copied += 1
         out.append(entry)
     lessons.append({"number": n, "entries": out})
 
 translations = {L: {str(n): json.load(open(f"{SRC}/{L}/{n}.json")) for n in range(1, 51)} for L in LANGS}
-out = {"languages": LANGS, "lessons": lessons, "translations": translations}
+
+# Example-sentence translations exist for a subset of languages (en, zh, zh-Hant so
+# far). Derived from the folders actually present, not a list here — a new language
+# upstream should appear by regenerating, not by editing this script.
+EX_SRC = os.path.join(SRC, "examples")
+example_langs = sorted(d for d in os.listdir(EX_SRC)
+                       if os.path.isdir(os.path.join(EX_SRC, d))) if os.path.isdir(EX_SRC) else []
+examples = {L: {str(n): json.load(open(f"{EX_SRC}/{L}/{n}.json")) for n in range(1, 51)}
+            for L in example_langs}
+out = {"languages": LANGS, "lessons": lessons, "translations": translations,
+       "examples": examples}
 dst = os.path.join(ROOT, "MinnaData.json")
 json.dump(out, open(dst, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 
@@ -130,7 +176,9 @@ for src in sorted(glob.glob(os.path.join(SUB, "voices", f"cheer-{PRIMARY}-*.m4a"
         cheer_alt += 1
 
 msg = (f"MinnaData.json {os.path.getsize(dst)//1024}KB | entries={sum(len(l['entries']) for l in lessons)}"
-       f" | {PRIMARY} clips={audio_copied} | {ALT} clips={alt_copied} | kana clips={kana_made}"
+       f" | example langs={len(example_langs)}"
+       f" | {PRIMARY} clips={audio_copied} | {ALT} clips={alt_copied}"
+       f" | example clips={example_copied} | kana clips={kana_made}"
        f" | cheer clips={cheer_made}+{cheer_alt}")
 if kana_missing:
     msg += f" | MISSING kana ({len(kana_missing)}): {','.join(kana_missing)}"
