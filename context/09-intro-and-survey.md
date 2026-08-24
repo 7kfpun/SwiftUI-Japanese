@@ -6,7 +6,7 @@ The first-launch flow, and the only place this app writes to a server.
 
 The app had no onboarding at all: `RootView` went straight into the `TabView` on
 Today. That left three things undiscovered — the Kana tab is free in full, a
-lesson has four untested practice modes before the scored ladder, and the same
+lesson has five untested practice modes before the scored ladder, and the same
 deck appears on the Lock Screen and Watch — and one thing unasked: whether the
 learner can read kana at all, which lesson 1 rung 1 assumes.
 
@@ -30,7 +30,7 @@ launch.
 
 Paging is `cardPager` over a `SwipeCard` deck with `CardStackPeek` — not
 `TabView(.page)` — so the first swipe a learner ever makes is the same gesture
-Today, Flashcards, Train and Kana Swipe all want. The tour teaches the app's one
+Today, Practice and Kana Swipe all want. The tour teaches the app's one
 navigation idiom while explaining the app. Paging is **clamped, not wrapped**: a
 forward swipe off card 5 finishes, exactly as the button does.
 
@@ -75,12 +75,12 @@ user's first paywall encounter is passing lesson 3's last rung and finding lesso
 
 Four chips in `SelectModeView`'s shallow→deep order, each swapping a full-size
 static vignette below: `VocabRow`s, a `SwipeCard` face with a `SwipeStamp` hint,
-Train's two chips (`TrainModel.optionCount` is 2), and Learn's assembled reading
+Practice's two chips (`PracticeModel.optionCount` is 2), and Learn's assembled reading
 over a tile grid. Vocab List is preselected so the card is never an empty frame.
 
 Two rules that aren't obvious:
 
-- **The samples are static.** Instantiating `TrainModel`/`LearnModel` or the real
+- **The samples are static.** Instantiating `PracticeModel`/`LearnModel` or the real
   mode views would drag in gating, ad slots and session state, and would start
   recording results from inside a tour.
 - **They are not draggable.** A horizontal drag would fight `cardPager`'s page
@@ -92,18 +92,18 @@ none of them needed translating.
 
 ### Card 4's rung mockup
 
-`IntroChallengeRungs` models three states explicitly, mirroring
-`ChallengeRowState`: rung 1 passed 3★, rung 2 **open** (numbered, three empty
-stars, no padlock), rung 3 locked behind it.
+`IntroChallengeRungs` models three states explicitly, mirroring the real ladder's
+chips: rung 1 passed 3★, rung 2 **open** (numbered, three empty stars, no
+padlock), rung 3 locked behind it.
 
 Inferring "locked" from "has no stars" is the tempting shortcut and it's wrong —
 an unattempted rung is *open*. Getting it wrong draws a padlock on rung 3 with
 rung 2 cleared above it, contradicting `ChallengeResult.isUnlocked` and, worse,
 contradicting the rule the card's own copy is teaching.
 
-The rungs are rebuilt rather than reusing the real (private) `ChallengeRow`,
-which takes a `ChallengeResult` — fabricating `@Model` rows for a mockup would
-insert invented history into the CloudKit-backed store.
+The rungs are rebuilt rather than reusing the real ladder's chips, which read a
+`ChallengeResult` — fabricating `@Model` rows for a mockup would insert invented
+history into the CloudKit-backed store.
 
 ## The three answers
 
@@ -252,8 +252,8 @@ missing-translation fallback, and several tests depend on that meaning.
 
 ## Localization
 
-27 new keys × 17 languages. Card 3's eight strings and card 4's captions were
-reused from `SelectModeView`/`ChallengeRow` rather than re-added. Four carry
+27 new keys × 17 languages. Card 3's strings and card 4's captions were
+reused from `SelectModeView`'s own copy rather than re-added. Four carry
 format placeholders and one escapes a literal percent (`%%`) — see
 `LocalizationTests.formatPlaceholdersSurviveTranslation`, which counts
 placeholders per language. Run `check-i18n-parity` after any string change here.

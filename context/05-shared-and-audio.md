@@ -21,7 +21,7 @@ exists for previews/tests. The real implementation is `AudioPronouncer`.
 ### One speech policy, two players
 
 There are **two** playback paths and they can't share a class: `AudioPronouncer` is
-fire-and-forget, while `LessonPlayer` (Vocab List's "Play all") sequences a whole lesson
+fire-and-forget, while `LessonPlayer` (Read along's engine) sequences a whole lesson
 and needs `AVAudioPlayerDelegate`/`AVSpeechSynthesizerDelegate` callbacks to advance.
 They *can* share the policy, and that's what kept drifting — both used to carry their own
 copy of the voice lookup, the 0.4 rate and the `cleanWord` call, with nothing making them
@@ -39,7 +39,7 @@ that delegate is the *only* thing `LessonPlayer` adds over `AudioPronouncer`.
 The playback order:
 
 1. **Bundled clip first** — `Speech.clipPlayer` / `VocabStore.kanaAudioURL` resolve the
-   pre-generated `.m4a`. This is the primary path for all 2089 words and every kana
+   pre-generated `.m4a`. This is the primary path for all 2100 words and every kana
    cell: reliable, works in the simulator, no dependence on which voices a device has
    installed. `clipPlayer` takes a `Speech.Voice`, and `audioURL` falls back to the
    default when that voice has no clip for the word — which is what lets a
@@ -99,10 +99,12 @@ deliberately picks a sample word that *has* a distinct kanji (`09-intro-and-surv
 | Type | Used by | Note |
 |---|---|---|
 | `SoundToggle` | every quiz/practice toolbar | The single global sound flag — same `Pref.soundOn` as `CardOptionsBar`'s sound chip |
-| `ScoreBadge` | Kana Classic/Listening, Kana Swipe, Kana Write, Train, Challenge | One right/wrong/total pill everywhere |
+| `ToolbarStatus` | every scored screen, via `ScoreBadge` | The status shell: a capsule of numbers in the nav bar's centre, plus an optional caption naming the run |
+| `ScoreBadge` | Kana Classic/Listening, Kana Swipe, Kana Write, Match | Right/wrong/total inside `ToolbarStatus` |
+| `ShakeEffect` | Match | The app's one "that didn't work" motion — a `GeometryEffect`, so it returns rather than leaving the view displaced |
 | `OptionGrid` + `QuizOptionButton` | Kana Classic/Listening, Challenge | The 2×2 multiple-choice grid, so both look identical |
-| `SwipeOptionChip` | Train, Kana Swipe | The two candidates on a swipe-to-choose screen |
-| `SwipeCard` | Today, Flashcards, Train, Kana Swipe, the intro | The card face itself: surface, hairline, shadow, "⟨ Swipe ⟩" hint, corner stamps, tilt-and-slide |
+| `SwipeOptionChip` | Practice (quiz face), Kana Swipe | The two candidates on a swipe-to-choose screen |
+| `SwipeCard` | Today, Practice (both faces), Kana Flashcards, Kana Swipe, the intro | The card face itself: surface, hairline, shadow, "⟨ Swipe ⟩" hint, corner stamps, tilt-and-slide |
 | `SwipeStamp` | via `SwipeCard` | The rotated corner stamp that previews a swipe's outcome |
 | `CardStackPeek` | every swipeable screen | The decorative faded-deck backdrop |
 | `choiceChip(_:)` (`View` ext.) | flashcard grade buttons, `SwipeOptionChip` | Tinted fill + coloured border, one chrome for every choice control |
@@ -110,7 +112,7 @@ deliberately picks a sample word that *has* a distinct kanji (`09-intro-and-surv
 `SwipeCard` is the piece that stopped four screens drifting: they had become four copies
 of the same chrome with four different corner radii and three separate copies of the
 stamp-opacity arithmetic. What stays with each caller is the part that genuinely differs —
-the *meaning* of a swipe. Flashcards grade yourself, Train and the kana quiz pick an
+the *meaning* of a swipe. Practice's card face grades yourself, its quiz face and the kana quiz pick an
 answer, Today just turns the page (so it passes no stamps at all). Same gesture,
 different verbs: the type owns the looks, the callers own the logic. The peek stack stays
 *outside* `SwipeCard` on purpose — it must not move with the card, and Today drives
@@ -155,7 +157,7 @@ top progress counter, auto-play, reveal button, and the congrats/restart screen 
 callers supplying only what's type-specific: the card face view, an id closure (for
 auto-play-on-change detection), the speak closure, the reveal/summary labels, and an
 optional `trackName` that becomes `"\(trackName)_grade"` / `"_done"` analytics events.
-**Both Lessons Flashcards and Kana Flashcards are the same `FlashcardScreen` over
+**Kana Flashcards is `FlashcardScreen` over
 different element types** (`Vocab` vs `K`) — which is why they look and behave
 identically.
 
@@ -201,7 +203,7 @@ pickers reading as one family:
   `.id(appLanguage)` so switching it rebuilds the UI instantly instead of needing a
   relaunch.
 - `Pref.translationLanguage` — which language Japanese vocabulary is translated *into*
-  (vocab lists, flashcards, Train, Challenge, search). Resolved per-lesson via
+  (vocab lists, Practice, Challenge, search). Resolved per-lesson via
   `VocabStore.lesson(_:_:)`, and re-resolved on push by `SelectModeView`/`VocabListView`
   so changing it mid-session takes effect on the next screen entry.
 
@@ -216,6 +218,46 @@ English-looking text that no translation pass will ever cover (hence
 `String(format:)`, so a literal `%` must be written `%%`
 (`LocalizationTests.literalPercentSignsAreEscaped`). Run the `check-i18n-parity` skill
 after any string change.
+
+## Notifications — `StreakReminder` + `PushService`
+
+Two kinds, deliberately separate:
+
+- **The streak reminder is entirely on-device** (`nihongo/StreakReminder.swift`).
+  What's worth saying — *you haven't studied today* — derives from `StudyDay` rows that
+  never leave the device, at a local hour only the device knows; a server would need
+  the streak, the time zone and an identifier to join them, three things this app goes
+  out of its way not to have. `reschedule(studiedToday:)` is idempotent and runs on
+  every recorded answer and Today appear; it **awaits** `cancel()` before adding —
+  the fire-and-forget callback form raced the adds, and because identifiers repeat
+  across reschedules (`streak.reminder.<yyyymmdd>`), a late removal deleted the very
+  requests that replaced it and that day's reminder silently never fired. No streak
+  *number* in the copy: requests are scheduled days ahead, and a number baked in now is
+  a guess about a day that hasn't happened. `requestAuthorization()` is called from the
+  Settings toggle and **nowhere else** — never at launch. Turning the toggle *off*
+  confirms first; the suppress flag around that dialog is a one-shot consumed inside
+  `onChange`, because a set-then-reset inside the button action never survives to the
+  next view update.
+
+- **Push is for messages that originate with us** (`nihongo/PushService.swift`):
+  OneSignal and Firebase Messaging coexist because the Firebase app-delegate proxy is
+  disabled (`FirebaseAppDelegateProxyEnabled = NO`), which makes the `AppDelegate`
+  callbacks load-bearing — `didRegister` fans the APNs token out to both SDKs by hand.
+  Delegate install order matters: ours is set *after* `OneSignal.initialize`, so it
+  wins `UNUserNotificationCenter.delegate`. The OneSignal app ID is a placeholder read
+  from Info.plist; empty skips init cleanly. iOS has **one** notification permission,
+  so the streak reminder's grant covers push — `registerIfAuthorized()` registers with
+  APNs only once authorized, because unprompted registration is silent and makes "no
+  token" indistinguishable from "user said no".
+
+  **The 3.0.2 launch crash lives here as a warning.** `registerIfAuthorized()` resumed
+  off the main thread after awaiting `notificationSettings()` and
+  `registerForRemoteNotifications()` asserted (`NSInternalInconsistencyException`,
+  3 users) — despite `PushService` being `@MainActor`, because the target builds in
+  Swift 5 language mode where `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` is inference,
+  not enforcement. The call is now wrapped in an explicit `await MainActor.run`, and
+  `AppDelegate` carries a source-level `@MainActor`. Don't "simplify" either away, and
+  treat any UIKit call after an `await` in this codebase with the same suspicion.
 
 ## `LegalView` (`nihongo/Legal/LegalView.swift`)
 

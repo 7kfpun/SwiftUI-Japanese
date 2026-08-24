@@ -46,13 +46,21 @@ Three Japanese faces plus one title face, all through `Theme` —
 `jp/jpBold/jpStrokes(_ size:)` and `title(_ style:weight:)` /
 `display(_ size:)` / `titleUIFont(...)`:
 
-- **`Theme.jp`** — `HiraMaruProN-W4`, iOS's built-in rounded Hiragino Maru
-  Gothic. Used for most Japanese body/headword text (Learn's assembled
-  answer, Lessons Quiz prompt, Flashcard faces, Today's card). No bundled font
-  file — if a rounded bundled typeface (e.g. Zen Maru Gothic) is ever wanted
-  instead, this is the one place to change it.
-- **`Theme.jpBold`** — `HiraginoSans-W6` (the Maru face has no bold weight on
-  iOS). Used for kana glyphs in the Kana tab (tile browser, quiz option text).
+- **`Theme.jp`** — `HiraMinProN-W3`, iOS's built-in **Hiragino Mincho ProN**
+  (明朝, serif). Used for most Japanese body/headword text (Learn's assembled
+  answer, Practice prompts, card faces, Today's card). No bundled font file —
+  this is the one place to change it.
+
+  Mincho because the design specifies it: its mocks set every Japanese string in
+  **Noto Serif JP** against a sans UI. Noto Serif JP isn't on iOS and bundling it
+  costs megabytes per weight, so this is the system face of the same class. The
+  brush contrast a mincho keeps — thick verticals, thin horizontals, angled
+  entries — is part of what a learner is reading *for*; a rounded gothic flattens
+  it. ProN, not Pro: JIS2004 shapes, what modern Japanese print uses.
+- **`Theme.jpBold`** — `HiraMinProN-W6`, the same family's heavy weight. Mincho
+  ships W3 and W6 on iOS, so unlike the old rounded Maru Gothic this no longer
+  has to jump families to find a bold. Used for kana glyphs in the Kana tab
+  (tile browser, quiz option text).
 - **`Theme.jpStrokes`** — **`KanjiStrokeOrders`**, a bundled third-party font
   (BSD-licensed — see `context/../nihongo/Legal` and `LegalDoc.licenses`)
   whose glyphs render with visible numbered stroke-order annotations. Used
@@ -62,8 +70,9 @@ Three Japanese faces plus one title face, all through `Theme` —
   stripped before display or scoring.
 
 **All three Japanese faces have full Latin coverage, and that is a trap.**
-Verified with CoreText: `HiraMaruProN-W4` and `HiraginoSans-W6` render Latin,
-Cyrillic and Western European accents from their own glyph tables, and the
+Verified against the iOS 26.5 runtime's own font files: both `HiraMinProN-W3`
+and `-W6` render Latin, digits and punctuation (and ★ · × —) from their own
+glyph tables, as the Maru/Sans faces before them did, and the
 bundled `KanjiStrokeOrders` file has real glyphs for a–z, A–Z and 0–9 too. So
 romaji or a translation drawn with one of them came out *plain*, never as tofu
 — which is why several slots sat on the wrong face unnoticed. The rule is that
@@ -77,7 +86,7 @@ romaji and translation no). Every switchable slot reads one of those:
 | Kana browser tile (26) and its toolbar glyph (15) | `jpBold` | `display` |
 | Kana quiz prompt, Classic (120) / Swipe (150) | `jpStrokes` | `display` |
 | Kana quiz options, Classic (26) / Swipe (30) | `jpBold` | `display` |
-| Train prompt (44) | `jp` | `display` (romaji) · system `.largeTitle` (translation) |
+| Practice quiz prompt (44) | `jp` | `display` (romaji) · system `.largeTitle` (translation) |
 | Challenge prompt (38) | `jp` | `display` (romaji) · system `.title` (translation) |
 
 A *translation* is the one case that doesn't take `display`: it's prose in the
@@ -109,12 +118,56 @@ Everything else uses Dynamic Type text styles (`.headline`, `.subheadline`,
 `.caption`, etc.) rather than fixed point sizes, so large-text accessibility
 settings work for free.
 
+### Scroll indicators: cards no, documents yes
+
+The practice and lesson screens are fixed-shape boards — a briefing, a results card, a
+lesson's modes — and on those the indicator sits *over* the content while reporting a
+position nobody needs. They pass `.scrollIndicators(.hidden)`. Legal, the paywall and the
+feedback form keep theirs: where you are in a licence agreement or a long form genuinely
+is information.
+
+### Toolbar items already have their chrome
+
+iOS 26 draws every navigation-bar item inside its own circular background. A toolbar
+button that also fills a `Circle()` behind its glyph therefore renders as a disc inside a
+disc — visibly a button wearing a second button, and the accent one looks worst because
+it is the one you notice. Toolbar items are **bare glyphs**, tinted where they need
+emphasis (`SoundToggle`, the back chevron, Vocab List's Read along). Filled shapes belong
+to in-body buttons, where nothing else is drawing a background.
+
+### A `.frame` is not a tap target
+
+`.buttonStyle(.plain)` hit-tests the label's *rendered content*, and a `.frame` only
+reserves layout space — it draws nothing, so it catches nothing. A full-width button
+built as
+
+```swift
+Button { … } label: { Text("Next").frame(maxWidth: .infinity).frame(height: 54) }
+    .buttonStyle(.plain)
+    .background(Color.primary, in: RoundedRectangle(cornerRadius: 18))   // ← outside
+```
+
+renders a 54pt bar and accepts taps **only on the glyphs of the word**. The background is
+applied to the `Button`, not to the label, so it never becomes part of the hit region.
+Reported from a real screen: the challenge's Next button looked full-width and only
+"Next" was pressable.
+
+The rule: **fill and shape belong inside the label** — `.background(…)` there makes the
+region hittable, and `.contentShape(RoundedRectangle(…))` states the target exactly.
+Applying them after `.buttonStyle` is the bug. The same applies to bare glyph buttons:
+an `Image` is only as tappable as the glyph it draws, so anything below 44pt needs a
+`.frame(width:height:)` plus `.contentShape(Rectangle())` — the rating stars were 22pt
+targets with dead gaps between them.
+
 ### Why the titles are rounded, and where the line is
 
-`Theme.jp` is *already* a rounded face (Hiragino Maru Gothic), so the Latin
-headings were the half that was out of step: a card whose Japanese word was
-soft and whose heading above it was plain SF Pro. Rounding the headings closes
-that gap from the Latin side, without touching the Japanese faces.
+The titles are rounded SF and the Japanese is mincho, and the mismatch is the
+point — it is the design's own pairing: a serif for the Japanese being taught, a
+sans for the interface around it. Content and chrome should not read as one
+voice. (The original reason was different: `Theme.jp` used to be Hiragino Maru
+Gothic, and rounding the Latin headings closed the gap to a *rounded* Japanese
+face. The Japanese face moved; the rounded headings stayed, now for the opposite
+reason.)
 
 `design: .rounded` rather than a bundled display font, deliberately — a
 Latin-only font file would break both Dynamic Type scaling and the system's
@@ -182,7 +235,7 @@ would get a rounded heading for free.
 
 ### Line heights per script, and what that costs a fixed-height box
 
-Measured with CoreText over every string in `UIStrings.json` and all 37 602
+Measured with CoreText over every string in `UIStrings.json` and all 39 900
 vocabulary translations in `MinnaData.json` (re-measured when Nepali joined as
 the 18th language: its line box and tallest ink are identical to Hindi's —
 both are Devanagari — so the table did not move). Line box = ascent + descent +
@@ -238,12 +291,12 @@ The most distinctive interaction pattern in the app, and it's genuinely
 - **`SwipeCard`** owns the card itself: surface, hairline, shadow, the ⟨ Swipe ⟩ hint,
   the corner stamps and the tilt-and-slide that follows a drag. Every swipeable screen
   draws one. What stays with each caller is what genuinely differs — the *meaning* of a
-  swipe: Flashcards grade yourself, Train and the kana quiz pick an answer, Today just
+  swipe: Practice's card face grades yourself, its quiz face and the kana quiz pick an answer, Today just
   turns the page (so it passes no stamps at all).
-- **Lessons Flashcards** and **Kana Flashcards** are the literal same
-  `FlashcardScreen<Element, Face>` generic, instantiated over `Vocab` and `K`
+- **Kana Flashcards** is the `FlashcardScreen<Element, Face>` generic over `K`;
+  Practice's card face reuses the same chrome over `Vocab`
   respectively.
-- **Kana Swipe quiz** and **Train** hand-roll their own drag gestures (2 fixed options
+- **Kana Swipe quiz** and **Practice** hand-roll their own drag gestures (2 fixed options
   instead of a pass/fail grade) over the same `SwipeCard`, `CardStackPeek` backdrop and
   `choiceChip` chrome, so they visually match the flashcard screens.
 - **Today** uses `CardPager` (the ordered-paging half of the pattern, not the
@@ -254,8 +307,8 @@ The most distinctive interaction pattern in the app, and it's genuinely
   `draggable: false`, so it keeps the fling animation while paging by button only.
 
 Concretely: drag horizontally with a slight rotation proportional to drag
-distance; past a threshold (80pt in `CardPager`, 90pt in Train and the kana swipe quiz,
-100pt in `FlashcardScreen`), the card flings fully off-screen and the next one enters
+distance; past a threshold (80pt in `CardPager`, 90pt in the kana swipe quiz,
+100pt in `FlashcardScreen` and Practice), the card flings fully off-screen and the next one enters
 from the opposite side; a corner `SwipeStamp` previews the outcome you're dragging
 toward, fading in so it reaches full strength exactly where the swipe would commit.
 Where a verdict is involved the stamp is paired with an *icon* change, never colour

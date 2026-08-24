@@ -1,7 +1,7 @@
 # Japanese Daily 每日日本語 — working rules
 
 Native SwiftUI + SwiftData iOS app teaching the Minna no Nihongo vocabulary (50
-lessons, 2089 words) and the kana syllabaries, in 19 UI languages, with a widget
+lessons, 2100 words) and the kana syllabaries, in 19 UI languages, with a widget
 and an Apple Watch app. `context/` documents how it works — read `context/README.md`
 first and follow its index; it is kept current and is the fastest way in.
 
@@ -96,6 +96,13 @@ first and follow its index; it is kept current and is the fastest way in.
   face unnoticed. The face follows the content's script at runtime (`KForm.isJapanese`,
   `VForm.isJapanese`), not the screen. `jpStrokes` is functional, not decorative: it is
   the handwriting scoring template.
+
+  **The Japanese face is Hiragino Mincho ProN** (`jp` = W3, `jpBold` = W6), following the
+  design's Noto Serif JP — which is not on iOS, so the system mincho stands in. Two things
+  do *not* follow it and must not be "aligned": `jpStrokes` (KanjiStrokeOrders — the
+  stroke-order template Kana Write scores against), and **the watch**, whose entire font
+  set contains one Japanese family, Hiragino Kaku Gothic — `WatchTheme.jp` names
+  `HiraginoSans-W3` because no mincho exists there to name.
 - **`CardPager` belongs on the card, not the enclosing `ZStack`** — outside it, the peek
   layers fling along with the card and the deck slides as one slab.
 
@@ -131,27 +138,50 @@ Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
     it, `Unlock` carries it, and every `Gating.isLocked` caller must pass
     `earnedFirstGroup` — the parameter defaults to `false` so an un-plumbed gate fails
     *closed*.
-  - **Previewed:** on a locked lesson "Play with meanings" reads
-    `Gating.freeMeaningPreview` (7) words, then the paywall (`Gating.wordsToRead`).
+  - **Previewed:** Read along's "Japanese + meaning" reads `Gating.freeMeaningPreview`
+    (7) words and then shows the paywall (`Gating.wordsToRead`). **Premium on every
+    lesson, free ones included** — it used to key off the lesson lock, which made the
+    same paid feature play in full on lessons 1–5 and preview everywhere else, so a
+    learner who stayed in the free lessons never discovered it was paid.
 
-  Plain "Play all" — Japanese only — stays free on every lesson, and Vocab List itself is
-  free everywhere. **Do not state a free-lesson count** in App Store or website copy — the
+  Read along's "Japanese only" stays free on every lesson, its **speed dial is premium**
+  (`Gating.rate` — 1× for everyone, 0.8×/1.2×/1.5× paid), and Vocab List itself is free
+  everywhere. **Do not state a free-lesson count** in App Store or website copy — the
   product decision is that a visitor assumes it's free and meets the paywall having
   already got value. Still make clear a paid unlock exists.
 - **Never hardcode a lesson count in UI copy.** The paywall said "All 50 lessons" in both
   apps, promising 50 of JLPT's 201 on the screen that asks for money. Interpolate
   `Course.current.lessonCount`; `Gating.freeLessonLimit` likewise.
-- **Five practice modes** per lesson — Vocab List, Flashcards, Train, Match, Learn —
-  **plus the Challenge ladder**. Match (`MatchView.swift`) is the newest: five words
-  against five shuffled meanings, tap a pair to clear it, endless. There is no
-  `QuizView.swift`; Quiz and Listening became the ladder and `TrainModel`. Kana has five
-  modes, one of which is Listening.
+- **Five practice modes** per lesson — Practice, Vocab List, Flashcards, Match, Learn —
+  **plus the Challenge ladder**. Flashcards came *back* in 2026-08 after the merge, but
+  as a **browse-only deck**: swipe to page (ordered/random), hold to flip for details,
+  release to flip back. No grading, and it writes nothing at all — no stage, no result,
+  no streak day. Looking at a word is not evidence of knowing it, and the self-assessment
+  that used to live here is the very thing Practice exists to avoid. Practice
+  (`PracticeView.swift`) is the merge of the old Flashcards and Train — and **only the
+  app scores**: every card is a two-option quiz, whatever the word's stage (there is no
+  separate teaching card — the teaching lives in the reveal on the card's back), and a
+  left/right swipe always means *this answer*, never *I knew it*. Self-assessment was the
+  difference between the two old modes and the thing beginners could not choose between.
+  Two correct answers memorize a word (with two options a coin flip is right half the
+  time); a wrong one demotes it and the card comes back. Scheduled by per-word stages
+  (`PracticeProgress`, local-only by decision). Match
+  (`MatchView.swift`): five words against five shuffled meanings, tap or drag a line to
+  clear a pair, endless. There is no `QuizView.swift` or `TrainView.swift`; Quiz and
+  Listening became the ladder, and Train and Flashcards became Practice. Kana still has
+  five modes (its Flashcards live on — `FlashcardScreen` is shared chrome), one of which
+  is Listening.
 
   The count is stated in copy in four places and they drift apart silently: the intro
   headline (`"Five ways through a lesson."` in `UIStrings.json`, ×19 languages),
-  `Intro.Mode` (whose order `IntroTests` pins against `SelectModeView`'s), every
+  `Intro.Mode` (whose order `IntroTests` pins), every
   `fastlane/*/metadata/*/description.txt`, and `scripts/build-web.py`'s `T` dict. Adding
-  a sixth mode means all four.
+  or merging a mode means all four — the merge to four and the return to five both had to
+  walk this list.
+
+  **The store descriptions and websites are right about the count and wrong about the
+  names**: they say five, which is true again, but they name *Flashcards and Train*, and
+  Train no longer exists. Fix the names with the release that ships Practice.
 - **All the audio is synthesised, never native-speaker recordings — so never claim
   "native audio"**, whatever the voice. The two courses use different engines:
   - **Minna: VOICEVOX** (neural). `whitecul` is the default for vocab and kana;
@@ -166,7 +196,7 @@ Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
     with a visible credit (e.g. `VOICEVOX:WhiteCUL`). Nothing in the app carries one yet;
     Settings → Licenses is where it belongs. Check the current terms before shipping.
 
-  All 2089 Minna words and all 7972 JLPT words have a clip. Live `AVSpeechSynthesizer`
+  All 2100 Minna words and all 7972 JLPT words have a clip. Live `AVSpeechSynthesizer`
   remains the fallback — it covers bare kana tiles, and any future course shipping no
   clips — so "every word has a clip" is true of *this* data, not a guarantee.
 - **Subscriptions sold: 1, 3, 6, 12 months + lifetime.** The 12-month returned 2026-08

@@ -86,7 +86,7 @@ are guaranteed a question each so a rung always tests what it taught.
 ## Form tiering by rung
 
 `Challenge.forms(index:of:)` (`Challenge.swift:118`) returns the prompt→answer pairs a
-rung may ask, using `VForm` (defined in `TrainView.swift:3`):
+rung may ask, using `VForm` (defined in `Lessons/VForm.swift`):
 
 | Rung | Pairs unlocked | Kind |
 |---|---|---|
@@ -149,8 +149,11 @@ preference.
 `Challenge.stars(score:)` (`Challenge.swift:97`): **3★ only for 100**, 2★ at 90–99, 1★
 at 80–89, none below the pass mark. Because every rung asks exactly 10 questions this
 reads directly as "no misses / one miss / two misses", which is the whole payoff of the
-uniform question count. `StarRow` (`ChallengeView.swift:316`) draws them on both the
-result screen and the ladder rows.
+uniform question count. `StarRow` (`ChallengeView.swift`) draws them on the briefing,
+the result screen and the ladder chips — and the briefing states the bands **in misses**,
+computed by `ChallengeView.allowedWrong` from the run's real question count rather than
+hardcoded to ten (a short rung allows fewer misses, and pinned by
+`ChallengeTests.briefingStarBandsFollowTheQuestionCount`).
 
 ## Persistence: best-only, and the merge resolver
 
@@ -178,9 +181,9 @@ So a sync race can inflate nothing and lose nothing. The readers that matter:
 
 | Function | Used by | Merge handling |
 |---|---|---|
-| `byIndex(lesson:context:)` | `SelectModeView`, `TodayView` | one fetch per ladder, duplicates collapsed via `better` |
-| `isUnlocked(index:results:)` | rung rows | rung 1 always open, else the previous must be passed |
-| `passedCount(results:)` | the Challenge section header | counts passed values of the collapsed map |
+| `byIndex(lesson:context:)` | `SelectModeView`, `ChallengeView`'s briefing + stats, `TodayView` | one fetch per ladder, duplicates collapsed via `better` |
+| `isUnlocked(index:results:)` | rung chips | rung 1 always open, else the previous must be passed |
+| `passedCount(results:)` | the Challenge header (with the star tally) | counts passed values of the collapsed map |
 | `totalPassed(context:)` | the rating prompt | dedupes by `id` **first** — counting both twins would fire the prompt early |
 | `firstUnpassed(total:results:)` | Today's deck | lowest unpassed rung, nil once cleared |
 
@@ -191,18 +194,30 @@ because it needs every lesson in one fetch rather than one ladder.
 
 The run is fixed up front — questions, forms and order all decided by `ChallengeModel`
 in `init` — because a score only means something if the run is the same shape every
-time. That is the deliberate opposite of `TrainView`, which regenerates endlessly and
+time. That is the deliberate opposite of `PracticeView`, which re-queues endlessly and
 lets the learner cycle forms.
+
+**Three screens: briefing → play → result.** The briefing sizes the run up before it
+starts (pool as words, star bands in misses, a "last time n%" banner on a return
+visit); `challenge_start` fires from its button, not from `onAppear`, so a run begins
+when the learner says so. Play adds a clock, the stars *still reachable*, per-question
+pips, a spelled-out prompt label and a risk line. Result is `model.isDone` rather than
+a phase, so no state bug can show a score without the questions — see `04-lessons.md`
+§5 for the full anatomy.
 
 Details that are load-bearing:
 
-- **`restart()` on re-entry** (`ChallengeView.swift:43`). `@State`'s initial value is
-  used once per view *identity*, and re-pushing the same row reuses that identity — so
-  without the `onAppear` check you return to the previous run's result screen with no
-  way to play again.
-- **`finish()` is guarded by `recorded`** (`:115`). `isDone` can re-fire on a redraw and
+- **`restart()` returns to the briefing**, not to question 1: a retry is exactly when
+  the "last time n%" banner has something to say. `advanceToNext()` does the same one
+  rung up. `@State`'s initial value is used once per view *identity*, and re-pushing the
+  same row reuses that identity — so without `restart()` and the `onAppear` check you
+  return to the previous run's result screen with no way to play again.
+- **`finish()` is guarded by `recorded`.** `isDone` can re-fire on a redraw and
   a second `ChallengeResult.record` would inflate `attempts`.
-- **Audio rules** (`:218`, and `:59` for the answer sound). An audio prompt always
+- **A miss demotes the word in `PracticeProgress`** (`.recognized`+ → `.seen`), which is
+  what makes the result screen's "missed words come back in Practice" true rather than
+  a promise the app doesn't keep.
+- **Audio rules.** An audio prompt always
   speaks — the clip *is* the question, so the sound toggle can't silence it. Other
   prompts respect the toggle with one hard exception: a **translation prompt never
   speaks**, because the options are the Japanese words and pronouncing the answer reads
@@ -214,7 +229,8 @@ Details that are load-bearing:
   `08-analytics.md`).
 - **The result screen swaps button prominence**: after a miss Retry leads (the words to
   fix are listed right there, deduped); after a pass Done leads while Retry stays
-  available for chasing the third star.
+  available for chasing the third star. Above them sit three stat cards — this run, the
+  rung's best, and the lesson's star tally out of `total * 3`.
 - **Ads and the rating ask hang off the run's edges** — interstitial preloaded on
   appear, shown on the way out only if the run finished; the star row offered only to a
   premium user who just *passed* their 15th rung. Both in `06-monetization.md`.
@@ -227,6 +243,8 @@ Details that are load-bearing:
 - **No spaced repetition across rungs.** The review window is positional (which step a
   word came from), not scheduled (when you last missed it). `KanaResult`-style
   per-item mastery exists for kana and deliberately has no vocab equivalent.
-- **No partial credit, no timers, no streaks.** A rung is 10 questions and a percentage.
+- **No partial credit and no time limit.** The play screen shows an elapsed clock, but
+  nothing depends on it — it is a sense of pace, never a scored dimension, and no result
+  is worse for taking longer.
 - **No seeding from the intro's "how far have you studied" answer** — see
   `09-intro-and-survey.md` for why inventing history would be worse than ignoring it.

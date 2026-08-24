@@ -78,11 +78,11 @@ Counted from `MinnaData.json`, not from memory:
 | Fact | Value |
 |---|---|
 | Lessons | 50 |
-| Vocab entries | 2089 |
-| Entries with a bundled clip | 2089 (all of them) |
+| Vocab entries | 2100 |
+| Entries with a bundled clip | 2100 (all of them) |
 | Words per lesson | 17 (min) – 63 (max) |
 | Languages | 19 |
-| Resolved translation strings | 35 513 |
+| Resolved translation strings | 39 900 |
 
 The shipped set is **18** (`en, zh, zh-Hant, vi, de, th, my, es, fr, ru, bn,
 hi, ta, te, ne, fil, id, ko` — Nepali joined 2026-08), which is what
@@ -213,7 +213,8 @@ brand-new, disconnected setting instead of erroring. The full set:
 | `translationLanguage` | `translationLanguage` | every lesson-resolving view |
 | `soundOn` | `isSoundOn` | `SoundToggle`, every auto-play |
 | `ordered` | `isOrdered` | Learn's order picker (defaults **true**) |
-| `trainOrdered` | `trainOrdered` | Train's order picker (defaults **false**) |
+| `flashcardsOrdered` | `flashcardsOrdered` | Flashcards' order picker (defaults **true**) — its own key, so changing one screen's order doesn't change the other's |
+| `trainOrdered` | `trainOrdered` | **Retired** with Train (merged into Practice); key reserved |
 | `kanjiShown` / `kanaShown` / `romajiShown` / `translationShown` | `isKanjiShown` / … | `CardOptionsBar`, Learn, Today |
 | `kanaTileScript` | `kanaTileScript` | `KanaBrowserView` — index into its script table (`03-kana.md`) |
 | `analyticsExcluded` | `analyticsExcluded` | `Track.setExcluded`, `AppBootstrap` |
@@ -223,9 +224,10 @@ brand-new, disconnected setting instead of erroring. The full set:
 | `textbookLesson` | `textbookLesson` | **nothing — recorded only** |
 | `goal` | `goal` | **nothing — recorded only** |
 
-Note that `ordered` and `trainOrdered` are two keys on purpose: Learn defaults to
-ordered, Train to random, so sharing one switch would force one of them to open in the
-wrong mode.
+New Practice keys: `practiceFrom` / `practiceTo` (the quiz pair as `VForm.label`
+strings) and `practiceMixed` — plus `playbackRate` for Read along's speed. Per-word
+Practice stages are **not** in UserDefaults at all: `PracticeProgress` keeps them in a
+JSON file in Application Support (`04-lessons.md` §1).
 
 **There is no `Pref.todayLesson` and no `Pref.todaySelection`.** Earlier releases
 persisted a chosen lesson and a saved 7-word selection; Today now derives its deck from
@@ -275,7 +277,7 @@ equivalent, no bookmarking and no spaced-repetition schedule.
 
 `nihongoTests/nihongoTests.swift` is the living contract for the generated data and will
 fail loudly if `build-minna-data.py`'s output shape changes. `DataTests` pins: exactly
-2089 vocab entries across lessons 1…50, all of them with a bundled audio clip,
+2100 vocab entries across lessons 1…50, all of them with a bundled audio clip,
 globally-unique `Vocab.id`, at least 4 distinct kana readings per lesson (a quiz needs 4
 options), one named clip that actually decodes, a bundled clip for *every* kana cell, and
 non-empty translations for lesson 1 in all 19 languages. `KanaTests` pins the 46/25/33

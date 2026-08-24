@@ -1,7 +1,7 @@
 # 00 — Overview
 
 **Japanese Daily 每日日本語** is a native SwiftUI + SwiftData iOS app that teaches
-the **Minna no Nihongo** textbook vocabulary (50 lessons, 2089 entries) plus the
+the **Minna no Nihongo** textbook vocabulary (50 lessons, 2100 entries) plus the
 hiragana/katakana kana syllabaries. It replaced an older React Native app of the
 same name; that RN app still exists at `~/Documents/OwnWorkspace/JapaneseBak` if
 anyone ever needs to check original behavior, but nothing from it is vendored into
@@ -22,7 +22,7 @@ actually is.
 TabView
 ├─ Today     → TodayView            (daily 7-word card browser + widget)
 ├─ Kana      → KanaBrowserView      → KanaQuizModeView → {Flashcards|Classic|Swipe|Listening|Write}
-├─ Lessons   → LessonListView       → SelectModeView    → {Vocab List|Flashcards|Train|Learn}
+├─ Lessons   → LessonListView       → SelectModeView    → {Practice|Vocab List|Flashcards|Match|Learn}
 │                                                       + Challenge ladder (rungs 1…N)
 ├─ Progress  → StatsView            (streak, days, challenges, kana) → BookmarksView
 └─ Settings  → SettingsView         (languages, premium, reminders, legal, feedback)
@@ -62,7 +62,7 @@ Defined in `nihongo/Store/Store.swift` (`Gating` enum):
   quota.
 - **One exception, and only one: the meaning preview.** On a locked lesson, "Play
   with meanings" reads `Gating.freeMeaningPreview` (7) words and then shows the
-  paywall (`Gating.wordsToRead`, `VocabListView`). Plain "Play all" is Japanese
+  paywall (`Gating.wordsToRead`, `ReadAlongView`). "Japanese only" is Japanese
   only and stays free on every lesson. Don't generalise this into a second gating
   concept — see `06-monetization.md` for why it earns its exception.
 - **Vocab List stays free on every lesson**, so browsing and search never lock.
@@ -95,7 +95,7 @@ Detailed in `06-monetization.md`; the shape of it:
   package is even added to the project; without it (or without `Secrets.plist`) DEBUG
   builds render a placeholder label instead of a real ad.
 - **AdMob interstitial** (`nihongo/Ads/Interstitial.swift`) — shown at most once
-  every 3 minutes, non-premium only, on leaving **Train** (if anything was answered) or
+  every 3 minutes, non-premium only, on leaving **Practice** (if anything was answered) or
   **a Challenge run** (only if it finished — never mid-run).
 - **A rating ask**, offered to anyone who has just passed their 21st rung, at most
   once every two months:
@@ -125,12 +125,13 @@ changed. See `build-and-deploy-web` skill.
   The tile script rotates hiragana → katakana → romaji on one toolbar tap. 5 quiz
   modes (Flashcards, Classic 4-option, Swipe 2-option, Listening,
   Write-with-scoring), all free.
-- **Lessons**: 50 lessons in 4 groups + debounced `contains` search. **Four**
-  untested practice modes per lesson (Vocab List, Flashcards, Train, Learn
-  tile-reconstruction) **plus a scored Challenge ladder** — 10 questions a rung,
-  80% to pass, up to 3 stars, each rung unlocked by passing the one below. Quiz
-  and Listening are no longer per-lesson modes: Listening became a question form
-  inside the ladder, and the old shared model is now `TrainModel`.
+- **Lessons**: 50 lessons in 4 groups + debounced `contains` search. **Five**
+  untested practice modes per lesson (Practice card-then-quiz, Vocab List,
+  Flashcards browse-only, Match, Learn tile-reconstruction) **plus a scored Challenge ladder** — 10 questions a
+  rung, 80% to pass, up to 3 stars, each rung unlocked by passing the one below.
+  Quiz and Listening are no longer per-lesson modes (Listening became a question
+  form inside the ladder), and Flashcards and Train merged into Practice
+  (`PracticeModel`, scheduled by `PracticeProgress`'s per-word stages).
 - **Today**: card browser dealing the next unpassed rung's pool (its new words
   plus the review window) — derived from progress, never chosen. Feeds the
   Lock-Screen/Home-Screen widget via an App Group and the watch over
@@ -142,7 +143,7 @@ changed. See `build-and-deploy-web` skill.
   (19 languages each), premium management, legal docs, feedback link. Two hidden
   developer affordances on the version footer: 7 taps toggles analytics
   exclusion, long-press replays the intro.
-- **Audio**: all 2089 words have a pre-generated VOICEVOX (`whitecul`) clip, plus a
+- **Audio**: all 2100 words have a pre-generated VOICEVOX (`whitecul`) clip, plus a
   second `kenzaki` clip the Challenge ladder alternates with, plus a live
   `AVSpeechSynthesizer` fallback for bare kana tiles and any word whose clip is absent.
   Synthesised, **not native-speaker recordings** — marketing copy must not claim

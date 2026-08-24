@@ -74,9 +74,28 @@ Five exemptions, all deliberate:
   surfaced in three places so it isn't a secret: the Challenge section footer on a free
   lesson (with a progress bar), a line on the paywall itself, and a one-time celebration
   that suppresses the rating and share prompts for that run.
-- **"Play with meanings" previews rather than refuses** — the one partial trial in the
+- **Endless playback is premium.** `Gating.loopsForever` is now simply `isPremium`: a
+  free listener hears the lesson through once, in any mode, and the player stops. The
+  loop is what the feature is really for — a lesson running while someone washes up —
+  and it costs nothing to give and everything to give away. The whole lesson still
+  plays: what is withheld is the repeat.
+- **Read along's speed dial is premium; the feature is not.** Free listeners hear the
+  whole lesson at `Gating.normalRate` (1.0×) and see the dial with a lock on it; 0.8×
+  (shadowing) and 1.2×/1.5× (review laps) are the paid part. Gated through
+  `Gating.rate(_:isPremium:)` rather than a bare `isPremium` check, because the honest
+  failure is the *lapsed* subscriber: 1.2× stays in `Pref.playbackRate` after a
+  subscription ends, and reading it straight back would keep granting a paid benefit.
+  The preference is remembered, not honoured, so resubscribing restores it exactly
+  (`PremiumTests.playbackSpeedIsPremiumButNormalSpeedIsNot`). Tapping it logs
+  `locked_speed` and opens the paywall with source `playback_speed` — Read along now has
+  two gates behind one sheet, and they report separately or the funnel says nothing.
+- **Read along's "Japanese + meaning" is premium on every lesson**, and previews rather
+  than refuses — the one partial trial in the
   app. On a locked lesson it reads `Gating.freeMeaningPreview` (7) words in full and
-  *then* shows the paywall. Plain "Play all" (Japanese only) is free on every lesson and
+  *then* shows the paywall — for anyone without a subscription, on a free lesson as much
+  as a locked one. It keyed off `isLocked` until 2026-08, which meant the same paid
+  feature played in full on lessons 1–5 and previewed after them; a learner who never
+  left the free lessons never met the gate at all. "Japanese only" is free on every lesson and
   is never truncated.
 
 `SelectModeView` enforces gating for the practice modes and the ladder (`:17`, `:88`,
@@ -99,7 +118,7 @@ pause — that means nothing described and everything heard. The lesson's Vocab 
 already free and already on screen, so the preview withholds nothing the user couldn't
 read; only the voice is new. That is what makes it safe to give away seven words of.
 
-Do not generalise it. A partial trial on Flashcards or the ladder cuts someone off
+Do not generalise it. A partial trial on Practice or the ladder cuts someone off
 mid-practice, which is exactly what the whole-lesson rule exists to prevent.
 
 ## `Store` — StoreKit 2, on device, no server
@@ -250,7 +269,7 @@ both preloading on `onAppear` and showing on `onDisappear`:
 
 | Screen | Shown when |
 |---|---|
-| `TrainView` | leaving, if `model.total > 0` (at least one answer) |
+| `PracticeView` | leaving, if anything was graded or answered |
 | `ChallengeView` | leaving, only if the run actually finished — **never mid-run** |
 
 **Unit IDs.** `AdConfig` splits prod/test so the repo can stay open-source. A fresh
