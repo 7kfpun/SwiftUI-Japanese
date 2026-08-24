@@ -478,14 +478,15 @@ LOCALE_TYPOGRAPHY = {
     # Pillow output is correct.
     "th": dict(font=FONT_SUKHUMVIT, index=5),
     # Japanese: Hiragino Maru Gothic ProN W4 (face 1 — face 0 is the older
-    # non-ProN variant with a smaller kanji set). This is the *only* rounded
-    # Japanese face on macOS, and it is the same family the app itself sets for
-    # Japanese headwords (Theme.jp = "HiraMaruProN-W4"), so the screenshots and
-    # the screens inside them use one typeface. Maru Gothic ships in W4 only,
-    # with no bold weight — which is exactly why Theme.jpBold falls back to
-    # Hiragino Sans W6 in the app. W4 is kept here anyway: at a 116px headline
-    # its strokes read as heavy as Heiti Medium does for Chinese, and staying
-    # rounded matters more than matching the Latin locales' bold.
+    # non-ProN variant with a smaller kanji set). The *only* rounded Japanese
+    # face on macOS.
+    #
+    # This is a marketing headline, and it deliberately no longer matches the
+    # app: Theme.jp moved to Hiragino Mincho ProN (the design's face), while a
+    # store headline at 116px wants weight the mincho's thin horizontals don't
+    # give. Maru Gothic ships in W4 only, with no bold, and at this size its
+    # strokes read as heavy as Heiti Medium does for Chinese. Revisit together
+    # with a screenshot re-render, never on its own — screenshots/ is generated.
     # No shaping needed: kana and kanji are all independent single-glyph
     # clusters, so unshaped Pillow output is correct. wrap="char" for the same
     # reason as Chinese — Japanese has no word spaces.
