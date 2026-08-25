@@ -110,8 +110,11 @@ struct DiagnosticsView: View {
                     // window is the one condition nothing can practise past.
                     Button("Show the recommend nudge") { showSharePrompt = true }
                     Button("Open the share sheet") { showShareSheet = true }
+                    // Reads the @State mirror, not `SharePrompt.lastAskedAt` — the key
+                    // has no publisher, so only the mirror makes the reset button redraw
+                    // this row (and reading the source directly left the mirror dead).
                     LabeledContent("Nudge last shown",
-                                   value: SharePrompt.lastAskedAt
+                                   value: shareAskedAt
                                        .map { $0.formatted(date: .abbreviated, time: .shortened) }
                                        ?? "never")
                     LabeledContent("Rungs required", value: "\(SharePrompt.challengesRequired)")
@@ -192,6 +195,10 @@ struct DiagnosticsView: View {
             }
             .navigationTitle("Diagnostics")
             .navigationBarTitleDisplayMode(.inline)
+            // The screen is developer-only and deliberately unlocalised, but it still
+            // owns a rating prompt and a Firestore write — `last_screen` has to be able
+            // to name it when one of those reports a failure.
+            .onAppear { Track.screen("diagnostics") }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }

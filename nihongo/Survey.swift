@@ -233,7 +233,11 @@ enum Survey {
                 // the bug report.
                 "shown_fields": AppInfo.shownFields,
                 // Most "the text is cut off" reports are an accessibility text size.
-                "text_size": AppInfo.textSize,
+                // The *stored* value, never `AppInfo.textSize` again: that accessor
+                // touches `UIApplication` and is main-actor for it, while `fields` is
+                // documented as legal off the main actor (tests build a Context there).
+                // Reading UIKit here made the stored property dead and the doc a lie.
+                "text_size": textSize,
                 // `Theme` deliberately swaps the surface/canvas roles between light and
                 // dark, so a contrast complaint is meaningless without knowing which.
                 "appearance": appearance,

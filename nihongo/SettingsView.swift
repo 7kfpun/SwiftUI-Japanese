@@ -170,12 +170,22 @@ struct SettingsView: View {
             // else. If iOS says no, the toggle goes back off rather than staying on over a
             // reminder that can never fire.
             .onChange(of: streakReminderOn) { _, on in
+                // A one-shot, consumed here — the only place it can work. Setting it
+                // true-then-false inside a button action never suppressed anything:
+                // `onChange` runs on the *next* view update, by which time the flag was
+                // already back to false, so "Keep it on" re-ran the authorization
+                // request and logged a `streak_reminder {on: true}` for what the user
+                // meant as a cancel.
+                if suppressOffConfirm {
+                    suppressOffConfirm = false
+                    return
+                }
                 // Turning it *off* asks first. Not a dark pattern and not a second toggle:
                 // the confirm exists because switching this off is usually a reaction to
                 // one badly-timed alert, and the thing worth saying — it stays quiet on
                 // days you've already studied — is exactly what the person who just got
                 // annoyed doesn't know yet. "Turn off" remains the default action.
-                if !on && !suppressOffConfirm {
+                if !on {
                     showReminderOffConfirm = true
                     return
                 }
@@ -193,11 +203,9 @@ struct SettingsView: View {
             .confirmationDialog(L.t("Turn off the daily reminder?"),
                                 isPresented: $showReminderOffConfirm, titleVisibility: .visible) {
                 Button(L.t("Turn off"), role: .destructive) {
-                    // `suppressOffConfirm` stops the re-entrant `onChange` this write
-                    // triggers from raising the same dialog again.
-                    suppressOffConfirm = true
+                    // No flag needed: the binding already flipped to false to draw the
+                    // tap, so this write is same-value and fires no `onChange`.
                     streakReminderOn = false
-                    suppressOffConfirm = false
                     Task {
                         await StreakReminder.reschedule(studiedToday: StudyDay.streak(context: context).studiedToday)
                         Track.event("streak_reminder", ["on": false, "hour": streakReminderHour])
@@ -205,9 +213,10 @@ struct SettingsView: View {
                 }
                 Button(L.t("Keep it on"), role: .cancel) {
                     // Put the switch back: the binding already flipped to draw the tap.
+                    // The flag is consumed by the `onChange` this write triggers, so the
+                    // restore doesn't re-request authorization or log a phantom opt-in.
                     suppressOffConfirm = true
                     streakReminderOn = true
-                    suppressOffConfirm = false
                     Track.event("streak_reminder_kept")
                 }
             } message: {

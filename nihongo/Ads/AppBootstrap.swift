@@ -44,6 +44,11 @@ private final class SurveyAppCheckFactory: NSObject, AppCheckProviderFactory {
 /// app builds and runs before the packages are added; and Firebase only configures
 /// when its git-ignored `GoogleService-Info.plist` is actually bundled, so an
 /// open-source clone (no secrets) still launches cleanly.
+// `@MainActor` in the source rather than inherited from the target's
+// `SWIFT_DEFAULT_ACTOR_ISOLATION`: everything below touches UIKit, and under Swift 5
+// language mode that build setting is inference the compiler is free not to enforce —
+// which is how `registerForRemoteNotifications` ended up asserting off-main in 3.0.2.
+@MainActor
 final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
@@ -217,8 +222,8 @@ enum Track {
     static func screen(_ name: String, _ params: [String: Any] = [:]) {
         // Also remembered for the survey context, which is why this is the one place worth
         // routing every screen through: `last_screen` is what turns "the audio is broken"
-        // into "the audio is broken on Kana Write". Recorded here rather than at the 16 call
-        // sites so it can't fall out of step with what analytics saw, and deliberately
+        // into "the audio is broken on Kana Write". Recorded here rather than at every
+        // call site so it can't fall out of step with what analytics saw, and deliberately
         // *outside* the analytics opt-out — a feedback report needs its own context even
         // from a device excluded from tracking.
         Survey.recordScreen(name)

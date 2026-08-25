@@ -102,7 +102,7 @@ enum StreakReminder {
                            now: Date = .now,
                            calendar: Calendar = StudyDay.calendar) async {
         let center = UNUserNotificationCenter.current()
-        cancel(center: center)
+        await cancel(center: center)
 
         guard UserDefaults.standard.bool(forKey: Pref.streakReminderOn) else { return }
         guard await authorizationStatus() == .authorized else { return }
@@ -127,11 +127,17 @@ enum StreakReminder {
     }
 
     /// Drop every pending streak reminder, leaving anything else alone.
-    static func cancel(center: UNUserNotificationCenter = .current()) {
-        center.getPendingNotificationRequests { requests in
-            let ours = requests.map(\.identifier).filter { $0.hasPrefix(prefix) }
-            center.removePendingNotificationRequests(withIdentifiers: ours)
-        }
+    ///
+    /// `async` and awaited by `reschedule`, not fire-and-forget. The callback form let
+    /// the removal land *after* the `add`s that followed it — and because the
+    /// identifiers repeat across reschedules (`streak.reminder.<yyyymmdd>`), the late
+    /// removal deleted the very requests it was supposed to be replaced by: that day's
+    /// reminder silently never fired. Reschedule runs on every recorded answer, so the
+    /// window was hit routinely.
+    static func cancel(center: UNUserNotificationCenter = .current()) async {
+        let requests = await center.pendingNotificationRequests()
+        let ours = requests.map(\.identifier).filter { $0.hasPrefix(prefix) }
+        center.removePendingNotificationRequests(withIdentifiers: ours)
     }
 
     /// The configured hour, clamped to a real one. A stored 0 is indistinguishable from

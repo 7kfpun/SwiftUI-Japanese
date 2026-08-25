@@ -145,7 +145,12 @@ struct TodayView: View {
                 Image(systemName: hasNext ? "flag.checkered" : "checkmark.seal.fill")
                 Text(L.t("Lesson %@", "\(lessonNumber)"))
                 Text("·")
-                Text(L.t("Ready for Challenge %@?", "\(upNext)"))
+                // `hasNext` decides the words, not just the icon — its doc says "the
+                // capsule says so rather than promising a test", and asking a learner
+                // who has passed everything whether they're ready for a rung
+                // `firstUnpassed` returned nil for is exactly that broken promise.
+                Text(hasNext ? L.t("Ready for Challenge %@?", "\(upNext)")
+                             : L.t("All challenges passed"))
                 Image(systemName: "chevron.right").font(.caption2)
             }
             .font(.footnote.weight(.semibold))
@@ -262,7 +267,13 @@ struct TodayView: View {
         for row in rows where row.isPassed { passed[row.lesson, default: []].insert(row.index) }
 
         for n in 1...Course.current.lessonCount {
-            let total = Challenge.count(wordCount: VocabStore.lesson(n, language).entries.count)
+            // `wordCount`, never `lesson(n).entries.count`: the lesson subscript traps
+            // when `Course.lessonCount` outruns the data file, and its own doc admits
+            // the two can drift. `wordCount` returns 0 there — `Challenge.count(0)` is
+            // 0, no rung is owed, and the loop walks on instead of crashing the first
+            // Today appear of a build shipped with a short dataset. It also skips
+            // building a whole language's Vocab array per lesson on every appear.
+            let total = Challenge.count(wordCount: VocabStore.wordCount(n))
             if (passed[n]?.count ?? 0) < total { return n }
         }
         // Every challenge cleared — keep reviewing the last lesson. The course's own

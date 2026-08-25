@@ -38,9 +38,6 @@ enum AdConfig {
         secrets["banners"] as? [String: String] ?? [:]
     }
 
-    /// True when real production ad IDs are configured (Secrets.plist present).
-    static var isProduction: Bool { !productionBanners.isEmpty }
-
     /// The banner unit ID for a slot — production when configured, else the test unit.
     ///
     /// `.today` used to borrow the vocab-list unit here, because Secrets.plist predated

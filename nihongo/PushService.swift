@@ -98,7 +98,17 @@ final class PushService: NSObject {
     /// "the user said no" look identical in the logs.
     func registerIfAuthorized() async {
         guard await StreakReminder.authorizationStatus() == .authorized else { return }
-        UIApplication.shared.registerForRemoteNotifications()
+        // `MainActor.run` despite this type already being `@MainActor`, because in
+        // production it demonstrably wasn't enough. `registerForRemoteNotifications`
+        // asserts `[NSThread isMainThread]` inside UIKit and threw
+        // `NSInternalInconsistencyException "Call must be made on main thread"` from
+        // exactly this await's resume in 3.0.2 — the target still builds in Swift 5
+        // language mode, where `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` and the
+        // `@MainActor` above are inference for *checking* and not a guaranteed hop back
+        // after awaiting the nonisolated `notificationSettings()` bridge. An explicit hop
+        // is free when already on the main actor and is the only thing that makes the
+        // guarantee independent of the language mode. Don't "simplify" it away.
+        await MainActor.run { UIApplication.shared.registerForRemoteNotifications() }
     }
 
     // MARK: - APNs token fan-out
