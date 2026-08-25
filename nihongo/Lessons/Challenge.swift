@@ -1,7 +1,7 @@
 import Foundation
 
 /// The Challenge ladder — the tested half of a lesson, opposite the Learn modes
-/// (Vocab List / Flashcards / Learn), which are untested practice.
+/// (Vocab List / Practice / Learn), which are untested practice.
 ///
 /// A lesson's words are cut into evenly-sized steps. Challenge *N* introduces step
 /// *N*'s words and reviews the previous `reviewWindow - 1` steps — a sliding window,
@@ -9,7 +9,7 @@ import Foundation
 /// Every challenge asks the same `questionsPerChallenge`, so each rung costs the same
 /// effort and the pass bar means the same thing everywhere. The prompt/answer forms
 /// harden as you climb, which is where Listening now lives — it used to be a separate
-/// mode running the very same model (now `TrainModel`).
+/// mode running the very same model (later `TrainModel`, now merged into Practice).
 enum Challenge {
     /// New words a later challenge aims to introduce — a target, not a fixed size.
     static let wordsPerStep = 7
@@ -138,7 +138,7 @@ enum Challenge {
 }
 
 /// One question in a challenge: a fixed prompt, fixed options, fixed forms. Unlike
-/// `TrainModel` — which regenerates endlessly and lets the user cycle forms — a
+/// `PracticeModel` — which re-queues endlessly and lets the user re-pair forms — a
 /// challenge's questions are decided up front so the run is bounded and scoreable.
 struct ChallengeQuestion: Identifiable {
     let id: Int

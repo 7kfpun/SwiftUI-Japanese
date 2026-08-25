@@ -145,9 +145,14 @@ enum Feedback {
     ///
     /// Only ever filled in by the flag on a practice screen, which knows the card on screen.
     /// The sheet itself has no word field — see `FeedbackView`.
-    struct Item: Equatable, Hashable {
+    struct Item: Equatable, Hashable, Identifiable {
         let lesson: Int
         let romaji: String
+
+        /// `Identifiable` so a view can drive `sheet(item:)` with it — the reported entry
+        /// and "is the sheet up" are then one piece of state that cannot disagree. The
+        /// pair already identifies the entry; there is nothing to add.
+        var id: String { "\(lesson)/\(romaji)" }
     }
 
     /// Characters the sheet accepts in the message.

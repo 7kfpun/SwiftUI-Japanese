@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Endless pair-matching over a lesson's vocabulary: five words down the left, their five
 /// meanings shuffled down the right, tap one from each side to clear the pair. Clear all
-/// five and the next five deal themselves — like Train it never ends, because this is
+/// five and the next five deal themselves — like Practice it never ends, because this is
 /// rehearsal rather than a test, and the Challenge ladder is where results count.
 ///
 /// **Tap order is free**: left-then-right and right-then-left both work. Fixing the order
@@ -55,7 +55,7 @@ final class MatchModel {
     /// The words of the current round, so the view can speak a tile without a lookup
     /// through the whole lesson.
     private var round: [Vocab] = []
-    /// Words not yet dealt in this pass, shuffled — the same bag `TrainModel` uses, and
+    /// Words not yet dealt in this pass, shuffled — the same bag Train used, and
     /// for the same reason: independent random draws re-deal words you just saw while
     /// others never appear at all.
     private var bag: [Vocab] = []
@@ -172,10 +172,60 @@ struct MatchView: View {
     /// model records *what* matched, the view decides how long that is worth looking at.
     @State private var flashID: String?
 
+    // MARK: - Connect-the-lines state (design 3d)
+
+    /// One tile's slot on the board, the key the geometry is filed under.
+    /// `fileprivate` so the preference key below can name it.
+    fileprivate struct Anchor: Hashable {
+        let side: MatchModel.Side
+        let index: Int
+    }
+
+    /// Every tile's frame in the board's coordinate space, kept fresh by preference —
+    /// the lines need real geometry, and a `List`-free custom board is the one place
+    /// in the app that has to know where its views actually are.
+    @State private var frames: [Anchor: CGRect] = [:]
+    /// The tile a finger is currently dragging a line out of, and where the finger is.
+    @State private var dragFrom: Anchor?
+    @State private var dragPoint: CGPoint?
+
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            column(model.left, side: .left)
-            column(model.right, side: .right)
+        VStack(spacing: 8) {
+            // A `Grid`, not two independent columns. Each column used to distribute its
+            // own height, so a long gloss on the right made that side's rows taller than
+            // the left's and the two lists drifted out of step — tiles no longer sat
+            // opposite anything, which is fatal on a screen whose whole job is pairing.
+            // A grid row is one row: both tiles share its height, whatever is in them.
+            Grid(horizontalSpacing: 34, verticalSpacing: 10) {
+                ForEach(0..<max(model.left.count, model.right.count), id: \.self) { i in
+                    GridRow {
+                        if i < model.left.count {
+                            tileButton(model.left[i], side: .left, index: i)
+                        }
+                        if i < model.right.count {
+                            tileButton(model.right[i], side: .right, index: i)
+                        }
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .coordinateSpace(name: "match")
+            .onPreferenceChange(TileFramesKey.self) { frames = $0 }
+            // The lines draw over the board but swallow nothing: never hit-tested,
+            // so a tap on the tile beneath them still lands.
+            .overlay { lines.allowsHitTesting(false) }
+
+            // The gesture is invisible until tried, so say it once, quietly — and name
+            // the fallback underneath, because the drag is the better way rather than
+            // the only one, and a learner who can't manage it should not be stuck.
+            VStack(spacing: 3) {
+                Text(L.t("Drag a word to its meaning"))
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                Text(L.t("Or tap one on each side"))
+                    .font(.caption2)
+                    .foregroundStyle(.quaternary)
+            }
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -183,7 +233,17 @@ struct MatchView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                ScoreBadge(correct: model.matched, total: model.attempts)
+                // `rounds` counts deals, and the first deal happens in `init` — so it is
+                // already 1 while the first round is on screen. Adding one opened the
+                // mode on "Round 2".
+                // Pairs cleared out of attempts — one number over another, which is
+                // what this screen's score actually is. `ScoreBadge`'s third figure is
+                // just the difference between the two, and the width it cost is what
+                // pushed a two-digit count into wrapping on a real device.
+                TallyBadge(icon: "link", done: model.matched, total: model.attempts,
+                           tint: Theme.accent,
+                           caption: L.t("Round %@ · %@ pairs",
+                                        "\(model.rounds)", "\(model.left.count)"))
             }
             ToolbarItemGroup(placement: .topBarTrailing) {
                 SoundToggle()
@@ -191,6 +251,7 @@ struct MatchView: View {
         }
         .onAppear {
             Track.screen("match", ["lesson": lessonNumber])
+            ModeVisits.mark(lesson: lessonNumber, mode: "match")
             if !store.isPremium { Ads.preloadInterstitial() }
         }
         .onDisappear {
@@ -221,24 +282,18 @@ struct MatchView: View {
                 // turns over — the deal is deferred in the model precisely so this
                 // moment (the flash, and the word still speaking) isn't swallowed.
                 if model.roundCleared {
+                    // The round that just closed, logged before the deal bumps `rounds`.
+                    // `attempts` is the running total, so consecutive rows say what each
+                    // successive board cost in taps — the mode is endless, and how deep
+                    // anyone goes is the only session length it has.
+                    Track.event("match_round", ["lesson": lessonNumber,
+                                                "round": model.rounds,
+                                                "attempts": model.attempts])
                     withAnimation(.easeOut(duration: 0.25)) { model.dealNext() }
                 }
             }
         }
         .sensoryFeedback(.impact(weight: .light), trigger: model.matched)
-    }
-
-    /// Tiles split the column's full height between them, so five pairs own the page
-    /// instead of huddling under the toolbar — and the tap targets grow with the screen,
-    /// which suits a mode that is entirely tapping.
-    private func column(_ tiles: [MatchModel.Tile], side: MatchModel.Side) -> some View {
-        VStack(spacing: 10) {
-            ForEach(Array(tiles.enumerated()), id: \.element.id) { index, tile in
-                tileButton(tile, side: side, index: index)
-                    .frame(maxHeight: .infinity)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     @ViewBuilder
@@ -264,9 +319,9 @@ struct MatchView: View {
                 .font(tile.isJapanese ? Theme.jp(20) : .system(.subheadline, weight: .medium))
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .frame(minHeight: 44)
+                .frame(minHeight: 56)   // the design's tile: a comfortable two-line box
                 .padding(.vertical, 8)
-                .padding(.horizontal, 6)
+                .padding(.horizontal, 7)
                 .background(
                     // Green is answer feedback, which a correct match genuinely is — the
                     // one place a fill is allowed. It rides on the flash, not on
@@ -283,12 +338,115 @@ struct MatchView: View {
         }
         .buttonStyle(.plain)
         .disabled(tile.cleared)
+        // A miss shakes the tile it happened on. The red border says *which* two were
+        // wrong; the shake says a thing happened — and it is over in 0.22s, before it
+        // can start feeling like a telling-off.
+        .modifier(ShakeEffect(shakes: missed ? 1 : 0))
+        .animation(.easeInOut(duration: 0.22), value: missed)
+        // Dealt in rather than appearing: five pairs replacing five pairs in the same
+        // ten boxes is otherwise indistinguishable from nothing having happened.
+        .transition(AnyTransition.opacity.combined(with: .offset(y: 8)))
+        // File this tile's frame under its slot, for the lines and the drop test.
+        .background(GeometryReader { geo in
+            Color.clear.preference(key: TileFramesKey.self,
+                                   value: [Anchor(side: side, index: index):
+                                           geo.frame(in: .named("match"))])
+        })
+        // The drag rides *beside* the tap (`simultaneousGesture`, a real minimum
+        // distance): press-and-release is still a pick, movement becomes a line.
+        // Either side can be the start — the same freedom the taps have, and for the
+        // same reason: meanings-first is recall, the more valuable direction.
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 12, coordinateSpace: .named("match"))
+                .onChanged { value in
+                    guard !tile.cleared, !model.wrong, !model.roundCleared else { return }
+                    if dragFrom == nil {
+                        dragFrom = Anchor(side: side, index: index)
+                        // The line starts by saying its word, like a tap would.
+                        if side == .left, soundOn, let word = model.word(id: tile.id) {
+                            pronouncer.speak(word)
+                        }
+                    }
+                    guard dragFrom == Anchor(side: side, index: index) else { return }
+                    dragPoint = value.location
+                }
+                .onEnded { value in
+                    defer { dragFrom = nil; dragPoint = nil }
+                    guard let from = dragFrom, from == Anchor(side: side, index: index),
+                          !model.wrong, !model.roundCleared else { return }
+                    let targetSide: MatchModel.Side = from.side == .left ? .right : .left
+                    let tiles = targetSide == .left ? model.left : model.right
+                    // Where the finger let go decides; a release over nothing (or over
+                    // a cleared tile) just lets the line snap back, no penalty.
+                    guard let hit = frames.first(where: { anchor, rect in
+                        anchor.side == targetSide && rect.contains(value.location)
+                            && tiles.indices.contains(anchor.index)
+                            && !tiles[anchor.index].cleared
+                    }) else { return }
+                    // Drop any tile still selected from an earlier tap. A pick left on
+                    // the *opposite* side resolves against the drag's first `pick` —
+                    // scoring a wrong answer the learner never made, and then swallowing
+                    // the drop, because `pick` refuses while a miss is showing.
+                    model.clearMiss()
+                    model.pick(side: from.side, index: from.index)
+                    model.pick(side: targetSide, index: hit.key.index)
+                }
+        )
         // Cleared pairs stay in place rather than collapsing: tiles that reflow under
         // your thumb make the next tap land on something you didn't aim at. They keep
-        // their footprint and fade — but not while their green moment is still showing.
-        .opacity(tile.cleared && !flashing ? 0.2 : 1)
+        // their footprint and *empty* — 0.2 opacity left grey text floating on the
+        // background, which read as broken rendering rather than as a cleared slot.
+        .opacity(flashing ? 1 : (tile.cleared ? 0 : 1))
+        .overlay {
+            if tile.cleared, !flashing {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Theme.line.opacity(0.35))
+            }
+        }
         .animation(.easeOut(duration: 0.2), value: tile.cleared)
         .accessibilityLabel(tile.text)
         .accessibilityHint(tile.cleared ? L.t("Complete!") : "")
+    }
+
+    /// The drawn layer: the line following the finger, and the one that has just been
+    /// completed.
+    ///
+    /// **Only the newest match keeps a line.** The design leaves every cleared pair's
+    /// line on the board, and with five pairs in random positions that is four or five
+    /// long diagonals crossing each other and the tiles — a scribble rather than a
+    /// record. One line, in the green of the match it belongs to, reads as what it is:
+    /// feedback for the pair just made.
+    private var lines: some View {
+        Canvas { context, _ in
+            if let id = flashID,
+               let i = model.left.firstIndex(where: { $0.id == id }),
+               let j = model.right.firstIndex(where: { $0.id == id }),
+               let a = frames[Anchor(side: .left, index: i)],
+               let b = frames[Anchor(side: .right, index: j)] {
+                var path = Path()
+                path.move(to: CGPoint(x: a.maxX, y: a.midY))
+                path.addLine(to: CGPoint(x: b.minX, y: b.midY))
+                context.stroke(path, with: .color(Theme.correct),
+                               style: StrokeStyle(lineWidth: 3, lineCap: .round))
+            }
+            if let from = dragFrom, let point = dragPoint,
+               let rect = frames[from] {
+                var path = Path()
+                path.move(to: CGPoint(x: from.side == .left ? rect.maxX : rect.minX,
+                                      y: rect.midY))
+                path.addLine(to: point)
+                context.stroke(path, with: .color(Theme.accent),
+                               style: StrokeStyle(lineWidth: 3, lineCap: .round))
+            }
+        }
+    }
+}
+
+/// Tile frames in the board's space — merged across tiles, latest write wins.
+private struct TileFramesKey: PreferenceKey {
+    static var defaultValue: [MatchView.Anchor: CGRect] { [:] }
+    static func reduce(value: inout [MatchView.Anchor: CGRect],
+                       nextValue: () -> [MatchView.Anchor: CGRect]) {
+        value.merge(nextValue()) { _, new in new }
     }
 }

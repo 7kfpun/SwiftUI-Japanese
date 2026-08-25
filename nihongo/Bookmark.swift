@@ -90,14 +90,27 @@ final class Bookmark {
 /// The star control on a vocab row. Hollow when unsaved, filled with the tier's count.
 struct BookmarkStars: View {
     let vocab: Vocab
+    /// The word's tier as its *owner* knows it, when the owner tracks one.
+    ///
+    /// The vocab list keeps a tier map for its cut counts and for deciding whether this
+    /// control is even shown, and its swipe writes bookmarks too — so this control's own
+    /// `@State`, loaded once in `.task`, would go stale the moment the row was swiped.
+    /// Passing the tier in makes the list the single source and this the view of it.
+    var tier: Int?? = nil
+    /// Told when the tier changes, so an owner can re-read its map. Without it the
+    /// "Bookmarked" chip's count would sit wrong until the screen reappeared.
+    var onChange: ((Int?) -> Void)? = nil
     @Environment(\.modelContext) private var context
-    @State private var stars: Int?
+    @State private var loaded: Int?
+
+    private var stars: Int? { (tier ?? nil) ?? loaded }
 
     var body: some View {
         Button {
             let next = Bookmark.next(after: stars)
             Bookmark.set(next, for: vocab, context: context)
-            stars = next
+            loaded = next
+            onChange?(next)
             Track.event("bookmark", ["lesson": vocab.lesson, "stars": next ?? 0])
         } label: {
             // One glyph and a numeral, never one glyph per tier.
@@ -120,6 +133,8 @@ struct BookmarkStars: View {
         .buttonStyle(.plain)
         .accessibilityLabel(L.t("Bookmark"))
         .accessibilityValue(stars.map { "\($0)" } ?? "")
-        .task { stars = Bookmark.stars(for: vocab.id, context: context) }
+        // Only when nobody upstream is tracking it — otherwise `tier` is the truth and
+        // a fetch here would be a second one.
+        .task { if tier == nil { loaded = Bookmark.stars(for: vocab.id, context: context) } }
     }
 }

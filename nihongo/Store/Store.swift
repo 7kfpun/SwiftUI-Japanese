@@ -77,6 +77,25 @@ enum Gating {
         return max(freeLessonLimit, band.last)
     }
 
+    /// Playback speed in Read along is premium, and **the normal speed is not**.
+    ///
+    /// Free listeners keep the feature; what they don't get is the dial. That is the
+    /// shape every gate in this app takes — nothing already on screen is taken away, and
+    /// the paid thing is the one you can only appreciate by having used it. Slowing a
+    /// clip to shadow it, or running a review lap at 1.5×, is worth paying for; being
+    /// unable to *listen* would not be.
+    ///
+    /// `rate(for:)` rather than a bare boolean, because the honest failure mode matters:
+    /// a lapsed subscriber has 1.2× sitting in `Pref.playbackRate`, and reading it back
+    /// would silently keep handing them a paid benefit. This clamps to normal speed
+    /// instead — the preference is remembered, not honoured, so resubscribing restores
+    /// exactly what they had.
+    static let normalRate = 1.0
+
+    static func rate(_ stored: Double, isPremium: Bool) -> Double {
+        isPremium ? stored : normalRate
+    }
+
     /// True when a lesson needs premium (everything but Vocab List).
     ///
     /// `earnedFirstGroup` defaults to false so a caller that hasn't looked it up fails
@@ -86,28 +105,38 @@ enum Gating {
         !isPremium && number > freeThrough(earnedFirstGroup: earnedFirstGroup)
     }
 
-    /// How many of a lesson's `count` words "Play all" reads.
+    /// How many of a lesson's `count` words Read along reads.
     ///
-    /// The whole lesson, except for the meanings mode on a locked lesson, which gets
+    /// The whole lesson, except for the meanings mode without premium, which gets
     /// `freeMeaningPreview`. `mode` is taken here rather than the caller checking
-    /// `isLocked` itself because the Japanese-only mode is free on **every** lesson,
-    /// locked or not — the lock is on reading the meaning aloud, not on the button.
-    static func wordsToRead(mode: ReadMode, count: Int, isLocked: Bool) -> Int {
-        guard mode == .withMeaning, isLocked else { return count }
+    /// `isPremium` itself because the Japanese-only mode is free on **every** lesson —
+    /// the gate is on reading the meaning aloud, not on the button.
+    ///
+    /// **Premium, not lesson-locked.** This used to key off `isLocked`, which made the
+    /// meanings mode free in full on lessons 1–5 and previewed everywhere after — so the
+    /// same paid feature behaved differently depending on which lesson you opened it
+    /// from, and a learner who never left the free lessons never discovered it was paid
+    /// at all. The preview survives the change and now reaches everyone who hasn't
+    /// subscribed: the rhythm it exists to demonstrate is exactly as unknown on lesson 1
+    /// as on lesson 40.
+    static func wordsToRead(mode: ReadMode, count: Int, isPremium: Bool) -> Int {
+        guard mode.readsBeyondTheWord, !isPremium else { return count }
         return min(freeMeaningPreview, count)
     }
 
-    /// Whether "Play all" may start over at the top and keep going indefinitely.
+    /// Whether Read along may start over at the top and keep going indefinitely.
     ///
-    /// Everything except the locked meanings preview, and deliberately the *same*
-    /// condition that truncates the list in `wordsToRead` rather than "was the list cut
-    /// short" — a preview has to reach an end for the paywall to follow it, and one that
-    /// repeated forever would hand a locked lesson the paid mode for free. Phrased on the
-    /// rule and not on the resulting count so it stays right even if a course ever ships
-    /// a lesson shorter than `freeMeaningPreview`, where nothing would be cut at all.
-    static func loopsForever(mode: ReadMode, isLocked: Bool) -> Bool {
-        !(mode == .withMeaning && isLocked)
-    }
+    /// **Subscribers only, in every mode.** Endless playback is the thing this feature is
+    /// really for — a lesson running in the background while someone washes up — and it
+    /// is the part that costs nothing to give and everything to give away. A free
+    /// listener still hears the whole lesson, once, in Japanese-only; the loop is what
+    /// they are being offered.
+    ///
+    /// `mode` is no longer read. It stays in the signature because the un-subscribed
+    /// meanings *preview* depends on this returning false — the paywall hangs off
+    /// `onFinished`, which a looping player never reaches — and a future mode that needs
+    /// to loop for everyone would want to say so here rather than at its call site.
+    static func loopsForever(mode: ReadMode, isPremium: Bool) -> Bool { isPremium }
 }
 
 /// StoreKit 2 premium store. No server / shared-secret receipt validation — transactions

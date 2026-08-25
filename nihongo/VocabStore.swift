@@ -28,11 +28,15 @@ enum VocabStore {
         let languages: [String]
         let lessons: [LessonDTO]
         let translations: [String: [String: [String: String]]]  // lang -> lessonNo -> romaji -> text
+        /// Example-sentence translations, same shape as `translations`. Optional twice
+        /// over: the JLPT data file has no key at all, and Minna carries only a few
+        /// languages so far.
+        let examples: [String: [String: [String: String]]]?
     }
 
     // Timed: this is the app's largest single launch cost, it blocks the first screen that
     // needs a word, and it is the one number that differs by course rather than by device
-    // — 2,089 entries for Minna against 7,972 for JLPT, from the same code. A regression
+    // — 2,100 entries for Minna against 7,972 for JLPT, from the same code. A regression
     // here (a bigger dataset, a slower decode) looks like "the app got slow to open",
     // which is exactly the report that arrives without a cause attached.
     private static let data: MinnaData = Track.trace("vocab_decode") {
@@ -51,6 +55,21 @@ enum VocabStore {
     /// languages look unrelated. See `L.languageOrder`.
     static let availableLanguages: [String] = L.ordered(data.languages)
 
+    /// Whether this course's dataset carries example sentences at all.
+    ///
+    /// Derived from the data, never hardcoded per course: JLPT ships 7,972 entries and
+    /// **not one example**, so every example-dependent control — Read along's
+    /// "+ Example" rung, the Vocab List examples switch — was a button that did nothing
+    /// in Bonsai JLPT. Reading it off the file rather than off `Course.current` means the
+    /// day `build-jlpt-data.py` starts emitting sentences the features appear on their
+    /// own, with no second place to remember to flip.
+    ///
+    /// Scans the decoded DTOs, so it touches no translation and builds no `Vocab`; it
+    /// short-circuits on the first example a course has.
+    static let hasExamples: Bool = data.lessons.contains { dto in
+        dto.entries.contains { $0.example != nil }
+    }
+
     private static func build(_ language: String) -> [Lesson] {
         // Fall back to English wholesale rather than per-entry: a stored preference can
         // name a language this course doesn't carry (someone switching between the two
@@ -58,22 +77,34 @@ enum VocabStore {
         // word rendering with a blank meaning — which looks like broken data, not like
         // a missing translation.
         let tr = data.translations[language] ?? data.translations[defaultLanguage] ?? [:]
+        // **No English fallback here**, unlike the meanings above — a deliberate
+        // asymmetry. A missing word-meaning leaves the row useless, so it borrows
+        // English; a missing example translation just leaves the sentence standing on
+        // its own (Japanese, furigana, romaji — all still shown), and an English line
+        // under it for a Thai learner read as data in the wrong language rather than a
+        // graceful fallback. Sixteen of the nineteen languages carry none yet; every
+        // reader of `exampleTranslation` nil-guards, and the read-along's fourth leg
+        // skips itself when the meaning is absent.
+        let ex = data.examples?[language] ?? [:]
         return data.lessons.map { dto in
             // Keyed by romaji for Minna, by `key` for courses whose romaji isn't unique.
             let byKey = tr[String(dto.number)] ?? [:]
+            let exByKey = ex[String(dto.number)] ?? [:]
             let items = dto.entries.map { e in
                 Vocab(lesson: dto.number,
                       kanji: e.kanji, kana: e.kana, romaji: e.romaji,
                       dictionary: e.dictionary, useKana: e.useKana ?? false,
                       translation: byKey[e.key ?? e.romaji] ?? "",
-                      audio: e.audio, key: e.key)
+                      audio: e.audio, key: e.key,
+                      example: e.example,
+                      exampleTranslation: exByKey[e.key ?? e.romaji])
             }
             return Lesson(number: dto.number, entries: items)
         }
     }
 
     // Per-language cache, built lazily (only the language actually shown — not all 17)
-    // so launch doesn't decode 17×2089 entries. Guarded by a lock because Swift
+    // so launch doesn't decode 17×2100 entries. Guarded by a lock because Swift
     // Testing runs cases in parallel; an unlocked mutable static would data-race.
     private static let lock = NSLock()
     private nonisolated(unsafe) static var cache: [String: [Lesson]] = [:]
@@ -106,6 +137,24 @@ enum VocabStore {
         guard let name = vocab.audio else { return nil }
         return Bundle.main.url(forResource: name + voice.suffix, withExtension: "m4a")
             ?? Bundle.main.url(forResource: name, withExtension: "m4a")
+    }
+
+    /// The bundled recording of this word's example sentence, or nil.
+    ///
+    /// Derived from the word's own clip name — one name locates both recordings and the
+    /// data carries no second path.
+    ///
+    /// **`ex-` prefixed, and no subdirectory.** Xcode's synchronized folders add every
+    /// resource individually, so the bundle is flat: without the prefix this file and
+    /// the word's own clip would both be `1-watashi.m4a` at the root and one would
+    /// silently win. Same reason `kana-` and `cheer-` exist. Looking it up by
+    /// `subdirectory:` would find nothing at all.
+    ///
+    /// `PRIMARY` voice only: the alternate exists to make a *listening* rung a real
+    /// test, and no rung asks a sentence — a second copy would be 47MB for nothing.
+    static func exampleAudioURL(for vocab: Vocab) -> URL? {
+        guard let name = vocab.audio, vocab.example != nil else { return nil }
+        return Bundle.main.url(forResource: "ex-" + name, withExtension: "m4a")
     }
 
     /// How many words lesson `n` holds, read straight off the decoded data.

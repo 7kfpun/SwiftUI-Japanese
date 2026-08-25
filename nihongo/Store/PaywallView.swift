@@ -130,6 +130,9 @@ struct PaywallView: View {
                 .font(.subheadline).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Button(L.t("Try again")) {
+                // Whether anyone bothers is what says if this button earns its place, or
+                // whether an empty paywall is simply abandoned.
+                Track.event("paywall_retry", params)
                 Task { await store.load() }
             }
             .buttonStyle(.bordered)

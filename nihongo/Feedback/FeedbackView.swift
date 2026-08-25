@@ -140,10 +140,15 @@ struct FeedbackView: View {
             HStack(spacing: 8) {
                 ForEach(1...5, id: \.self) { i in
                     Button { draft.stars = i } label: {
+                        // A `.title2` star glyph is a ~22pt target, half Apple's 44pt
+                        // minimum, and the gaps between stars took no taps at all — on
+                        // the one control this sheet exists to collect.
                         Image(systemName: i <= draft.stars ? "star.fill" : "star")
                             .font(.title2)
                             .foregroundStyle(i <= draft.stars ? Theme.accent
                                                              : Color.secondary.opacity(0.4))
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(L.t("%@ stars", "\(i)"))
@@ -216,7 +221,7 @@ struct FeedbackView: View {
     /// they didn't type, so this is where they find that out.
     ///
     /// Opened cold from Settings, there is no word and no way to name one. A searchable list
-    /// of all 2,089 entries was the alternative; it was dropped because the flag already
+    /// of all 2,100 entries was the alternative; it was dropped because the flag already
     /// knows the answer at the moment it matters, and the list would only serve someone
     /// re-finding a word they had already walked away from. So this points at the better
     /// route instead of being a dead end, and the report still sends without it — `lesson`
@@ -353,7 +358,7 @@ struct FeedbackView: View {
 /// `kind` and the entry already filled in, leaving one question — what's wrong with it.
 ///
 /// **A toolbar item, never an overlay on the card.** Every screen that carries it but
-/// `ChallengeView` is swipe-driven (`FlashcardScreen` and `TrainView` through `SwipeCard`,
+/// `ChallengeView` is swipe-driven (`FlashcardScreen` and `PracticeView` through `SwipeCard`,
 /// `LearnView` through `cardPager`), and a control sitting on the card competes with the
 /// horizontal drag that grades or turns it — the exact failure `CLAUDE.md` records from the
 /// intro's sample cards. The toolbar is outside the gesture's view entirely, and it puts the

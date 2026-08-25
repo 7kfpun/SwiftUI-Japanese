@@ -43,9 +43,17 @@ struct Cheer: Equatable {
         Cheer(text: "いいですね",      key: "ii-desu-ne",       meaning: "Nice"),
         Cheer(text: "やったね",       key: "yatta-ne",         meaning: "You did it"),
         Cheer(text: "じょうずですね",  key: "jouzu-desu-ne",    meaning: "You're good at this"),
-        Cheer(text: "かんぺき",       key: "kanpeki",          meaning: "Perfect"),
         Cheer(text: "そのちょうし",    key: "sono-choushi",     meaning: "That's the spirit"),
+    ]
+
+    /// Held back for a clean sweep. はなまる is the flower-circle a teacher draws on
+    /// perfect work and かんぺき says so outright; both name *full marks*, so hearing
+    /// either after two right out of three reads as the app not watching — praise that
+    /// outranks the score is worth less than no praise. They stay in the pass pool's
+    /// place only when the run actually earned three stars.
+    static let perfect = [
         Cheer(text: "はなまる",       key: "hanamaru",         meaning: "Full marks"),
+        Cheer(text: "かんぺき",       key: "kanpeki",          meaning: "Perfect"),
     ]
 
     /// After a miss. Encouragement, never correction — the screen already lists the words
@@ -69,15 +77,31 @@ struct Cheer: Equatable {
         (phrases.filter { $0 != last }.randomElement() ?? phrases.randomElement())
     }
 
-    /// The last of each kind, so a pass and a miss don't silence each other — they are
-    /// separate pools and a repeat across them isn't a repeat to the ear.
-    @MainActor private static var last: [Bool: Cheer] = [:]
+    /// Which pool a run has earned. Three tiers, not two: see `perfect`.
+    enum Tier: Hashable { case perfect, passed, missed }
+
+    static func tier(stars: Int, passed: Bool) -> Tier {
+        if stars >= 3 { return .perfect }
+        return passed ? .passed : .missed
+    }
+
+    static func pool(_ tier: Tier) -> [Cheer] {
+        switch tier {
+        case .perfect: return perfect
+        case .passed:  return Self.passed
+        case .missed:  return missed
+        }
+    }
+
+    /// The last of each kind, so the tiers don't silence each other — they are separate
+    /// pools and a repeat across them isn't a repeat to the ear.
+    @MainActor private static var last: [Tier: Cheer] = [:]
 
     @MainActor
-    static func next(passed: Bool) -> Cheer? {
-        guard let choice = pick(from: passed ? Self.passed : missed, avoiding: last[passed])
-        else { return nil }
-        last[passed] = choice
+    static func next(stars: Int, passed: Bool) -> Cheer? {
+        let tier = tier(stars: stars, passed: passed)
+        guard let choice = pick(from: pool(tier), avoiding: last[tier]) else { return nil }
+        last[tier] = choice
         return choice
     }
 }
@@ -90,6 +114,15 @@ protocol Pronouncer {
     func speak(_ vocab: Vocab, voice: Speech.Voice)
     func speak(kana: K)
     func speak(cheer: Cheer)
+    /// An example sentence. Live TTS only, deliberately: the upstream clips exist but
+    /// bundling ~4,200 of them is a 50MB+ app-size decision that hasn't been made —
+    /// the synthesiser keeps the feature offline either way, and swapping in bundled
+    /// clips later changes this one implementation, not the callers.
+    func speak(sentence: String)
+    /// The example sentence of a specific word — prefers that word's bundled recording
+    /// and falls back to speaking `sentence`. Separate from `speak(sentence:)` because
+    /// only a caller holding the `Vocab` can name the clip.
+    func speak(example vocab: Vocab)
     func stop()
 }
 
@@ -104,6 +137,8 @@ struct SilentPronouncer: Pronouncer {
     func speak(_ vocab: Vocab, voice: Speech.Voice) {}
     func speak(kana: K) {}
     func speak(cheer: Cheer) {}
+    func speak(sentence: String) {}
+    func speak(example vocab: Vocab) {}
     func stop() {}
 }
 
@@ -265,6 +300,32 @@ final class AudioPronouncer: Pronouncer {
         } else {
             speakLive(cheer.text)
         }
+    }
+
+    func speak(sentence: String) {
+        stop()
+        PlaybackSession.activate()
+        speakLive(sentence)
+    }
+
+    /// The recorded sentence when the word has one, the synthesiser when it doesn't.
+    ///
+    /// Both exist on purpose. All 2,100 Minna entries ship a clip, but a future course
+    /// may ship none — and the fallback is what keeps "tap the sentence to hear it"
+    /// working rather than silently doing nothing. Same clip-or-speak shape as
+    /// `speak(_:voice:)`; still synthesised audio, VOICEVOX rather than a reader.
+    func speak(example vocab: Vocab) {
+        stop()
+        PlaybackSession.activate()
+        if let url = VocabStore.exampleAudioURL(for: vocab),
+           let p = try? AVAudioPlayer(contentsOf: url) {
+            p.volume = 1
+            p.prepareToPlay()
+            player = p
+            p.play()
+            return
+        }
+        if let spoken = vocab.example?.spoken { speakLive(spoken) }
     }
 
     func stop() {
