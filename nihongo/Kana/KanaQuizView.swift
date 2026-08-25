@@ -44,8 +44,18 @@ final class KanaQuizModel {
         next()
     }
 
-    func swapFrom() { swap(&from, &other) }
-    func swapTo()   { swap(&to, &other) }
+    /// Both swaps report the direction *after* the swap — the pair the learner asked
+    /// for, not the one they left. Logged in the model rather than at the two buttons
+    /// because the classic and the swipe quiz both drive this one type, so one call site
+    /// each covers both screens.
+    func swapFrom() {
+        swap(&from, &other)
+        Track.event("kana_quiz_direction", ["from": from.label, "to": to.label])
+    }
+    func swapTo() {
+        swap(&to, &other)
+        Track.event("kana_quiz_direction", ["from": from.label, "to": to.label])
+    }
 
     func next() {
         picked = nil

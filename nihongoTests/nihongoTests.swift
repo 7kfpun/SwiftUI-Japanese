@@ -10,8 +10,8 @@ import UIKit
 struct DataTests {
     @Test func generatedDataShape() {
         // Entry/audio totals are regeneration canaries — update together with `make data`.
-        #expect(VocabStore.allVocab().count == 2089)
-        #expect(VocabStore.allVocab().filter { $0.audio != nil }.count == 2089)
+        #expect(VocabStore.allVocab().count == 2100)
+        #expect(VocabStore.allVocab().filter { $0.audio != nil }.count == 2100)
         #expect(VocabStore.lessons().map(\.number) == Array(1...50))
     }
 
@@ -233,6 +233,54 @@ struct DataTests {
         #expect(Streak(days: days, today: 20260102).current == 4)
     }
 
+    /// Every entry ships an example sentence, each sentence is distinct, and the
+    /// English translation resolves — the wholesale-en fallback means every language
+    /// then shows *something* under the sentence. Distinctness matters because the
+    /// upstream data promises it: two words sharing a sentence reads as a copy bug.
+    /// Furigana annotates the kanji core only — shared tails (です。) and shared
+    /// prefixes are already visible on the main line, and repeating them reads as a
+    /// typo rather than a reading.
+    @Test func furiganaTrimsToTheKanjiCore() {
+        let ex = ExampleSentence(kanji: ["わたしは", "学生です。"],
+                                 kana:  ["わたしは", "がくせいです。"],
+                                 romaji: ["watashiwa", "gakuseidesu"])
+        #expect(ex.reading(at: 0) == nil)               // all kana — nothing to annotate
+        #expect(ex.reading(at: 1) == "がくせい")          // です。 trimmed
+
+        let mid = ExampleSentence(kanji: ["人は"], kana: ["ひとは"], romaji: ["hitowa"])
+        #expect(mid.reading(at: 0) == "ひと")             // trailing particle trimmed
+
+        let pre = ExampleSentence(kanji: ["お名前は"], kana: ["おなまえは"], romaji: ["onamaewa"])
+        #expect(pre.reading(at: 0) == "なまえ")           // honorific prefix trimmed too
+
+        #expect(ex.reading(at: 9) == nil)               // out of range degrades, never traps
+    }
+
+    @Test func everyEntryCarriesADistinctExample() {
+        let all = VocabStore.allVocab()
+        let examples = all.compactMap(\.example)
+        #expect(examples.count == all.count)
+
+        // The flag the example *controls* are gated on — Read along's "+ Example" rung
+        // and the Vocab List examples switch. Inverted or misread it either hides a
+        // working feature from every Minna learner or restores a dead button to JLPT,
+        // and neither shows up as a crash. This suite runs against Minna, whose answer
+        // is true; the JLPT half is pinned by the count above being the whole corpus.
+        #expect(VocabStore.hasExamples)
+        #expect(all.allSatisfy { !($0.exampleTranslation ?? "").isEmpty })
+
+        // The three arrays are index-aligned by contract — the UI zips them into
+        // columns, so a length mismatch is a rendering bug waiting at some row i.
+        #expect(examples.allSatisfy {
+            !$0.kanji.isEmpty && $0.kanji.count == $0.kana.count && $0.kana.count == $0.romaji.count
+        })
+
+        // Distinct sentences, as upstream promises — two words sharing one reads as
+        // a copy bug. Joined kanji is the sentence's identity.
+        let sentences = examples.map { $0.kanji.joined() }
+        #expect(Set(sentences).count == sentences.count)
+    }
+
     @Test func idsAreGloballyUnique() {
         // Romaji repeats across lessons, so Vocab.id must include the lesson number.
         let ids = VocabStore.allVocab().map(\.id)
@@ -346,8 +394,49 @@ struct KanaTests {
         #expect(KanaData.katakanaPool.count == 74)
     }
 
+    /// Every word with an example ships its recording, under the `ex-` name the flat
+    /// bundle requires — and that name must not collide with the word's own clip.
+    @Test func exampleSentenceClipsAreBundledAndDistinct() {
+        var checked = 0
+        for lesson in VocabStore.lessons() {
+            for word in lesson.entries where word.example != nil {
+                let url = VocabStore.exampleAudioURL(for: word)
+                #expect(url != nil, "no example clip for \(word.id)")
+                // The sentence and the word are different files. Without the `ex-`
+                // prefix they would both be `<lesson>-<slug>.m4a` at the bundle root,
+                // and one would silently answer for the other.
+                if let url, let wordURL = VocabStore.audioURL(for: word) {
+                    #expect(url != wordURL, "\(word.id): sentence and word are one file")
+                }
+                checked += 1
+            }
+        }
+        #expect(checked > 2000, "only \(checked) words carried an example")
+    }
+
     @Test func strokeOrderFontIsBundled() {
         #expect(UIFont(name: "KanjiStrokeOrders", size: 20) != nil)
+    }
+
+    /// The Japanese faces must actually *resolve* on the device, and cover Latin.
+    ///
+    /// `Font.custom` fails silently: a name iOS doesn't ship falls back to the system
+    /// face and nothing looks broken, which is exactly how the watch target spent its
+    /// life naming a Maru Gothic that watchOS has never shipped. Latin coverage is the
+    /// second half — `CLAUDE.md`'s rule that romaji set in a Japanese face reads plain
+    /// rather than as tofu only holds while these faces carry the glyphs.
+    @Test func japaneseFacesResolveAndCoverLatin() throws {
+        for name in ["HiraMinProN-W3", "HiraMinProN-W6"] {
+            let font = try #require(UIFont(name: name, size: 20),
+                                    "iOS does not ship '\(name)' — Theme would fall back silently")
+            let coverage = try #require(CTFontCopyCharacterSet(font) as CharacterSet?)
+            for scalar in "AZaz09.,%\u{2605}".unicodeScalars {
+                #expect(coverage.contains(scalar), "\(name) cannot draw '\(scalar)'")
+            }
+            for scalar in "\u{3042}\u{30A2}\u{6F22}".unicodeScalars {   // あ ア 漢
+                #expect(coverage.contains(scalar), "\(name) cannot draw '\(scalar)'")
+            }
+        }
     }
 }
 
@@ -452,118 +541,334 @@ struct FlashcardTests {
     }
 }
 
-// MARK: - Train / kana quiz models
+// MARK: - Practice / kana quiz models
 
-struct TrainTests {
-    /// Random mode deals from a shuffled bag, not independent draws.
-    ///
-    /// This was `vocab.randomElement()` per question — sampling *with replacement*, which
-    /// meets only ~64% of a lesson's words over a full pass whatever the lesson size,
-    /// spending the rest re-asking words just seen. Users reported it as being tested on
-    /// a handful of words, which is exactly what it was.
-    @MainActor
-    @Test func randomOrderAsksEveryWordBeforeRepeatingAny() {
+struct PracticeTests {
+    /// Where a word sits in the queue now, and which face it will show — the re-queue
+    /// distance is drawn per word, so tests assert a window rather than an index.
+    private static func requeued(_ model: PracticeModel, _ id: String) -> Int? {
+        model.queue.firstIndex { $0.vocab.id == id }
+    }
+
+    /// The drawn distance, clamped the way `advance` clamps it against a short queue.
+    private static func inWindow(_ offset: Int, queueCount: Int) -> Bool {
+        let lowest = min(PracticeModel.requeueWindow.lowerBound, queueCount)
+        let highest = min(PracticeModel.requeueWindow.upperBound, queueCount)
+        return offset >= lowest && offset <= highest
+    }
+
+    /// A throwaway store in a temp directory, so tests never touch the real one.
+    private static func freshProgress() -> PracticeProgress {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("practice-tests-\(UUID().uuidString)")
+        return PracticeProgress(directory: dir)
+    }
+
+    @Test func stagesPersistAcrossReload() {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("practice-tests-\(UUID().uuidString)")
+        let store = PracticeProgress(directory: dir)
+        store.set(.recognized, for: "1/watashi")
+        store.set(.memorized, for: "1/anata")
+        store.saveNow()
+
+        let reloaded = PracticeProgress(directory: dir)
+        #expect(reloaded.stage(of: "1/watashi") == .recognized)
+        #expect(reloaded.stage(of: "1/anata") == .memorized)
+        // Absent is the common case forever — it must read as unseen, not crash.
+        #expect(reloaded.stage(of: "1/never-practiced") == .unseen)
+    }
+
+    @Test func unseenRemovesTheRowAndAlienStagesClamp() throws {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("practice-tests-\(UUID().uuidString)")
+        let store = PracticeProgress(directory: dir)
+        store.set(.seen, for: "1/word")
+        store.set(.unseen, for: "1/word")
+        #expect(store.stages["1/word"] == nil)   // removed, not stored as zero
+
+        // A newer build's stage 7 degrades to the top of the ladder this build knows;
+        // junk below zero clamps up. Best-effort, never a wipe.
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let file = dir.appendingPathComponent("PracticeProgress.json")
+        try Data(#"{"v":9,"words":{"1/a":7,"1/b":-2,"1/c":2}}"#.utf8).write(to: file)
+        let reloaded = PracticeProgress(directory: dir)
+        #expect(reloaded.stage(of: "1/a") == .memorized)
+        #expect(reloaded.stage(of: "1/b") == .unseen)
+        #expect(reloaded.stage(of: "1/c") == .recognized)
+    }
+
+    @Test func countsFoldSeenIntoUnseen() {
+        let store = Self.freshProgress()
+        let entries = VocabStore.lesson(1).entries
+        store.set(.memorized, for: entries[0].id)
+        store.set(.recognized, for: entries[1].id)
+        store.set(.seen, for: entries[2].id)     // display folds this into unseen
+
+        let counts = store.counts(for: entries)
+        #expect(counts.memorized == 1)
+        #expect(counts.recognized == 1)
+        #expect(counts.unseen == entries.count - 2)
+    }
+
+    /// **Every card is the same card.** A word the learner has never met is asked like
+    /// any other — being asked is how the mode finds out what they know, and what they
+    /// didn't know is taught in the reveal that follows a miss. There is no separate
+    /// teaching card to tap past first, and so no `face` to get wrong.
+    @Test func everyWordIsDealtAsAQuestion() {
         let vocab = VocabStore.lesson(7).entries
-        let model = TrainModel(vocab: vocab)
-
-        // One full pass: every word exactly once, no repeats, nothing missed.
-        var seen = [model.answer.id]
-        for _ in 1..<vocab.count {
-            model.next()
-            seen.append(model.answer.id)
-        }
-        #expect(Set(seen).count == vocab.count)
-        #expect(Set(seen) == Set(vocab.map(\.id)))
-
-        // And across the refill boundary the next word is never the one on screen —
-        // two independent shuffles would collide there at a very noticeable rhythm.
-        for _ in 0..<(vocab.count * 3) {
-            let before = model.answer.id
-            model.next()
-            #expect(model.answer.id != before)
-        }
+        let model = PracticeModel(vocab: vocab, progress: Self.freshProgress())
+        #expect(model.sessionTotal == vocab.count)
+        #expect(Set(model.queue.map(\.vocab.id)) == Set(vocab.map(\.id)))
+        // Two options are dealt from the first card, with nothing tapped through first.
+        #expect(model.options.count == PracticeModel.optionCount)
+        #expect(model.options.contains { $0.id == model.current?.vocab.id })
     }
 
-    /// Two chips, one swipe: the answer is present and the distractor differs on BOTH
-    /// faces — a shared display text is unanswerable, a shared prompt text (homophones,
-    /// なん/なに-style glosses) is a second right answer that would be marked wrong.
-    @Test func dealsTwoOptionsDistinctOnBothFaces() {
-        let model = TrainModel(vocab: VocabStore.lesson(5).entries)
-        for _ in 0..<50 {
-            model.next()
-            #expect(model.options.count == 2)
-            #expect(model.options.contains { $0.id == model.answer.id })
-            let shown = model.options.map { model.to.value($0) }
-            #expect(Set(shown).count == shown.count)
-            let prompts = model.options.map { model.from.value($0) }
-            #expect(Set(prompts).count == prompts.count)
-        }
-    }
-
-    /// Cycling a form re-deals the distractor — it was picked to be distinct under the
-    /// old pair, and with two chips a collision under the new one is fatal.
-    @Test func formCyclingSkipsOtherSideAndKeepsOptionsDistinct() {
-        let model = TrainModel(vocab: VocabStore.lesson(1).entries)
-        for _ in 0..<8 {
-            model.cycleFrom()
-            #expect(model.from != model.to)
-            model.cycleTo()
-            #expect(model.from != model.to)
-            let shown = model.options.map { model.to.value($0) }
-            #expect(Set(shown).count == shown.count)
-        }
-    }
-
-    /// Starting ordered means starting at word 1. The preference has to reach the
-    /// model's initialiser, because `init` draws the first word immediately — applying
-    /// it afterwards anchored the walk to whatever random word had already been picked,
-    /// so a "front to back" sweep began in the middle of the lesson.
-    @Test func orderedModeStartsAtTheFirstWord() {
+    /// Looking at the back of the card costs the round.
+    ///
+    /// A long press flips the card to its meaning, and a right answer given after
+    /// reading the answer is not evidence of knowing the word — so it moves nothing up
+    /// the ladder and the word simply comes back. A *wrong* answer still demotes,
+    /// peeked or not: missing it with the meaning in front of you is if anything the
+    /// clearer signal.
+    @Test func peekingCostsTheRoundButNotThePunishment() throws {
         let vocab = VocabStore.lesson(1).entries
-        for _ in 0..<20 {                       // would pass ~1-in-35 of the time by luck
-            let model = TrainModel(vocab: vocab, ordered: true)
-            #expect(model.answer.id == vocab[0].id)
-        }
-        // Random stays random — it must not silently become an ordered walk.
-        let seen = Set((0..<30).map { _ in TrainModel(vocab: vocab).answer.id })
-        #expect(seen.count > 1)
+        let progress = Self.freshProgress()
+        for w in vocab { progress.set(.seen, for: w.id) }
+        let model = PracticeModel(vocab: vocab, progress: progress)
+
+        // Right answer, but peeked: stage unchanged, nothing retired, word re-queued.
+        let word = try #require(model.current).vocab
+        let right = try #require(model.options.firstIndex { $0.id == word.id })
+        model.choose(right)
+        model.resolve(credited: false)
+        #expect(progress.stage(of: word.id) == .seen)
+        #expect(model.retired == 0)
+        #expect(Self.requeued(model, word.id) != nil)
+
+        // The same answer, credited, does promote — so the clamp above is the peek and
+        // not something else swallowing the result.
+        let second = try #require(model.current).vocab
+        let alsoRight = try #require(model.options.firstIndex { $0.id == second.id })
+        model.choose(alsoRight)
+        model.resolve()
+        #expect(progress.stage(of: second.id) == .recognized)
+
+        // Wrong after a peek still demotes.
+        let third = try #require(model.current).vocab
+        progress.set(.recognized, for: third.id)
+        let wrong = try #require(model.options.firstIndex { $0.id != third.id })
+        model.choose(wrong)
+        model.resolve(credited: false)
+        #expect(progress.stage(of: third.id) == .seen)
     }
 
-    /// Ordered mode walks the lesson front to back, wrapping — and switching it on
-    /// mid-run resumes from the word on screen rather than snapping to word 1.
-    @Test func orderedModeWalksTheLessonAndResumesInPlace() {
+    /// **Two correct answers, not one.** With two options a coin flip is right half the
+    /// time, so a single hit promotes one rung (`.seen` → `.recognized`) and only the
+    /// second reaches `.memorized` and retires the word. A wrong answer drops it to
+    /// `.seen` and brings the card back to re-teach it.
+    @Test func quizAnswersMoveTheLadderBothWays() throws {
         let vocab = VocabStore.lesson(1).entries
-        let model = TrainModel(vocab: vocab)
-        model.ordered = true
-        let start = vocab.firstIndex { $0.id == model.answer.id } ?? -1
-        for step in 1...vocab.count {                       // one full wrapping lap
-            model.next()
-            #expect(model.answer.id == vocab[(start + step) % vocab.count].id)
-            #expect(model.options.contains { $0.id == model.answer.id })
+        let progress = Self.freshProgress()
+        // Every word *met* — so the session is all quizzes and every one of them is on
+        // its first rung, which is what makes the two-step promotion observable.
+        for w in vocab { progress.set(.seen, for: w.id) }
+        let model = PracticeModel(vocab: vocab, progress: progress)
+
+        // First correct answer: one rung up, still in the queue as a quiz.
+        let word = model.current!.vocab
+        let right = model.options.firstIndex { $0.id == word.id }!
+        model.choose(right)
+        model.resolve()
+        #expect(progress.stage(of: word.id) == .recognized)
+        #expect(model.retired == 0)
+        #expect(model.queue.count == vocab.count)
+        // Requeued far back — a proven word needs confirming, not another look.
+        let promoted = try #require(Self.requeued(model, word.id))
+        #expect(promoted >= min(PracticeModel.provenWindow.lowerBound, model.queue.count))
+
+        // Answer it right again and it retires.
+        while let item = model.current, item.vocab.id != word.id {
+            let i = model.options.firstIndex { $0.id == item.vocab.id } ?? 0
+            model.choose(i)
+            model.resolve()
+        }
+        let again = model.options.firstIndex { $0.id == word.id }!
+        model.choose(again)
+        model.resolve()
+        #expect(progress.stage(of: word.id) == .memorized)
+        #expect(model.retired >= 1)
+
+        // Wrong: the other chip. Demoted to seen, card face re-queued.
+        let retiredBefore = model.retired
+        let second = model.current!.vocab
+        let wrong = model.options.firstIndex { $0.id != second.id }!
+        model.choose(wrong)
+        model.resolve()
+        #expect(progress.stage(of: second.id) == .seen)
+        #expect(model.retired == retiredBefore)
+        let requeued = try #require(Self.requeued(model, second.id))
+        #expect(Self.inWindow(requeued, queueCount: model.queue.count))
+    }
+
+    /// Restart rebuilds from the stages: memorized words sit the session out, and a
+    /// fully-memorized lesson re-enters whole as quiz review rather than as nothing.
+    @Test func restartBuildsFromStagesAndFullMasteryMeansReview() {
+        let vocab = VocabStore.lesson(1).entries
+        let progress = Self.freshProgress()
+        progress.set(.memorized, for: vocab[0].id)
+        let model = PracticeModel(vocab: vocab, progress: progress)
+        #expect(model.sessionTotal == vocab.count - 1)
+        #expect(!model.queue.contains { $0.vocab.id == vocab[0].id })
+
+        for w in vocab { progress.set(.memorized, for: w.id) }
+        model.restart()
+        #expect(model.sessionTotal == vocab.count)
+    }
+
+    /// The distractor rule holds under every quiz pair, not just kana → meaning:
+    /// matching the answer side is a second right answer, matching the prompt side
+    /// is an unanswerable question.
+    @Test func optionsAreDistinctOnBothFacesUnderEveryPair() {
+        let pool = VocabStore.lesson(5).entries
+        for from in PracticeModel.quizFaces {
+            for to in PracticeModel.quizFaces where to != from {
+                for answer in pool.prefix(20) {
+                    let opts = PracticeModel.options(for: answer, pool: pool,
+                                                     from: from, to: to)
+                    #expect(opts.count == 2)
+                    #expect(opts.contains { $0.id == answer.id })
+                    #expect(Set(opts.map { to.value($0) }).count == opts.count)
+                    #expect(Set(opts.map { from.value($0) }).count == opts.count)
+                }
+            }
         }
     }
 
-    @Test func listeningVariantUsesAudioPromptAndWordOptions() {
-        // Listening is Train with an audio prompt; the options are the written word.
-        let model = TrainModel(vocab: VocabStore.lesson(3).entries, from: .audio)
-        #expect(model.from == .audio)
-        #expect(model.to == .kana)
-        // Cycling the answer side must never land on audio (audio can't be an option).
-        for _ in 0..<10 { model.cycleTo(); #expect(model.to != .audio) }
+    /// Words with no kanji to show skip the kanji *question*, not the word: the
+    /// kanji slot moves off kanji, and when that collapses the pair the **degraded**
+    /// side moves again — so the side the learner explicitly chose survives.
+    @Test func kanjiLessWordsDegradeTheKanjiSlot() {
+        let vocab = VocabStore.lesson(1).entries
+        guard let plain = vocab.first(where: { !$0.displaysKanji }) else { return }
+        let progress = Self.freshProgress()
+        let model = PracticeModel(vocab: vocab, progress: progress)
+
+        model.setPair(from: .kanji, to: .translation, mixed: false)
+        #expect(model.pair(for: plain) == (.kana, .translation))
+
+        // Prompt-side kanji collapses onto the chosen kana answer, so the *prompt*
+        // becomes the meaning: answering in kana is what the learner asked for.
+        model.setPair(from: .kanji, to: .kana, mixed: false)
+        #expect(model.pair(for: plain) == (.translation, .kana))
+
+        if let written = vocab.first(where: { $0.displaysKanji }) {
+            model.setPair(from: .kanji, to: .translation, mixed: false)
+            #expect(model.pair(for: written) == (.kanji, .translation))
+        }
     }
 
-    @Test func promptCanCycleToAudioButBackAgain() {
-        let model = TrainModel(vocab: VocabStore.lesson(1).entries)
-        var sawAudio = false
-        for _ in 0..<VForm.allCases.count { model.cycleFrom(); if model.from == .audio { sawAudio = true } }
-        #expect(sawAudio)                 // audio is reachable as a prompt
-        #expect(model.from != model.to)   // and never collides with the answer side
+    /// A session must keep reaching **new words**, not circle the handful it has
+    /// already asked.
+    ///
+    /// Two regressions live here. A fixed re-queue distance preserved order, so the deck
+    /// used to play in blocks. Then two-step promotion re-tested proven words near the
+    /// front, which crowded the unasked ones out — 16 cards could pass with nothing new
+    /// reached. `provenWindow` is what fixed the second: a word's *first* correct answer
+    /// sends it far back, because it needs confirming rather than another look.
+    @Test func theQueueKeepsReachingWordsItHasNotAskedYet() {
+        let vocab = VocabStore.lesson(1).entries
+        let model = PracticeModel(vocab: vocab, progress: Self.freshProgress())
+
+        // Answer everything correctly — the path that starved the queue.
+        var asked: [String] = []
+        var longestRepeatGap = 0, sinceNew = 0
+        var seen = Set<String>()
+        for _ in 0..<36 {
+            guard let item = model.current else { break }
+            asked.append(item.vocab.id)
+            if seen.insert(item.vocab.id).inserted { sinceNew = 0 } else { sinceNew += 1 }
+            longestRepeatGap = max(longestRepeatGap, sinceNew)
+            let right = model.options.firstIndex { $0.id == item.vocab.id } ?? 0
+            model.choose(right)
+            model.resolve()
+        }
+
+        // Over 36 cards a 46-word lesson should have met a good share of its words, and
+        // never spent a long stretch only re-asking ones already seen.
+        #expect(seen.count >= 18, "only \(seen.count) distinct words in 36 cards")
+        #expect(longestRepeatGap <= 10,
+                "\(longestRepeatGap) cards passed without reaching a new word")
+    }
+
+    /// Mixed must be *mixed*, including on a lesson where hardly anything has kanji.
+    ///
+    /// The first implementation drew one of the six combinations and then rewrote a
+    /// kanji slot the word couldn't fill into kana — which funnels four of the six onto
+    /// kana→meaning, so a katakana-heavy lesson asked the easiest direction two-thirds
+    /// of the time. Reported from a real screen. The fix enumerates what a word supports
+    /// and draws from that, so a kana-only word splits evenly between its two.
+    @Test func mixedDrawsEvenlyFromWhatEachWordSupports() {
+        let vocab = VocabStore.lesson(1).entries
+        let model = PracticeModel(vocab: vocab, progress: Self.freshProgress())
+        model.setPair(from: .kana, to: .translation, mixed: true)
+
+        if let plain = vocab.first(where: { !$0.displaysKanji }) {
+            var seen: [String: Int] = [:]
+            for _ in 0..<400 {
+                let (f, t) = model.pair(for: plain)
+                #expect(f != .kanji && t != .kanji)   // never asks a face it can't draw
+                #expect(f != t)
+                seen["\(f.label)>\(t.label)", default: 0] += 1
+            }
+            // Both supported directions, and neither runs away with it: an even split
+            // is 200/200, so 100 is a floor no fair draw realistically breaches.
+            #expect(seen.count == 2)
+            #expect(seen.values.allSatisfy { $0 > 100 })
+        }
+
+        if let written = vocab.first(where: { $0.displaysKanji }) {
+            var seen = Set<String>()
+            for _ in 0..<400 {
+                let (f, t) = model.pair(for: written)
+                #expect(f != t)
+                seen.insert("\(f.label)>\(t.label)")
+            }
+            // All six ordered pairs of the three faces stay reachable.
+            #expect(seen.count == 6)
+        }
+    }
+
+    /// The faces a word can be asked in — the set everything above draws from.
+    @Test func availableFacesFollowTheWord() {
+        let vocab = VocabStore.lesson(1).entries
+        if let plain = vocab.first(where: { !$0.displaysKanji }) {
+            #expect(PracticeModel.faces(for: plain) == [.kana, .translation])
+        }
+        if let written = vocab.first(where: { $0.displaysKanji }) {
+            #expect(PracticeModel.faces(for: written) == [.kana, .kanji, .translation])
+        }
+    }
+
+    /// The pair only ever takes the three faces, and never prompt == answer — the
+    /// sheet's greying rule, enforced in the model where it can't be bypassed.
+    @Test func setPairRefusesInvalidCombinations() {
+        let model = PracticeModel(vocab: VocabStore.lesson(1).entries,
+                                  progress: Self.freshProgress())
+        model.setPair(from: .kana, to: .translation, mixed: false)
+        model.setPair(from: .kana, to: .kana, mixed: false)      // same face: refused
+        #expect(model.from == .kana && model.to == .translation)
+        model.setPair(from: .audio, to: .kana, mixed: false)     // not a quiz face: refused
+        #expect(model.from == .kana && model.to == .translation)
     }
 
     @Test func emptyVocabDegradesInsteadOfCrashing() {
-        let model = TrainModel(vocab: [])
-        #expect(model.options.count <= 1)    // just the placeholder answer, no crash
-        #expect(model.answer.kana.isEmpty)
+        let model = PracticeModel(vocab: [], progress: Self.freshProgress())
+        #expect(model.isDone)
+        #expect(model.options.isEmpty)
+        model.choose(0)    // no crash on an empty queue
+        model.resolve()
     }
 
     @Test func kanaQuizOptionsAreDistinctAndContainAnswer() {
@@ -584,11 +889,11 @@ struct TrainTests {
     /// prompt is the word itself (any written form, or the audio question), forbidden
     /// when the prompt is the meaning and the options are the word.
     @Test func promptAudioNeverRevealsAnswer() {
-        #expect(TrainModel.promptAudioSafe(from: .kana))
-        #expect(TrainModel.promptAudioSafe(from: .kanji))
-        #expect(TrainModel.promptAudioSafe(from: .romaji))
-        #expect(TrainModel.promptAudioSafe(from: .audio))
-        #expect(!TrainModel.promptAudioSafe(from: .translation))
+        #expect(VForm.promptAudioSafe(from: .kana))
+        #expect(VForm.promptAudioSafe(from: .kanji))
+        #expect(VForm.promptAudioSafe(from: .romaji))
+        #expect(VForm.promptAudioSafe(from: .audio))
+        #expect(!VForm.promptAudioSafe(from: .translation))
     }
 }
 
@@ -661,6 +966,49 @@ struct PremiumTests {
     /// lineup only in case, and folding each onto its current twin is deliberate. What
     /// this pins is that the *set* stays closed — a new product whose ID ends in anything
     /// unexpected would quietly introduce a sixth label that no dashboard is grouped by.
+    /// Read along's speed dial is premium — and the *feature* is not.
+    ///
+    /// A free listener still hears the whole lesson; what they don't get is the dial.
+    /// The failure mode this pins is the lapsed subscriber: 1.2× stays in
+    /// `Pref.playbackRate` after a subscription ends, and reading it straight back would
+    /// keep handing out a paid benefit forever. `Gating.rate` clamps instead — the
+    /// preference is remembered, not honoured, so resubscribing restores it exactly.
+    /// The meanings mode is premium **on every lesson**, free ones included.
+    ///
+    /// It used to key off the lesson lock, so it played in full on lessons 1–5 and
+    /// previewed everywhere else: the same paid feature behaving two ways depending on
+    /// where it was opened, and invisible as paid to anyone who stayed in the free
+    /// lessons. Japanese-only is the half that stays free everywhere.
+    @Test func readingMeaningsAloudIsPremiumOnEveryLesson() {
+        let lessonSizes = [8, 16, 46]
+        for count in lessonSizes {
+            // Free listener: preview only, whichever lesson this is.
+            #expect(Gating.wordsToRead(mode: .withMeaning, count: count, isPremium: false)
+                    == min(Gating.freeMeaningPreview, count))
+            #expect(!Gating.loopsForever(mode: .withMeaning, isPremium: false))
+            // Subscriber: the whole lesson, looping.
+            #expect(Gating.wordsToRead(mode: .withMeaning, count: count, isPremium: true) == count)
+            #expect(Gating.loopsForever(mode: .withMeaning, isPremium: true))
+            // Japanese-only always reads the *whole* lesson — what a free listener
+            // doesn't get is the repeat.
+            for premium in [true, false] {
+                #expect(Gating.wordsToRead(mode: .japanese, count: count, isPremium: premium) == count)
+            }
+            #expect(!Gating.loopsForever(mode: .japanese, isPremium: false))
+            #expect(Gating.loopsForever(mode: .japanese, isPremium: true))
+        }
+    }
+
+    @Test func playbackSpeedIsPremiumButNormalSpeedIsNot() {
+        for stored in [0.8, 1.0, 1.2, 1.5] {
+            #expect(Gating.rate(stored, isPremium: true) == stored)
+            #expect(Gating.rate(stored, isPremium: false) == Gating.normalRate)
+        }
+        // Normal speed is what a free listener gets, and it is a real speed — not a
+        // silence, and not a slower one.
+        #expect(Gating.normalRate == 1.0)
+    }
+
     @Test func premiumTierUsesTheFivePlanLabels() {
         let p = Course.minna.products
         let expected: Set<String> = ["1m", "3m", "6m", "12m", "lifetime"]
@@ -779,11 +1127,11 @@ struct PremiumTests {
     /// feature that has always been free and that nobody asked to charge for.
     @Test func plainReadAllIsFreeEvenOnALockedLesson() {
         for count in [17, 30, 63] {
-            #expect(Gating.wordsToRead(mode: .japanese, count: count, isLocked: true) == count)
-            #expect(Gating.wordsToRead(mode: .japanese, count: count, isLocked: false) == count)
+            #expect(Gating.wordsToRead(mode: .japanese, count: count, isPremium: false) == count)
+            #expect(Gating.wordsToRead(mode: .japanese, count: count, isPremium: true) == count)
             // The meanings mode is only cut short when the lesson is actually locked.
-            #expect(Gating.wordsToRead(mode: .withMeaning, count: count, isLocked: false) == count)
-            #expect(Gating.wordsToRead(mode: .withMeaning, count: count, isLocked: true)
+            #expect(Gating.wordsToRead(mode: .withMeaning, count: count, isPremium: true) == count)
+            #expect(Gating.wordsToRead(mode: .withMeaning, count: count, isPremium: false)
                     == Gating.freeMeaningPreview)
         }
     }
@@ -806,15 +1154,18 @@ struct PremiumTests {
     ///
     /// Plain "Play all" loops on every lesson, locked or not, because it was always free.
     @Test func lockedMeaningPreviewNeverLoops() {
-        #expect(!Gating.loopsForever(mode: .withMeaning, isLocked: true))
-        #expect(Gating.loopsForever(mode: .withMeaning, isLocked: false))
-        #expect(Gating.loopsForever(mode: .japanese, isLocked: true))
-        #expect(Gating.loopsForever(mode: .japanese, isLocked: false))
+        // Looping is premium in *every* mode — a free listener hears the lesson once.
+        #expect(!Gating.loopsForever(mode: .withMeaning, isPremium: false))
+        #expect(Gating.loopsForever(mode: .withMeaning, isPremium: true))
+        #expect(!Gating.loopsForever(mode: .japanese, isPremium: false))
+        #expect(Gating.loopsForever(mode: .japanese, isPremium: true))
+        #expect(!Gating.loopsForever(mode: .withExample, isPremium: false))
+        #expect(Gating.loopsForever(mode: .withExample, isPremium: true))
         // The rule is the same one that truncates the list: whatever is cut short must be
         // exactly what is denied a loop, or one of the two is a way round the other.
         for count in [3, 7, 17, 63] {
-            let cut = Gating.wordsToRead(mode: .withMeaning, count: count, isLocked: true) < count
-            #expect(cut || !Gating.loopsForever(mode: .withMeaning, isLocked: true))
+            let cut = Gating.wordsToRead(mode: .withMeaning, count: count, isPremium: false) < count
+            #expect(cut || !Gating.loopsForever(mode: .withMeaning, isPremium: false))
         }
     }
 }
@@ -824,6 +1175,23 @@ struct PremiumTests {
 /// The wrap in `LessonPlayer`. Only the pure step function is reachable without audio and
 /// a screen, which is why it exists — the rest is delegate callbacks.
 struct LessonPlayerTests {
+
+
+
+    /// Every mode that reads past the word is premium — the gate is on *that*, so a
+    /// fourth mode reading something else is paid without `Gating` being edited.
+    @Test func everyModeBeyondTheWordIsPremium() {
+        #expect(!ReadMode.japanese.readsBeyondTheWord)
+        #expect(ReadMode.withMeaning.readsBeyondTheWord)
+        #expect(ReadMode.withExample.readsBeyondTheWord)
+        for mode in [ReadMode.withMeaning, .withExample] {
+            #expect(Gating.wordsToRead(mode: mode, count: 46, isPremium: false)
+                    == Gating.freeMeaningPreview)
+            #expect(Gating.wordsToRead(mode: mode, count: 46, isPremium: true) == 46)
+            #expect(!Gating.loopsForever(mode: mode, isPremium: false))
+        }
+    }
+
     /// Mid-list, looping changes nothing: the next word is the next word.
     @Test func advancesThroughTheListRegardlessOfLooping() {
         for loops in [true, false] {
@@ -1699,6 +2067,54 @@ struct PersistenceTests {
 struct ChallengeTests {
     private var lesson1: [Vocab] { VocabStore.lesson(1).entries }
 
+    /// The briefing states the star bands as "up to N wrong", and N has to be derived
+    /// from the run's real question count — a short rung allows fewer misses than a
+    /// ten-question one, and a hardcoded number would promise a star that never lands.
+    @MainActor
+    @Test func briefingStarBandsFollowTheQuestionCount() {
+        for questions in [4, 6, 8, 10] {
+            for minScore in [90, Challenge.passScore] {
+                let allowed = ChallengeView.allowedWrong(questions: questions, minScore: minScore)
+                // Missing exactly `allowed` still meets the band...
+                let atBand = Int((Double(questions - allowed) / Double(questions) * 100).rounded())
+                #expect(atBand >= minScore)
+                // ...and one more never does.
+                if allowed < questions {
+                    let past = Int((Double(questions - allowed - 1) / Double(questions) * 100).rounded())
+                    #expect(past < minScore)
+                }
+            }
+        }
+        // A clean ten-question rung: 1 miss keeps 2★ (90%), 2 keeps 1★ (80%).
+        #expect(ChallengeView.allowedWrong(questions: 10, minScore: 90) == 1)
+        #expect(ChallengeView.allowedWrong(questions: 10, minScore: Challenge.passScore) == 2)
+        // Degenerate input must not divide by zero or loop.
+        #expect(ChallengeView.allowedWrong(questions: 0, minScore: 80) == 0)
+    }
+
+    /// The lesson screen offers one "worth retrying" rung: passed but short of three
+    /// stars, fewest stars first, and the *later* rung when two tie — the freshest gap.
+    /// Nil once every passed rung is three-starred, so the card disappears when won.
+    @MainActor
+    @Test func retryTargetPicksTheWeakestPassedRung() {
+        func result(_ index: Int, stars: Int, passed: Bool = true) -> ChallengeResult {
+            ChallengeResult(lesson: 1, index: index, bestScore: stars * 30, stars: stars,
+                            completedAt: passed ? .now : nil)
+        }
+        // 2★ at rung 2 and 1★ at rung 4 → the 1★ one, fewest stars wins.
+        var rows = [2: result(2, stars: 2), 4: result(4, stars: 1)]
+        #expect(SelectModeView.retryTarget(results: rows) == 4)
+        // Tie on stars → the later rung.
+        rows = [2: result(2, stars: 2), 5: result(5, stars: 2)]
+        #expect(SelectModeView.retryTarget(results: rows) == 5)
+        // An unpassed rung is the ladder's job, not the retry card's.
+        rows = [3: result(3, stars: 0, passed: false)]
+        #expect(SelectModeView.retryTarget(results: rows) == nil)
+        // Everything three-starred → nothing to win back.
+        rows = [1: result(1, stars: 3), 2: result(2, stars: 3)]
+        #expect(SelectModeView.retryTarget(results: rows) == nil)
+    }
+
     /// Every lesson gets a ladder covering exactly its words — no word unreachable,
     /// none counted twice.
     @Test func laddersCoverEveryLessonExactly() {
@@ -1927,8 +2343,30 @@ struct ChallengeTests {
     /// The spoken reaction never repeats itself back to back, and every phrase can name a
     /// clip file. "Varied" that can say the same thing twice running is exactly the case a
     /// listener notices, so the no-repeat rule is the part worth pinning.
+    /// **Full-marks praise is held for full marks.** はなまる and かんぺき both *mean*
+    /// a perfect score, so hearing one after two right out of three tells the learner the
+    /// app isn't watching — praise that outranks the result is worth less than silence.
+    /// They live in their own pool, reachable only at three stars.
+    @Test func fullMarksPhrasesAreHeldForACleanSweep() {
+        #expect(Cheer.tier(stars: 3, passed: true) == .perfect)
+        #expect(Cheer.tier(stars: 2, passed: true) == .passed)
+        #expect(Cheer.tier(stars: 1, passed: true) == .passed)
+        #expect(Cheer.tier(stars: 0, passed: false) == .missed)
+
+        // The two that name full marks are in the perfect pool and nowhere else.
+        let fullMarks = ["hanamaru", "kanpeki"]
+        #expect(fullMarks.allSatisfy { key in Cheer.perfect.contains { $0.key == key } })
+        #expect(Cheer.passed.allSatisfy { !fullMarks.contains($0.key) })
+        #expect(Cheer.missed.allSatisfy { !fullMarks.contains($0.key) })
+
+        // Every tier still has something to say, and enough of it to vary.
+        for tier in [Cheer.Tier.perfect, .passed, .missed] {
+            #expect(Cheer.pool(tier).count >= 2)
+        }
+    }
+
     @Test func cheersVaryAndCanNameAClip() {
-        for pool in [Cheer.passed, Cheer.missed] {
+        for pool in [Cheer.perfect, Cheer.passed, Cheer.missed] {
             #expect(pool.count >= 2)      // one phrase can only ever repeat
             for phrase in pool {
                 let next = Cheer.pick(from: pool, avoiding: phrase)
@@ -1939,7 +2377,7 @@ struct ChallengeTests {
 
         // Keys become `cheer-<key>.m4a`, so they must be unique across both pools and
         // safe as filenames — a collision would give two phrases the same clip.
-        let all = Cheer.passed + Cheer.missed
+        let all = Cheer.perfect + Cheer.passed + Cheer.missed
         let keys = all.map(\.key)
         #expect(Set(keys).count == keys.count)
         #expect(keys.allSatisfy { !$0.isEmpty && $0.allSatisfy { $0.isLowercase || $0 == "-" } })
@@ -2260,16 +2698,21 @@ struct IntroTests {
     @Test func modeChipsReuseSelectModeStrings() throws {
         // Order is `SelectModeView`'s shallow → deep order, and the tour must not drift
         // from it: the chips exist to teach the labels the learner meets a tap later.
-        #expect(Intro.Mode.allCases == [.vocabList, .flashcards, .train, .match, .learn])
+        #expect(Intro.Mode.allCases == [.vocabList, .flashcards, .practice, .match, .learn])
         #expect(Intro.Mode.allCases.map(\.titleKey)
-                == ["Vocab List", "Flashcards", "Train", "Match", "Learn"])
+                == ["Vocab List", "Flashcards", "Practice", "Match", "Learn"])
         #expect(Intro.Mode.allCases.map(\.subtitleKey)
-                == ["Browse & hear all words", "Swipe right if you know it",
-                    "Swipe to the right answer", "Pair each word with its meaning",
+                == ["Browse & hear all words", "Swipe through the words",
+                    "Cards first, then a quick quiz",
+                    "Pair each word with its meaning",
                     "Rebuild the reading from tiles"])
+        // Practice gave up the card-stack glyph when Flashcards came back: that mode
+        // *is* a stack of cards, and two modes sharing an icon in one grid is a bug the
+        // eye finds before any test does.
         #expect(Intro.Mode.allCases.map(\.icon)
-                == ["list.bullet", "rectangle.on.rectangle.angled",
-                    "arrow.left.arrow.right", "link", "square.grid.2x2"])
+                == ["list.bullet", "rectangle.on.rectangle.angled", "graduationcap",
+                    "link", "square.grid.2x2"])
+        #expect(Set(Intro.Mode.allCases.map(\.icon)).count == Intro.Mode.allCases.count)
         for mode in Intro.Mode.allCases {
             #expect(UIImage(systemName: mode.icon) != nil, "missing SF Symbol \(mode.icon)")
         }

@@ -12,7 +12,7 @@ final class LearnModel {
     private(set) var answer: [String] = []
     private(set) var state: AnswerState = .inProgress
 
-    /// Guarded like `TrainModel` and `MatchModel`: a bad data regeneration must degrade
+    /// Guarded like `PracticeModel` and `MatchModel`: a bad data regeneration must degrade
     /// (an unplayable screen) rather than crash — and Learn was the one mode that trapped.
     var current: Vocab {
         vocab.indices.contains(index)
@@ -21,8 +21,11 @@ final class LearnModel {
                     useKana: false, translation: "", audio: nil, key: nil)
     }
     var target: String { cleanWord(current.kana) }
-    /// Some entries are sentence-length and exceed the tile cap (e.g. L14). Bail gracefully.
-    var isPlayable: Bool { !tiles.isEmpty || target.count <= 15 }
+    /// Some entries are sentence-length and exceed the tile cap (e.g. L14). Bail
+    /// gracefully — and an *empty* target (kana that cleans away entirely) is just as
+    /// unplayable as a too-long one: without the emptiness check it rendered a blank
+    /// tile grid with nothing to say for itself.
+    var isPlayable: Bool { !tiles.isEmpty || (!target.isEmpty && target.count <= 15) }
 
     init(vocab: [Vocab]) {
         self.vocab = vocab
@@ -61,6 +64,10 @@ final class LearnModel {
 struct LearnView: View {
     @State private var model: LearnModel
     @State private var fling: Int? = nil   // programmatic CardPager trigger (Random button)
+    /// Set by the Random button so `turnPage` knows the shuffle it is about to run was
+    /// already logged as `via: button` — the button pages through `fling`, so without
+    /// this the one tap would also count as a swipe.
+    @State private var shuffledByButton = false
     // Read the visibility flags directly so the current card updates the instant a toggle flips.
     @AppStorage(Pref.kanjiShown)       private var showKanji = true
     @AppStorage(Pref.kanaShown)        private var showKana = true
@@ -120,7 +127,11 @@ struct LearnView: View {
         // Auto-play the word on each page when sound is on. Paging speaks explicitly in
         // `turnPage` — `onChange(of: index)` would silently skip when `random()` happens to
         // land on the card already showing.
-        .onAppear { autoPlay(); Track.screen("learn", ["lesson": lessonNumber]) }
+        .onAppear {
+            autoPlay()
+            Track.screen("learn", ["lesson": lessonNumber])
+            ModeVisits.mark(lesson: lessonNumber, mode: "learn")
+        }
         .onChange(of: model.state) {
             if model.state == .correct {
                 Track.event("learn_answer", ["correct": true, "lesson": lessonNumber])
@@ -136,7 +147,20 @@ struct LearnView: View {
 
     /// Swipe/fling handler: next/prev (ordered) or shuffle (random).
     private func turnPage(_ dir: Int) {
-        if ordered { dir > 0 ? model.next() : model.prev() } else { model.random() }
+        if ordered {
+            dir > 0 ? model.next() : model.prev()
+        } else {
+            model.random()
+            // The same shuffle the Random button asks for, reached by flinging the card
+            // instead — one event name, `via` telling the two apart. The button already
+            // logged its own tap and then hands the turn to the pager, so that arrival
+            // is consumed here rather than counted a second time.
+            if shuffledByButton {
+                shuffledByButton = false
+            } else {
+                Track.event("learn_shuffle", ["lesson": lessonNumber, "via": "swipe"])
+            }
+        }
         autoPlay()   // explicit: every completed page-turn speaks the new word
     }
 
@@ -226,7 +250,14 @@ struct LearnView: View {
             }
             Spacer()
             if !ordered {
-                Button { fling = 1 } label: {
+                Button {
+                    // Its own name: the picker's `learn_order_mode` says which *mode*
+                    // the learner chose, this says how often they actually reshuffle
+                    // inside it — a different question.
+                    Track.event("learn_shuffle", ["lesson": lessonNumber, "via": "button"])
+                    shuffledByButton = true
+                    fling = 1
+                } label: {
                     Label(L.t("Random"), systemImage: "shuffle")
                 }
                 .buttonStyle(.borderedProminent)

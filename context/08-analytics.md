@@ -35,7 +35,7 @@ enum Track {
   disables Analytics, Crashlytics and Performance together.
 - **One event name per thing that happened — never one generic name split by a
   param.** Every mode's answer has its own name (`challenge_answer`, `match_answer`,
-  `train_answer`, `kana_swipe_answer`, …): a name you can read straight off the
+  `practice_answer`, `kana_swipe_answer`, …): a name you can read straight off the
   console says what it is. Params qualify (which lesson, correct?); they don't
   identify. Decided, reversed once, and re-decided 2026-08 — don't "unify" these.
 
@@ -72,32 +72,58 @@ Params in *italics* are common to every row of their group. `is_premium` is on a
 |---|---|---|
 | `challenge_answer` | correct, lesson, index, from, to | each ladder option picked |
 | `match_answer` | correct, lesson | each Match pair resolved |
-| `train_answer` | correct, lesson, from, to | each Train swipe |
+| `match_round` | lesson, round, attempts | a board cleared, logged before the next deal — the mode is endless, so consecutive rows are the only session length it has |
+| `practice_answer` | correct, lesson, from, to | each Practice quiz swipe |
+| `practice_done` | total, lesson | Practice queue emptied |
+| `practice_restart` | total, lesson | Restart tapped on the done screen |
+| `practice_peek` | lesson | card held to read its back (that answer is then uncredited) |
+| `practice_show_kana` | lesson | the reading asked for on a kanji prompt |
+| `practice_pair` | from, to, mixed, lesson | quiz pair committed from the sheet |
 | `learn_answer` | correct, lesson | tile answer resolves |
 | `kana_classic_answer` / `kana_listening_answer` / `kana_swipe_answer` | correct | each kana quiz answer |
+| `kana_quiz_direction` | from, to | either side of a kana quiz swapped — logged in `KanaQuizModel` after the swap, so the pair reported is the one asked for, and one call site each covers both quiz screens |
 | `kana_write_grade` | pass, score | a drawing is scored |
-| `flashcard_grade` / `kana_flashcard_grade` | known, lesson | self-grade swipe — `known` is the learner's own verdict |
-| `flashcard_done` / `kana_flashcard_done` | total, lesson | deck finished |
+| `kana_flashcard_grade` | known | kana self-grade swipe |
+| `kana_flashcard_reveal` | — | Reveal tapped before grading (`FlashcardScreen` logs `<trackName>_reveal`, so only a deck that names itself sends it — today only kana) |
+| `kana_flashcard_done` | total | kana deck finished |
+| `kana_flashcard_restart` | total | Restart on the kana done screen |
+
+Retired (never reuse the names): `train_answer`, `train_form`, `train_order_mode`,
+`flashcard_grade`, `flashcard_done` — Train and the Lessons flashcards merged into
+Practice 2026-08 — `practice_grade`, which counted a self-assessment Practice no
+longer asks for, and `practice_card`, which marked a teaching card being handed to the
+quiz: the card is no longer a step of its own, so nothing logs it.
 
 ### Challenge ladder
 
 | Event | Params | When |
 |---|---|---|
-| `challenge_start` | *lesson, index*, questions | run begins |
+| `challenge_start` | *lesson, index*, questions | the briefing's Start button — a run begins when the learner says so, not on appear |
 | `challenge_complete` | score, stars, passed | run recorded (once) |
+| `challenge_next` | *lesson*, from_index, stars | the result screen's forward step to the next rung |
 | `challenge_retry` | previous_score | Try again on the result screen |
 | `challenge_done_tapped` | passed | Done/Back on the result screen |
-| `challenge_abandon` | question, of | left mid-run |
-| `earned_first_group` | — | the 3★ sweep unlocks the first band |
+| `challenge_abandon` | question, of, correct | left mid-run — `correct` says whether the run was going badly or merely interrupted |
+| `challenge_review_play` | — | a missed word tapped to hear it again, on the result screen's "Review these" list |
+| `cheer_replay` | stars, passed | the cheer phrase tapped for another one; scoped to the tier that picks the phrase, so this row carries neither lesson nor index |
+| `earned_first_group` | lesson, index | the 3★ sweep unlocks the first band — the rung that completed it |
 
 ### Study & play
 
 | Event | Params | When |
 |---|---|---|
 | `study_day` | streak, best | an answer stamps today (`StudyDay.record`) |
-| `read_all` | *lesson, mode*, words | Play all / with meanings starts |
+| `read_all` | *lesson, mode*, preview | Read along starts, or switches mode; `preview` marks a run cut short by the free meanings limit |
 | `read_all_loop` | lap | playback wraps to word 1 |
+| `read_all_stop` | lesson, mode | the lit segment tapped a second time — the only way to end a run without leaving the screen |
+| `read_all_jump` | lesson, index | a playlist row tapped while playing, moving the run to that word (a tap on a *stopped* player just speaks the word and logs nothing) |
+| `read_all_speed` | rate, lesson | Read along speed changed (premium only) |
+| `read_all_pause` | paused, lesson | Read along paused or resumed |
+| `locked_speed` | lesson | the speed dial tapped without premium |
+| `vocab_cut` | cut, lesson | vocab list cut chip (all/notMemorized/bookmarked) |
+| `examples_shown` | on | example-sentence toggle |
 | `play_vocab` | lesson | word tapped in a list |
+| `play_example` | lesson, surface (vocab_list/practice/flashcards) | the example sentence tapped to hear it — logged at each caller, never inside `VocabFace`, so the surface is the caller's own fact |
 | `play_kana` | romaji | kana tile tapped |
 | `today_swipe` | lesson, depth, deck, for_challenge | deck depth high-water mark |
 | `today_challenge_open` | lesson, index | Today's challenge capsule tapped |
@@ -114,8 +140,10 @@ Params in *italics* are common to every row of their group. `is_premium` is on a
 | `set_app_language` / `set_vocab_language` | code | either picker changes |
 | `toggle_sound` | on | the global sound toggle |
 | `toggle_field` | field, shown | CardOptionsBar chips |
-| `train_order_mode` / `learn_order_mode` | ordered | ordered/random switch |
-| `train_form` | from, to, lesson | Train's form pair cycled |
+| `learn_order_mode` | ordered | Learn's ordered/random switch |
+| `learn_shuffle` | lesson, via (button/swipe) | a reshuffle inside random mode. One name, two ways in: the Random button pages through `CardPager`'s `fling`, so `turnPage` consumes that arrival instead of counting it a second time as a swipe |
+| `flashcard_order_mode` | ordered | Flashcards' ordered/random switch |
+| `flashcard_flip` | lesson | a Flashcards card held to see its back |
 | `kana_table` / `kana_tile_script` | table / script | kana chart switches |
 | `kana_quiz_open` | table | a kana mode opened from the chart |
 | `kana_clear` | cleared | learned-kana reset confirmed |
@@ -127,20 +155,24 @@ Params in *italics* are common to every row of their group. `is_premium` is on a
 | Event | Params | When |
 |---|---|---|
 | `paywall_shown` / `paywall_dismissed` / `paywall_unavailable` | *source, lesson*; +purchased on dismiss | paywall lifecycle |
+| `paywall_retry` | *source, lesson* | Try again on the products-didn't-load state — whether an empty paywall is retried or simply abandoned |
 | `purchase_start` / `purchase_success` / `purchase_failed` | *tier, source*; +reason on failure (error/cancelled/pending/unverified) | StoreKit flow |
-| `restore` | outcome (already_premium/restored/nothing_found/failed), source, premium | Restore tapped; outcome separates "wrong Apple ID" from "cancelled sign-in" |
+| `restore` | outcome (already_premium/restored/nothing_found/failed), source, premium; +error on failure | Restore tapped; outcome separates "wrong Apple ID" from "cancelled sign-in", and `error` names the failure mode (cancelled, offline) a support reply turns on — the message only, never anything identifying |
 | `locked_mode` | mode, lesson | locked practice row tapped |
 | `locked_challenge` | lesson, index | locked rung tapped |
-| `locked_read_all` | lesson, words_read | meanings preview hit its limit |
+| `locked_read_all` | lesson, heard | meanings preview hit its limit (`heard` = words played before it did) |
 
 ### Prompts (rating, share, notifications)
 
 | Event | Params | When |
 |---|---|---|
-| `rating_shown` / `rating_given` / `rating_dismissed` | lesson or source; stars on given | the star row (result screen or Diagnostics) |
+| `rating_shown` | lesson, passed_total | the star row is about to appear (ladder only) |
+| `rating_given` | stars, source (challenge/diagnostics); +lesson, index from the ladder | a star picked |
+| `rating_dismissed` | source; +lesson from the ladder | closed without picking |
 | `review_requested` | — | SKStoreReviewController asked |
 | `share_prompt_shown` / `share_prompt_dismissed` | lesson, passed_total / accepted | the recommend-a-friend nudge |
-| `share_opened` / `share_completed` | source (prompt/settings) | share sheet opened / finished |
+| `share_opened` | source (prompt/settings) | share sheet opened |
+| `share_completed` | source, completed, activity | the share sheet closed — **also on cancel**, as `completed: false` with `activity: none`, so this is not a conversion count on its own. Only the prompt path can emit it (Settings shares through `ShareLink`, which has no completion handler), so `source` is always `prompt` |
 | `notification_opt_in` | source (intro/streak), accepted; +streak from streak | soft ask answered |
 | `notification_opt_in_dismissed` | streak | soft-ask sheet swiped away |
 | `notification_permission` | granted | the one-shot iOS alert |
@@ -153,25 +185,38 @@ Params in *italics* are common to every row of their group. `is_premium` is on a
 | `screen` | name (+lesson etc.) | every screen; the full list is below |
 | `audio_missing` | item | clip fell back to TTS (+ a Crashlytics breadcrumb) |
 | `survey_failed` | collection | a Firestore write was rejected — usually stale rules |
-| `ad_failed` / `interstitial_shown` / `interstitial_failed` | error where relevant | ad lifecycle |
+| `ad_failed` / `interstitial_shown` / `interstitial_failed` | error where relevant; `ad_failed` adds slot | ad lifecycle — `slot` is which banner placement failed, so one broken unit doesn't read as every ad failing |
 | `widget_open` / `widget_challenge_open` | lesson (+index) | launched via widget deep link |
 | `push_registered` / `push_register_failed` / `fcm_token` | error / present | APNs registration |
 | `notification_opened` | kind (streak_reminder/push) | a notification was tapped |
-| `feedback_opened` / `feedback_dismissed` / `feedback_submitted` | source; +message_length on dismiss, categories on submit — never the text | feedback flow |
+| `feedback_opened` / `feedback_dismissed` | source; +message_length on dismiss | sheet opened / abandoned |
+| `feedback_submitted` | source, kind, area, lesson, has_item, message_length, has_email, stars | a report sent (`Feedback.Draft.trackParams`). Buckets and lengths only: `has_item` and `has_email` are the aggregate halves of the reported word and the reply address, and the message itself is never logged |
+| `report_swipe` | lesson | the vocab list swiped to report a mistake — logged on the swipe, so finding the gesture is countable separately from sending a report |
 | `manage_subscription` | — | Settings row tapped |
+
+**Audio replays on a card or a prompt are deliberately untracked.** Tapping the Practice
+card, a flashcard, the Today card or a quiz prompt speaks the word — but there the tap
+*is* the surface, so it fires as often as a learner idly touches the screen and would
+swamp `play_vocab` with rows that mean nothing in particular. The explicit speaker
+controls are the tracked ones (`play_vocab`, `play_example`, `play_kana`,
+`challenge_review_play`, `cheer_replay`): each is a control someone aimed at.
 
 ### Screens (`screen`, split by `name`)
 
-`today` `kana` `lessons` `select_mode` `vocab_list` `flashcards` `train` `match`
+`today` `kana` `lessons` `select_mode` `vocab_list` `read_along` `flashcards` `practice` `match`
 `learn` `challenge` `kana_flashcard` `kana_quiz_mode` `kana_quiz_classic`
 `kana_quiz_listening` `kana_quiz_swipe` `kana_write` `progress` `bookmarks`
-`settings` `legal` — lesson-scoped ones carry `lesson` (challenge adds `index`,
-legal adds `doc`).
+`settings` `legal` `intro` `diagnostics` — lesson-scoped ones carry `lesson` (challenge
+adds `index`, legal adds `doc`). `kana_quiz_classic` and `kana_quiz_listening` are one
+screen passing its table, so a grep for the literal finds neither. `intro` fires
+alongside the tour's own `intro_card`; `diagnostics` is developer-only and unlocalised,
+and is there because `last_screen` has to be able to name it when its rating write or its
+Firestore probe reports a failure.
 
 ### Performance traces
 
 `vocab_decode` (`VocabStore`) — the app's largest launch cost, and the one number that
-differs by course (2,089 vs 7,972 entries). Everything else (app start, rendering,
+differs by course (2,100 vs 7,972 entries). Everything else (app start, rendering,
 network) is Performance's automatic instrumentation.
 
 ## User properties
