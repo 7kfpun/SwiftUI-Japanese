@@ -20,6 +20,10 @@ struct SelectModeView: View {
     /// bounce off the ladder" and "people bounce off Practice".
     @State private var paywallSource = "select_mode_locked"
     @State private var results: [Int: ChallengeResult] = [:]
+    /// Whether the previous lesson's ladder is fully passed — see
+    /// `ChallengeResult.previousLessonCleared`. Defaults open so lesson 1 (and the
+    /// first render before `reloadResults`) never flashes a lock it doesn't mean.
+    @State private var previousCleared = true
     /// Which modes this lesson has seen — drives the rows' trailing status.
     @State private var visits: Set<String> = []
 
@@ -304,10 +308,18 @@ struct SelectModeView: View {
 
             rungStrip
 
-            if !locked, let next = nextIndex {
+            // The gate's one sentence, where the locked chips point at it. Numerals
+            // interpolate, so 19 languages carry one string.
+            if !locked, !previousCleared {
+                Text(L.t("Clear every challenge in Lesson %@ first", "\(lesson.number - 1)"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if !locked, previousCleared, let next = nextIndex {
                 nextCard(next)
             }
-            if !locked, let retry = Self.retryTarget(results: results) {
+            if !locked, previousCleared, let retry = Self.retryTarget(results: results) {
                 retryCard(retry)
             }
 
@@ -343,6 +355,13 @@ struct SelectModeView: View {
                 chipBody(i, star: nil, isNext: false, lockedIcon: true)
             }
             .buttonStyle(.plain)
+        } else if !previousCleared {
+            // Sequence-locked: the previous lesson's ladder isn't finished. Not a
+            // button — there is nothing to open, and the line under the strip says
+            // why. Earned stars still show, so progress made before the rule (or on
+            // another device) isn't drawn as if it never happened.
+            chipBody(i, star: result?.stars, isNext: false, lockedIcon: !passed)
+                .opacity(0.55)
         } else if passed || isNext {
             NavigationLink {
                 ChallengeView(lesson: current, index: i, total: challengeCount)
@@ -478,6 +497,8 @@ struct SelectModeView: View {
     /// Re-read on every appear so a challenge finished and popped back updates the strip.
     private func reloadResults() {
         results = ChallengeResult.byIndex(lesson: lesson.number, context: context)
+        previousCleared = ChallengeResult.previousLessonCleared(lesson: lesson.number,
+                                                                context: context)
         // A rung finished on the pushed screen may have completed the sweep, and this
         // view is what draws the locks — so the two have to be re-read together.
         unlock.refresh(context: context)

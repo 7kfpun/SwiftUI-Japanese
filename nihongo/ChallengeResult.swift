@@ -102,6 +102,21 @@ final class ChallengeResult {
         results.values.filter(\.isPassed).count
     }
 
+    /// The ladder's cross-lesson gate: lesson `n`'s challenges open only once every
+    /// challenge of lesson `n − 1` is **passed** (kf, 2026-08-25). Passing, not three
+    /// stars — three stars is the *earned-unlock* bar (`Gating.hasEarnedFirstGroup`),
+    /// and demanding it here would make the free band's own reward block progress.
+    ///
+    /// The study modes stay open on every unlocked lesson — the rule sequences the
+    /// *tests*, not the studying. Lesson 1 has no previous lesson to clear, and a
+    /// dataset with no rungs for the previous lesson (`wordCount` 0 on drift) owes
+    /// nothing, so the gate degrades open rather than sealing the course shut.
+    static func previousLessonCleared(lesson: Int, context: ModelContext) -> Bool {
+        guard lesson > 1 else { return true }
+        let total = Challenge.count(wordCount: VocabStore.wordCount(lesson - 1))
+        return passedCount(results: byIndex(lesson: lesson - 1, context: context)) >= total
+    }
+
     /// Rungs passed across every lesson — how far into the app someone actually is,
     /// used to decide whether they've done enough to be worth asking for a rating.
     ///

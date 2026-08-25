@@ -183,6 +183,7 @@ So a sync race can inflate nothing and lose nothing. The readers that matter:
 |---|---|---|
 | `byIndex(lesson:context:)` | `SelectModeView`, `ChallengeView`'s briefing + stats, `TodayView` | one fetch per ladder, duplicates collapsed via `better` |
 | `isUnlocked(index:results:)` | rung chips | rung 1 always open, else the previous must be passed |
+| `previousLessonCleared(lesson:context:)` | `SelectModeView`'s ladder section | **cross-lesson gate (2026-08-25)**: lesson n's ladder opens only once every rung of lesson n − 1 is *passed* (not three-starred — that bar belongs to the earned unlock). Lesson 1 is always open; a dataset with no rungs for the previous lesson degrades open. Study modes are untouched — the rule sequences the tests, not the studying. Today's capsule and the widget already respect it by construction: `studyLesson()` walks lessons in order, so the frontier lesson's predecessors are cleared by definition |
 | `passedCount(results:)` | the Challenge header (with the star tally) | counts passed values of the collapsed map |
 | `totalPassed(context:)` | the rating prompt | dedupes by `id` **first** — counting both twins would fire the prompt early |
 | `firstUnpassed(total:results:)` | Today's deck | lowest unpassed rung, nil once cleared |

@@ -2515,6 +2515,26 @@ struct ChallengeResultTests {
         #expect(row.isPassed)
     }
 
+    /// The ladder is sequential across lessons: lesson n opens only when every rung
+    /// of lesson n − 1 is passed. Passing is the bar — three stars is the earned-unlock
+    /// bar, and demanding it here would let the reward block progress.
+    @Test func previousLessonGatesTheNextLadder() throws {
+        let ctx = try makeContext()
+        #expect(ChallengeResult.previousLessonCleared(lesson: 1, context: ctx))
+
+        // Lesson 1 partially passed: lesson 2 stays shut.
+        let total = Challenge.count(wordCount: VocabStore.wordCount(1))
+        for i in 1..<total {
+            ChallengeResult.record(lesson: 1, index: i, score: 100, context: ctx)
+        }
+        #expect(!ChallengeResult.previousLessonCleared(lesson: 2, context: ctx))
+
+        // The last rung passed — merely passed, not three-starred — opens it.
+        ChallengeResult.record(lesson: 1, index: total, score: Challenge.passScore,
+                               context: ctx)
+        #expect(ChallengeResult.previousLessonCleared(lesson: 2, context: ctx))
+    }
+
     /// A failing run records the attempt but leaves the challenge incomplete.
     @Test func failingDoesNotComplete() throws {
         let ctx = try makeContext()
