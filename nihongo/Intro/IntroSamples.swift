@@ -4,10 +4,10 @@ import SwiftUI
 /// in, and the Today widget.
 ///
 /// All of them are **static vignettes over real lesson-1 data** — never a hardcoded
-/// word, and never a live mode. Instantiating `TrainModel` / `LearnModel` or the real
+/// word, and never a live mode. Instantiating `PracticeModel` / `LearnModel` or the real
 /// mode views would drag in gating, ad slots and session state for a card nobody can
 /// play, and each of those views owns a horizontal drag gesture that would fight
-/// `cardPager`'s page turn. So these reuse the *chrome* (`SwipeCard`, `SwipeStamp`,
+/// `cardPager`'s page turn. So these reuse the *chrome* (`SwipeCard`,
 /// `SwipeOptionChip`, `VocabRow`, `StarRow`) and answer to taps only.
 struct IntroModeSample: View {
     let mode: Intro.Mode
@@ -31,8 +31,8 @@ struct IntroModeSample: View {
     private var offset: Int {
         switch mode {
         case .vocabList:  return 0
-        case .flashcards: return 3
-        case .train:      return 4
+        case .flashcards: return 4
+        case .practice:   return 3
         case .match:      return 8
         case .learn:      return 6
         }
@@ -43,7 +43,7 @@ struct IntroModeSample: View {
             switch mode {
             case .vocabList:  vocabList
             case .flashcards: flashcard
-            case .train:      train
+            case .practice:   practice
             case .match:      match
             case .learn:      learn
             }
@@ -98,40 +98,32 @@ struct IntroModeSample: View {
         }
     }
 
-    /// Flashcards — the real card face, already revealed, with a `SwipeStamp` standing
-    /// in for the stamp that fades in under a drag.
-    ///
-    /// Accent, not green: green and red are answer feedback everywhere in this app and
-    /// nothing in the intro is graded, so the corner hint borrows the shape without the
-    /// colour that would claim a verdict.
+    /// Flashcards — the front of a card, which is the whole mode: no verdict, no
+    /// options, just the word. The one vignette with nothing being asked.
     @ViewBuilder private var flashcard: some View {
         if let word {
             SwipeCard(showsHint: false) {
                 VStack(spacing: 6) {
                     Text(word.kana)
-                        .font(Theme.jp(34))
+                        .font(Theme.jp(32))
                         .lineLimit(1).minimumScaleFactor(0.4)
-                    Text(word.romaji)
-                        .font(.subheadline).foregroundStyle(.secondary)
-                    Text(word.translation)
-                        .font(.subheadline).foregroundStyle(Theme.accent)
-                        .multilineTextAlignment(.center).minimumScaleFactor(0.6)
+                    if word.displaysKanji {
+                        Text(word.kanji).font(Theme.jp(17)).foregroundStyle(.secondary)
+                    }
                 }
                 .padding(16)
-            }
-            .overlay(alignment: .topTrailing) {
-                SwipeStamp(systemImage: "checkmark", color: Theme.accent, rotation: 8)
-                    .padding(10)
             }
             .contentShape(Rectangle())
             .onTapGesture { pronouncer.speak(word) }
         }
     }
 
-    /// Train — the prompt over the mode's own two option chips, left unanswered
-    /// (`picked: nil`), which is exactly the state whose chevrons read as "swipe this
-    /// way". `TrainModel.optionCount` is 2, so two is the honest number.
-    @ViewBuilder private var train: some View {
+    /// Practice — the quiz face: the prompt over the mode's own two option chips, left
+    /// unanswered (`picked: nil`), which is exactly the state whose chevrons read as
+    /// "swipe this way". `PracticeModel.optionCount` is 2, so two is the honest number.
+    /// The quiz half rather than the card half, because the card is a flashcard anyone
+    /// recognises — the swipe-to-answer is the part worth previewing.
+    @ViewBuilder private var practice: some View {
         if let word, let other = distractor {
             VStack(spacing: 10) {
                 Text(word.kana)
@@ -225,13 +217,13 @@ private struct LearnSample: View {
 /// The Challenge ladder as it looks a rung in: one cleared, the next open, the one after
 /// still shut behind it.
 ///
-/// `ChallengeRow`'s anatomy — filled accent circle with a checkmark once passed, the
+/// The ladder's anatomy — filled accent circle with a checkmark once passed, the
 /// `StarRow`, the same `Best %@%` / `Beat Challenge %@ to unlock` captions — rebuilt here
 /// rather than reused, because the real row takes a `ChallengeResult` and fabricating
 /// `@Model` rows for a mockup would mean inserting invented history into a CloudKit-backed
 /// store. Nothing is persisted by this view; it is a picture of a row, not a row.
 struct IntroChallengeRungs: View {
-    /// The three states a rung can be in, mirroring `ChallengeRowState`.
+    /// The three states a rung can be in, mirroring the real strip's chips.
     ///
     /// Modelled explicitly rather than inferred from "has stars", because those aren't the
     /// same fact: a rung nobody has attempted yet is *open* — numbered, three empty stars,

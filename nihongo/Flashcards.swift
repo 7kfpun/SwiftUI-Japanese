@@ -61,7 +61,7 @@ struct FlashcardScreen<Element, Face: View>: View {
     private let revealLabel: String
     private let summary: (Int) -> String
     private let trackName: String?
-    /// Merged into this screen's own two events. It exists so the caller can name what the
+    /// Merged into every event this screen logs. It exists so the caller can name what the
     /// deck is *of* — the lesson number, for the vocab deck — which this screen has no way
     /// to know: it is generic over its element and holds nothing but cards. Kana passes
     /// none, because a kana deck is the whole chart and there is nothing to distinguish.
@@ -126,25 +126,20 @@ struct FlashcardScreen<Element, Face: View>: View {
         }
     }
 
-    /// Mastered / remaining / total, built the same way `ScoreBadge` builds its counts.
+    /// Mastered / remaining / total, in the shared `ToolbarStatus` shell — the same
+    /// object in the same slot as every other practice screen's counter.
     ///
     /// **`Image` + `Text`, never `Label`.** A `Label` in a toolbar's principal slot picks
     /// up `.iconOnly` from the toolbar's own label style, so the numbers silently
-    /// vanished and the header read as two bare icons and a stray "/ 35". The capsule and
-    /// `fixedSize` come from `ScoreBadge` too — this sits in the same slot on the same
-    /// kind of screen, and a counter the toolbar is free to compress is one that will be.
+    /// vanished and the header read as two bare icons and a stray "/ 35".
     private var progress: some View {
-        HStack(spacing: 14) {
+        ToolbarStatus {
             stat("checkmark", deck.mastered, Theme.correct)
             stat("rectangle.stack.fill", deck.remaining, Theme.accent)
             Text("/ \(deck.total)")
                 .font(.footnote.weight(.medium).monospacedDigit())
                 .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 6)
-        .background(Capsule().fill(Color(.tertiarySystemFill)))
-        .fixedSize()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(deck.mastered) done, \(deck.remaining) left, \(deck.total) total")
     }
@@ -177,7 +172,12 @@ struct FlashcardScreen<Element, Face: View>: View {
             VStack(spacing: 14) {
                 face(element, revealed)
                 if !revealed {
-                    Button { withAnimation { revealed = true } } label: {
+                    // How often the answer is asked for before the grade — a deck where
+                    // every card is revealed is a deck that is being read, not recalled.
+                    Button {
+                        if let n = trackName { Track.event("\(n)_reveal", trackParams) }
+                        withAnimation { revealed = true }
+                    } label: {
                         Label(revealLabel, systemImage: "eye")
                     }
                     .buttonStyle(.bordered)
@@ -203,6 +203,10 @@ struct FlashcardScreen<Element, Face: View>: View {
     /// as the kana swipe quiz's option chips, so every Tinder-like screen matches.
     private var graders: some View {
         HStack(spacing: 12) {
+            // `contentShape` inside the label, `choiceChip` outside the style: without
+            // the shape only the glyphs were tappable — the chip's tinted padding is
+            // background, and background outside a `.plain` button label isn't a target.
+            // Same trap `SwipeOptionChip` documents.
             Button { grade(right: false) } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.left")
@@ -210,6 +214,7 @@ struct FlashcardScreen<Element, Face: View>: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
+                .contentShape(RoundedRectangle(cornerRadius: 18))
             }
             .buttonStyle(.plain)
             .choiceChip(Theme.wrong)
@@ -221,6 +226,7 @@ struct FlashcardScreen<Element, Face: View>: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
+                .contentShape(RoundedRectangle(cornerRadius: 18))
             }
             .buttonStyle(.plain)
             .choiceChip(Theme.correct)
@@ -236,6 +242,9 @@ struct FlashcardScreen<Element, Face: View>: View {
             Text(L.t("All done!")).font(Theme.title(.largeTitle, weight: .bold))
             Text(summary(deck.total)).foregroundStyle(.secondary)
             Button {
+                if let n = trackName {
+                    Track.event("\(n)_restart", trackParams.merging(["total": deck.total]) { a, _ in a })
+                }
                 withAnimation { deck.restart(); revealed = false; drag = .zero }
                 autoPlay()
             } label: {
@@ -252,7 +261,8 @@ struct FlashcardScreen<Element, Face: View>: View {
     private func grade(right: Bool) {
         guard !animating else { return }
         animating = true
-        // `flashcard_grade` / `kana_flashcard_grade` — the name already says which deck,
+        // `kana_flashcard_grade` (the one caller left since Lessons flashcards merged
+        // into Practice) — the name already says which deck,
         // and `known` is the learner's own verdict, not a marked answer.
         if let n = trackName {
             Track.event("\(n)_grade", trackParams.merging(["known": right]) { a, _ in a })

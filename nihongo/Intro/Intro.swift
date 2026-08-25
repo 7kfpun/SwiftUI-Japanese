@@ -72,40 +72,46 @@ enum Intro {
         }
     }
 
-    /// The five Learn modes card 3 previews, in `SelectModeView`'s shallow → deep order.
+    /// The five ways through a lesson card 3 previews, shallow → deep: meet the words,
+    /// page through them, be asked about them, pair them, produce them.
+    ///
+    /// Not quite the lesson screen's own order any more — that screen leads with the
+    /// Practice hero and lists Vocab List first among the rows — because a tour reads
+    /// as a sequence and Vocab List is where a learner actually starts.
+    /// `IntroTests.modeChipsReuseSelectModeStrings` pins whatever this says.
     ///
     /// Titles, subtitles and icons are the *same* strings and symbols the real mode rows
     /// use — deliberately not intro-specific copy, so the tour teaches the labels the
     /// learner will meet again a tap later. Nothing new to translate here.
     enum Mode: String, CaseIterable, Identifiable {
-        case vocabList, flashcards, train, match, learn
+        case vocabList, flashcards, practice, match, learn
 
         var id: String { rawValue }
         var titleKey: String {
             switch self {
             case .vocabList:  return "Vocab List"
             case .flashcards: return "Flashcards"
-            case .train:      return "Train"
-            case .match:      return "Match"
-            case .learn:      return "Learn"
+            case .practice:   return "Practice"
+            case .match:     return "Match"
+            case .learn:     return "Learn"
             }
         }
         var subtitleKey: String {
             switch self {
             case .vocabList:  return "Browse & hear all words"
-            case .flashcards: return "Swipe right if you know it"
-            case .train:      return "Swipe to the right answer"
-            case .match:      return "Pair each word with its meaning"
-            case .learn:      return "Rebuild the reading from tiles"
+            case .flashcards: return "Swipe through the words"
+            case .practice:   return "Cards first, then a quick quiz"
+            case .match:     return "Pair each word with its meaning"
+            case .learn:     return "Rebuild the reading from tiles"
             }
         }
         var icon: String {
             switch self {
             case .vocabList:  return "list.bullet"
             case .flashcards: return "rectangle.on.rectangle.angled"
-            case .train:      return "arrow.left.arrow.right"
-            case .match:      return "link"
-            case .learn:      return "square.grid.2x2"
+            case .practice:   return "graduationcap"
+            case .match:     return "link"
+            case .learn:     return "square.grid.2x2"
             }
         }
         var title: String { L.t(titleKey) }

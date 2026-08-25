@@ -12,9 +12,31 @@ enum Pref {
     static let romajiShown         = "isRomajiShown"
     static let translationShown    = "isTranslationShown"
     static let kanaTileScript      = "kanaTileScript"
-    /// Train's word order — false (random) by default; Learn's `ordered` key defaults
-    /// the other way, so the two modes deliberately don't share a switch.
+    /// Whether vocab lists show each word's example sentence. One global switch, not
+    /// per-row disclosure: the user's call ("show all / off all"). Off by default
+    /// (design 3a): every sentence expanded left four words per screen, and a vocab
+    /// list's first job is to be scannable. The flashcard back still shows them.
+    static let examplesShown       = "examplesShown"
+    /// RETIRED — Train's word order, gone with Train itself when it merged into
+    /// Practice (whose scheduler owns the order). The key stays reserved so a future
+    /// setting can never silently inherit an old device's stale value.
     static let trainOrdered        = "trainOrdered"
+    /// Practice's quiz pair (design 5a): which face the prompt shows and which the
+    /// options answer, as `VForm.label` strings — stable ASCII, never localized text.
+    /// Unset reads as the default kana → meaning.
+    static let practiceFrom        = "practiceFrom"
+    static let practiceTo          = "practiceTo"
+    /// When true, every quiz card draws a random valid pair instead of the fixed one.
+    static let practiceMixed       = "practiceMixed"
+    /// "Play all" playback speed as a multiplier (0.8, 1.0, 1.2, 1.5). Applies to the
+    /// bundled clips and the TTS fallback alike; unset reads as 1.0.
+    static let playbackRate        = "playbackRate"
+    /// `ModeVisits`' backing array — which practice modes each lesson has opened.
+    static let modeVisits          = "modeVisits"
+    /// Flashcards' order picker. Its own key, not Learn's `ordered`: the two screens
+    /// default the same way but they are different sittings, and sharing one switch
+    /// would make changing the order in one silently change the other.
+    static let flashcardsOrdered   = "flashcardsOrdered"
     /// Per-device opt-out of analytics collection, independent of DEBUG/Release —
     /// toggled via a long-press on the version footer in Settings. Lets the
     /// developer exclude their own TestFlight/Release usage without a rebuild.
@@ -69,4 +91,29 @@ enum Pref {
     /// Why they said they're learning: "travel" / "jlpt" / "work" / "culture" / "other".
     /// Recorded only, for the same segmentation reason as `textbookLesson`.
     static let goal                = "goal"
+}
+
+
+/// Which practice modes a lesson has opened — the honest datum behind the lesson
+/// screen's "Tried / Not tried yet" status labels (design 2a). "Opened" is all it
+/// records: inventing a completion state for modes that are deliberately endless
+/// (Match, Practice) would be a lie with a progress bar.
+///
+/// A `Set` of `"lesson/mode"` strings in UserDefaults: tens of entries even for a
+/// finished course, written once per first visit, and local like every other
+/// unscored study trace.
+enum ModeVisits {
+    static func mark(lesson: Int, mode: String) {
+        var set = Set(UserDefaults.standard.stringArray(forKey: Pref.modeVisits) ?? [])
+        guard set.insert("\(lesson)/\(mode)").inserted else { return }
+        UserDefaults.standard.set(Array(set), forKey: Pref.modeVisits)
+    }
+
+    /// The modes `lesson` has visited, as bare mode keys.
+    static func all(lesson: Int) -> Set<String> {
+        let prefix = "\(lesson)/"
+        return Set((UserDefaults.standard.stringArray(forKey: Pref.modeVisits) ?? [])
+            .filter { $0.hasPrefix(prefix) }
+            .map { String($0.dropFirst(prefix.count)) })
+    }
 }

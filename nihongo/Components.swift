@@ -16,25 +16,98 @@ struct SoundToggle: View {
     }
 }
 
-/// One consistent score indicator used by every scored screen in the app (Kana classic,
-/// Kana swipe, Kana write, Train, and the Challenge ladder). Shows right / wrong / total.
+/// The status readout every practice screen puts in the centre of its navigation bar:
+/// a capsule holding the numbers, and — where the run has a shape worth naming — a
+/// caption under it.
+///
+/// One component rather than each screen assembling its own capsule, because they had
+/// already drifted: different paddings, two fills and two fonts across the kana quizzes,
+/// Match and the ladder, for what is the same object in the same slot on every one of
+/// them. `ScoreBadge` is now this with right/wrong/total inside it.
+///
+/// `fixedSize` because the toolbar is free to compress its principal item, and a counter
+/// it decides to shrink is one that will be — the numbers are the point.
+struct ToolbarStatus<Content: View>: View {
+    /// What the run is, in a few words — "Round 2 · 5 pairs". Optional: a kana quiz is
+    /// just a quiz, and a caption saying so would be furniture.
+    var caption: String? = nil
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        VStack(spacing: 3) {
+            HStack(spacing: 12) { content() }
+                // **Never wrap.** The principal slot is whatever the navigation bar has
+                // left after the back button and the trailing controls, and on a real
+                // device with a Dynamic Island that is narrow enough to break a
+                // two-digit number across two lines — "✓ 1/0" where 10 was meant.
+                // `fixedSize` on the outer stack is not enough: it asks for the ideal
+                // size, and the toolbar can still refuse it. Denying the wrap at the
+                // text is what actually holds.
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 5)
+                .background(Capsule().fill(Theme.surface))
+                .overlay(Capsule().stroke(Theme.line, lineWidth: 1))
+            if let caption {
+                Text(caption)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+            }
+        }
+        .fixedSize()
+    }
+}
+
+/// A single tally — "10 / 11" behind one glyph — for screens whose score is one number
+/// out of another.
+///
+/// Match's is exactly that (pairs cleared out of attempts), and the three-part
+/// right/wrong/total form spent roughly twice the width saying the same thing: the
+/// wrong count is just the difference, and on a real device that extra width is what
+/// pushed the numbers into wrapping. The design draws one icon and one fraction.
+struct TallyBadge: View {
+    let icon: String
+    let done: Int
+    let total: Int
+    var tint: Color = Theme.correct
+    var caption: String? = nil
+
+    var body: some View {
+        ToolbarStatus(caption: caption) {
+            HStack(spacing: 5) {
+                Image(systemName: icon).imageScale(.small)
+                Text("\(done) / \(total)").monospacedDigit()
+            }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(tint)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(done) of \(total)")
+    }
+}
+
+/// One consistent score indicator used by every scored screen in the app (Kana Classic,
+/// Kana Swipe, Kana Write). Shows right / wrong / total, in `ToolbarStatus`.
 struct ScoreBadge: View {
     let correct: Int
     let total: Int
     private var wrong: Int { total - correct }
 
+    /// What this run is, under the numbers — Match names its round, a kana quiz has
+    /// nothing to add.
+    var caption: String? = nil
+
     var body: some View {
-        HStack(spacing: 14) {
+        ToolbarStatus(caption: caption) {
             stat("checkmark", correct, Theme.correct)
             stat("xmark", wrong, Theme.wrong)
             Text("/ \(total)")
                 .font(.footnote.weight(.medium).monospacedDigit())
                 .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 6)
-        .background(Capsule().fill(Color(.tertiarySystemFill)))
-        .fixedSize()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(correct) correct, \(wrong) wrong, \(total) total")
     }
@@ -120,7 +193,7 @@ struct QuizOptionButton: View {
                 // 0.65, not 0.5. The rows are a fixed 74pt (see `OptionGrid`) and the
                 // longest Minna glosses are sentence-length parentheticals, so the floor is
                 // what actually gets rendered for the tail of the data. Measured with
-                // CoreText over all 37 602 translations in the 18 languages: at 0.5 the
+                // CoreText over all 39 900 translations in the 18 languages: at 0.5 the
                 // worst cases land at 8.5pt (Burmese) and 8.8pt (German, Vietnamese) — below
                 // anything readable — while 0.65 holds every language at 11.2pt or better.
                 // The cost is 46 glosses that tail-truncate instead of shrinking rather than
@@ -193,6 +266,11 @@ struct SwipeOptionChip: View {
     /// Title-sized but deliberately *not* `Theme.title` at any call site: an answer you
     /// pick is content, and the two Japanese call sites pass their own face anyway.
     var font: Font = .title3.weight(.semibold)
+    /// The gesture in words ("Swipe left"), under the answer. The chevron already points
+    /// the way; this spells it out for the first run, before the gesture is learned.
+    /// Optional because the kana quiz teaches its swipe elsewhere and doesn't want the
+    /// second line taking room from a chip that is already only romaji.
+    var hint: String? = nil
     /// Choosing this option. Swiping the card is the headline gesture, but tapping the
     /// chip has to work too — it's the obvious thing to try, and these looked tappable
     /// long before they were.
@@ -209,6 +287,7 @@ struct SwipeOptionChip: View {
 
     var body: some View {
         Button(action: action) {
+            VStack(spacing: 4) {
             HStack(spacing: 6) {
                 if side == 0 { marker }
                 Text(text)
@@ -217,7 +296,7 @@ struct SwipeOptionChip: View {
                     // Wrap first, shrink second. The chip has a `minHeight`, not a fixed
                     // height, so a long gloss is allowed to make it taller — but
                     // `lineLimit(3)` capped it before it could, and 0.4 of `.title3` is 8pt.
-                    // Measured over all 37 602 translations in the 18 languages: at (3, 0.4)
+                    // Measured over all 39 900 translations in the 18 languages: at (3, 0.4)
                     // the worst cases in English, French, German, Vietnamese and Burmese all
                     // bottomed out at the 8pt floor; at (4, 0.6) nothing renders below 12pt
                     // and the share that tail-truncates instead only moves from 0.08% to
@@ -227,6 +306,14 @@ struct SwipeOptionChip: View {
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                 if side == 1 { marker }
+            }
+            // Hidden once answered: the verdict is the message then, and a swipe
+            // instruction on a chip that no longer takes one is just noise.
+            if let hint, !answered {
+                Text(hint)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 14)
@@ -384,7 +471,11 @@ struct CardStackPeek: View {
     }
 }
 
-/// 2×2 grid of quiz options.
+/// 2×2 grid of quiz options — the kana classic quiz's layout.
+///
+/// The Challenge ladder used to share it and now stacks its four options full-width
+/// instead: a vocab option is a gloss that can run to a phrase, and two of those side
+/// by side shrink to unreadable where a kana romaji never does.
 ///
 /// Rows have a set height rather than expanding to fill. Letting them grow made the
 /// answers as large as the prompt above them — and on a quiz the question should be
@@ -404,6 +495,176 @@ struct OptionGrid<Cell: View>: View {
                     }
                 }
                 .frame(height: rowHeight)
+            }
+        }
+    }
+}
+
+/// An example sentence as aligned columns: kanji over kana over romaji, one column per
+/// bunsetsu, wrapping like text. The alignment is the feature — see `ExampleSentence`.
+struct ExampleSentenceView: View {
+    let example: ExampleSentence
+    /// The columns wrap in reading order, so long sentences fold like prose would.
+    ///
+    /// Furigana order, not caption order: the small kana sits *above* the kanji it
+    /// reads, the way every Japanese text annotates readings — putting it below made
+    /// the column read as three unrelated lines. The reading slot is reserved even
+    /// where kanji and kana coincide, so the kanji baseline and the romaji line stay
+    /// level across every column of the sentence.
+    var body: some View {
+        FlowLayout(spacing: 8, lineSpacing: 6) {
+            ForEach(example.kanji.indices, id: \.self) { i in
+                // Centred within the column: furigana over the kanji, romaji under the
+                // phrase, the way printed furigana is set. Left-aligned, both
+                // annotations hugged the column's left edge and looked indented.
+                VStack(alignment: .center, spacing: 0) {
+                    // The reading centres over the kanji **core**, not the phrase: in
+                    // 本です。 the ほん belongs over 本 alone, and centring it over the
+                    // whole column parked it visibly off its kanji. Hidden copies of
+                    // the prefix and suffix (zero height, real width) push the reading
+                    // to exactly the core's span; the row keeps the reading's own
+                    // height, so the reserved blank line stays the same size as ever.
+                    if let a = example.annotated(at: i) {
+                        HStack(alignment: .center, spacing: 0) {
+                            hiddenSpan(a.prefix)
+                            Text(a.reading)
+                                .font(Theme.jp(9))
+                                .foregroundStyle(.secondary)
+                                .layoutPriority(1)
+                            hiddenSpan(a.suffix)
+                        }
+                    } else {
+                        Text(" ").font(Theme.jp(9))
+                    }
+                    // Quieter than the headword above the pane on purpose: the example
+                    // illustrates the word, it doesn't compete with it.
+                    Text(example.kanji[i]).font(Theme.jp(14))
+                    if example.romaji.indices.contains(i) {
+                        Text(example.romaji[i]).font(.caption2).foregroundStyle(.tertiary)
+                    }
+                }
+            }
+        }
+    }
+
+    /// A phrase segment that occupies its rendered *width* and nothing else — the
+    /// ruler that positions a reading over its kanji core. Zero height so the
+    /// main-line font doesn't inflate the small furigana row.
+    private func hiddenSpan(_ text: String) -> some View {
+        Text(text).font(Theme.jp(14)).fixedSize()
+            .frame(height: 0).hidden()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(example.spoken)
+    }
+}
+
+/// Minimal wrapping layout — rows of subviews at their natural size, folding when the
+/// width runs out. Exists because the example columns must wrap like text, and neither
+/// `HStack` (clips) nor a grid (uniform cells) can do ragged reading-order wrapping.
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+    var lineSpacing: CGFloat = 6
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        arrange(proposal: proposal, subviews: subviews).size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        // Wrap against the width actually granted, not the one proposed: the two differ
+        // whenever the parent proposes nil/unspecified (an ideal-size pass), and folding
+        // on `.infinity` there lays every column out on one row that then runs off the
+        // side of `bounds`.
+        let granted = ProposedViewSize(width: bounds.width, height: bounds.height)
+        for (subview, point) in zip(subviews, arrange(proposal: granted, subviews: subviews).points) {
+            subview.place(at: CGPoint(x: bounds.minX + point.x, y: bounds.minY + point.y),
+                          proposal: .unspecified)
+        }
+    }
+
+    private func arrange(proposal: ProposedViewSize, subviews: Subviews) -> (size: CGSize, points: [CGPoint]) {
+        let maxWidth = proposal.width ?? .infinity
+        var points: [CGPoint] = []
+        var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0, width: CGFloat = 0
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if x > 0, x + size.width > maxWidth {
+                x = 0
+                y += rowHeight + lineSpacing
+                rowHeight = 0
+            }
+            points.append(CGPoint(x: x, y: y))
+            rowHeight = max(rowHeight, size.height)
+            width = max(width, x + size.width)
+            x += size.width + spacing
+        }
+        return (CGSize(width: width, height: y + rowHeight), points)
+    }
+}
+
+
+/// A short horizontal shake — the app's one "that didn't work" motion.
+///
+/// A `GeometryEffect` rather than an offset animation so it can run to completion and
+/// return, without leaving the view displaced if the value changes mid-flight.
+struct ShakeEffect: GeometryEffect {
+    var amount: CGFloat = 4
+    var shakesPerUnit = 3
+    var animatableData: CGFloat
+
+    init(shakes: Int) { animatableData = CGFloat(shakes) }
+
+    func effectValue(size: CGSize) -> ProjectionTransform {
+        ProjectionTransform(CGAffineTransform(
+            translationX: amount * sin(animatableData * .pi * CGFloat(shakesPerUnit)), y: 0))
+    }
+}
+
+/// The vocab card face: kana (+ kanji), revealing meaning + romaji + example.
+/// Shared by Practice's reveal and the Flashcards deck's back — the same face, so a
+/// word looks the same wherever it is turned over.
+struct VocabFace: View {
+    let vocab: Vocab
+    let revealed: Bool
+    var speakExample: () -> Void = {}
+
+    var body: some View {
+        VStack(spacing: 14) {
+            Text(vocab.kana)
+                .font(Theme.jp(56))
+                .minimumScaleFactor(0.4)
+                .multilineTextAlignment(.center)
+            if vocab.displaysKanji {
+                Text(vocab.kanji).font(Theme.jp(22)).foregroundStyle(.secondary)
+            }
+            if revealed {
+                Divider().padding(.horizontal, 40)
+                Text(vocab.translation)
+                    .font(.title3)
+                    .foregroundStyle(Theme.accent)
+                    .multilineTextAlignment(.center)
+                if !vocab.romaji.isEmpty {
+                    Text(vocab.romaji).font(.subheadline).foregroundStyle(.secondary)
+                }
+                // The example, after the reveal only: the front is a recall test and
+                // the sentence contains the word — showing it early would answer the
+                // card. A button (speaks on tap), because the card face's own tap is
+                // taken by pronouncing the word.
+                if let example = vocab.example {
+                    Button(action: speakExample) {
+                        VStack(spacing: 6) {
+                            ExampleSentenceView(example: example)
+                            if let tr = vocab.exampleTranslation {
+                                Text(tr)
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 4)
+                }
             }
         }
     }

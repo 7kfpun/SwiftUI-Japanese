@@ -69,7 +69,10 @@ struct IntroView: View {
         }
         .padding()
         .background(Theme.canvas)
-        .onAppear { trackCard() }
+        .onAppear {
+            Track.screen("intro")
+            trackCard()
+        }
         .onChange(of: index) { trackCard() }
     }
 
@@ -328,10 +331,10 @@ struct IntroView: View {
             // Exactly two columns, not `chipColumns`' adaptive width. The mode names are
             // short enough that an adaptive grid fits *three* on a 6.9" screen and then
             // reflows differently on a 5.4", so the layout would depend on the device.
-            // Five chips can't fill a rectangle in any column count but 1 or 5, so the
-            // trailing hole is now unavoidable — two columns at least make it a regular
-            // 2 + 2 + 1 that reads as a list, rather than an adaptive grid that changes
-            // shape between phones.
+            // Five chips are 2 + 2 + 1, so the last row has a hole. Two fixed columns
+            // keep that hole in the same place on every phone; `chipColumns`' adaptive
+            // width fits three on a 6.9" and two on a 5.4", which moves the shape of the
+            // grid between devices — a worse trade than one predictable gap.
             LazyVGrid(columns: Self.modeColumns, spacing: 8) {
                 ForEach(Intro.Mode.allCases) { mode in
                     IntroChip(text: mode.title, icon: mode.icon, selected: peek == mode) {

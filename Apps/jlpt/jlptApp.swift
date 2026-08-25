@@ -17,6 +17,9 @@ struct jlptApp: App {
     /// consulted at every gate — see `Gating.isLocked`.
     @State private var unlock = Unlock()
     @State private var router = Router()
+    /// Per-word Practice stages — local-only by decision, not a CloudKit model.
+    /// See `PracticeProgress` for why.
+    @State private var practice = PracticeProgress()
     private let pronouncer = AudioPronouncer()
 
     var sharedModelContainer: ModelContainer = {
@@ -52,6 +55,7 @@ struct jlptApp: App {
                 .environment(store)
                 .environment(unlock)
                 .environment(router)
+                .environment(practice)
                 .onOpenURL(perform: handle)
         }
         .modelContainer(sharedModelContainer)

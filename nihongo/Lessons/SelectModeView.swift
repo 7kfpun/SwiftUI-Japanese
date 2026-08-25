@@ -1,18 +1,27 @@
 import SwiftUI
 import SwiftData
 
+/// The lesson screen (design 2a): a per-word standing bar, the Practice hero, the
+/// other modes as status-carrying rows, and the Challenge ladder as a chip strip
+/// with one "next up" card and one "worth retrying" card.
+///
+/// A custom scroll page rather than a `List`: the hero is a dark card, the ladder is
+/// horizontal, and the rows carry trailing status — three things a `List` fights.
 struct SelectModeView: View {
     let lesson: Lesson
     @AppStorage(Pref.translationLanguage) private var language = VocabStore.deviceDefaultLanguage
     @Environment(Store.self) private var store
     @Environment(Unlock.self) private var unlock
+    @Environment(PracticeProgress.self) private var practice
     @Environment(\.modelContext) private var context
     @State private var showPaywall = false
     /// Which row opened the paywall — a locked mode or a locked challenge rung. Both used
     /// to report one `select_mode_locked` source, which is the difference between "people
-    /// bounce off the ladder" and "people bounce off Flashcards".
+    /// bounce off the ladder" and "people bounce off Practice".
     @State private var paywallSource = "select_mode_locked"
     @State private var results: [Int: ChallengeResult] = [:]
+    /// Which modes this lesson has seen — drives the rows' trailing status.
+    @State private var visits: Set<String> = []
 
     // Re-resolve so entering a mode uses the current Meanings language.
     private var current: Lesson { VocabStore.lesson(lesson.number, language) }
@@ -27,65 +36,413 @@ struct SelectModeView: View {
     private var challengeCount: Int { Challenge.count(wordCount: current.entries.count) }
 
     var body: some View {
-        List {
-            // Study first, test second — the two halves are separated because they ask
-            // different things of you: the Learn modes are untested practice you can
-            // wander through, the ladder is scored and gates the next rung.
-            //
-            // Rows run shallow → deep, the order you'd actually study new material:
-            // meet the words (Vocab List), recognise them (Flashcards), choose under a
-            // gentle 50/50 ask (Train, audio prompts included), hold five pairs at once
-            // (Match), then produce them from tiles (Learn) — the last stop before the
-            // Challenge ladder tests you. Match sits after Train because five-against-five
-            // is a wider net than a coin flip, and before Learn because recognising a
-            // pairing is still easier than producing the reading from nothing.
-            Section {
-                // Vocab List is free on every lesson — browsing and search stay open.
-                NavigationLink { VocabListView(lesson: current) } label: {
-                    ModeRow(icon: "list.bullet", title: L.t("Vocab List"),
-                            subtitle: L.t("Browse & hear all words"))
-                }
-                mode(key: "flashcards", icon: "rectangle.on.rectangle.angled", title: L.t("Flashcards"),
-                     subtitle: L.t("Swipe right if you know it")) { FlashcardView(lesson: current) }
-                mode(key: "train", icon: "arrow.left.arrow.right", title: L.t("Train"),
-                     subtitle: L.t("Swipe to the right answer")) { TrainView(lesson: current) }
-                mode(key: "match", icon: "link", title: L.t("Match"),
-                     subtitle: L.t("Pair each word with its meaning")) { MatchView(lesson: current) }
-                mode(key: "learn", icon: "square.grid.2x2", title: L.t("Learn"),
-                     subtitle: L.t("Rebuild the reading from tiles")) { LearnView(lesson: current) }
-            } header: {
-                Text(L.t("Learn")).font(Theme.title(.footnote))
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                standing
+                practiceHero
+                otherWays
+                challengeSection
             }
-
-            Section {
-                ForEach(1...challengeCount, id: \.self) { i in challengeRow(i) }
-            } header: {
-                // The tally is part of the header, not a row datum, so it takes the header
-                // face too — it just keeps its monospaced digits so it doesn't jitter as
-                // rungs are cleared.
-                HStack {
-                    Text(L.t("Challenge"))
-                    Spacer()
-                    Text("\(ChallengeResult.passedCount(results: results)) / \(challengeCount)")
-                        .monospacedDigit()
-                }
-                .font(Theme.title(.footnote))
-            } footer: {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(L.t("Clear every challenge to master the lesson."))
-                    earnHint
-                }
-            }
+            .padding(16)
         }
+        // A results card is a fixed shape, not a document —
+        // the bar sat over the content and reported a position nobody needed.
+        .scrollIndicators(.hidden)
+        .background(Theme.canvas)
         .navigationTitle(L.t("Lesson %@", "\(lesson.number)"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             Track.screen("select_mode", ["lesson": lesson.number])
             reloadResults()
+            visits = ModeVisits.all(lesson: lesson.number)
         }
         .sheet(isPresented: $showPaywall) {
             PaywallView(source: paywallSource, lesson: lesson.number)
         }
+    }
+
+    // MARK: - Standing (the per-word bar)
+
+    /// Where the lesson stands, word by word: one proportional bar — memorized solid,
+    /// recognized faded, unseen on the line colour — and the counts spelled out under
+    /// it. Proportional rather than one segment per word, because JLPT lessons run to
+    /// dozens of words and forty hairline pips read as texture, not progress.
+    private var standing: some View {
+        let counts = practice.counts(for: current.entries)
+        let total = max(current.entries.count, 1)
+        return VStack(alignment: .leading, spacing: 8) {
+            GeometryReader { geo in
+                HStack(spacing: 3) {
+                    segment(geo, count: counts.memorized, total: total, color: Theme.accent)
+                    segment(geo, count: counts.recognized, total: total, color: Theme.accent.opacity(0.35))
+                    segment(geo, count: counts.unseen, total: total, color: Theme.line)
+                }
+            }
+            .frame(height: 6)
+            Text(L.t("%@ memorized · %@ recognized · %@ unseen",
+                     "\(counts.memorized)", "\(counts.recognized)", "\(counts.unseen)"))
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder
+    private func segment(_ geo: GeometryProxy, count: Int, total: Int, color: Color) -> some View {
+        if count > 0 {
+            Capsule().fill(color)
+                .frame(width: max(6, geo.size.width * CGFloat(count) / CGFloat(total) - 3))
+        }
+    }
+
+    // MARK: - The hero
+
+    /// The default next action gets the page's one heavy card — `Color.primary` on the
+    /// canvas, so it inverts cleanly in dark mode. Everything on it takes the inverse
+    /// (`systemBackground`) foreground.
+    private var practiceHero: some View {
+        Group {
+            if locked {
+                Button {
+                    paywallSource = "locked_mode"
+                    showPaywall = true
+                    Track.event("locked_mode", ["mode": "practice", "lesson": lesson.number])
+                } label: { heroCard }
+            } else {
+                NavigationLink {
+                    PracticeView(lesson: current, progress: practice)
+                } label: { heroCard }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var heroCard: some View {
+        let counts = practice.counts(for: current.entries)
+        let total = max(current.entries.count, 1)
+        // The session Practice would deal right now: the non-memorized words — or the
+        // whole lesson again, as review, once everything is memorized.
+        let cards = counts.recognized + counts.unseen
+        let queue = cards == 0 ? total : cards
+        // ~20s per card-then-quiz round trip; a rough promise, deliberately rounded up.
+        let minutes = max(1, Int((Double(queue) * 20 / 60).rounded(.up)))
+
+        return VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text(L.t("Up next"))
+                    .font(.caption.weight(.semibold))
+                    .textCase(.uppercase)
+                Spacer()
+                Text(L.t("About %@ min · %@ cards", "\(minutes)", "\(queue)"))
+                    .font(.caption)
+                    .monospacedDigit()
+            }
+            .opacity(0.65)
+
+            HStack(spacing: 12) {
+                // Not the card-stack glyph any more — Flashcards owns that, and it *is*
+                // a stack of cards. Practice is the one that teaches and tests.
+                Image(systemName: "graduationcap")
+                    .font(.title2)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L.t("Practice")).font(Theme.title(.title2))
+                    Text(L.t("Cards first, then a quick quiz"))
+                        .font(.footnote)
+                        .opacity(0.65)
+                }
+                Spacer(minLength: 12)
+                if locked {
+                    Image(systemName: "lock.fill").font(.subheadline).opacity(0.7)
+                } else {
+                    // The stated verb. Visual only — the whole card is the link.
+                    Text(L.t("Start"))
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.primary)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Capsule().fill(Color(.systemBackground)))
+                }
+            }
+
+            // How much of the lesson is banked, drawn on the card itself.
+            GeometryReader { geo in
+                Capsule().fill(Color(.systemBackground).opacity(0.25))
+                    .overlay(alignment: .leading) {
+                        Capsule().fill(Color(.systemBackground))
+                            .frame(width: geo.size.width * CGFloat(counts.memorized) / CGFloat(total))
+                    }
+            }
+            .frame(height: 4)
+        }
+        .foregroundStyle(Color(.systemBackground))
+        .padding(18)
+        .background(Color.primary, in: RoundedRectangle(cornerRadius: 22))
+    }
+
+    // MARK: - The other modes
+
+    private var otherWays: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(L.t("Other ways to practice"))
+                .font(Theme.title(.footnote))
+                .foregroundStyle(.secondary)
+            VStack(spacing: 0) {
+                // Vocab List is free on every lesson — browsing and search stay open.
+                NavigationLink { VocabListView(lesson: current) } label: {
+                    wayRow(key: "vocab_list", icon: "list.bullet", title: L.t("Vocab List"),
+                           subtitle: L.t("Browse & hear all words"), gated: false)
+                }
+                .buttonStyle(.plain)
+                Divider().padding(.leading, 56)
+                // Second because it asks *nothing*: a deck to page through before
+                // anything starts testing you.
+                way(key: "flashcards", icon: "rectangle.on.rectangle.angled",
+                    title: L.t("Flashcards"),
+                    subtitle: L.t("Swipe through the words")) { FlashcardView(lesson: current) }
+                Divider().padding(.leading, 56)
+                way(key: "match", icon: "link", title: L.t("Match"),
+                    subtitle: L.t("Pair each word with its meaning")) { MatchView(lesson: current) }
+                Divider().padding(.leading, 56)
+                way(key: "learn", icon: "square.grid.2x2", title: L.t("Learn"),
+                    subtitle: L.t("Rebuild the reading from tiles")) { LearnView(lesson: current) }
+            }
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
+        }
+    }
+
+    /// A premium-gated mode row: navigates when unlocked, opens the paywall when not.
+    /// `key` is the analytics name and the visit key; `title` is the on-screen one.
+    @ViewBuilder
+    private func way<D: View>(key: String, icon: String, title: String, subtitle: String,
+                              @ViewBuilder destination: @escaping () -> D) -> some View {
+        if locked {
+            Button {
+                paywallSource = "locked_mode"
+                showPaywall = true
+                Track.event("locked_mode", ["mode": key, "lesson": lesson.number])
+            } label: {
+                wayRow(key: key, icon: icon, title: title, subtitle: subtitle, gated: true)
+            }
+            .buttonStyle(.plain)
+        } else {
+            NavigationLink { destination() } label: {
+                wayRow(key: key, icon: icon, title: title, subtitle: subtitle, gated: false)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    /// Icon, name, one-line description — and on the trailing edge, whether this lesson
+    /// has tried the mode yet. Honest data only: "tried", not a made-up completion.
+    private func wayRow(key: String, icon: String, title: String, subtitle: String,
+                        gated: Bool) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon)
+                .font(.title3)
+                .frame(width: 30)
+                .foregroundStyle(gated ? Color.secondary : Theme.accent)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(Theme.title(.headline))
+                Text(subtitle).font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 10)
+            if gated {
+                Image(systemName: "lock.fill").font(.footnote).foregroundStyle(.secondary)
+            } else if visits.contains(key) {
+                Text(L.t("Tried"))
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(Theme.accent)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 4)
+                    .background(Theme.accent.opacity(0.12), in: Capsule())
+            } else {
+                Text(L.t("Not tried yet"))
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+        .foregroundStyle(.primary)
+    }
+
+    // MARK: - The ladder
+
+    private var earnedStars: Int { results.values.reduce(0) { $0 + $1.stars } }
+
+    /// The first rung that is unlocked but not yet passed — the ladder's "next up".
+    private var nextIndex: Int? {
+        (1...challengeCount).first {
+            ChallengeResult.isUnlocked(index: $0, results: results) && !(results[$0]?.isPassed ?? false)
+        }
+    }
+
+    /// The passed rung most worth another run: fewest stars first, later rung on a tie —
+    /// the freshest gap. Nil once everything passed is three-starred.
+    static func retryTarget(results: [Int: ChallengeResult]) -> Int? {
+        results.values
+            .filter { $0.isPassed && $0.stars < 3 }
+            .sorted { ($0.stars, -$0.index) < ($1.stars, -$1.index) }
+            .first?.index
+    }
+
+    private var challengeSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(L.t("Challenge"))
+                    .font(Theme.title(.footnote))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                // Numerals and a star — no localization to drift.
+                Text("\(earnedStars) / \(challengeCount * 3) ★")
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            }
+
+            rungStrip
+
+            if !locked, let next = nextIndex {
+                nextCard(next)
+            }
+            if !locked, let retry = Self.retryTarget(results: results) {
+                retryCard(retry)
+            }
+
+            earnHint
+        }
+    }
+
+    /// Every rung as a chip: passed ones show their stars, the next one is the filled
+    /// call to action, later ones wait behind a lock. Passed and next chips push the
+    /// run directly — the strip is the ladder, not a diagram of it.
+    private var rungStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(1...challengeCount, id: \.self) { i in rungChip(i) }
+            }
+            .padding(.vertical, 2)
+        }
+        .scrollClipDisabled()
+    }
+
+    @ViewBuilder
+    private func rungChip(_ i: Int) -> some View {
+        let result = results[i]
+        let passed = result?.isPassed ?? false
+        let isNext = nextIndex == i
+
+        if locked {
+            Button {
+                paywallSource = "locked_challenge"
+                showPaywall = true
+                Track.event("locked_challenge", ["lesson": lesson.number, "index": i])
+            } label: {
+                chipBody(i, star: nil, isNext: false, lockedIcon: true)
+            }
+            .buttonStyle(.plain)
+        } else if passed || isNext {
+            NavigationLink {
+                ChallengeView(lesson: current, index: i, total: challengeCount)
+            } label: {
+                chipBody(i, star: result?.stars, isNext: isNext, lockedIcon: false)
+            }
+            .buttonStyle(.plain)
+        } else {
+            chipBody(i, star: nil, isNext: false, lockedIcon: true)
+                .opacity(0.55)
+        }
+    }
+
+    private func chipBody(_ i: Int, star: Int?, isNext: Bool, lockedIcon: Bool) -> some View {
+        VStack(spacing: 5) {
+            Text("\(i)")
+                .font(.headline.monospacedDigit())
+            if isNext {
+                Text(L.t("Next up"))
+                    .font(.caption2.weight(.semibold))
+                    .lineLimit(1)
+            } else if let star {
+                StarRow(stars: star, size: 8)
+            } else if lockedIcon {
+                Image(systemName: "lock.fill")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(minWidth: 56)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 10)
+        .foregroundStyle(isNext ? Color(.systemBackground) : Color.primary)
+        .background(isNext ? AnyShapeStyle(Theme.accent) : AnyShapeStyle(Theme.surface),
+                    in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14)
+            .stroke(isNext ? Color.clear : Theme.line, lineWidth: 1))
+        .contentShape(Rectangle())
+        .accessibilityLabel(L.t("Challenge %@", "\(i)"))
+    }
+
+    /// The forward step, as a card: which rung, and what it will ask.
+    private func nextCard(_ i: Int) -> some View {
+        let questions = min(Challenge.questionsPerChallenge,
+                            Challenge.pool(current.entries, index: i).count)
+        return NavigationLink {
+            ChallengeView(lesson: current, index: i, total: challengeCount)
+        } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle().fill(Theme.accent).frame(width: 32, height: 32)
+                    Text("\(i)")
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(Color(.systemBackground))
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L.t("Challenge %@", "\(i)")).font(Theme.title(.headline))
+                    Text("\(L.t("Next up")) · \(L.t("%@ mixed questions", "\(questions)"))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.accent)
+            }
+            .padding(14)
+            .background(Theme.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.accent, lineWidth: 1.5))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.primary)
+    }
+
+    /// The gap most worth closing: a passed rung still short of three stars.
+    private func retryCard(_ i: Int) -> some View {
+        let result = results[i]
+        return NavigationLink {
+            ChallengeView(lesson: current, index: i, total: challengeCount)
+        } label: {
+            HStack(spacing: 12) {
+                StarRow(stars: result?.stars ?? 0, size: 10)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L.t("Retry Challenge %@", "\(i)")).font(Theme.title(.headline))
+                    Text("\(L.t("Best %@%", "\(result?.bestScore ?? 0)")) · \(L.t("Earn %@ more ★", "\(3 - (result?.stars ?? 0))"))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(14)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.primary)
     }
 
     /// The offer, stated where the work happens.
@@ -112,120 +469,17 @@ struct SelectModeView: View {
                 Text(L.t("%@ / %@ three-starred", "\(unlock.swept)", "\(unlock.totalRungs)"))
                     .monospacedDigit()
             }
-            .padding(.top, 2)
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .padding(.top, 6)
         }
     }
 
-    /// Re-read on every appear so a challenge finished and popped back updates its row.
+    /// Re-read on every appear so a challenge finished and popped back updates the strip.
     private func reloadResults() {
         results = ChallengeResult.byIndex(lesson: lesson.number, context: context)
         // A rung finished on the pushed screen may have completed the sweep, and this
         // view is what draws the locks — so the two have to be re-read together.
         unlock.refresh(context: context)
     }
-
-    /// A rung of the ladder: locked by premium, locked by progress, or playable.
-    @ViewBuilder
-    private func challengeRow(_ i: Int) -> some View {
-        let result = results[i]
-        let openable = ChallengeResult.isUnlocked(index: i, results: results)
-
-        if locked {
-            Button {
-                paywallSource = "locked_challenge"
-                showPaywall = true
-                Track.event("locked_challenge", ["lesson": lesson.number, "index": i])
-            } label: {
-                ChallengeRow(index: i, result: nil, state: .premium)
-            }
-            .buttonStyle(.plain)
-        } else if openable {
-            NavigationLink {
-                ChallengeView(lesson: current, index: i, total: challengeCount)
-            } label: {
-                ChallengeRow(index: i, result: result, state: .open)
-            }
-        } else {
-            ChallengeRow(index: i, result: nil, state: .sequential)
-        }
-    }
-
-    /// A premium-gated mode row: navigates when unlocked, opens the paywall when not.
-    ///
-    /// `key` is the analytics name and `title` is the on-screen one, and they are separate
-    /// arguments because they were the same one. `title` arrives from `L.t`, so the event
-    /// reported "Flashcards" to an English user and "闪卡" to a Chinese one — the same tap
-    /// spread across 17 values, none of which could be summed.
-    @ViewBuilder
-    private func mode<D: View>(key: String, icon: String, title: String, subtitle: String,
-                               @ViewBuilder destination: @escaping () -> D) -> some View {
-        if locked {
-            Button {
-                paywallSource = "locked_mode"
-                showPaywall = true
-                Track.event("locked_mode", ["mode": key, "lesson": lesson.number])
-            } label: {
-                ModeRow(icon: icon, title: title, subtitle: subtitle, locked: true)
-            }
-            .buttonStyle(.plain)
-        } else {
-            NavigationLink { destination() } label: {
-                ModeRow(icon: icon, title: title, subtitle: subtitle)
-            }
-        }
-    }
-}
-
-/// Why a challenge row isn't playable — the two lock reasons look different on
-/// purpose, because only one of them is something the user can fix by paying.
-enum ChallengeRowState { case open, sequential, premium }
-
-private struct ChallengeRow: View {
-    let index: Int
-    let result: ChallengeResult?
-    let state: ChallengeRowState
-
-    var body: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(passed ? Theme.accent : Color.secondary.opacity(0.15))
-                    .frame(width: 30, height: 30)
-                if passed {
-                    Image(systemName: "checkmark")
-                        .font(.footnote.weight(.bold)).foregroundStyle(.white)
-                } else {
-                    Text("\(index)")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(state == .open ? .primary : .secondary)
-                }
-            }
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(L.t("Challenge %@", "\(index)"))
-                    .font(Theme.title(.headline))
-                    .foregroundStyle(state == .open ? .primary : .secondary)
-                if let result, result.bestScore > 0 {
-                    Text(L.t("Best %@%", "\(result.bestScore)"))
-                        .font(.caption).foregroundStyle(.secondary)
-                } else if state == .sequential {
-                    // Name the concrete goal ("Beat Challenge 2") rather than describe
-                    // the restriction — the row always knows exactly which rung blocks it.
-                    Text(L.t("Beat Challenge %@ to unlock", "\(index - 1)"))
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-            }
-
-            Spacer()
-
-            switch state {
-            case .open:       StarRow(stars: result?.stars ?? 0)
-            case .sequential: Image(systemName: "lock.fill").font(.footnote).foregroundStyle(.tertiary)
-            case .premium:    Image(systemName: "lock.fill").font(.footnote).foregroundStyle(.secondary)
-            }
-        }
-        .padding(.vertical, 4)
-    }
-
-    private var passed: Bool { result?.isPassed == true }
 }
