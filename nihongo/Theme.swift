@@ -41,14 +41,29 @@ enum Theme {
     /// comes from the lighter surface + `line` border, so the shadow goes clear.
     static let shadow = dynamic(UIColor(white: 0, alpha: 0.10), .clear)
 
-    /// Japanese display font for the big word/kana text — iOS's built-in rounded
-    /// Hiragino Maru Gothic (no bundled font files needed). To swap in a bundled
-    /// typeface later (e.g. Zen Maru Gothic), change only this name.
-    static func jp(_ size: CGFloat) -> Font { .custom("HiraMaruProN-W4", size: size) }
+    /// Japanese display font for the big word/kana text — **Hiragino Mincho ProN**,
+    /// iOS's built-in serif (明朝) face. No bundled font files needed.
+    ///
+    /// Mincho because that is what the design specifies (its mocks set every Japanese
+    /// string in Noto Serif JP, a mincho face, against a sans UI). Noto Serif JP itself
+    /// is not on iOS and bundling it would cost megabytes per weight, so this takes the
+    /// system face of the same class. Hiragino Mincho carries the modelled brush
+    /// contrast a learner is reading *for* — the vertical/horizontal stroke weights that
+    /// a rounded gothic flattens away — which matters more here than anywhere else,
+    /// because the glyph on screen is the thing being learned rather than chrome.
+    ///
+    /// ProN, not Pro: JIS2004 glyph shapes, matching what modern Japanese print uses.
+    /// Full Latin coverage, so romaji set in it reads as merely plain, never broken —
+    /// the invariant in `CLAUDE.md` that outlived three wrong-face slots.
+    ///
+    /// To swap in a bundled typeface later, change only this name (and `jpBold`).
+    static func jp(_ size: CGFloat) -> Font { .custom("HiraMinProN-W3", size: size) }
 
-    /// Bold Japanese display font (the rounded Maru has no bold weight on iOS, so
-    /// this uses the built-in Hiragino Sans W6). Used for kana glyphs in Kana modes.
-    static func jpBold(_ size: CGFloat) -> Font { .custom("HiraginoSans-W6", size: size) }
+    /// Bold Japanese display font — Hiragino Mincho ProN W6, the same family's heavy
+    /// weight (mincho ships W3 and W6 on iOS, so unlike the old rounded Maru Gothic
+    /// this does *not* have to jump families to find a bold). Used for kana glyphs in
+    /// Kana modes.
+    static func jpBold(_ size: CGFloat) -> Font { .custom("HiraMinProN-W6", size: size) }
 
     /// Stroke-order font (KanjiStrokeOrders, bundled): glyphs render with numbered
     /// stroke-order annotations, so a learner absorbs stroke order while quizzing. Used by
@@ -60,11 +75,12 @@ enum Theme {
     /// Titles and headings — SF Rounded. **The one place the title face is decided;**
     /// nothing outside `Theme` should name a font design.
     ///
-    /// Rounded because the Latin side was the half that was out of step: Japanese
-    /// headwords already render in `jp` (`HiraMaruProN-W4`, a *rounded* Hiragino Maru
-    /// Gothic) while every Latin heading was plain SF Pro, so a card's title and its
-    /// word were speaking two different dialects. Rounding the headings harmonises the
-    /// two without touching the Japanese faces at all.
+    /// Rounded, and deliberately *not* matched to the Japanese face. `jp` is now a
+    /// mincho serif, and the pairing is the design's own: a serif for the Japanese being
+    /// taught, a sans for the interface around it (its mocks pair Noto Serif JP with a
+    /// sans UI face). The two are meant to read as content and chrome, not as one voice —
+    /// so the headings stay rounded SF, which is also the only choice that keeps Dynamic
+    /// Type and nineteen languages working.
     ///
     /// Not a bundled display face, deliberately. `design: .rounded` keeps two things a
     /// Latin-only font file would break for the nine non-Latin UI languages: Dynamic
