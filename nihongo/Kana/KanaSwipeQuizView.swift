@@ -22,13 +22,7 @@ struct KanaSwipeQuizView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            HStack(spacing: 8) {
-                Button(model.from.label) { model.swapFrom() }
-                Image(systemName: "arrow.right")
-                Button(model.to.label) { model.swapTo() }
-            }
-            .font(.subheadline).buttonStyle(.bordered)
-            .disabled(model.picked != nil)
+            KanaDirectionBar(model: model)
 
             // Prompt card (draggable) — fills the available height. The peek stack
             // behind it is static (same visual language as the flashcard decks);
@@ -79,15 +73,9 @@ struct KanaSwipeQuizView: View {
                 .padding(.horizontal, 16)
         }
         .onTapGesture { pronouncer.speak(kana: model.answer) }
-        .gesture(
-            DragGesture()
-                .onChanged { if model.picked == nil { drag = $0.translation } }
-                .onEnded { value in
-                    if value.translation.width > threshold { decide(1) }
-                    else if value.translation.width < -threshold { decide(0) }
-                    else { withAnimation(.spring) { drag = .zero } }
-                }
-        )
+        .gesture(CardSwipe.gesture(drag: $drag, threshold: threshold,
+                                   canDrag: { model.picked == nil },
+                                   decide: { decide($0 ? 1 : 0) }))
     }
 
     /// Kana readings are one to three characters, so they take a much larger face than
@@ -111,8 +99,8 @@ struct KanaSwipeQuizView: View {
         // a different exercise from picking one of four, and the name says so on its own.
         Track.event("kana_swipe_answer", ["correct": model.isCorrectOption(side)])
         withAnimation(.spring(duration: 0.2)) { lastCorrect = model.isCorrectOption(side) }
-        withAnimation(.easeOut(duration: 0.25)) { drag.width = side == 1 ? 700 : -700 }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        // A longer wait than the exit itself, so the verdict badge reads first.
+        CardSwipe.fling($drag, toRight: side == 1, then: 0.5) {
             model.next()
             withAnimation(.spring) {
                 lastCorrect = nil

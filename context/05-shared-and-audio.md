@@ -108,6 +108,25 @@ deliberately picks a sample word that *has* a distinct kanji (`09-intro-and-surv
 | `SwipeStamp` | via `SwipeCard` | The rotated corner stamp that previews a swipe's outcome |
 | `CardStackPeek` | every swipeable screen | The decorative faded-deck backdrop |
 | `choiceChip(_:)` (`View` ext.) | flashcard grade buttons, `SwipeOptionChip` | Tinted fill + coloured border, one chrome for every choice control |
+| `CardSwipe` | Practice, Kana Flashcards, Kana Swipe | The decide-drag (threshold right/left or spring home — `canDrag` is each screen's pin reason, `canCommit` covers Practice's held-flipped card) and the 700pt/0.25s `fling(_:toRight:then:)` exit; the kana swipe stretches `then` to 0.5s so its verdict badge reads first |
+| `SwipeHint` | `SwipeCard` (via `showsHint`), Learn | The "⟨ Swipe ⟩" whisper — Learn draws its own card chrome for the tile game and overlays just this |
+| `PromptHeader` | rating, share nudge, feedback thanks, paywall, earned unlock, notification opt-in | Icon–title–blurb head; emits **siblings**, not a stack, so each sheet keeps its own spacing |
+| `DeckDonePanel` | Practice, Kana Flashcards | Party popper, "All done!", summary line, Restart |
+| `CapsuleBar` | Practice session bar, lesson hero, lesson rows, kana browser | Track + proportional fill; colours/height/width are the parameters, the clamp lives inside |
+| `FlagAndSoundToolbar` | Practice, both flashcard decks, Challenge | The trailing pair in its one blessed order — flag first, sound second; `item` nil hides the flag |
+| `OrderPicker` | Lessons Flashcards, Learn | Ordered/Random segments; takes the per-screen event name so the decks stay separable |
+| `PrimaryPillButton` | Practice Next, Challenge start + advance | The 54pt black pill; fill/shape/contentShape live inside the label — the hit-target trap, solved once |
+| `QuizPromptPanel` + `AudioPromptGlyph` | Challenge run, Kana Classic/Listening | The tap-to-hear question pane; content is the caller's, chrome and replay-tap are shared |
+| `EmptyStatePanel` | Progress, Bookmarks | Art over one line of guidance on the canvas; the art closure is the one per-site difference |
+| `IconCount` | `ScoreBadge`, Kana Flashcards header | Tinted icon+number atom; `Image`+`Text`, never `Label` (toolbars strip a `Label`'s text) |
+| `KanaDirectionBar` | Kana Classic/Listening, Kana Swipe | from → to with bordered swap buttons; listening replaces the prompt side with a speaker |
+| `ExampleSentenceView(translation:)` | `VocabFace`, vocab rows, Read along playlist | The furigana columns now take the translated line too — three screens stacked the same pair in three fonts |
+
+The 2026-08 extraction pass (everything from `CardSwipe` down) came out of an audit
+that found each of these copied at two to six call sites, already drifting. The two
+survivors it deliberately left alone: the chip/capsule *mode selectors*, which are
+genuinely four different designs with documented reasons, and the intro's page dots,
+whose two variants differ on purpose.
 
 `SwipeCard` is the piece that stopped four screens drifting: they had become four copies
 of the same chrome with four different corner radii and three separate copies of the

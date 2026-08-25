@@ -71,20 +71,13 @@ struct EarnedUnlockCard: View {
 
     var body: some View {
         VStack(spacing: 18) {
-            Image(systemName: "lock.open.fill")
-                .font(.system(size: 44))
-                .foregroundStyle(Color.streak)
-                .accessibilityHidden(true)
-
-            Text(L.t("%@ unlocked!", band))
-                .font(Theme.title(.title2, weight: .bold))
-                .multilineTextAlignment(.center)
-
-            Text(L.t("Three stars on every challenge so far — lessons up to %@ are yours, free.",
-                     "\(through)"))
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+            PromptHeader(icon: "lock.open.fill",
+                         title: L.t("%@ unlocked!", band),
+                         blurb: L.t("Three stars on every challenge so far — lessons up to %@ are yours, free.",
+                                    "\(through)"),
+                         iconFont: .system(size: 44),
+                         tint: Color.streak,
+                         titleFont: Theme.title(.title2, weight: .bold))
 
             Button(action: onDone) {
                 Text(L.t("Keep going"))

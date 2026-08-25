@@ -25,7 +25,8 @@ struct BookmarksView: View {
                     ForEach([3, 2, 1], id: \.self) { tier in
                         if let words = groups[tier], !words.isEmpty {
                             Section {
-                                ForEach(words) { VocabRow(vocab: $0, showLesson: true) }
+                                ForEach(words) { VocabRow(vocab: $0, showLesson: true,
+                                                          surface: "bookmarks") }
                             } header: {
                                 Text(String(repeating: "★", count: tier))
                                     .font(Theme.title(.footnote))
@@ -43,18 +44,11 @@ struct BookmarksView: View {
     }
 
     private var empty: some View {
-        VStack(spacing: 16) {
+        EmptyStatePanel(text: L.t("Tap the star beside any word to save it here.")) {
             Image(systemName: "star")
                 .font(.system(size: 40))
                 .foregroundStyle(Theme.accent.opacity(0.5))
-            Text(L.t("Tap the star beside any word to save it here."))
-                .font(Theme.title(.subheadline, weight: .regular))
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
         }
-        .padding(32)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.canvas)
     }
 
     /// Resolve saved ids back to words in the *current* meaning language.

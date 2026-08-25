@@ -23,6 +23,13 @@ struct FlashcardView: View {
     @State private var index = 0
     /// Held down — the card is showing its back. Released, it turns straight back.
     @State private var flipped = false
+    /// This card already logged its flip — `flashcard_flip` counts cards peeked, not
+    /// presses, so it stays comparable with `practice_peek` across the two screens.
+    @State private var flippedThisCard = false
+    /// Distinct cards reached this sitting — `flashcard_swipe` reports depth rather
+    /// than raw turns (back-and-forth on two cards isn't progress), same rule as
+    /// `today_swipe`, and only a *new* card logs.
+    @State private var cardsSeen: Set<Int> = [0]
 
     private var entries: [Vocab] { lesson.entries }
     private var current: Vocab? { entries.indices.contains(index) ? entries[index] : nil }
@@ -57,14 +64,8 @@ struct FlashcardView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            // The flag leads the sound toggle, the order every screen carrying both uses.
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                if let word = current {
-                    ReportItemButton(item: Feedback.Item(lesson: word.lesson,
-                                                         romaji: word.romaji))
-                }
-                SoundToggle()
-            }
+            FlagAndSoundToolbar(item: current.map { Feedback.Item(lesson: $0.lesson,
+                                                                  romaji: $0.romaji) })
         }
         .onAppear {
             autoPlay()
@@ -100,7 +101,10 @@ struct FlashcardView: View {
                    value: flipped)
         .onTapGesture { pronouncer.speak(word) }
         .onLongPressGesture(minimumDuration: 0.3) {
-            Track.event("flashcard_flip", ["lesson": lesson.number])
+            if !flippedThisCard {
+                flippedThisCard = true
+                Track.event("flashcard_flip", ["lesson": lesson.number])
+            }
             withAnimation { flipped = true }
         } onPressingChanged: { pressing in
             if !pressing, flipped { withAnimation { flipped = false } }
@@ -137,15 +141,7 @@ struct FlashcardView: View {
     /// through a lesson, and a first walk wants the order the course teaches in. Random
     /// is the second pass, and gets the shuffle button instead of a swipe direction.
     private var orderPicker: some View {
-        Picker("", selection: $ordered) {
-            Text(L.t("Ordered")).tag(true)
-            Text(L.t("Random")).tag(false)
-        }
-        .pickerStyle(.segmented)
-        .labelsHidden()
-        .onChange(of: ordered) {
-            Track.event("flashcard_order_mode", ["ordered": ordered])
-        }
+        OrderPicker(ordered: $ordered, event: "flashcard_order_mode")
     }
 
     /// One hint, both modes.
@@ -169,12 +165,17 @@ struct FlashcardView: View {
     private func turnPage(_ dir: Int) {
         guard !entries.isEmpty else { return }
         flipped = false
+        flippedThisCard = false
         if ordered {
             index = (index + (dir > 0 ? 1 : -1) + entries.count) % entries.count
         } else if entries.count > 1 {
             var next = index
             while next == index { next = Int.random(in: entries.indices) }
             index = next
+        }
+        if cardsSeen.insert(index).inserted {
+            Track.event("flashcard_swipe", ["lesson": lesson.number,
+                                            "depth": cardsSeen.count])
         }
         autoPlay()
     }

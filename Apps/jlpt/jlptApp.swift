@@ -19,6 +19,7 @@ struct jlptApp: App {
     @State private var router = Router()
     /// Per-word Practice stages — local-only by decision, not a CloudKit model.
     /// See `PracticeProgress` for why.
+    @Environment(\.scenePhase) private var scenePhase
     @State private var practice = PracticeProgress()
     private let pronouncer = AudioPronouncer()
 
@@ -56,6 +57,14 @@ struct jlptApp: App {
                 .environment(unlock)
                 .environment(router)
                 .environment(practice)
+                // One app-level flush, not one per writing screen: ChallengeView
+                // demotes stages too, and a jetsam kill during suspension persisted
+                // its SwiftData result while the matching demote sat in the debounce —
+                // the result screen's "missed words come back in Practice" promise,
+                // silently false.
+                .onChange(of: scenePhase) {
+                    if scenePhase == .background { practice.saveNow() }
+                }
                 .onOpenURL(perform: handle)
         }
         .modelContainer(sharedModelContainer)

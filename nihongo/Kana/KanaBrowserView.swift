@@ -298,17 +298,8 @@ private struct KanaProgressBar: View {
                     .contentTransition(.numericText())
             }
 
-            Capsule()
-                .fill(Color.secondary.opacity(0.18))
-                .frame(height: 8)
-                .overlay(alignment: .leading) {
-                    GeometryReader { geo in
-                        Capsule()
-                            .fill(isComplete ? Color.streak : Theme.accent)
-                            .frame(width: geo.size.width * max(0, min(fraction, 1)))
-                    }
-                }
-                .clipShape(Capsule())
+            CapsuleBar(fraction: fraction, height: 8,
+                       fill: isComplete ? Color.streak : Theme.accent)
         }
         // One animation on the fraction drives the bar, the number and the glyph swap
         // together, so the whole row moves as one thing when an answer lands.

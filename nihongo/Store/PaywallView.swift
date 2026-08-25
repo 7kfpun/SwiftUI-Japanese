@@ -33,15 +33,14 @@ struct PaywallView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    Image(systemName: "crown.fill")
-                        .font(.system(size: 44)).foregroundStyle(Theme.accent)
-                    Text(L.t("Unlock all lessons")).font(Theme.title(.title, weight: .bold))
-                    // Interpolated from Gating rather than written out, so the offer on
-                    // screen can't drift from the rule the app actually enforces.
-                    Text(L.t("Free through lesson %@ — unlock the rest and remove ads.",
-                             "\(Gating.freeLessonLimit)"))
-                        .font(.subheadline).foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
+                    // The blurb interpolates from Gating rather than being written out,
+                    // so the offer on screen can't drift from the rule the app enforces.
+                    PromptHeader(icon: "crown.fill",
+                                 title: L.t("Unlock all lessons"),
+                                 blurb: L.t("Free through lesson %@ — unlock the rest and remove ads.",
+                                            "\(Gating.freeLessonLimit)"),
+                                 iconFont: .system(size: 44),
+                                 titleFont: Theme.title(.title, weight: .bold))
 
                     // The other way through, on the screen that asks for money. Not a
                     // leak: someone good enough to three-star five lessons was never the

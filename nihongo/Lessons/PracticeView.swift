@@ -89,6 +89,11 @@ final class PracticeModel {
     /// the whole first pass of a fresh lesson — ten right answers, no movement, and it
     /// read as broken. This moves on every correct answer and dips when a wrong one
     /// demotes a word, which is exactly the story the queue is telling.
+    ///
+    /// `sessionWork` **ratchets** in `resolve` when a demotion grows the owed work
+    /// past it. Frozen, a review lap (every word at one owed answer) that opened with
+    /// a miss had `remainingWork > sessionWork`, and the clamp pinned the bar at 0%
+    /// through several correct answers — the exact failure the weighting replaced.
     var fractionDone: Double {
         let total = Double(max(sessionWork, 1))
         return min(1, max(0, (total - Double(remainingWork)) / total))
@@ -227,6 +232,9 @@ final class PracticeModel {
         } else {
             progress.set(.seen, for: item.vocab.id)
             advance(requeue: Item(vocab: item.vocab))
+            // The demotion may have grown the owed work past the session's original
+            // total — see `fractionDone`.
+            sessionWork = max(sessionWork, remainingWork)
         }
     }
 
@@ -332,6 +340,9 @@ struct PracticeView: View {
     @State private var peeked = false
     @State private var lastCorrect: Bool? = nil
     @State private var animating = false   // guards double-grades mid-animation
+    /// The pending reveal, kept so `onDisappear` can cancel it: fired on a dead view
+    /// it spoke the missed word aloud over whatever screen came next.
+    @State private var pendingReveal: DispatchWorkItem?
     @State private var showPairSheet = false
     private let lessonNumber: Int
 
@@ -384,18 +395,17 @@ struct PracticeView: View {
             // re-queues almost everything it asks, so the one figure that moves was
             // buried between two that don't. The bar under it carries the same fact, and
             // the number that belongs beside a bar is the one going up.
-            // The flag leads the sound toggle, same order as every screen carrying both.
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                if let item = model.current {
-                    ReportItemButton(item: Feedback.Item(lesson: item.vocab.lesson,
-                                                         romaji: item.vocab.romaji))
-                }
-                SoundToggle()
-            }
+            FlagAndSoundToolbar(item: model.current.map {
+                Feedback.Item(lesson: $0.vocab.lesson, romaji: $0.vocab.romaji)
+            })
         }
         .sheet(isPresented: $showPairSheet) {
             PracticePairSheet(model: model, lesson: lessonNumber)
                 .presentationDetents([.medium, .large])
+                // The denominator for `practice_pair`: opened-then-left-alone was
+                // invisible, so the commit rate had nothing under the line.
+                .onAppear { Track.event("practice_pair_open",
+                                        ["lesson": lessonNumber, "mixed": model.mixed]) }
         }
         .onAppear {
             autoPlay()
@@ -406,10 +416,16 @@ struct PracticeView: View {
         // A popup ad on the way out — non-premium only, throttled — and the last
         // stage write flushed past the save debounce.
         .onDisappear {
-            // A miss whose reveal is still open hasn't been graded yet — walking away
-            // mid-lesson must still cost the word its rung, exactly as answering did
-            // before the grade moved to `advanceAfterReveal`.
-            if revealed { model.resolve(credited: !peeked) }
+            // The reveal may still be pending; fired on a dead view it spoke the
+            // missed word over the next screen.
+            pendingReveal?.cancel()
+            pendingReveal = nil
+            // Any answered card is graded on the way out — `revealed` alone missed the
+            // 0.6s window between a wrong swipe and its reveal, where leaving skipped
+            // the demotion entirely. `resolve` guards on `picked`, so an unanswered
+            // card grades nothing (a correct answer's fling resolves within 0.25s and
+            // clears `picked`, so it can't be double-graded here).
+            if model.picked != nil { model.resolve(credited: !peeked) }
             model.flush()
             // `answered`, not queue arithmetic: a re-queue removes and re-inserts one
             // item, so `sessionTotal - queue.count + retired` collapsed to 2×retired —
@@ -582,19 +598,13 @@ struct PracticeView: View {
     /// that need reading time — a miss, or a "not sure" — while a correct answer still
     /// moves on by itself, because there is nothing there to read.
     private var continueButton: some View {
-        Button { advanceAfterReveal() } label: {
+        PrimaryPillButton(action: advanceAfterReveal) {
             HStack(spacing: 8) {
                 Text(L.t("Next"))
                 Image(systemName: "arrow.right")
             }
             .font(Theme.title(.headline))
-            .frame(maxWidth: .infinity)
-            .frame(height: 54)
-            .foregroundStyle(Color(.systemBackground))
-            .background(Color.primary, in: RoundedRectangle(cornerRadius: 18))
-            .contentShape(RoundedRectangle(cornerRadius: 18))
         }
-        .buttonStyle(.plain)
     }
 
     /// One line: where this word stands on the left, what the quizzes ask on the right.
@@ -615,14 +625,7 @@ struct PracticeView: View {
     /// the printed count stays `retired`, the number the mode is actually about.
     private var sessionBar: some View {
         HStack(spacing: 10) {
-            GeometryReader { geo in
-                Capsule().fill(Theme.line)
-                    .overlay(alignment: .leading) {
-                        Capsule().fill(Theme.accent)
-                            .frame(width: geo.size.width * CGFloat(model.fractionDone))
-                    }
-            }
-            .frame(height: 4)
+            CapsuleBar(fraction: model.fractionDone, height: 4, track: Theme.line)
 
             // The same measure as the bar, in numerals. "0 / 48 memorized" was the
             // honest count and read as a frozen one — a word needs two correct answers
@@ -696,16 +699,10 @@ struct PracticeView: View {
     // MARK: - Gestures
 
     private var quizDrag: some Gesture {
-        DragGesture()
-            .onChanged {
-                if model.picked == nil, !animating, !revealed, !flipped { drag = $0.translation }
-            }
-            .onEnded { value in
-                guard !flipped else { withAnimation(.spring) { drag = .zero }; return }
-                if value.translation.width > threshold { decide(1) }
-                else if value.translation.width < -threshold { decide(0) }
-                else { withAnimation(.spring) { drag = .zero } }
-            }
+        CardSwipe.gesture(drag: $drag, threshold: threshold,
+                          canDrag: { model.picked == nil && !animating && !revealed && !flipped },
+                          canCommit: { !flipped },
+                          decide: { decide($0 ? 1 : 0) })
     }
 
     // MARK: - Flow
@@ -716,8 +713,7 @@ struct PracticeView: View {
     private func advanceAfterReveal() {
         guard !animating else { return }
         animating = true
-        withAnimation(.easeOut(duration: 0.25)) { drag.width = 700 }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+        CardSwipe.fling($drag, toRight: true) {
             model.resolve(credited: !peeked)
             afterAdvance()
         }
@@ -743,8 +739,8 @@ struct PracticeView: View {
                                         "to": model.questionTo.label])
         withAnimation(.spring(duration: 0.2)) { lastCorrect = correct }
         if correct {
-            withAnimation(.easeOut(duration: 0.25)) { drag.width = side == 1 ? 700 : -700 }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            // A longer wait than the exit itself, so the verdict badge reads first.
+            CardSwipe.fling($drag, toRight: side == 1, then: 0.5) {
                 // A right answer after reading the back proves nothing — see
                 // `PracticeModel.resolve(credited:)`.
                 model.resolve(credited: !peeked)
@@ -759,7 +755,8 @@ struct PracticeView: View {
             // verdict (`picked` goes nil), and "Next" then re-asked the word whose
             // answer had just been shown. Holding the card keeps `picked` set — so the
             // right chip stays marked — and `advanceAfterReveal` does the grading.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            let reveal = DispatchWorkItem {
+                pendingReveal = nil
                 withAnimation(.spring) { lastCorrect = nil }
                 withAnimation(.easeOut(duration: 0.2)) { revealed = true }
                 drag = .zero
@@ -767,6 +764,8 @@ struct PracticeView: View {
                 // The word just missed, said aloud while its meaning is on screen.
                 if soundOn, let word = model.current?.vocab { pronouncer.speak(word) }
             }
+            pendingReveal = reveal
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: reveal)
         }
     }
 
@@ -797,26 +796,12 @@ struct PracticeView: View {
     // MARK: - Chrome
 
     private var congrats: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "party.popper.fill")
-                .font(.system(size: 72))
-                .foregroundStyle(Theme.accent)
-            Text(L.t("All done!")).font(Theme.title(.largeTitle, weight: .bold))
-            Text(L.t("You reviewed %@ words", "\(model.sessionTotal)")).foregroundStyle(.secondary)
-            Button {
-                Track.event("practice_restart", ["lesson": lessonNumber,
-                                                 "total": model.sessionTotal])
-                withAnimation { model.restart(); revealed = false; drag = .zero }
-                autoPlay()
-            } label: {
-                Label(L.t("Restart"), systemImage: "arrow.clockwise").frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .padding(.top, 8)
+        DeckDonePanel(summary: L.t("You reviewed %@ words", "\(model.sessionTotal)")) {
+            Track.event("practice_restart", ["lesson": lessonNumber,
+                                             "total": model.sessionTotal])
+            withAnimation { model.restart(); revealed = false; drag = .zero }
+            autoPlay()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
     }
 }
 
@@ -1048,11 +1033,16 @@ struct PracticePairSheet: View {
     }
 
     /// Apply and record. Tapping a face always leaves Mixed, since naming a direction
-    /// is the opposite of asking for a random one.
+    /// is the opposite of asking for a random one. Logged only when something actually
+    /// moved — re-tapping the selected chip is a no-op, and counting it overstated how
+    /// often the pair is changed.
     private func commit(from: VForm, to: VForm, mixed: Bool = false) {
+        let changed = model.questionFrom != from || model.questionTo != to
+                      || model.mixed != mixed
         withAnimation(.easeOut(duration: 0.15)) {
             model.setPair(from: from, to: to, mixed: mixed)
         }
+        guard changed else { return }
         Track.event("practice_pair", ["from": from.label, "to": to.label,
                                       "mixed": mixed, "lesson": lessonNumber])
     }

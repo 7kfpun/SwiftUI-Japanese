@@ -95,7 +95,13 @@ struct TodayView: View {
             // already gives some to a banner.
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    StreakBadge(streak: streak) { router.tab = .progress }
+                    StreakBadge(streak: streak) {
+                        // The screen event can't split the badge from the tab bar, and
+                        // this is the affordance the badge exists to be.
+                        Track.event("streak_open", ["streak": streak.current,
+                                                    "studied_today": streak.studiedToday])
+                        router.tab = .progress
+                    }
                 }
             }
             .onAppear {
@@ -130,7 +136,8 @@ struct TodayView: View {
                         await PushService.shared.registerIfAuthorized()
                     }
                 }
-                .presentationDetents([.medium])
+                .scrollableWhenCramped()
+                .presentationDetents([.medium, .large])
             }
             .onChange(of: language) { loadPicks() }
         }
@@ -166,9 +173,13 @@ struct TodayView: View {
     /// user can legitimately be reading words for a challenge they can't take. Both rules
     /// are `Router`'s (`openLesson` / `openLessonList`), and the widget's link shares them.
     private func openChallenge() {
-        Track.event("today_challenge_open", ["lesson": lessonNumber, "index": upNext])
-        if Gating.isLocked(lesson: lessonNumber, isPremium: store.isPremium,
-                           earnedFirstGroup: unlock.earnedFirstGroup) {
+        let locked = Gating.isLocked(lesson: lessonNumber, isPremium: store.isPremium,
+                                     earnedFirstGroup: unlock.earnedFirstGroup)
+        // `locked` on the event: a locked lesson lands on the Lessons list, not the
+        // rung the event names, and without the param the two were one number.
+        Track.event("today_challenge_open", ["lesson": lessonNumber, "index": upNext,
+                                             "locked": locked])
+        if locked {
             router.openLessonList()
         } else {
             router.openLesson(VocabStore.lesson(lessonNumber, language))

@@ -26,6 +26,7 @@ enum WordStage: Int, Codable, Comparable {
 /// few hundred kilobytes that would otherwise sit inside the defaults plist and be
 /// rewritten whole on every swipe. `Pref` stays what it is — scalars.
 @Observable
+@MainActor
 final class PracticeProgress {
     /// Absent word — the common case forever, since only practiced words get a row.
     func stage(of word: String) -> WordStage { stages[word] ?? .unseen }
@@ -99,7 +100,14 @@ final class PracticeProgress {
     }
 
     /// Debounced: a Practice session writes once a second at most, not once a swipe.
-    /// `PracticeView.onDisappear` calls `saveNow()` so the last grade always lands.
+    /// The app flushes on backgrounding (`nihongoApp`) and Practice flushes on exit,
+    /// so the last grade always lands.
+    ///
+    /// The class is explicitly `@MainActor` (see the declaration) so this Task
+    /// inherits the actor: unannotated, the debounce body ran on the cooperative pool
+    /// and `saveNow()` encoded `stages` while the main thread was mutating it — a
+    /// torn read waiting for a resize. Swift 5 language mode enforces none of this,
+    /// which is exactly why the annotation is written out.
     private func scheduleSave() {
         saveTask?.cancel()
         saveTask = Task { [weak self] in

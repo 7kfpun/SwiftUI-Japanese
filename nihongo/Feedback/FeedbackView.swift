@@ -77,8 +77,15 @@ struct FeedbackView: View {
         // invisible measures the wrong thing.
         .onDisappear {
             guard !sent else { return }
-            Track.event("feedback_dismissed", ["source": source.rawValue,
-                                               "message_length": draft.trimmedMessage.count])
+            // The picks ride along: "chose 'a wrong word', then gave up" and "opened
+            // and left" are different failures, and message_length alone couldn't
+            // tell them apart.
+            var params: [String: Any] = ["source": source.rawValue,
+                                         "message_length": draft.trimmedMessage.count]
+            params["kind"] = draft.kind?.rawValue
+            params["area"] = draft.area?.rawValue
+            if draft.stars > 0 { params["stars"] = draft.stars }
+            Track.event("feedback_dismissed", params)
         }
     }
 
@@ -234,7 +241,7 @@ struct FeedbackView: View {
                 // looks exactly like the entry that was on screen a tap ago. Its own tap
                 // still speaks the word, which is the cheapest possible confirmation that
                 // this is the right one — and for a mis-cut clip it *is* the bug.
-                VocabRow(vocab: vocab, showLesson: true)
+                VocabRow(vocab: vocab, showLesson: true, surface: "feedback_sheet")
             }
         } else if let romaji = draft.item?.romaji {
             // A kana item (lesson 0), or a romaji the bundled data no longer has after a
@@ -326,15 +333,10 @@ struct FeedbackView: View {
     /// right" and nothing else, and a green tick here would be the app grading the report.
     private var confirmation: some View {
         VStack(spacing: 14) {
-            Image(systemName: "paperplane.fill")
-                .font(.largeTitle)
-                .foregroundStyle(Theme.accent)
-            Text(L.t("Thanks — it's on its way."))
-                .font(Theme.title(.title3))
-                .multilineTextAlignment(.center)
-            Text(L.t("We read every one of these."))
-                .font(.subheadline).foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+            PromptHeader(icon: "paperplane.fill",
+                         title: L.t("Thanks — it's on its way."),
+                         blurb: L.t("We read every one of these."),
+                         iconFont: .largeTitle)
         }
         .padding(28)
     }

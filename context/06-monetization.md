@@ -17,13 +17,14 @@ removes every ad, so there is exactly one thing to buy and one boolean to check.
 | Group | IDs | Status |
 |---|---|---|
 | Lifetime | `com.kfpun.nihongo.premium.lifetime` | non-consumable, sold |
-| Subscriptions | `…premium.1m`, `…premium.3M`, `…premium.6M` | sold |
+| Subscriptions | `…premium.1m`, `…premium.3M`, `…premium.6M`, `…premium.12M` | sold |
 | Legacy | `…premium.3m`, `…premium.6m`, `…premium.12m` | **restore only, never sold** |
 
 `purchasable = subscriptions + [lifetime]` is what the paywall fetches;
-`all = purchasable + legacy` is what the entitlement scan accepts. So four things are
-sellable — **1 month, 3 months, 6 months, lifetime** — and a 12-month plan exists only
-as history: an RN-era subscriber who restores keeps working, but nothing can sell one.
+`all = purchasable + legacy` is what the entitlement scan accepts. So five things are
+sellable — **1, 3, 6 and 12 months, plus lifetime**. The 12-month plan returned as
+uppercase `12M` in 2026-08; the lowercase `12m` remains history only — an RN-era
+subscriber who restores keeps working, but nothing can sell one.
 `PremiumTests.lineupInvariants` pins both directions (purchasable is disjoint from
 legacy; `all` is a superset of each).
 

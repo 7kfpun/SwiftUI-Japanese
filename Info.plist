@@ -248,6 +248,10 @@
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
+		<!-- Read along is the app's documented background-audio feature: a lesson
+		     playing while the phone is locked. Without this mode the app suspended on
+		     the lock button and the run died mid-word. -->
+		<string>audio</string>
 		<string>remote-notification</string>
 	</array>
 </dict>

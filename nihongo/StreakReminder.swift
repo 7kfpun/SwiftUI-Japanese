@@ -85,9 +85,16 @@ enum StreakReminder {
     /// once, and after that the only route back is the Settings app.
     @discardableResult
     static func requestAuthorization() async -> Bool {
+        // Whether the system alert can actually appear: iOS shows it only from
+        // `.notDetermined`. Logging unconditionally re-counted every later toggle of
+        // an already-denied setting as another "one-shot alert", which is the exact
+        // thing the event's doc says it measures.
+        let fresh = await authorizationStatus() == .notDetermined
         let granted = (try? await UNUserNotificationCenter.current()
             .requestAuthorization(options: [.alert, .sound, .badge])) ?? false
-        Track.event("notification_permission", ["granted": granted])
+        if fresh {
+            Track.event("notification_permission", ["granted": granted])
+        }
         return granted
     }
 

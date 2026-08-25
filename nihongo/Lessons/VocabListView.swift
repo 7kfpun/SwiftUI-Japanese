@@ -24,7 +24,11 @@ enum ReadMode: String {
 /// clip's completion. Bundled Kyoko clip first, TTS fallback when a clip is absent.
 ///
 /// Playback loops by default: the list is meant to run in the background while someone
-/// washes up, and stopping after one pass turned that into a two-minute session. The one
+/// washes up, and stopping after one pass turned that into a two-minute session. That
+/// promise is load-bearing on two things elsewhere (kf, 2026-08-26: background reading
+/// is a must): the `audio` entry in both apps' `UIBackgroundModes` — without it the
+/// lock button suspended the app mid-word — and the interruption observer in `init`,
+/// which keeps a phone call from wedging the run. Removing either breaks this. The one
 /// caller that must *not* loop is the locked meanings preview — see `loops`.
 @MainActor
 @Observable
@@ -100,7 +104,37 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
         return u
     }
 
-    override init() { super.init(); synth.delegate = self }
+    override init() {
+        super.init()
+        synth.delegate = self
+        // A phone call or Siri suspends the session out from under the run. Without
+        // this observer `isPlaying` stayed true while nothing was pending — the
+        // system-paused clip never delivers its finish callback — so the run came
+        // back from an interruption dead, under a toolbar still showing pause.
+        NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance(), queue: .main) { [weak self] note in
+            guard let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+                  let type = AVAudioSession.InterruptionType(rawValue: raw) else { return }
+            // Hop rather than trusting the queue: the class is main-actor and the
+            // closure is not — the PushService lesson, applied here.
+            Task { @MainActor [weak self] in
+                guard let self, self.isPlaying else { return }
+                switch type {
+                case .began:
+                    self.pause()
+                case .ended:
+                    let opts = (note.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt)
+                        .map(AVAudioSession.InterruptionOptions.init(rawValue:)) ?? []
+                    // Resume only when iOS says the slot is ours again; otherwise stay
+                    // paused and let the toolbar's play button do the resuming.
+                    if opts.contains(.shouldResume) { self.resume() }
+                @unknown default:
+                    break
+                }
+            }
+        }
+    }
 
     /// Tapping the mode that is already playing stops it; any other tap (a different
     /// mode, or from stopped) starts fresh. The read-along segments call this directly,
@@ -128,6 +162,10 @@ final class LessonPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesizerDe
     /// since elapsed time against a total means nothing once you've skipped ahead.
     func play(word i: Int) {
         guard isPlaying, entries.indices.contains(i) else { return }
+        // A jump is a resume: without this a tap from paused played exactly one word
+        // and died — every continuation guards on `!isPaused`, so the chain dropped
+        // the moment the jumped-to clip finished, under a toolbar still showing ▶.
+        isPaused = false
         play(i)
     }
 

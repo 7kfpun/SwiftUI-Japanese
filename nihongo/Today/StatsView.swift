@@ -100,21 +100,14 @@ struct StatsView: View {
     /// nothing in Dynamic Type or tap targets, and an empty list with five zeroes reads
     /// as a broken screen rather than a new one.
     private var empty: some View {
-        VStack(spacing: 16) {
+        EmptyStatePanel(text: L.t("Take a challenge or a kana quiz to start a streak.")) {
             Image("skill-tree")
                 .renderingMode(.template)
                 .resizable()
                 .scaledToFit()
                 .frame(maxWidth: 180)
                 .foregroundStyle(Theme.accent.opacity(0.7))
-            Text(L.t("Take a challenge or a kana quiz to start a streak."))
-                .font(Theme.title(.subheadline, weight: .regular))
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
         }
-        .padding(32)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.canvas)
     }
 
     private func row(_ symbol: String, _ label: String, _ value: String) -> some View {

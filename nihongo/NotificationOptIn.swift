@@ -78,14 +78,11 @@ struct NotificationOptInCard: View {
 
     var body: some View {
         VStack(spacing: 18) {
-            Image(systemName: "bell.badge")
-                .font(.system(size: 44))
-                .foregroundStyle(Color.streak)
-                .accessibilityHidden(true)
-
-            Text(L.t("Never lose a streak"))
-                .font(Theme.title(.title2, weight: .bold))
-                .multilineTextAlignment(.center)
+            PromptHeader(icon: "bell.badge",
+                         title: L.t("Never lose a streak"),
+                         iconFont: .system(size: 44),
+                         tint: Color.streak,
+                         titleFont: Theme.title(.title2, weight: .bold))
 
             // Concrete about what arrives and what doesn't. "Enable notifications to stay
             // motivated" is the phrasing people have learned to refuse; the promise that

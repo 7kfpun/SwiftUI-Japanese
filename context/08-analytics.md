@@ -71,19 +71,24 @@ Params in *italics* are common to every row of their group. `is_premium` is on a
 | Event | Params | When |
 |---|---|---|
 | `challenge_answer` | correct, lesson, index, from, to | each ladder option picked |
-| `match_answer` | correct, lesson | each Match pair resolved |
+| `match_answer` | correct, lesson, via (tap/drag) | each Match pair resolved — `via` is what says whether the connect-a-line drag is being found |
 | `match_round` | lesson, round, attempts | a board cleared, logged before the next deal — the mode is endless, so consecutive rows are the only session length it has |
 | `practice_answer` | correct, lesson, from, to | each Practice quiz swipe |
 | `practice_done` | total, lesson | Practice queue emptied |
 | `practice_restart` | total, lesson | Restart tapped on the done screen |
 | `practice_peek` | lesson | card held to read its back (that answer is then uncredited) |
 | `practice_show_kana` | lesson | the reading asked for on a kanji prompt |
-| `practice_pair` | from, to, mixed, lesson | quiz pair committed from the sheet |
+| `practice_pair` | from, to, mixed, lesson | quiz pair committed from the sheet — only when something actually changed; re-tapping the selected chip logs nothing |
+| `practice_pair_open` | lesson, mixed | the pair sheet opened — the denominator for `practice_pair` |
 | `learn_answer` | correct, lesson | tile answer resolves |
+| `learn_page` | lesson, forward | an ordered page-turn — `learn_shuffle` covers random mode's half of the same gesture |
 | `kana_classic_answer` / `kana_listening_answer` / `kana_swipe_answer` | correct | each kana quiz answer |
 | `kana_quiz_direction` | from, to | either side of a kana quiz swapped — logged in `KanaQuizModel` after the swap, so the pair reported is the one asked for, and one call site each covers both quiz screens |
 | `kana_write_grade` | pass, score | a drawing is scored |
-| `kana_flashcard_grade` | known | kana self-grade swipe |
+| `kana_write_skip` | romaji | Next on an undrawn canvas — the strongest difficulty signal the mode has |
+| `kana_write_clear` | strokes, romaji | the Clear button (only the button — programmatic clears on script switches and page turns don't count) |
+| `kana_write_script` | script | hiragana/katakana picker changed |
+| `kana_flashcard_grade` | known, via (tap/swipe) | kana self-grade, however it arrived |
 | `kana_flashcard_reveal` | — | Reveal tapped before grading (`FlashcardScreen` logs `<trackName>_reveal`, so only a deck that names itself sends it — today only kana) |
 | `kana_flashcard_done` | total | kana deck finished |
 | `kana_flashcard_restart` | total | Restart on the kana done screen |
@@ -99,12 +104,13 @@ quiz: the card is no longer a step of its own, so nothing logs it.
 | Event | Params | When |
 |---|---|---|
 | `challenge_start` | *lesson, index*, questions | the briefing's Start button — a run begins when the learner says so, not on appear |
+| `streak_open` | streak, studied_today | the toolbar streak badge tapped through to Progress — the tab bar can't be told apart on the `progress` screen event |
 | `challenge_complete` | score, stars, passed | run recorded (once) |
 | `challenge_next` | *lesson*, from_index, stars | the result screen's forward step to the next rung |
 | `challenge_retry` | previous_score | Try again on the result screen |
 | `challenge_done_tapped` | passed | Done/Back on the result screen |
 | `challenge_abandon` | question, of, correct | left mid-run — `correct` says whether the run was going badly or merely interrupted |
-| `challenge_review_play` | — | a missed word tapped to hear it again, on the result screen's "Review these" list |
+| `challenge_review_play` | lesson, index | a missed word tapped to hear it again, on the result screen's "Review these" list |
 | `cheer_replay` | stars, passed | the cheer phrase tapped for another one; scoped to the tier that picks the phrase, so this row carries neither lesson nor index |
 | `earned_first_group` | lesson, index | the 3★ sweep unlocks the first band — the rung that completed it |
 
@@ -122,15 +128,16 @@ quiz: the card is no longer a step of its own, so nothing logs it.
 | `locked_speed` | lesson | the speed dial tapped without premium |
 | `vocab_cut` | cut, lesson | vocab list cut chip (all/notMemorized/bookmarked) |
 | `examples_shown` | on | example-sentence toggle |
-| `play_vocab` | lesson | word tapped in a list |
+| `play_vocab` | lesson, surface (vocab_list/search/bookmarks/feedback_sheet/intro) | word tapped in a list row |
 | `play_example` | lesson, surface (vocab_list/practice/flashcards) | the example sentence tapped to hear it — logged at each caller, never inside `VocabFace`, so the surface is the caller's own fact |
 | `play_kana` | romaji | kana tile tapped |
 | `today_swipe` | lesson, depth, deck, for_challenge | deck depth high-water mark |
-| `today_challenge_open` | lesson, index | Today's challenge capsule tapped |
+| `today_challenge_open` | lesson, index, locked | Today's challenge capsule tapped — `locked` marks the taps that land on the Lessons list instead of the rung |
 | `bookmark` | lesson, stars | star tier cycled |
 | `search_vocab` | query_length, results | search fires (never the query text) |
 | `intro_mode_peek` | mode | intro card 3 chip tapped |
-| `intro_card` / `intro_skip` | card | card shown / tour skipped |
+| `intro_card` | card | first arrival on a card — back-navigation doesn't re-fire, so per-card counts are depth, not views |
+| `intro_skip` | card, knows_kana, textbook_lesson, goal | tour skipped, carrying whatever was answered before the exit |
 | `intro_done` | knows_kana, textbook_lesson, goal | tour finished, answers attached |
 
 ### Settings & toggles
@@ -143,7 +150,8 @@ quiz: the card is no longer a step of its own, so nothing logs it.
 | `learn_order_mode` | ordered | Learn's ordered/random switch |
 | `learn_shuffle` | lesson, via (button/swipe) | a reshuffle inside random mode. One name, two ways in: the Random button pages through `CardPager`'s `fling`, so `turnPage` consumes that arrival instead of counting it a second time as a swipe |
 | `flashcard_order_mode` | ordered | Flashcards' ordered/random switch |
-| `flashcard_flip` | lesson | a Flashcards card held to see its back |
+| `flashcard_flip` | lesson | a Flashcards card held to see its back — once per card, comparable with `practice_peek` |
+| `flashcard_swipe` | lesson, depth | a *new* card reached — depth like `today_swipe`, so back-and-forth isn't progress |
 | `kana_table` / `kana_tile_script` | table / script | kana chart switches |
 | `kana_quiz_open` | table | a kana mode opened from the chart |
 | `kana_clear` | cleared | learned-kana reset confirmed |
@@ -154,12 +162,12 @@ quiz: the card is no longer a step of its own, so nothing logs it.
 
 | Event | Params | When |
 |---|---|---|
-| `paywall_shown` / `paywall_dismissed` / `paywall_unavailable` | *source, lesson*; +purchased on dismiss | paywall lifecycle |
+| `paywall_shown` / `paywall_dismissed` / `paywall_unavailable` | *source, lesson*; +purchased on dismiss | paywall lifecycle — the live sources are exactly `locked_mode`, `locked_challenge`, `read_all_meanings`, `playback_speed` and `settings` |
 | `paywall_retry` | *source, lesson* | Try again on the products-didn't-load state — whether an empty paywall is retried or simply abandoned |
 | `purchase_start` / `purchase_success` / `purchase_failed` | *tier, source*; +reason on failure (error/cancelled/pending/unverified) | StoreKit flow |
 | `restore` | outcome (already_premium/restored/nothing_found/failed), source, premium; +error on failure | Restore tapped; outcome separates "wrong Apple ID" from "cancelled sign-in", and `error` names the failure mode (cancelled, offline) a support reply turns on — the message only, never anything identifying |
 | `locked_mode` | mode, lesson | locked practice row tapped |
-| `locked_challenge` | lesson, index | locked rung tapped |
+| `locked_challenge` | lesson, index, reason (paywall/previous_lesson/not_unlocked) | any locked rung tapped — the paywall gate opens the paywall; the other two are inert taps that would otherwise be invisible |
 | `locked_read_all` | lesson, heard | meanings preview hit its limit (`heard` = words played before it did) |
 
 ### Prompts (rating, share, notifications)
@@ -175,8 +183,8 @@ quiz: the card is no longer a step of its own, so nothing logs it.
 | `share_completed` | source, completed, activity | the share sheet closed — **also on cancel**, as `completed: false` with `activity: none`, so this is not a conversion count on its own. Only the prompt path can emit it (Settings shares through `ShareLink`, which has no completion handler), so `source` is always `prompt` |
 | `notification_opt_in` | source (intro/streak), accepted; +streak from streak | soft ask answered |
 | `notification_opt_in_dismissed` | streak | soft-ask sheet swiped away |
-| `notification_permission` | granted | the one-shot iOS alert |
-| `streak_reminder` / `streak_reminder_hour` / `streak_reminder_kept` | on, hour | Settings reminder controls |
+| `notification_permission` | granted | the one-shot iOS alert — logged only when the status was `.notDetermined`, i.e. when the alert could actually appear |
+| `streak_reminder` / `streak_reminder_hour` / `streak_reminder_kept` | on, hour; +denied when iOS refused the enable | Settings reminder controls — a denied enable logs `{on: true, denied: true}`, never a phantom turn-off |
 
 ### Plumbing & diagnostics
 
@@ -189,7 +197,7 @@ quiz: the card is no longer a step of its own, so nothing logs it.
 | `widget_open` / `widget_challenge_open` | lesson (+index) | launched via widget deep link |
 | `push_registered` / `push_register_failed` / `fcm_token` | error / present | APNs registration |
 | `notification_opened` | kind (streak_reminder/push) | a notification was tapped |
-| `feedback_opened` / `feedback_dismissed` | source; +message_length on dismiss | sheet opened / abandoned |
+| `feedback_opened` / `feedback_dismissed` | source; dismiss adds message_length, kind, area, stars | sheet opened / abandoned — the picks ride the abandon so half-filled reports are visible |
 | `feedback_submitted` | source, kind, area, lesson, has_item, message_length, has_email, stars | a report sent (`Feedback.Draft.trackParams`). Buckets and lengths only: `has_item` and `has_email` are the aggregate halves of the reported word and the reply address, and the message itself is never logged |
 | `report_swipe` | lesson | the vocab list swiped to report a mistake — logged on the swipe, so finding the gesture is countable separately from sending a report |
 | `manage_subscription` | — | Settings row tapped |

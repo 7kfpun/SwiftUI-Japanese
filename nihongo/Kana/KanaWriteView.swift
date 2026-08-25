@@ -56,7 +56,11 @@ struct KanaWriteView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .onChange(of: script) { clear() }
+            .onChange(of: script) {
+                Track.event("kana_write_script", ["script": script == .hiragana
+                                                  ? "hiragana" : "katakana"])
+                clear()
+            }
             .onChange(of: targetGlyph) { loadTemplateImage() }
 
             // Prompt: just the romaji — the script picker above already shows which
@@ -73,7 +77,13 @@ struct KanaWriteView: View {
             scoreRow
 
             HStack(spacing: 12) {
-                Button(L.t("Clear")) { clear() }
+                Button(L.t("Clear")) {
+                    // Only the button logs — `clear()` also runs on script switches
+                    // and page turns, which aren't the learner wiping a failed glyph.
+                    Track.event("kana_write_clear", ["strokes": strokes.count,
+                                                     "romaji": answer.romaji])
+                    clear()
+                }
                     .buttonStyle(.bordered)
                 Button {
                     withAnimation { showTemplate.toggle() }
@@ -210,7 +220,13 @@ struct KanaWriteView: View {
     /// Grade on Next — one verdict per kana, so the low scores mid-way through a
     /// multi-stroke glyph never count as misses. Skipped (undrawn) kana aren't graded.
     private func grade() {
-        guard let score else { return }
+        guard let score else {
+            // Next on an undrawn canvas. Not an answer, but far from nothing: skipping
+            // a kana you can't begin to draw is the strongest difficulty signal this
+            // mode produces, and it was the one outcome with no row at all.
+            Track.event("kana_write_skip", ["romaji": answer.romaji])
+            return
+        }
         // Stroke count is a hard check (textbook counts); the shape score covers
         // the rest. No count available = shape-only.
         let strokesOK = expectedStrokes.map { strokes.count == $0 } ?? true

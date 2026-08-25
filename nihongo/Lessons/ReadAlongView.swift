@@ -316,7 +316,10 @@ struct ReadAlongView: View {
                             Track.event("read_all_jump", ["lesson": lesson.number,
                                                           "index": i])
                             player.play(word: i)
-                        } else {
+                        } else if !player.isPlaying {
+                            // Only a *stopped* player's rows speak. While the free
+                            // preview runs, rows past its end are inert — speaking
+                            // there put a second voice over the running lesson.
                             pronouncer.speak(word)
                         }
                     } label: {
@@ -381,15 +384,11 @@ struct ReadAlongView: View {
                 // rather than on a toggle, because a mode that reads sentences and a
                 // list that hides them is one screen disagreeing with itself.
                 if player.mode == .withExample, let example = word.example {
-                    VStack(alignment: .leading, spacing: 4) {
-                        ExampleSentenceView(example: example)
-                        if let tr = word.exampleTranslation {
-                            Text(tr)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.leading)
-                        }
-                    }
+                    ExampleSentenceView(example: example,
+                                        translation: word.exampleTranslation,
+                                        translationFont: .caption2,
+                                        alignment: .leading,
+                                        spacing: 4)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(10)
                     // An inset pane on the row's card — `Theme.canvas` on `Theme.surface`,

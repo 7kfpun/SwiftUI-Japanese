@@ -118,17 +118,9 @@ struct ShareSheetPrompt: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Image(systemName: "heart.text.square")
-                .font(.system(size: 40))
-                .foregroundStyle(Theme.accent)
-
-            Text(L.t("Know someone learning Japanese?"))
-                .font(Theme.title(.title3))
-                .multilineTextAlignment(.center)
-
-            Text(L.t("A recommendation from you is worth more than any ad."))
-                .font(.subheadline).foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+            PromptHeader(icon: "heart.text.square",
+                         title: L.t("Know someone learning Japanese?"),
+                         blurb: L.t("A recommendation from you is worth more than any ad."))
 
             Button {
                 accepted = true
@@ -154,7 +146,8 @@ struct ShareSheetPrompt: View {
                 .foregroundStyle(.secondary)
         }
         .padding(28)
-        .presentationDetents([.height(360)])
+        .scrollableWhenCramped()
+        .presentationDetents([.height(360), .large])
         // `onDisappear`, not the "Not now" button — the same lesson `PaywallView` records.
         // Swiping the sheet away is a third exit, and counting only the button would make
         // `accepted` a rate over an undercounted denominator. `share_prompt_shown` fires

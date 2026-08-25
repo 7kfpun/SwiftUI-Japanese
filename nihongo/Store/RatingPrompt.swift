@@ -131,17 +131,9 @@ struct RatingSheet: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 40))
-                .foregroundStyle(Theme.accent)
-
-            Text(L.t("Enjoying %@?", Course.current.displayName))
-                .font(Theme.title(.title3))
-                .multilineTextAlignment(.center)
-
-            Text(L.t("Tap a star to tell us how it's going."))
-                .font(.subheadline).foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+            PromptHeader(icon: "sparkles",
+                         title: L.t("Enjoying %@?", Course.current.displayName),
+                         blurb: L.t("Tap a star to tell us how it's going."))
 
             HStack(spacing: 8) {
                 ForEach(1...5, id: \.self) { i in
@@ -171,6 +163,7 @@ struct RatingSheet: View {
             .foregroundStyle(.secondary)
         }
         .padding(28)
-        .presentationDetents([.height(340)])
+        .scrollableWhenCramped()
+        .presentationDetents([.height(340), .large])
     }
 }

@@ -124,25 +124,13 @@ struct KanaQuizView: View {
     var body: some View {
         VStack(spacing: 16) {
             // Direction toggles (in listening mode the prompt side is the audio)
-            HStack(spacing: 8) {
-                if listening {
-                    Image(systemName: "speaker.wave.2.fill").foregroundStyle(Theme.accent)
-                } else {
-                    Button(model.from.label) { model.swapFrom() }
-                }
-                Image(systemName: "arrow.right")
-                Button(model.to.label) { model.swapTo() }
-            }
-            .font(.subheadline)
-            .buttonStyle(.bordered)
-            .disabled(model.picked != nil)
+            KanaDirectionBar(model: model, listening: listening)
 
             // Question prompt: the kana glyph, or a speaker in listening mode.
-            Group {
+            QuizPromptPanel(onTap: { pronouncer.speak(kana: model.answer) }) {
                 if listening {
                     VStack(spacing: 12) {
-                        Image(systemName: "speaker.wave.3.fill")
-                            .font(.system(size: 64)).foregroundStyle(Theme.accent)
+                        AudioPromptGlyph()
                         Text(L.t("Hear it, pick the word"))
                             .font(.subheadline).foregroundStyle(.secondary)
                     }
@@ -153,11 +141,6 @@ struct KanaQuizView: View {
                         .minimumScaleFactor(0.4)
                 }
             }
-            .frame(maxWidth: .infinity)
-            .frame(maxHeight: .infinity)
-            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
-            .contentShape(Rectangle())
-            .onTapGesture { pronouncer.speak(kana: model.answer) }
 
             OptionGrid(count: model.options.count) { i in
                 QuizOptionButton(text: model.to.value(model.options[i]),

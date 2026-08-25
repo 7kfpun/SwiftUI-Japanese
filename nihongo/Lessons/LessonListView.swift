@@ -79,7 +79,7 @@ struct LessonListView: View {
                                 .listRowSeparator(.hidden)
                             }
                             ForEach(hits) { v in
-                                VocabRow(vocab: v, showLesson: true)
+                                VocabRow(vocab: v, showLesson: true, surface: "search")
                             }
                         } header: {
                             // Spelled out rather than `Section(_ title:)` so the count
@@ -176,7 +176,9 @@ private struct LessonRow: View {
                 Text("\(done) / \(total)")
                     .font(.footnote.monospacedDigit())
                     .foregroundStyle(.secondary)
-                ProgressBar(fraction: fraction)
+                // Fixed width so the bars line up down the list instead of jittering
+                // with each row's title length.
+                CapsuleBar(fraction: fraction, width: 92)
             }
         }
         .accessibilityElement(children: .combine)
@@ -207,26 +209,6 @@ struct StageDot: View {
     }
 }
 
-/// A slim capsule progress bar. Fixed width so the bars line up down the list instead
-/// of jittering with each row's title length.
-private struct ProgressBar: View {
-    let fraction: Double
-
-    var body: some View {
-        Capsule()
-            .fill(Color.secondary.opacity(0.18))
-            .frame(width: 92, height: 6)
-            .overlay(alignment: .leading) {
-                GeometryReader { geo in
-                    Capsule()
-                        .fill(Theme.accent)
-                        .frame(width: geo.size.width * max(0, min(fraction, 1)))
-                }
-            }
-            .accessibilityHidden(true)   // the row's combined label already says n / m
-    }
-}
-
 /// A single vocabulary row (used in vocab lists and search results).
 struct VocabRow: View {
     let vocab: Vocab
@@ -246,6 +228,10 @@ struct VocabRow: View {
     /// control's own fetched state and the list's map drift apart. Nil elsewhere, where
     /// the control simply reads its own.
     var savedTier: Int?? = nil
+    /// Which screen this row is on, carried onto `play_vocab` — search, the vocab
+    /// list, bookmarks and the feedback sheet were one undifferentiated row while
+    /// `play_example` two lines below already said where it was tapped.
+    var surface = "vocab_list"
     /// Called when the row's own control changes the tier, so the list can re-read its
     /// map — the counts on the cut chips depend on it.
     var onTierChange: ((Int?) -> Void)? = nil
@@ -255,7 +241,7 @@ struct VocabRow: View {
     /// the row *is* the word, so all its text speaks it.
     private func speakWord() {
         pronouncer.speak(vocab)
-        Track.event("play_vocab", ["lesson": vocab.lesson])
+        Track.event("play_vocab", ["lesson": vocab.lesson, "surface": surface])
     }
 
     var body: some View {
@@ -345,13 +331,10 @@ struct VocabRow: View {
                 Track.event("play_example", ["lesson": vocab.lesson,
                                              "surface": "vocab_list"])
             } label: {
-                VStack(alignment: .leading, spacing: 6) {
-                    ExampleSentenceView(example: example)
-                    if let tr = vocab.exampleTranslation {
-                        Text(tr).font(.caption).foregroundStyle(.secondary)
-                            .multilineTextAlignment(.leading)
-                    }
-                }
+                ExampleSentenceView(example: example,
+                                    translation: vocab.exampleTranslation,
+                                    translationFont: .caption,
+                                    alignment: .leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(10)
                 // An inset pane, so the sentence reads as the row's attachment rather

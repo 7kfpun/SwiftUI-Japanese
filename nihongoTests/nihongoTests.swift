@@ -543,6 +543,7 @@ struct FlashcardTests {
 
 // MARK: - Practice / kana quiz models
 
+@MainActor
 struct PracticeTests {
     /// Where a word sits in the queue now, and which face it will show — the re-queue
     /// distance is drawn per word, so tests assert a window rather than an index.

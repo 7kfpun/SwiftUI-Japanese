@@ -115,14 +115,9 @@ struct FlashcardScreen<Element, Face: View>: View {
         .toolbar {
             ToolbarItem(placement: .principal) { progress }
             // The flag leads the sound toggle, in that order on every screen carrying both.
-            // Only while a card is up: on the done screen there is no word on screen for a
-            // report to be about.
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                if let reportItem, let card = deck.current {
-                    ReportItemButton(item: reportItem(card))
-                }
-                SoundToggle()
-            }
+            // The flag only while a card is up: on the done screen there is no word on
+            // screen for a report to be about.
+            FlagAndSoundToolbar(item: deck.current.flatMap { card in reportItem.map { $0(card) } })
         }
     }
 
@@ -134,23 +129,16 @@ struct FlashcardScreen<Element, Face: View>: View {
     /// vanished and the header read as two bare icons and a stray "/ 35".
     private var progress: some View {
         ToolbarStatus {
-            stat("checkmark", deck.mastered, Theme.correct)
-            stat("rectangle.stack.fill", deck.remaining, Theme.accent)
+            IconCount(icon: "checkmark", count: deck.mastered, color: Theme.correct,
+                      font: .footnote.weight(.semibold))
+            IconCount(icon: "rectangle.stack.fill", count: deck.remaining, color: Theme.accent,
+                      font: .footnote.weight(.semibold))
             Text("/ \(deck.total)")
                 .font(.footnote.weight(.medium).monospacedDigit())
                 .foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(deck.mastered) done, \(deck.remaining) left, \(deck.total) total")
-    }
-
-    private func stat(_ icon: String, _ n: Int, _ color: Color) -> some View {
-        HStack(spacing: 5) {
-            Image(systemName: icon).imageScale(.small)
-            Text("\(n)").monospacedDigit()
-        }
-        .font(.footnote.weight(.semibold))
-        .foregroundStyle(color)
     }
 
     /// The peek stack is a static backdrop — only `topCard` moves. Applying the
@@ -187,15 +175,9 @@ struct FlashcardScreen<Element, Face: View>: View {
             .padding(24)
         }
         .onTapGesture { speak(element) }
-        .gesture(
-            DragGesture()
-                .onChanged { if !animating { drag = $0.translation } }
-                .onEnded { value in
-                    if value.translation.width > threshold { grade(right: true) }
-                    else if value.translation.width < -threshold { grade(right: false) }
-                    else { withAnimation(.spring) { drag = .zero } }
-                }
-        )
+        .gesture(CardSwipe.gesture(drag: $drag, threshold: threshold,
+                                   canDrag: { !animating },
+                                   decide: { grade(right: $0, via: "swipe") }))
     }
 
     /// The grade buttons double as swipe legends: arrows on the outer edges point the
@@ -235,40 +217,25 @@ struct FlashcardScreen<Element, Face: View>: View {
     }
 
     private var congrats: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "party.popper.fill")
-                .font(.system(size: 72))
-                .foregroundStyle(Theme.accent)
-            Text(L.t("All done!")).font(Theme.title(.largeTitle, weight: .bold))
-            Text(summary(deck.total)).foregroundStyle(.secondary)
-            Button {
-                if let n = trackName {
-                    Track.event("\(n)_restart", trackParams.merging(["total": deck.total]) { a, _ in a })
-                }
-                withAnimation { deck.restart(); revealed = false; drag = .zero }
-                autoPlay()
-            } label: {
-                Label(L.t("Restart"), systemImage: "arrow.clockwise").frame(maxWidth: .infinity)
+        DeckDonePanel(summary: summary(deck.total)) {
+            if let n = trackName {
+                Track.event("\(n)_restart", trackParams.merging(["total": deck.total]) { a, _ in a })
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .padding(.top, 8)
+            withAnimation { deck.restart(); revealed = false; drag = .zero }
+            autoPlay()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
     }
 
-    private func grade(right: Bool) {
+    private func grade(right: Bool, via: String = "tap") {
         guard !animating else { return }
         animating = true
         // `kana_flashcard_grade` (the one caller left since Lessons flashcards merged
         // into Practice) — the name already says which deck,
         // and `known` is the learner's own verdict, not a marked answer.
         if let n = trackName {
-            Track.event("\(n)_grade", trackParams.merging(["known": right]) { a, _ in a })
+            Track.event("\(n)_grade", trackParams.merging(["known": right, "via": via]) { a, _ in a })
         }
-        withAnimation(.easeOut(duration: 0.25)) { drag.width = right ? 700 : -700 }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+        CardSwipe.fling($drag, toRight: right) {
             if right { deck.know() } else { deck.dontKnow() }
             revealed = false
             drag = .zero

@@ -102,8 +102,8 @@ struct ScoreBadge: View {
 
     var body: some View {
         ToolbarStatus(caption: caption) {
-            stat("checkmark", correct, Theme.correct)
-            stat("xmark", wrong, Theme.wrong)
+            IconCount(icon: "checkmark", count: correct, color: Theme.correct)
+            IconCount(icon: "xmark", count: wrong, color: Theme.wrong)
             Text("/ \(total)")
                 .font(.footnote.weight(.medium).monospacedDigit())
                 .foregroundStyle(.secondary)
@@ -112,12 +112,78 @@ struct ScoreBadge: View {
         .accessibilityLabel("\(correct) correct, \(wrong) wrong, \(total) total")
     }
 
-    private func stat(_ icon: String, _ n: Int, _ color: Color) -> some View {
+}
+
+/// The from → to direction bar both kana quizzes wear: two bordered buttons around an
+/// arrow, disabled once an answer is picked. In listening mode the prompt side is the
+/// audio, so a speaker stands where the first button would be — the classic quiz is the
+/// only caller that passes `listening`.
+struct KanaDirectionBar: View {
+    let model: KanaQuizModel
+    var listening = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            if listening {
+                Image(systemName: "speaker.wave.2.fill").foregroundStyle(Theme.accent)
+            } else {
+                Button(model.from.label) { model.swapFrom() }
+            }
+            Image(systemName: "arrow.right")
+            Button(model.to.label) { model.swapTo() }
+        }
+        .font(.subheadline)
+        .buttonStyle(.bordered)
+        .disabled(model.picked != nil)
+    }
+}
+
+/// The tap-to-hear question pane the Challenge run and the kana quiz share: content
+/// on a surface-filled rounded rect, the whole pane tappable to replay. Content stays
+/// a closure because the two screens disagree on everything inside it (a 64pt speaker,
+/// a word, a caption) and on nothing outside it — which was exactly the duplicated part.
+struct QuizPromptPanel<Content: View>: View {
+    let onTap: () -> Void
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        Group(content: content)
+            .frame(maxWidth: .infinity)
+            .frame(maxHeight: .infinity)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
+            .contentShape(Rectangle())
+            .onTapGesture(perform: onTap)
+    }
+}
+
+/// The 64pt accent speaker that stands in for an audio prompt, in both quiz panes.
+struct AudioPromptGlyph: View {
+    var body: some View {
+        Image(systemName: "speaker.wave.3.fill")
+            .font(.system(size: 64))
+            .foregroundStyle(Theme.accent)
+            // The glyph alone is the whole question ("listen, then pick") — without a
+            // label VoiceOver read the pane as an unnamed image.
+            .accessibilityLabel(L.t("Tap to hear it"))
+    }
+}
+
+/// A tinted icon-and-number pair — the atom `ScoreBadge` and the kana flashcards'
+/// header readout both drew by hand. `Image` + `Text`, never `Label`: a `Label` in a
+/// toolbar's principal slot picks up `.iconOnly` and the number silently vanishes.
+/// The font is left to the caller, since the two headers deliberately differ a step.
+struct IconCount: View {
+    let icon: String
+    let count: Int
+    let color: Color
+    var font: Font = .subheadline.weight(.semibold)
+
+    var body: some View {
         HStack(spacing: 5) {
             Image(systemName: icon).imageScale(.small)
-            Text("\(n)").monospacedDigit()
+            Text("\(count)").monospacedDigit()
         }
-        .font(.subheadline.weight(.semibold))
+        .font(font)
         .foregroundStyle(color)
     }
 }
@@ -384,14 +450,7 @@ struct SwipeCard<Content: View>: View {
         .overlay(alignment: .topTrailing) { stamp(rightStamp, rotation: 8, active: drag.width > 0) }
         .overlay(alignment: .topLeading) { stamp(leftStamp, rotation: -8, active: drag.width < 0) }
         .overlay(alignment: .bottom) {
-            if showsHint {
-                HStack(spacing: 10) {
-                    Image(systemName: "chevron.compact.left")
-                    Text(L.t("Swipe"))
-                    Image(systemName: "chevron.compact.right")
-                }
-                .font(.caption).foregroundStyle(.tertiary).padding(.bottom, 8)
-            }
+            if showsHint { SwipeHint() }
         }
         .offset(x: drag.width, y: drag.height / 10)
         .rotationEffect(.degrees(Double(drag.width / 22)))
@@ -406,6 +465,183 @@ struct SwipeCard<Content: View>: View {
             SwipeStamp(systemImage: spec.name, color: spec.color, rotation: rotation)
                 .opacity(showsStamps && active ? min(abs(drag.width) / threshold, 1) : 0)
                 .padding(16)
+        }
+    }
+}
+
+/// The end-of-deck panel Practice and the kana flashcards both show: the party
+/// popper, "All done!", one line of summary and a Restart button. The two copies were
+/// identical to the glyph — only the summary string and what restarting means differ,
+/// so those are the parameters.
+struct DeckDonePanel: View {
+    let summary: String
+    let onRestart: () -> Void
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "party.popper.fill")
+                .font(.system(size: 72))
+                .foregroundStyle(Theme.accent)
+            Text(L.t("All done!")).font(Theme.title(.largeTitle, weight: .bold))
+            Text(summary).foregroundStyle(.secondary)
+            Button(action: onRestart) {
+                Label(L.t("Restart"), systemImage: "arrow.clockwise").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .padding(.top, 8)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+    }
+}
+
+/// A whole-screen empty state: some art over one line of guidance, on the canvas.
+/// The art is a parameter because it is the one thing the two call sites disagree on
+/// (Progress uses a template illustration, Bookmarks an SF Symbol) — everything else
+/// was copied verbatim and had started to drift.
+struct EmptyStatePanel<Art: View>: View {
+    let text: String
+    @ViewBuilder var art: () -> Art
+
+    var body: some View {
+        VStack(spacing: 16) {
+            art()
+            Text(text)
+                .font(Theme.title(.subheadline, weight: .regular))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.canvas)
+    }
+}
+
+/// The full-width black action pill — `Color.primary` fill, system-background text,
+/// 54pt, radius 18 — that Practice's Next and both Challenge buttons drew by hand.
+///
+/// Fill, shape and `contentShape` all live *inside* the button label on purpose: a
+/// `.frame` only reserves layout space and is not hit-testable on its own, so with
+/// the background applied outside the label only the glyphs took taps — the bug this
+/// codebase has now hit on four separate buttons.
+struct PrimaryPillButton<Content: View>: View {
+    let action: () -> Void
+    @ViewBuilder var label: () -> Content
+
+    var body: some View {
+        Button(action: action) {
+            label()
+                .frame(maxWidth: .infinity)
+                .frame(height: 54)
+                .foregroundStyle(Color(.systemBackground))
+                .background(Color.primary, in: RoundedRectangle(cornerRadius: 18))
+                .contentShape(RoundedRectangle(cornerRadius: 18))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// The Ordered / Random segmented control the two deck modes share. `event` is the
+/// per-screen analytics name — one event name per thing, so the two decks stay
+/// separable in the dashboards even though the control is one.
+struct OrderPicker: View {
+    @Binding var ordered: Bool
+    let event: String
+
+    var body: some View {
+        Picker("", selection: $ordered) {
+            Text(L.t("Ordered")).tag(true)
+            Text(L.t("Random")).tag(false)
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .onChange(of: ordered) { Track.event(event, ["ordered": ordered]) }
+    }
+}
+
+/// The trailing toolbar pair every practice surface carries: the report flag, then
+/// the sound toggle — **in that order**, which four screens each re-stated in a
+/// comment. `item` is optional because the flag only makes sense while a word is on
+/// screen; `sound: false` is for Learn, whose sound control lives in its
+/// `CardOptionsBar` chip instead — passing neither renders nothing, which is what
+/// makes adopting this on every practice screen say "no flag here" out loud.
+struct FlagAndSoundToolbar: ToolbarContent {
+    var item: Feedback.Item? = nil
+    var sound = true
+
+    var body: some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            if let item {
+                ReportItemButton(item: item)
+            }
+            if sound {
+                SoundToggle()
+            }
+        }
+    }
+}
+
+/// A capsule progress bar: a track and a proportional fill. Four screens hand-rolled
+/// the same `Capsule` + `GeometryReader` pair — Practice's session bar, the lesson
+/// hero, the lesson list's per-row bar and the kana browser — differing only in the
+/// colours and the height, so those are the parameters. The fraction is clamped here
+/// once instead of at whichever call sites remembered to.
+///
+/// Two track colours exist on purpose: the default reads against `Theme.surface`
+/// rows; Practice passes `Theme.line` because its bar sits directly on the canvas,
+/// and the hero passes a translucent system-background because it sits on ink.
+struct CapsuleBar: View {
+    let fraction: Double
+    var height: CGFloat = 6
+    var width: CGFloat? = nil
+    var track: Color = Color.secondary.opacity(0.18)
+    var fill: Color = Theme.accent
+
+    var body: some View {
+        Capsule()
+            .fill(track)
+            .overlay(alignment: .leading) {
+                GeometryReader { geo in
+                    Capsule()
+                        .fill(fill)
+                        .frame(width: geo.size.width * max(0, min(fraction, 1)))
+                }
+            }
+            .clipShape(Capsule())
+            .frame(width: width, height: height)
+            .accessibilityHidden(true)   // callers narrate the numbers (or label the row)
+    }
+}
+
+/// The icon–title–blurb head every prompt sheet opens with — the rating ask, the
+/// share nudge, the feedback thanks, the paywall, the earned unlock and the
+/// notification opt-in all set the same three lines and had six hand copies.
+///
+/// Deliberately **not** its own stack: the body emits siblings, so each sheet's own
+/// `VStack` spacing keeps applying between them — the six sheets space 14/18/20pt and
+/// unifying that would have moved every one of them. The icon is decorative by
+/// definition here (the title says everything), so it is accessibility-hidden.
+struct PromptHeader: View {
+    let icon: String
+    let title: String
+    var blurb: String? = nil
+    var iconFont: Font = .system(size: 40)
+    var tint: Color = Theme.accent
+    var titleFont: Font = Theme.title(.title3)
+
+    var body: some View {
+        Image(systemName: icon)
+            .font(iconFont)
+            .foregroundStyle(tint)
+            .accessibilityHidden(true)
+        Text(title)
+            .font(titleFont)
+            .multilineTextAlignment(.center)
+        if let blurb {
+            Text(blurb)
+                .font(.subheadline).foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
         }
     }
 }
@@ -428,6 +664,88 @@ struct AnswerBadge: View {
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
         .transition(.scale.combined(with: .opacity))
         .allowsHitTesting(false)
+    }
+}
+
+extension View {
+    /// Sheet content that scrolls only when it doesn't fit.
+    ///
+    /// The prompt sheets sit in fixed-height detents; at accessibility type sizes (or
+    /// under German and Russian titles) their buttons fell past the bottom edge with
+    /// no way to reach them — and on the notification opt-in the only exit left was a
+    /// swipe-down, which the caller reads as "never answered", so the sheet returned
+    /// forever. A `ScrollView` that only engages under pressure keeps the normal case
+    /// pinned and the cramped case usable; pairing the fixed detent with `.large`
+    /// gives the same escape hatch to fingers.
+    func scrollableWhenCramped() -> some View {
+        ViewThatFits(in: .vertical) {
+            self
+            ScrollView { self }
+        }
+    }
+}
+
+/// Defers a destination's construction until navigation actually renders it.
+///
+/// `NavigationLink { Destination() }` evaluates the closure during **body** — the
+/// link only defers *rendering*. A destination whose init does real work
+/// (`ChallengeView` builds ten rejection-sampled questions via `State(initialValue:)`)
+/// therefore ran on every render of the presenting screen: the lesson hub was
+/// rebuilding on the order of eighty questions per visit across its chips and cards.
+/// Storing the closure and calling it in `body` moves that work to the push.
+struct Deferred<Content: View>: View {
+    let content: () -> Content
+    init(@ViewBuilder _ content: @escaping () -> Content) { self.content = content }
+    var body: Content { content() }
+}
+
+/// The drag every swipe-to-decide card runs — Practice, the kana flashcards and the
+/// kana swipe quiz had three hand copies of the same three branches: past the
+/// threshold rightward decides right, leftward decides left, anything else springs
+/// home. `canDrag` is each screen's own reason the card is currently pinned;
+/// `canCommit` covers Practice's held-flipped card, where releasing a drag must
+/// spring back no matter how far it travelled.
+enum CardSwipe {
+    static func gesture(drag: Binding<CGSize>, threshold: CGFloat,
+                        canDrag: @escaping () -> Bool,
+                        canCommit: @escaping () -> Bool = { true },
+                        decide: @escaping (_ right: Bool) -> Void) -> some Gesture {
+        DragGesture()
+            .onChanged { if canDrag() { drag.wrappedValue = $0.translation } }
+            .onEnded { value in
+                guard canCommit() else {
+                    return withAnimation(.spring) { drag.wrappedValue = .zero }
+                }
+                if value.translation.width > threshold { decide(true) }
+                else if value.translation.width < -threshold { decide(false) }
+                else { withAnimation(.spring) { drag.wrappedValue = .zero } }
+            }
+    }
+
+    /// Fling the card off-screen and run the continuation once it has left. The exit
+    /// itself is always 0.25s; `then` is how long the *caller* waits, which the kana
+    /// swipe quiz stretches to let its verdict badge read before the next card deals.
+    static func fling(_ drag: Binding<CGSize>, toRight: Bool,
+                      then delay: TimeInterval = 0.25,
+                      _ continuation: @escaping () -> Void) {
+        withAnimation(.easeOut(duration: 0.25)) {
+            drag.wrappedValue.width = toRight ? 700 : -700
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: continuation)
+    }
+}
+
+/// The "⟨ Swipe ⟩" whisper at a card's bottom edge — `SwipeCard` shows it through
+/// `showsHint`, and Learn (which draws its own card chrome for the tile game) overlays
+/// the same one rather than keeping a byte-for-byte copy.
+struct SwipeHint: View {
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "chevron.compact.left")
+            Text(L.t("Swipe"))
+            Image(systemName: "chevron.compact.right")
+        }
+        .font(.caption).foregroundStyle(.tertiary).padding(.bottom, 8)
     }
 }
 
@@ -504,6 +822,15 @@ struct OptionGrid<Cell: View>: View {
 /// bunsetsu, wrapping like text. The alignment is the feature — see `ExampleSentence`.
 struct ExampleSentenceView: View {
     let example: ExampleSentence
+    /// The sentence's translated meaning, drawn under the columns when given — the
+    /// three screens that show one all stacked the same pair by hand, in three fonts.
+    var translation: String? = nil
+    var translationFont: Font = .footnote
+    var alignment: HorizontalAlignment = .center
+    /// Gap between the columns and the translation — the read-along playlist packs a
+    /// tighter 4 into its rows; everywhere else keeps 6.
+    var spacing: CGFloat = 6
+
     /// The columns wrap in reading order, so long sentences fold like prose would.
     ///
     /// Furigana order, not caption order: the small kana sits *above* the kanji it
@@ -512,6 +839,28 @@ struct ExampleSentenceView: View {
     /// where kanji and kana coincide, so the kanji baseline and the romaji line stay
     /// level across every column of the sentence.
     var body: some View {
+        VStack(alignment: alignment, spacing: spacing) {
+            columns
+            if let translation {
+                Text(translation)
+                    .font(translationFont)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(alignment == .trailing ? .trailing
+                                            : alignment == .center ? .center : .leading)
+            }
+        }
+    }
+
+    private var columns: some View {
+        annotatedColumns
+            // On the columns, not inside `hiddenSpan` — a `.hidden()` zero-height
+            // ruler isn't in the accessibility tree, so the combined sentence label
+            // was attached to nothing and VoiceOver read three fragments per column.
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(example.spoken)
+    }
+
+    private var annotatedColumns: some View {
         FlowLayout(spacing: 8, lineSpacing: 6) {
             ForEach(example.kanji.indices, id: \.self) { i in
                 // Centred within the column: furigana over the kanji, romaji under the
@@ -553,14 +902,19 @@ struct ExampleSentenceView: View {
     private func hiddenSpan(_ text: String) -> some View {
         Text(text).font(Theme.jp(14)).fixedSize()
             .frame(height: 0).hidden()
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(example.spoken)
     }
 }
 
 /// Minimal wrapping layout — rows of subviews at their natural size, folding when the
 /// width runs out. Exists because the example columns must wrap like text, and neither
 /// `HStack` (clips) nor a grid (uniform cells) can do ragged reading-order wrapping.
+///
+/// **Caveat**: `sizeThatFits` arranges against the *proposed* width while
+/// `placeSubviews` re-arranges against the *granted* one. With a concrete width — every
+/// current call site — the two agree. Under an unspecified proposal (an ideal-size
+/// pass) the reported height would be one row's while placement wraps several, painting
+/// past the reserved space. If a caller ever puts this in a context that probes ideal
+/// size (`fixedSize`, alignment-guide measurement), reconcile the two first.
 struct FlowLayout: Layout {
     var spacing: CGFloat = 8
     var lineSpacing: CGFloat = 6
@@ -651,16 +1005,9 @@ struct VocabFace: View {
                 // taken by pronouncing the word.
                 if let example = vocab.example {
                     Button(action: speakExample) {
-                        VStack(spacing: 6) {
-                            ExampleSentenceView(example: example)
-                            if let tr = vocab.exampleTranslation {
-                                Text(tr)
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                                    .multilineTextAlignment(.center)
-                            }
-                        }
-                        .contentShape(Rectangle())
+                        ExampleSentenceView(example: example,
+                                            translation: vocab.exampleTranslation)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .padding(.top, 4)

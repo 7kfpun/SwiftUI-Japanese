@@ -91,13 +91,7 @@ struct LearnView: View {
         VStack(spacing: 16) {
             CardOptionsBar()
 
-            Picker("", selection: $ordered) {
-                Text(L.t("Ordered")).tag(true)
-                Text(L.t("Random")).tag(false)
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .onChange(of: ordered) { Track.event("learn_order_mode", ["ordered": ordered]) }
+            OrderPicker(ordered: $ordered, event: "learn_order_mode")
 
             card
 
@@ -119,10 +113,10 @@ struct LearnView: View {
         // the one practice screen with no other toolbar item. Same placement as the other
         // three. Not on the card: the card owns the horizontal drag (`cardPager`).
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                ReportItemButton(item: Feedback.Item(lesson: model.current.lesson,
-                                                     romaji: model.current.romaji))
-            }
+            // `sound: false` — Learn's sound control is its `CardOptionsBar` chip.
+            FlagAndSoundToolbar(item: Feedback.Item(lesson: model.current.lesson,
+                                                    romaji: model.current.romaji),
+                                sound: false)
         }
         // Auto-play the word on each page when sound is on. Paging speaks explicitly in
         // `turnPage` — `onChange(of: index)` would silently skip when `random()` happens to
@@ -149,6 +143,10 @@ struct LearnView: View {
     private func turnPage(_ dir: Int) {
         if ordered {
             dir > 0 ? model.next() : model.prev()
+            // Its own name: a page through the course order is not a reshuffle, and
+            // leaving it silent made `learn_shuffle` measure only random mode's half
+            // of the same gesture.
+            Track.event("learn_page", ["lesson": lessonNumber, "forward": dir > 0])
         } else {
             model.random()
             // The same shuffle the Random button asks for, reached by flinging the card
@@ -201,14 +199,7 @@ struct LearnView: View {
         .padding(.vertical, 24)
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
         .overlay(alignment: .bottom) {
-            if ordered {
-                HStack(spacing: 10) {
-                    Image(systemName: "chevron.compact.left")
-                    Text(L.t("Swipe"))
-                    Image(systemName: "chevron.compact.right")
-                }
-                .font(.caption).foregroundStyle(.tertiary).padding(.bottom, 8)
-            }
+            if ordered { SwipeHint() }
         }
         .contentShape(Rectangle())
         .onTapGesture { pronouncer.speak(model.current) }

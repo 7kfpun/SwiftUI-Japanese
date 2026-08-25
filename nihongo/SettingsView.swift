@@ -193,7 +193,18 @@ struct SettingsView: View {
                     if on {
                         let granted = await StreakReminder.requestAuthorization()
                         notificationsDenied = !granted
-                        if !granted { streakReminderOn = false; return }
+                        if !granted {
+                            // iOS said no. The flag write below re-enters `onChange`
+                            // with `on == false` — without the one-shot it raised the
+                            // "turn off?" dialog over the deny alert and logged the
+                            // failed *enable* as a chosen *disable*. What happened is
+                            // an enable that iOS refused, so that is what gets logged.
+                            suppressOffConfirm = true
+                            streakReminderOn = false
+                            Track.event("streak_reminder", ["on": true, "hour": streakReminderHour,
+                                                            "denied": true])
+                            return
+                        }
                         await PushService.shared.registerIfAuthorized()
                     }
                     await StreakReminder.reschedule(studiedToday: StudyDay.streak(context: context).studiedToday)

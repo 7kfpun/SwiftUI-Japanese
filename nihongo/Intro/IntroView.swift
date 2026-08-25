@@ -31,6 +31,7 @@ struct IntroView: View {
     @Environment(\.modelContext) private var modelContext
 
     @State private var index = 0
+    @State private var seenCards: Set<Intro.Card> = []
     @State private var fling: Int?
     @State private var answers = IntroAnswers()
     /// Vocab List is preselected so card 3 is never an empty frame.
@@ -500,7 +501,13 @@ struct IntroView: View {
         fling = -1
     }
 
-    private func trackCard() { Track.event("intro_card", ["card": card.rawValue]) }
+    /// First arrival on each card only. Back-navigation re-fired the event, which
+    /// turned a per-card funnel into a count of *views* — depth is the question.
+    private func trackCard() {
+        guard !seenCards.contains(card) else { return }
+        seenCards.insert(card)
+        Track.event("intro_card", ["card": card.rawValue])
+    }
 
     private func finish() {
         answers.save()
@@ -520,7 +527,11 @@ struct IntroView: View {
     /// not log `intro_done` — abandoning isn't completing, and the two shouldn't be one
     /// number in a funnel.
     private func skip() {
-        Track.event("intro_skip", ["card": card.rawValue])
+        // The answers given so far ride along — they survive as user properties, but
+        // the event stream lost them entirely, and a skip on card 4 with three answers
+        // is a different exit from a skip on card 1 with none.
+        Track.event("intro_skip", ["card": card.rawValue]
+            .merging(answers.trackParams) { a, _ in a })
         answers.save()
         onFinish(Intro.landingTab(kana: answers.kana))
     }

@@ -134,13 +134,10 @@ struct ChallengeView: View {
             // A `.sheet`, so this view stays in the hierarchy while a report is written:
             // `onDisappear` below logs `challenge_abandon` and fires the exit interstitial,
             // and neither may happen because someone reported a word mid-run.
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                if phase == .play, let question = model.question, model.picked != nil {
-                    ReportItemButton(item: Feedback.Item(lesson: question.answer.lesson,
-                                                         romaji: question.answer.romaji))
-                }
-                SoundToggle()
-            }
+            FlagAndSoundToolbar(item: phase == .play && model.picked != nil
+                ? model.question.map { Feedback.Item(lesson: $0.answer.lesson,
+                                                     romaji: $0.answer.romaji) }
+                : nil)
         }
         .onAppear {
             // Coming back to a run that already ended means the view was reused —
@@ -343,16 +340,9 @@ struct ChallengeView: View {
     }
 
     private var startButton: some View {
-        Button(action: startRun) {
-            Text(L.t("Start the challenge"))
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .frame(height: 54)
-                .foregroundStyle(Color(.systemBackground))
-                .background(Color.primary, in: RoundedRectangle(cornerRadius: 18))
-                .contentShape(RoundedRectangle(cornerRadius: 18))
+        PrimaryPillButton(action: startRun) {
+            Text(L.t("Start the challenge")).font(.headline)
         }
-        .buttonStyle(.plain)
     }
 
     // MARK: - The run
@@ -431,20 +421,12 @@ struct ChallengeView: View {
                 // arrival is the "next" cue itself.
                 ZStack {
                     if model.picked != nil {
-                        Button { withAnimation(.easeOut(duration: 0.15)) { model.advance() } } label: {
-                            // Fill and shape go *inside* the label. A `.frame` only
-                            // reserves layout space — it is not hit-testable on its own,
-                            // so with the background applied outside, only the glyphs of
-                            // the word took taps and the rest of a 54pt bar did nothing.
+                        PrimaryPillButton(action: {
+                            withAnimation(.easeOut(duration: 0.15)) { model.advance() }
+                        }) {
                             Text(model.isLastQuestion ? L.t("Finish") : L.t("Next"))
                                 .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 54)
-                                .foregroundStyle(Color(.systemBackground))
-                                .background(Color.primary, in: RoundedRectangle(cornerRadius: 18))
-                                .contentShape(RoundedRectangle(cornerRadius: 18))
                         }
-                        .buttonStyle(.plain)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
@@ -528,11 +510,9 @@ struct ChallengeView: View {
 
     /// A big speaker for audio prompts, the word itself otherwise. Tapping replays.
     private func prompt(_ q: ChallengeQuestion) -> some View {
-        Group {
+        QuizPromptPanel(onTap: { pronouncer.speak(q.answer, voice: q.voice) }) {
             if q.from.isAudio {
-                Image(systemName: "speaker.wave.3.fill")
-                    .font(.system(size: 64))
-                    .foregroundStyle(Theme.accent)
+                AudioPromptGlyph()
             } else {
                 Text(q.from.value(q.answer))
                     .font(q.from.promptFont(wordSize: 38, translationStyle: .title))
@@ -544,11 +524,6 @@ struct ChallengeView: View {
                     .padding(.horizontal, 20)
             }
         }
-        .frame(maxWidth: .infinity)
-        .frame(maxHeight: .infinity)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
-        .contentShape(Rectangle())
-        .onTapGesture { pronouncer.speak(q.answer, voice: q.voice) }
     }
 
     /// Persist the result once. Guarded because `isDone` can re-fire on redraws and a
@@ -719,8 +694,12 @@ private struct ChallengeResultView: View {
                         ForEach(uniqueMissed, id: \.id) { word in
                             Button {
                                 pronouncer.speak(word)
+                                // `model.index`, never bare `index` — in this scope the
+                                // bare name resolves to Darwin's C `index(_:_:)` from
+                                // strings.h, and `[String: Any]` accepts the function
+                                // value without a murmur.
                                 Track.event("challenge_review_play",
-                                            ["lesson": lesson.number, "index": index])
+                                            ["lesson": lesson.number, "index": model.index])
                             } label: {
                                 HStack(spacing: 10) {
                                     Image(systemName: "speaker.wave.2")

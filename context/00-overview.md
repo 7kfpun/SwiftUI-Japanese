@@ -79,7 +79,7 @@ of RN-era subscription IDs (`…premium.3m/6m/12m`) that are no longer sold but
 are still honored so pre-existing buyers restore correctly. `Store.isPremium`
 is derived from `Transaction.currentEntitlements` and drives both lesson
 gating and ad visibility everywhere (`BannerAd`, `Interstitial`). So four things are
-sellable — 1m, 3M, 6M and lifetime — and 12m exists only for restores. Full detail,
+sellable — 1m, 3M, 6M, 12M and lifetime — the lowercase 12m exists only for restores. Full detail,
 including the price maths and why plan names never come from App Store Connect, in
 `06-monetization.md`.
 

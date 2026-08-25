@@ -67,10 +67,16 @@ final class MatchModel {
 
     func word(id: String) -> Vocab? { round.first { $0.id == id } }
 
+    /// How the most recent pick arrived — "tap" or "drag" — carried onto
+    /// `match_answer`, since the connect-a-line drag is the design's headline gesture
+    /// and its adoption was unmeasurable while both routes resolved identically.
+    private(set) var lastVia = "tap"
+
     /// Tap a tile. Ignored while a miss is showing, on a tile already cleared, and in
     /// the gap between the last match and the next deal.
-    func pick(side: Side, index: Int) {
+    func pick(side: Side, index: Int, via: String = "tap") {
         guard !wrong, !roundCleared else { return }
+        lastVia = via
         switch side {
         case .left:
             guard left.indices.contains(index), !left[index].cleared else { return }
@@ -245,9 +251,8 @@ struct MatchView: View {
                            caption: L.t("Round %@ · %@ pairs",
                                         "\(model.rounds)", "\(model.left.count)"))
             }
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                SoundToggle()
-            }
+            // No flag on Match: no single word is "the" word on a board of five pairs.
+            FlagAndSoundToolbar()
         }
         .onAppear {
             Track.screen("match", ["lesson": lessonNumber])
@@ -261,7 +266,8 @@ struct MatchView: View {
         // two tiles were wrong, short enough that it never feels like a penalty.
         .onChange(of: model.wrong) {
             guard model.wrong else { return }
-            Track.event("match_answer", ["lesson": lessonNumber, "correct": false])
+            Track.event("match_answer", ["lesson": lessonNumber, "correct": false,
+                                         "via": model.lastVia])
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
                 withAnimation(.easeOut(duration: 0.15)) { model.clearMiss() }
             }
@@ -271,7 +277,8 @@ struct MatchView: View {
         // same word — an id that doesn't change wouldn't re-fire.
         .onChange(of: model.matched) {
             guard let id = model.lastMatched else { return }
-            Track.event("match_answer", ["lesson": lessonNumber, "correct": true])
+            Track.event("match_answer", ["lesson": lessonNumber, "correct": true,
+                                         "via": model.lastVia])
             withAnimation(.easeOut(duration: 0.15)) { flashID = id }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                 // A later match may already be flashing; only clear our own.
@@ -388,8 +395,8 @@ struct MatchView: View {
                     // scoring a wrong answer the learner never made, and then swallowing
                     // the drop, because `pick` refuses while a miss is showing.
                     model.clearMiss()
-                    model.pick(side: from.side, index: from.index)
-                    model.pick(side: targetSide, index: hit.key.index)
+                    model.pick(side: from.side, index: from.index, via: "drag")
+                    model.pick(side: targetSide, index: hit.key.index, via: "drag")
                 }
         )
         // Cleared pairs stay in place rather than collapsing: tiles that reflow under

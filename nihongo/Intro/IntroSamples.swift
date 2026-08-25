@@ -93,7 +93,7 @@ struct IntroModeSample: View {
         return VStack(spacing: 0) {
             ForEach(Array(rows.enumerated()), id: \.element.id) { i, vocab in
                 if i > 0 { Divider() }
-                VocabRow(vocab: vocab).padding(.vertical, 7)
+                VocabRow(vocab: vocab, surface: "intro").padding(.vertical, 7)
             }
         }
     }

@@ -15,10 +15,10 @@ struct SelectModeView: View {
     @Environment(PracticeProgress.self) private var practice
     @Environment(\.modelContext) private var context
     @State private var showPaywall = false
-    /// Which row opened the paywall — a locked mode or a locked challenge rung. Both used
-    /// to report one `select_mode_locked` source, which is the difference between "people
-    /// bounce off the ladder" and "people bounce off Practice".
-    @State private var paywallSource = "select_mode_locked"
+    /// Which row opened the paywall — a locked mode or a locked challenge rung. Every
+    /// presenting path overwrites this before the sheet appears, so the initial value
+    /// is unreachable on purpose; it exists only so the property needs no optional.
+    @State private var paywallSource = "locked_mode"
     @State private var results: [Int: ChallengeResult] = [:]
     /// Whether the previous lesson's ladder is fully passed — see
     /// `ChallengeResult.previousLessonCleared`. Defaults open so lesson 1 (and the
@@ -115,7 +115,7 @@ struct SelectModeView: View {
                 } label: { heroCard }
             } else {
                 NavigationLink {
-                    PracticeView(lesson: current, progress: practice)
+                    Deferred { PracticeView(lesson: current, progress: practice) }
                 } label: { heroCard }
             }
         }
@@ -170,14 +170,14 @@ struct SelectModeView: View {
             }
 
             // How much of the lesson is banked, drawn on the card itself.
-            GeometryReader { geo in
-                Capsule().fill(Color(.systemBackground).opacity(0.25))
-                    .overlay(alignment: .leading) {
-                        Capsule().fill(Color(.systemBackground))
-                            .frame(width: geo.size.width * CGFloat(counts.memorized) / CGFloat(total))
-                    }
-            }
-            .frame(height: 4)
+            // `total` is already `max(count, 1)`, and `CapsuleBar` clamps — no guard.
+            CapsuleBar(fraction: Double(counts.memorized) / Double(total),
+                       height: 4,
+                       track: Color(.systemBackground).opacity(0.25),
+                       fill: Color(.systemBackground))
+                .accessibilityLabel(L.t("%@ memorized · %@ recognized · %@ unseen",
+                                        "\(counts.memorized)", "\(counts.recognized)",
+                                        "\(counts.unseen)"))
         }
         .foregroundStyle(Color(.systemBackground))
         .padding(18)
@@ -193,7 +193,7 @@ struct SelectModeView: View {
                 .foregroundStyle(.secondary)
             VStack(spacing: 0) {
                 // Vocab List is free on every lesson — browsing and search stay open.
-                NavigationLink { VocabListView(lesson: current) } label: {
+                NavigationLink { Deferred { VocabListView(lesson: current) } } label: {
                     wayRow(key: "vocab_list", icon: "list.bullet", title: L.t("Vocab List"),
                            subtitle: L.t("Browse & hear all words"), gated: false)
                 }
@@ -230,7 +230,7 @@ struct SelectModeView: View {
             }
             .buttonStyle(.plain)
         } else {
-            NavigationLink { destination() } label: {
+            NavigationLink { Deferred(destination) } label: {
                 wayRow(key: key, icon: icon, title: title, subtitle: subtitle, gated: false)
             }
             .buttonStyle(.plain)
@@ -350,21 +350,28 @@ struct SelectModeView: View {
             Button {
                 paywallSource = "locked_challenge"
                 showPaywall = true
-                Track.event("locked_challenge", ["lesson": lesson.number, "index": i])
+                Track.event("locked_challenge", ["lesson": lesson.number, "index": i,
+                                                 "reason": "paywall"])
             } label: {
                 chipBody(i, star: nil, isNext: false, lockedIcon: true)
             }
             .buttonStyle(.plain)
         } else if !previousCleared {
-            // Sequence-locked: the previous lesson's ladder isn't finished. Not a
-            // button — there is nothing to open, and the line under the strip says
-            // why. Earned stars still show, so progress made before the rule (or on
-            // another device) isn't drawn as if it never happened.
+            // Sequence-locked: the previous lesson's ladder isn't finished. Nothing to
+            // open — the line under the strip says why — but the tap still logs:
+            // without it the two newest gates were the only ones the dashboard
+            // couldn't see anyone bounce off. Earned stars still show, so progress
+            // made before the rule (or on another device) isn't drawn as if it never
+            // happened.
             chipBody(i, star: result?.stars, isNext: false, lockedIcon: !passed)
                 .opacity(0.55)
+                .onTapGesture {
+                    Track.event("locked_challenge", ["lesson": lesson.number, "index": i,
+                                                     "reason": "previous_lesson"])
+                }
         } else if passed || isNext {
             NavigationLink {
-                ChallengeView(lesson: current, index: i, total: challengeCount)
+                Deferred { ChallengeView(lesson: current, index: i, total: challengeCount) }
             } label: {
                 chipBody(i, star: result?.stars, isNext: isNext, lockedIcon: false)
             }
@@ -372,6 +379,10 @@ struct SelectModeView: View {
         } else {
             chipBody(i, star: nil, isNext: false, lockedIcon: true)
                 .opacity(0.55)
+                .onTapGesture {
+                    Track.event("locked_challenge", ["lesson": lesson.number, "index": i,
+                                                     "reason": "not_unlocked"])
+                }
         }
     }
 
@@ -408,7 +419,7 @@ struct SelectModeView: View {
         let questions = min(Challenge.questionsPerChallenge,
                             Challenge.pool(current.entries, index: i).count)
         return NavigationLink {
-            ChallengeView(lesson: current, index: i, total: challengeCount)
+            Deferred { ChallengeView(lesson: current, index: i, total: challengeCount) }
         } label: {
             HStack(spacing: 12) {
                 ZStack {
@@ -441,7 +452,7 @@ struct SelectModeView: View {
     private func retryCard(_ i: Int) -> some View {
         let result = results[i]
         return NavigationLink {
-            ChallengeView(lesson: current, index: i, total: challengeCount)
+            Deferred { ChallengeView(lesson: current, index: i, total: challengeCount) }
         } label: {
             HStack(spacing: 12) {
                 StarRow(stars: result?.stars ?? 0, size: 10)
