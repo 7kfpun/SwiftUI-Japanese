@@ -1,9 +1,11 @@
 import SwiftUI
 
-/// The field-visibility + sound toggles above the card in Learn and Today — one bar, one
-/// set of `Pref` keys, so the two screens can't disagree about what a card shows. Hosts read
-/// the same keys directly (not via a wrapper struct) so a card re-renders the moment a
-/// toggle flips.
+/// The field-visibility + sound toggles above the card in Learn. Today used to share
+/// the bar and now draws the same switches as its toolbar "Show" menu (2026-08
+/// redesign) — but both read **one set of `Pref` keys** and log the same
+/// `toggle_field` event, so the two screens still cannot disagree about what a card
+/// shows. Hosts read the keys directly (not via a wrapper struct) so a card
+/// re-renders the moment a toggle flips.
 struct CardOptionsBar: View {
     @AppStorage(Pref.kanjiShown)       private var showKanji = true
     @AppStorage(Pref.kanaShown)        private var showKana = true

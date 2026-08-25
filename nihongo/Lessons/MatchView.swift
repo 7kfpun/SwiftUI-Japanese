@@ -224,14 +224,11 @@ struct MatchView: View {
             // The gesture is invisible until tried, so say it once, quietly — and name
             // the fallback underneath, because the drag is the better way rather than
             // the only one, and a learner who can't manage it should not be stuck.
-            VStack(spacing: 3) {
-                Text(L.t("Drag a word to its meaning"))
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                Text(L.t("Or tap one on each side"))
-                    .font(.caption2)
-                    .foregroundStyle(.quaternary)
-            }
+            // One hint line — the fresh handoff drops the tap fallback's caption;
+            // the tap still works, it just no longer narrates itself.
+            Text(L.t("Drag a word to its meaning"))
+                .font(.caption)
+                .foregroundStyle(.tertiary)
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -242,12 +239,13 @@ struct MatchView: View {
                 // `rounds` counts deals, and the first deal happens in `init` — so it is
                 // already 1 while the first round is on screen. Adding one opened the
                 // mode on "Round 2".
-                // Pairs cleared out of attempts — one number over another, which is
-                // what this screen's score actually is. `ScoreBadge`'s third figure is
-                // just the difference between the two, and the width it cost is what
-                // pushed a two-digit count into wrapping on a real device.
-                TallyBadge(icon: "link", done: model.matched, total: model.attempts,
-                           tint: Theme.accent,
+                // The fresh handoff (2026-08-26) reworks this into the standard
+                // right/wrong tally — it postdates, and is the answer to, the
+                // on-device wrapping complaint that had pushed Match onto
+                // `TallyBadge`: the counters are now the compact monospace pair
+                // every quiz header wears.
+                ScoreBadge(correct: model.matched,
+                           total: model.attempts,
                            caption: L.t("Round %@ · %@ pairs",
                                         "\(model.rounds)", "\(model.left.count)"))
             }

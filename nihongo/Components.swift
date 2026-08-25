@@ -61,34 +61,6 @@ struct ToolbarStatus<Content: View>: View {
     }
 }
 
-/// A single tally — "10 / 11" behind one glyph — for screens whose score is one number
-/// out of another.
-///
-/// Match's is exactly that (pairs cleared out of attempts), and the three-part
-/// right/wrong/total form spent roughly twice the width saying the same thing: the
-/// wrong count is just the difference, and on a real device that extra width is what
-/// pushed the numbers into wrapping. The design draws one icon and one fraction.
-struct TallyBadge: View {
-    let icon: String
-    let done: Int
-    let total: Int
-    var tint: Color = Theme.correct
-    var caption: String? = nil
-
-    var body: some View {
-        ToolbarStatus(caption: caption) {
-            HStack(spacing: 5) {
-                Image(systemName: icon).imageScale(.small)
-                Text("\(done) / \(total)").monospacedDigit()
-            }
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(tint)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(done) of \(total)")
-    }
-}
-
 /// One consistent score indicator used by every scored screen in the app (Kana Classic,
 /// Kana Swipe, Kana Write). Shows right / wrong / total, in `ToolbarStatus`.
 struct ScoreBadge: View {

@@ -42,6 +42,12 @@ struct TodayView: View {
     /// Furthest card reached in this deck, so `today_swipe` reports depth rather than
     /// raw swipe count — back-and-forth on the same two cards isn't engagement.
     @State private var deepestCard = 1
+    /// Programmatic page-turn for the card's Not yet / Got it buttons, so a button
+    /// press animates exactly like a swipe (Learn's trick).
+    @State private var fling: Int?
+    /// The turn in flight came from a button — `today_swipe` reports `via` with it,
+    /// the same one-name-two-ways-in shape as `learn_shuffle`.
+    @State private var pagedByButton = false
     /// Recomputed on appear rather than observed: the streak can only change by answering
     /// something, which always happens on another screen, so there is nothing to watch
     /// while Today is visible.
@@ -76,14 +82,16 @@ struct TodayView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 16) {
-                CardOptionsBar()
-                // Where you are and what's next. This carries the lesson number that
-                // used to live in the toolbar picker — the picker itself is gone,
-                // because Today no longer studies a lesson you choose, it studies the
-                // one you're actually on.
-                whereYouAre
+            VStack(spacing: 14) {
+                // Where you are and what's next, as the redesign's warm-up banner —
+                // it carries the lesson-and-rung fact the old capsule held, plus the
+                // one sentence that makes the deck make sense: these exact words are
+                // what the test will ask. The field toggles moved to the toolbar's
+                // Show menu, so the banner is the first thing under the title.
+                warmupBanner
+                if picks.count > 1 { deckSegments }
                 if let word = current { cardStack(word) } else { ProgressView().frame(maxHeight: .infinity) }
+                if picks.count > 1 { deckFooter }
             }
             .padding()
             .background(Theme.canvas)
@@ -94,7 +102,8 @@ struct TodayView: View {
             // one integer — and a toolbar item costs no vertical space on a screen that
             // already gives some to a banner.
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .topBarTrailing) { showMenu }
+                ToolbarItem(placement: .topBarLeading) {
                     StreakBadge(streak: streak) {
                         // The screen event can't split the badge from the tab bar, and
                         // this is the affordance the badge exists to be.
@@ -143,29 +152,98 @@ struct TodayView: View {
         }
     }
 
-    /// Where you are, and the way in. Same wording, same capsule and the same
-    /// destination as the widget's call to action — the two are the same promise made
-    /// on two surfaces, so they shouldn't look or behave like different features.
-    private var whereYouAre: some View {
+    /// Where you are, and the way in — the same destination as the widget's call to
+    /// action, drawn as the redesign's warm-up banner. `hasNext` decides the words,
+    /// not just the icon: a learner who has passed everything is reviewing, not
+    /// preparing, and the banner must not promise a rung `firstUnpassed` said is gone.
+    private var warmupBanner: some View {
         Button(action: openChallenge) {
-            HStack(spacing: 6) {
-                Image(systemName: hasNext ? "flag.checkered" : "checkmark.seal.fill")
-                Text(L.t("Lesson %@", "\(lessonNumber)"))
-                Text("·")
-                // `hasNext` decides the words, not just the icon — its doc says "the
-                // capsule says so rather than promising a test", and asking a learner
-                // who has passed everything whether they're ready for a rung
-                // `firstUnpassed` returned nil for is exactly that broken promise.
-                Text(hasNext ? L.t("Ready for Challenge %@?", "\(upNext)")
-                             : L.t("All challenges passed"))
-                Image(systemName: "chevron.right").font(.caption2)
+            HStack(spacing: 11) {
+                Image(systemName: hasNext ? "flag" : "checkmark.seal.fill")
+                    .foregroundStyle(Theme.accent)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(hasNext ? L.t("Warming up for Challenge %@", "\(upNext)")
+                                 : L.t("All challenges passed"))
+                        .font(Theme.title(.subheadline))
+                        .foregroundStyle(.primary)
+                    Text(hasNext ? L.t("These %@ words are exactly what it will ask.",
+                                       "\(picks.count)")
+                                 : L.t("Reviewing the last words of Lesson %@.",
+                                       "\(lessonNumber)"))
+                        .font(.caption)
+                        .foregroundStyle(Theme.accent)
+                }
+                .multilineTextAlignment(.leading)
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Theme.accent)
             }
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(Theme.accent)
-            .padding(.horizontal, 12).padding(.vertical, 5)
-            .background(Theme.accent.opacity(0.12), in: Capsule())
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.accent.opacity(0.5)))
+            .contentShape(RoundedRectangle(cornerRadius: 16))
         }
         .buttonStyle(.plain)
+    }
+
+    /// One slim segment per card: filled for seen, mid for the current, faint for what
+    /// is still to come — the deck's length made visible without a number.
+    private var deckSegments: some View {
+        HStack(spacing: 5) {
+            ForEach(picks.indices, id: \.self) { i in
+                Capsule()
+                    .fill(i < index ? Color.primary
+                          : i == index ? Color.secondary
+                          : Theme.line)
+                    .frame(height: 4)
+            }
+        }
+        .animation(.easeOut(duration: 0.2), value: index)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(L.t("Word %@ of %@", "\(index + 1)", "\(picks.count)"))
+    }
+
+    /// What is left and where it leads, under the deck.
+    private var deckFooter: some View {
+        HStack(spacing: 8) {
+            Text(L.t("%@ cards left", "\(max(0, picks.count - 1 - index))"))
+            if hasNext {
+                Rectangle().fill(Theme.line).frame(width: 1, height: 11)
+                Text(L.t("Then straight into Challenge %@", "\(upNext)"))
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+    }
+
+    /// The card-field toggles, moved off the canvas into the toolbar (design: the
+    /// "Show" pill). Same `Pref` keys and the same `toggle_field` event as the
+    /// `CardOptionsBar` this replaces on Today — Learn keeps the bar, and the two
+    /// screens still cannot disagree about what a card shows.
+    private var showMenu: some View {
+        Menu {
+            Section(L.t("Shown on the card")) {
+                fieldToggle($showKana, L.t("Kana"), "kana")
+                fieldToggle($showKanji, L.t("Kanji"), "kanji")
+                fieldToggle($showRomaji, L.t("Romaji"), "romaji")
+                fieldToggle($showTranslation, L.t("Meaning"), "meaning")
+            }
+            Divider()
+            fieldToggle($soundOn, L.t("Read aloud automatically"), "sound")
+        } label: {
+            Label(L.t("Show"), systemImage: "eye")
+        }
+    }
+
+    private func fieldToggle(_ value: Binding<Bool>, _ title: String, _ name: String) -> some View {
+        Toggle(title, isOn: Binding(
+            get: { value.wrappedValue },
+            set: { on in
+                value.wrappedValue = on
+                Track.event("toggle_field", ["field": name, "shown": on])
+            }))
     }
 
     /// To the lesson's mode list — not into the rung itself — or to the Lessons list when
@@ -200,40 +278,136 @@ struct TodayView: View {
         // No stamps: here a swipe only turns the page, it doesn't decide anything.
         // Movement comes from `cardPager` below rather than a drag binding, so this
         // passes no `drag` — the modifier applies the offset itself.
-        SwipeCard(showsHint: picks.count > 1) {
-            VStack(spacing: 12) {
-                if showKanji && word.displaysKanji {
-                    Text(word.kanji).font(Theme.jp(22)).foregroundStyle(.secondary)
+        SwipeCard(showsHint: false) {
+            VStack(spacing: 0) {
+                HStack {
+                    // The chip states the deck's contract — these words are the test.
+                    Text(hasNext ? L.t("Asked in Challenge %@", "\(upNext)")
+                                 : L.t("Review these"))
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(Theme.accent)
+                        .padding(.horizontal, 11).padding(.vertical, 5)
+                        .background(Theme.accent.opacity(0.12), in: Capsule())
+                    Spacer()
+                    // Its own button: the card's tap also speaks, but a visible control
+                    // is what tells anyone the card *can* talk.
+                    Button { pronouncer.speak(word) } label: {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .font(.body)
+                            .foregroundStyle(Color(.systemBackground))
+                            .frame(width: 44, height: 44)
+                            .background(Color.primary, in: Circle())
+                            .contentShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(L.t("Tap to hear it"))
                 }
-                if showKana {
-                    Text(word.kana).font(Theme.jp(46))
-                        .minimumScaleFactor(0.4).multilineTextAlignment(.center)
+
+                Spacer(minLength: 10)
+
+                // The written form leads (design): kanji as the hero with the kana
+                // reading above it, exactly as furigana orders them — or the kana
+                // itself as hero for kana-only words. Each line still obeys its
+                // toggle, so the Show menu means the same thing it always has.
+                VStack(spacing: 9) {
+                    if word.displaysKanji, showKanji {
+                        if showKana {
+                            Text(word.kana)
+                                .font(Theme.jp(15))
+                                .foregroundStyle(.secondary)
+                                .kerning(1.5)
+                        }
+                        Text(word.kanji)
+                            .font(Theme.jp(46))
+                            .minimumScaleFactor(0.4)
+                            .multilineTextAlignment(.center)
+                    } else if showKana {
+                        Text(word.kana)
+                            .font(Theme.jp(46))
+                            .minimumScaleFactor(0.4)
+                            .multilineTextAlignment(.center)
+                    }
+                    if showRomaji {
+                        Text(word.romaji)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .kerning(0.8)
+                    }
+                    if showTranslation {
+                        Rectangle().fill(Theme.line)
+                            .frame(width: 34, height: 1)
+                            .padding(.vertical, 5)
+                        Text(word.translation)
+                            .font(Theme.title(.title3))
+                            .multilineTextAlignment(.center)
+                        // The usage note, where the data carries one — the line the
+                        // design shows under the meaning (「あのひと」的禮貌說法).
+                        if let note = word.dictionary, !note.isEmpty {
+                            Text(note)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                    }
                 }
-                if showRomaji {
-                    Text(word.romaji).font(.title3).foregroundStyle(.secondary)
-                }
-                if showTranslation {
-                    Text(word.translation).font(.title3).foregroundStyle(Theme.accent)
-                        .multilineTextAlignment(.center)
+
+                Spacer(minLength: 10)
+
+                // Paging verbs, not grades: Today writes nothing — looking at a word
+                // is not evidence of knowing it — so "Not yet" turns back and "Got it"
+                // turns forward, through the same fling the swipe uses.
+                if picks.count > 1 {
+                    HStack(spacing: 10) {
+                        Button { pagedByButton = true; fling = -1 } label: {
+                            HStack(spacing: 7) {
+                                Image(systemName: "chevron.left")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                                Text(L.t("Not yet"))
+                            }
+                            .font(Theme.title(.subheadline))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .contentShape(RoundedRectangle(cornerRadius: 15))
+                        }
+                        .buttonStyle(.plain)
+                        .overlay(RoundedRectangle(cornerRadius: 15).stroke(Theme.line, lineWidth: 1.5))
+
+                        Button { pagedByButton = true; fling = 1 } label: {
+                            HStack(spacing: 7) {
+                                Text(L.t("Got it"))
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.semibold))
+                            }
+                            .font(Theme.title(.subheadline))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .foregroundStyle(Color(.systemBackground))
+                            .background(Color.primary, in: RoundedRectangle(cornerRadius: 15))
+                            .contentShape(RoundedRectangle(cornerRadius: 15))
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(24)
+            .padding(18)
         }
         .onTapGesture { pronouncer.speak(word) }
-        .cardPager(canPage: { picks.count > 1 }) { dir in
+        .cardPager(fling: $fling, canPage: { picks.count > 1 }) { dir in
             let count = picks.count
             index = dir > 0 ? (index + 1) % count : (index - 1 + count) % count
             autoPlay()   // explicit: every completed page-turn speaks the new word
             // Today is the landing tab, so "did anyone go past the first card" is the
             // question that decides whether it earns the slot. `depth` is how far into
-            // the deck this swipe reached — a distribution stuck at 1 means the cards
+            // the deck this turn reached — a distribution stuck at 1 means the cards
             // are wallpaper; one that runs to the end means it's the study surface.
             deepestCard = max(deepestCard, index + 1)
             Track.event("today_swipe", ["lesson": lessonNumber,
                                         "depth": deepestCard,
                                         "deck": picks.count,
-                                        "for_challenge": upNext])
+                                        "for_challenge": upNext,
+                                        "via": pagedByButton ? "button" : "swipe"])
+            pagedByButton = false
         }
     }
 

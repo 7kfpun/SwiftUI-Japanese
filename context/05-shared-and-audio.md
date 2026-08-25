@@ -87,7 +87,9 @@ for nothing.
 
 ## `CardOptionsBar` (`nihongo/Lessons/CardOptionsBar.swift`)
 
-The field-visibility + sound toggle row shown on Learn and Today. Backed directly by
+The field-visibility + sound toggle row shown on Learn. Today moved the same four
+switches into its toolbar "Show" menu in the 2026-08 redesign, but both surfaces are
+backed directly by
 `@AppStorage` (`Pref.kanjiShown`/`.kanaShown`/`.romajiShown`/`.translationShown`/`.soundOn`)
 so toggling instantly re-renders whatever card is showing — there's no intermediate
 view-model layer to keep in sync. Each toggle logs `toggle_field` with the field name and
