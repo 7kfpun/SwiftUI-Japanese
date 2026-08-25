@@ -677,6 +677,14 @@ struct Deferred<Content: View>: View {
 /// home. `canDrag` is each screen's own reason the card is currently pinned;
 /// `canCommit` covers Practice's held-flipped card, where releasing a drag must
 /// spring back no matter how far it travelled.
+/// How long a card must be held before it turns over — one number for Today,
+/// Flashcards and Practice, so the same gesture is exactly as eager everywhere.
+/// 0.2s is markedly snappier than the 0.5s system default while staying clear of
+/// the plain tap every card also carries (tap speaks, hold flips).
+enum CardFlip {
+    static let hold: TimeInterval = 0.2
+}
+
 enum CardSwipe {
     static func gesture(drag: Binding<CGSize>, threshold: CGFloat,
                         canDrag: @escaping () -> Bool,

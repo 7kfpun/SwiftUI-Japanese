@@ -830,17 +830,13 @@ private struct ChallengeResultView: View {
     /// learned and the English is only there to make it stick.
     @ViewBuilder
     private func cheerLine(_ phrase: Cheer) -> some View {
-        // Tappable: it plays again *and* draws another phrase. There are six to eight
-        // per tier and a learner meets them dozens of times, so the tap is how the rest
-        // get discovered — a phrase heard once at the end of a run is a phrase never
-        // learned. Re-rolling on tap also means the button does something visible even
-        // with the sound off.
+        // Tappable: it says the same phrase again (kf, 2026-08-26). It used to draw
+        // the *next* phrase on every tap, but the tap people actually make is "say
+        // that once more so I can catch it" — and the words swapping mid-listen was
+        // the phrase escaping exactly when someone tried to learn it. Variety still
+        // happens where it always did: a fresh phrase per result screen.
         Button {
-            guard let next = Cheer.next(stars: model.stars, passed: model.passed) else { return }
-            withAnimation(.easeOut(duration: 0.15)) { self.phrase = next }
-            pronouncer.speak(cheer: next)
-            // Whether the phrases get discovered at all is the question the tap answers,
-            // and the tier is what decides how many there are to find.
+            pronouncer.speak(cheer: phrase)
             Track.event("cheer_replay", ["stars": model.stars, "passed": model.passed])
         } label: {
             VStack(spacing: 4) {

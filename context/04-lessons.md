@@ -468,8 +468,9 @@ padlock and isn't tappable. The next playable rung is the strip's one filled chi
   *appears* on answering rather than sitting there disabled.
 - **Result** — `model.isDone`, not a phase, so no state bug can reach a score screen
   without the questions. Stars (celebrating), a stars-derived title, a **tappable cheer**
-  (replays *and* re-rolls the phrase — six to eight per tier, and the tap is how the rest
-  get discovered), three stat cards (this run / best / lesson stars, the last accented
+  (says the same phrase again — the tap people make is "once more so I can catch it",
+  and the re-roll-on-tap swapped the words mid-listen, so it went 2026-08-26; variety
+  comes from the fresh draw each result screen makes), three stat cards (this run / best / lesson stars, the last accented
   because it describes the lesson rather than the run), the missed words, a **what's-left
   banner** sized to the outcome (clean sweep → what remains in the lesson; pass → the
   third star is still there; miss → how many points short), then the forward step with

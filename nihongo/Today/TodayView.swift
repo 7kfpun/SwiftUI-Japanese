@@ -24,6 +24,7 @@ struct TodayView: View {
     @AppStorage(Pref.translationShown) private var showTranslation = true
     @AppStorage(Pref.soundOn)          private var soundOn = true
     @Environment(\.pronouncer) private var pronouncer
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.modelContext) private var context
     // Only for deciding where the capsule's tap goes — the deck itself is never gated.
     @Environment(Store.self) private var store
@@ -42,12 +43,13 @@ struct TodayView: View {
     /// Furthest card reached in this deck, so `today_swipe` reports depth rather than
     /// raw swipe count — back-and-forth on the same two cards isn't engagement.
     @State private var deepestCard = 1
-    /// Programmatic page-turn for the card's Not yet / Got it buttons, so a button
-    /// press animates exactly like a swipe (Learn's trick).
-    @State private var fling: Int?
-    /// The turn in flight came from a button — `today_swipe` reports `via` with it,
-    /// the same one-name-two-ways-in shape as `learn_shuffle`.
-    @State private var pagedByButton = false
+    /// Held down — the card shows its back. Released, it turns straight back;
+    /// same hold-to-peek as Flashcards and Practice, so one gesture means one thing
+    /// everywhere a card has a back.
+    @State private var flipped = false
+    /// This card already logged its flip — `today_flip` counts cards peeked, not
+    /// presses, matching `flashcard_flip` and `practice_peek`.
+    @State private var flippedThisCard = false
     /// Recomputed on appear rather than observed: the streak can only change by answering
     /// something, which always happens on another screen, so there is nothing to watch
     /// while Today is visible.
@@ -91,7 +93,11 @@ struct TodayView: View {
                 warmupBanner
                 if picks.count > 1 { deckSegments }
                 if let word = current { cardStack(word) } else { ProgressView().frame(maxHeight: .infinity) }
-                if picks.count > 1 { deckFooter }
+                // The gesture is invisible until tried — same one-line teacher as
+                // Flashcards, in the slot the cards-left footer used to hold.
+                Text(L.t("Long-press to see details"))
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
             }
             .padding()
             .background(Theme.canvas)
@@ -205,19 +211,6 @@ struct TodayView: View {
         .accessibilityLabel(L.t("Word %@ of %@", "\(index + 1)", "\(picks.count)"))
     }
 
-    /// What is left and where it leads, under the deck.
-    private var deckFooter: some View {
-        HStack(spacing: 8) {
-            Text(L.t("%@ cards left", "\(max(0, picks.count - 1 - index))"))
-            if hasNext {
-                Rectangle().fill(Theme.line).frame(width: 1, height: 11)
-                Text(L.t("Then straight into Challenge %@", "\(upNext)"))
-            }
-        }
-        .font(.caption)
-        .foregroundStyle(.secondary)
-    }
-
     /// The card-field toggles, moved off the canvas into the toolbar (design: the
     /// "Show" pill). Same `Pref` keys and the same `toggle_field` event as the
     /// `CardOptionsBar` this replaces on Today — Learn keeps the bar, and the two
@@ -278,7 +271,64 @@ struct TodayView: View {
         // No stamps: here a swipe only turns the page, it doesn't decide anything.
         // Movement comes from `cardPager` below rather than a drag binding, so this
         // passes no `drag` — the modifier applies the offset itself.
-        SwipeCard(showsHint: false) {
+        // The hint hides while flipped — it belongs to `SwipeCard`, which is what the
+        // 3D turn rotates, so on the back it would render mirror-written.
+        SwipeCard(showsHint: picks.count > 1 && !flipped) {
+            ZStack {
+                back(word).opacity(flipped ? 1 : 0)
+                front(word).opacity(flipped ? 0 : 1)
+            }
+        }
+        .rotation3DEffect(.degrees(flipped && !reduceMotion ? 180 : 0),
+                          axis: (x: 0, y: 1, z: 0))
+        .animation(reduceMotion ? .easeOut(duration: 0.15) : .spring(duration: 0.45),
+                   value: flipped)
+        .onTapGesture { pronouncer.speak(word) }
+        // Hold to look, release to turn back — the details (the example above all)
+        // live on the back, whatever the Show menu hides on the front.
+        .onLongPressGesture(minimumDuration: CardFlip.hold) {
+            if !flippedThisCard {
+                flippedThisCard = true
+                Track.event("today_flip", ["lesson": lessonNumber])
+            }
+            withAnimation { flipped = true }
+        } onPressingChanged: { pressing in
+            if !pressing, flipped { withAnimation { flipped = false } }
+        }
+        .sensoryFeedback(.impact(weight: .light), trigger: flipped)
+        .cardPager(canPage: { picks.count > 1 }) { dir in
+            let count = picks.count
+            index = dir > 0 ? (index + 1) % count : (index - 1 + count) % count
+            flipped = false
+            flippedThisCard = false
+            autoPlay()   // explicit: every completed page-turn speaks the new word
+            // Today is the landing tab, so "did anyone go past the first card" is the
+            // question that decides whether it earns the slot. `depth` is how far into
+            // the deck this turn reached — a distribution stuck at 1 means the cards
+            // are wallpaper; one that runs to the end means it's the study surface.
+            deepestCard = max(deepestCard, index + 1)
+            Track.event("today_swipe", ["lesson": lessonNumber,
+                                        "depth": deepestCard,
+                                        "deck": picks.count,
+                                        "for_challenge": upNext])
+        }
+    }
+
+    /// Mirrored, so it reads the right way round once the card has turned. Full
+    /// details regardless of the Show menu — the flip is the way to see everything,
+    /// and the example sentence lives only here.
+    private func back(_ word: Vocab) -> some View {
+        VocabFace(vocab: word, revealed: true,
+                  speakExample: {
+                      pronouncer.speak(example: word)
+                      Track.event("play_example", ["lesson": word.lesson,
+                                                   "surface": "today"])
+                  })
+            .padding(18)
+            .rotation3DEffect(.degrees(reduceMotion ? 0 : 180), axis: (x: 0, y: 1, z: 0))
+    }
+
+    private func front(_ word: Vocab) -> some View {
             VStack(spacing: 0) {
                 HStack {
                     // The chip states the deck's contract — these words are the test.
@@ -352,63 +402,8 @@ struct TodayView: View {
                 }
 
                 Spacer(minLength: 10)
-
-                // Paging verbs, not grades: Today writes nothing — looking at a word
-                // is not evidence of knowing it — so "Not yet" turns back and "Got it"
-                // turns forward, through the same fling the swipe uses.
-                if picks.count > 1 {
-                    HStack(spacing: 10) {
-                        Button { pagedByButton = true; fling = -1 } label: {
-                            HStack(spacing: 7) {
-                                Image(systemName: "chevron.left")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.secondary)
-                                Text(L.t("Not yet"))
-                            }
-                            .font(Theme.title(.subheadline))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 48)
-                            .contentShape(RoundedRectangle(cornerRadius: 15))
-                        }
-                        .buttonStyle(.plain)
-                        .overlay(RoundedRectangle(cornerRadius: 15).stroke(Theme.line, lineWidth: 1.5))
-
-                        Button { pagedByButton = true; fling = 1 } label: {
-                            HStack(spacing: 7) {
-                                Text(L.t("Got it"))
-                                Image(systemName: "chevron.right")
-                                    .font(.caption.weight(.semibold))
-                            }
-                            .font(Theme.title(.subheadline))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 48)
-                            .foregroundStyle(Color(.systemBackground))
-                            .background(Color.primary, in: RoundedRectangle(cornerRadius: 15))
-                            .contentShape(RoundedRectangle(cornerRadius: 15))
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
             }
             .padding(18)
-        }
-        .onTapGesture { pronouncer.speak(word) }
-        .cardPager(fling: $fling, canPage: { picks.count > 1 }) { dir in
-            let count = picks.count
-            index = dir > 0 ? (index + 1) % count : (index - 1 + count) % count
-            autoPlay()   // explicit: every completed page-turn speaks the new word
-            // Today is the landing tab, so "did anyone go past the first card" is the
-            // question that decides whether it earns the slot. `depth` is how far into
-            // the deck this turn reached — a distribution stuck at 1 means the cards
-            // are wallpaper; one that runs to the end means it's the study surface.
-            deepestCard = max(deepestCard, index + 1)
-            Track.event("today_swipe", ["lesson": lessonNumber,
-                                        "depth": deepestCard,
-                                        "deck": picks.count,
-                                        "for_challenge": upNext,
-                                        "via": pagedByButton ? "button" : "swipe"])
-            pagedByButton = false
-        }
     }
 
     /// Deal the study deck: every word the next unpassed challenge can ask — its new

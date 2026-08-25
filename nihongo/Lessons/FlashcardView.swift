@@ -100,7 +100,7 @@ struct FlashcardView: View {
         .animation(reduceMotion ? .easeOut(duration: 0.15) : .spring(duration: 0.45),
                    value: flipped)
         .onTapGesture { pronouncer.speak(word) }
-        .onLongPressGesture(minimumDuration: 0.3) {
+        .onLongPressGesture(minimumDuration: CardFlip.hold) {
             if !flippedThisCard {
                 flippedThisCard = true
                 Track.event("flashcard_flip", ["lesson": lesson.number])

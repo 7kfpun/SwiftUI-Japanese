@@ -474,7 +474,7 @@ struct PracticeView: View {
         // thing you stop doing, where a flipped card would just sit there answered. It
         // also leaves the tap free to speak the word and needs no fourth control under a
         // question that already has two answers and a way out.
-        .onLongPressGesture(minimumDuration: 0.35) {
+        .onLongPressGesture(minimumDuration: CardFlip.hold) {
             guard !revealed, model.picked == nil else { return }
             if !peeked {
                 peeked = true

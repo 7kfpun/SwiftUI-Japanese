@@ -111,7 +111,7 @@ quiz: the card is no longer a step of its own, so nothing logs it.
 | `challenge_done_tapped` | passed | Done/Back on the result screen |
 | `challenge_abandon` | question, of, correct | left mid-run — `correct` says whether the run was going badly or merely interrupted |
 | `challenge_review_play` | lesson, index | a missed word tapped to hear it again, on the result screen's "Review these" list |
-| `cheer_replay` | stars, passed | the cheer phrase tapped for another one; scoped to the tier that picks the phrase, so this row carries neither lesson nor index |
+| `cheer_replay` | stars, passed | the cheer phrase tapped to hear it again (same phrase — the re-roll-on-tap was removed 2026-08-26); scoped to the tier that picks the phrase, so this row carries neither lesson nor index |
 | `earned_first_group` | lesson, index | the 3★ sweep unlocks the first band — the rung that completed it |
 
 ### Study & play
@@ -129,9 +129,10 @@ quiz: the card is no longer a step of its own, so nothing logs it.
 | `vocab_cut` | cut, lesson | vocab list cut chip (all/notMemorized/bookmarked) |
 | `examples_shown` | on | example-sentence toggle |
 | `play_vocab` | lesson, surface (vocab_list/search/bookmarks/feedback_sheet/intro) | word tapped in a list row |
-| `play_example` | lesson, surface (vocab_list/practice/flashcards) | the example sentence tapped to hear it — logged at each caller, never inside `VocabFace`, so the surface is the caller's own fact |
+| `play_example` | lesson, surface (vocab_list/practice/flashcards/today) | the example sentence tapped to hear it — logged at each caller, never inside `VocabFace`, so the surface is the caller's own fact |
 | `play_kana` | romaji | kana tile tapped |
 | `today_swipe` | lesson, depth, deck, for_challenge | deck depth high-water mark |
+| `today_flip` | lesson | a Today card held to see its back — once per card, comparable with `flashcard_flip` and `practice_peek` |
 | `today_challenge_open` | lesson, index, locked | Today's challenge capsule tapped — `locked` marks the taps that land on the Lessons list instead of the rung |
 | `bookmark` | lesson, stars | star tier cycled |
 | `search_vocab` | query_length, results | search fires (never the query text) |
