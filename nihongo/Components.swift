@@ -677,10 +677,11 @@ struct Deferred<Content: View>: View {
 /// home. `canDrag` is each screen's own reason the card is currently pinned;
 /// `canCommit` covers Practice's held-flipped card, where releasing a drag must
 /// spring back no matter how far it travelled.
-/// How long a card must be held before it turns over — one number for Today,
-/// Flashcards and Practice, so the same gesture is exactly as eager everywhere.
-/// 0.2s is markedly snappier than the 0.5s system default while staying clear of
-/// the plain tap every card also carries (tap speaks, hold flips).
+/// How long Practice's card must be held before it peeks — the browse decks moved
+/// to a double-tap toggle (2026-08-26), but Practice keeps the hold on purpose: a
+/// peek there must *cost* something to keep, because a right answer after reading
+/// the back is uncredited. 0.2s is markedly snappier than the 0.5s system default
+/// while staying clear of the tap that speaks the word.
 enum CardFlip {
     static let hold: TimeInterval = 0.2
 }
@@ -807,6 +808,10 @@ struct ExampleSentenceView: View {
     var translation: String? = nil
     var translationFont: Font = .footnote
     var alignment: HorizontalAlignment = .center
+    /// The kanji size each column is set at; the furigana and romaji scale with it.
+    /// The lists keep the compact 14; card backs pass 18 — the flip's whole point is
+    /// reading the sentence comfortably, so there the example is the biggest thing.
+    var columnSize: CGFloat = 14
     /// Gap between the columns and the translation — the read-along playlist packs a
     /// tighter 4 into its rows; everywhere else keeps 6.
     var spacing: CGFloat = 6
@@ -857,19 +862,21 @@ struct ExampleSentenceView: View {
                         HStack(alignment: .center, spacing: 0) {
                             hiddenSpan(a.prefix)
                             Text(a.reading)
-                                .font(Theme.jp(9))
+                                .font(Theme.jp((columnSize * 0.64).rounded()))
                                 .foregroundStyle(.secondary)
                                 .layoutPriority(1)
                             hiddenSpan(a.suffix)
                         }
                     } else {
-                        Text(" ").font(Theme.jp(9))
+                        Text(" ").font(Theme.jp((columnSize * 0.64).rounded()))
                     }
                     // Quieter than the headword above the pane on purpose: the example
                     // illustrates the word, it doesn't compete with it.
-                    Text(example.kanji[i]).font(Theme.jp(14))
+                    Text(example.kanji[i]).font(Theme.jp(columnSize))
                     if example.romaji.indices.contains(i) {
-                        Text(example.romaji[i]).font(.caption2).foregroundStyle(.tertiary)
+                        Text(example.romaji[i])
+                            .font(columnSize >= 16 ? .caption : .caption2)
+                            .foregroundStyle(.tertiary)
                     }
                 }
             }
@@ -880,7 +887,7 @@ struct ExampleSentenceView: View {
     /// ruler that positions a reading over its kanji core. Zero height so the
     /// main-line font doesn't inflate the small furigana row.
     private func hiddenSpan(_ text: String) -> some View {
-        Text(text).font(Theme.jp(14)).fixedSize()
+        Text(text).font(Theme.jp(columnSize)).fixedSize()
             .frame(height: 0).hidden()
     }
 }
@@ -956,43 +963,183 @@ struct ShakeEffect: GeometryEffect {
 /// The vocab card face: kana (+ kanji), revealing meaning + romaji + example.
 /// Shared by Practice's reveal and the Flashcards deck's back — the same face, so a
 /// word looks the same wherever it is turned over.
-struct VocabFace: View {
+/// The toggle-driven word face both browse decks show as their card **front** —
+/// Today and the lesson Flashcards read the same `Pref` keys, so "what the front
+/// shows" is one choice made once, from either screen's Show menu. Set in the
+/// redesign's furigana order: reading small above the written form.
+struct VocabFront: View {
     let vocab: Vocab
-    let revealed: Bool
-    var speakExample: () -> Void = {}
+    @AppStorage(Pref.kanjiShown)       private var showKanji = true
+    @AppStorage(Pref.kanaShown)        private var showKana = true
+    @AppStorage(Pref.romajiShown)      private var showRomaji = true
+    @AppStorage(Pref.translationShown) private var showTranslation = true
+
+    /// The hero's size follows the word's length: a two-kana word earns poster type,
+    /// a ten-character compound steps down instead of wrapping into a broken block.
+    /// Counted off whichever form the hero actually shows, with `minimumScaleFactor`
+    /// kept underneath as the safety net for the true outliers.
+    private var heroText: String {
+        vocab.displaysKanji && showKanji ? vocab.kanji : vocab.kana
+    }
+    private var heroSize: CGFloat {
+        switch heroText.count {
+        case ...3:  return 62
+        case ...6:  return 50
+        case ...9:  return 40
+        default:    return 32
+        }
+    }
 
     var body: some View {
-        VStack(spacing: 14) {
-            Text(vocab.kana)
-                .font(Theme.jp(56))
-                .minimumScaleFactor(0.4)
-                .multilineTextAlignment(.center)
-            if vocab.displaysKanji {
-                Text(vocab.kanji).font(Theme.jp(22)).foregroundStyle(.secondary)
+        VStack(spacing: 9) {
+            if vocab.displaysKanji, showKanji {
+                if showKana {
+                    Text(vocab.kana)
+                        .font(Theme.jp(max(13, (heroSize * 0.3).rounded())))
+                        .foregroundStyle(.secondary)
+                        .kerning(1.5)
+                }
+                Text(vocab.kanji)
+                    .font(Theme.jp(heroSize))
+                    .minimumScaleFactor(0.5)
+                    .multilineTextAlignment(.center)
+            } else if showKana {
+                Text(vocab.kana)
+                    .font(Theme.jp(heroSize))
+                    .minimumScaleFactor(0.5)
+                    .multilineTextAlignment(.center)
             }
-            if revealed {
-                Divider().padding(.horizontal, 40)
+            if showRomaji {
+                Text(vocab.romaji)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .kerning(0.8)
+            }
+            if showTranslation {
+                Rectangle().fill(Theme.line)
+                    .frame(width: 34, height: 1)
+                    .padding(.vertical, 5)
                 Text(vocab.translation)
-                    .font(.title3)
+                    .font(Theme.title(.title3))
                     .foregroundStyle(Theme.accent)
                     .multilineTextAlignment(.center)
-                if !vocab.romaji.isEmpty {
-                    Text(vocab.romaji).font(.subheadline).foregroundStyle(.secondary)
-                }
-                // The example, after the reveal only: the front is a recall test and
-                // the sentence contains the word — showing it early would answer the
-                // card. A button (speaks on tap), because the card face's own tap is
-                // taken by pronouncing the word.
-                if let example = vocab.example {
-                    Button(action: speakExample) {
-                        ExampleSentenceView(example: example,
-                                            translation: vocab.exampleTranslation)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, 4)
+                // The usage note, where the data carries one.
+                if let note = vocab.dictionary, !note.isEmpty {
+                    Text(note)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
                 }
             }
         }
+    }
+}
+
+/// The "Show" toolbar menu that drives `VocabFront`'s toggles — one component, so
+/// Today and Flashcards offer the identical choice. Same `Pref` keys as Learn's
+/// `CardOptionsBar` and the same `toggle_field` event, so no surface can disagree.
+/// `sound: false` is for screens whose toolbar already carries a `SoundToggle`.
+struct CardShowMenu: View {
+    var sound = true
+    @AppStorage(Pref.kanjiShown)       private var showKanji = true
+    @AppStorage(Pref.kanaShown)        private var showKana = true
+    @AppStorage(Pref.romajiShown)      private var showRomaji = true
+    @AppStorage(Pref.translationShown) private var showTranslation = true
+    @AppStorage(Pref.soundOn)          private var soundOn = true
+
+    var body: some View {
+        Menu {
+            Section(L.t("Shown on the card")) {
+                toggle($showKana, L.t("Kana"), "kana")
+                toggle($showKanji, L.t("Kanji"), "kanji")
+                toggle($showRomaji, L.t("Romaji"), "romaji")
+                toggle($showTranslation, L.t("Meaning"), "meaning")
+            }
+            if sound {
+                Divider()
+                toggle($soundOn, L.t("Read automatically"), "sound")
+            }
+        } label: {
+            Label(L.t("Show"), systemImage: "eye")
+        }
+    }
+
+    private func toggle(_ value: Binding<Bool>, _ title: String, _ name: String) -> some View {
+        Toggle(title, isOn: Binding(
+            get: { value.wrappedValue },
+            set: { on in
+                value.wrappedValue = on
+                Track.event("toggle_field", ["field": name, "shown": on])
+            }))
+    }
+}
+
+struct VocabFace: View {
+    let vocab: Vocab
+    var speakExample: () -> Void = {}
+
+    /// The details face — Practice's reveal, the Flashcards back and the Today back
+    /// all draw this one view, so the three cards cannot drift apart.
+    ///
+    /// Set as a **dictionary entry, not a poster** (kf, 2026-08-26): left-aligned,
+    /// the word shrunk to a headword line — the front already showed it big — and the
+    /// example in its own `Theme.canvas` inset pane, which is what makes it the main
+    /// event structurally rather than only by font size. Flipping means "help me
+    /// understand this word", and an entry is the shape understanding reads best in.
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            // The headword line: written form, reading beside it, romaji whispered
+            // underneath — the compact top line of any dictionary entry.
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(vocab.displaysKanji ? vocab.kanji : vocab.kana)
+                        .font(Theme.jp(30))
+                    if vocab.displaysKanji {
+                        Text(vocab.kana)
+                            .font(Theme.jp(15))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .minimumScaleFactor(0.5)
+                if !vocab.romaji.isEmpty {
+                    Text(vocab.romaji)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .kerning(0.8)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(vocab.translation)
+                    .font(Theme.title(.title3))
+                    .foregroundStyle(Theme.accent)
+                // The usage note — the details face carries *all* the details.
+                if let note = vocab.dictionary, !note.isEmpty {
+                    Text(note)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .multilineTextAlignment(.leading)
+
+            // A button (speaks the sentence on tap), because the card face's own tap
+            // is taken by pronouncing the word. Canvas on the surface card — the house
+            // rule for an inset pane — is what lifts the sentence off the entry.
+            if let example = vocab.example {
+                Button(action: speakExample) {
+                    ExampleSentenceView(example: example,
+                                        translation: vocab.exampleTranslation,
+                                        translationFont: .subheadline,
+                                        alignment: .leading,
+                                        columnSize: 21)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 12))
+                        .contentShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

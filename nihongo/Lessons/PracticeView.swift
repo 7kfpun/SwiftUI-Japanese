@@ -505,7 +505,7 @@ struct PracticeView: View {
             // No "release to turn back": the finger is already holding the card down,
             // so the instruction describes what stopping would do — which the learner
             // finds out by stopping.
-            VocabFace(vocab: item.vocab, revealed: true,
+            VocabFace(vocab: item.vocab,
                       speakExample: {
                           pronouncer.speak(example: item.vocab)
                           Track.event("play_example", ["lesson": lessonNumber,
@@ -539,7 +539,7 @@ struct PracticeView: View {
                 // prompt included — so keeping the 44pt question above it repeated the
                 // word and pushed the face past the card's top edge, prompt label
                 // bleeding out over the corner.
-                VocabFace(vocab: item.vocab, revealed: true,
+                VocabFace(vocab: item.vocab,
                           speakExample: {
                               pronouncer.speak(example: item.vocab)
                               Track.event("play_example", ["lesson": lessonNumber,

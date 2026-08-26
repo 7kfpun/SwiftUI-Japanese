@@ -69,8 +69,8 @@ Defined in `nihongo/Store/Store.swift` (`Gating` enum):
 - **Today is never paywalled.** Its deck is derived from progress and walks all
   50 lessons whatever the subscription says — meeting the words is free, being
   *tested* on them is what premium buys. Its warm-up banner ("Warming up for
-  Challenge N" since the 2026-08 redesign — segment strip, hold-to-flip for
-  the full details, field toggles in a toolbar "Show" menu; nothing writes)
+  Challenge N" since the 2026-08 redesign — segment strip, double-tap-to-flip
+  for the full spoken entry, field toggles in a toolbar "Show" menu; nothing writes)
   stops at the Lessons list when the lesson is locked.
 
 Purchases are **StoreKit 2**, on-device only — no server, no shared secret.

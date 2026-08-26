@@ -17,12 +17,18 @@ struct FlashcardView: View {
 
     @AppStorage(Pref.flashcardsOrdered) private var ordered = true
     @AppStorage(Pref.soundOn) private var soundOn = true
+    @AppStorage(Pref.translationLanguage) private var language = VocabStore.deviceDefaultLanguage
+    @Environment(Store.self) private var store
     @Environment(\.pronouncer) private var pronouncer
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var index = 0
-    /// Held down — the card is showing its back. Released, it turns straight back.
+    /// Double-tap turns the card over and it stays over; double-tap again turns it
+    /// back. A single tap reads: the word on the front, the whole entry on the back.
     @State private var flipped = false
+    /// Reads the flipped entry aloud — see `TodayView.readDetails`, same rule: the
+    /// spoken meaning is Read along's paid feature, so free users get the word leg.
+    @State private var detailPlayer = LessonPlayer()
     /// This card already logged its flip — `flashcard_flip` counts cards peeked, not
     /// presses, so it stays comparable with `practice_peek` across the two screens.
     @State private var flippedThisCard = false
@@ -64,9 +70,14 @@ struct FlashcardView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            // The flag keeps its slot; the sound toggle moves inside the Show menu,
+            // exactly as on Today — one toolbar layout for both browse decks.
             FlagAndSoundToolbar(item: current.map { Feedback.Item(lesson: $0.lesson,
-                                                                  romaji: $0.romaji) })
+                                                                  romaji: $0.romaji) },
+                                sound: false)
+            ToolbarItem(placement: .topBarTrailing) { CardShowMenu() }
         }
+        .onDisappear { detailPlayer.stop() }
         .onAppear {
             autoPlay()
             Track.screen("flashcards", ["lesson": lesson.number])
@@ -99,34 +110,45 @@ struct FlashcardView: View {
                           axis: (x: 0, y: 1, z: 0))
         .animation(reduceMotion ? .easeOut(duration: 0.15) : .spring(duration: 0.45),
                    value: flipped)
-        .onTapGesture { pronouncer.speak(word) }
-        .onLongPressGesture(minimumDuration: CardFlip.hold) {
-            if !flippedThisCard {
-                flippedThisCard = true
-                Track.event("flashcard_flip", ["lesson": lesson.number])
-            }
-            withAnimation { flipped = true }
-        } onPressingChanged: { pressing in
-            if !pressing, flipped { withAnimation { flipped = false } }
+        .onTapGesture(count: 2) { toggleFlip(word) }
+        .onTapGesture {
+            if flipped { readDetails(word) } else { pronouncer.speak(word) }
         }
         .sensoryFeedback(.impact(weight: .light), trigger: flipped)
     }
 
+    /// The shared toggle-driven face — the same front, the same Show menu and the
+    /// same `Pref` keys as Today, so "what a card front shows" is one choice made
+    /// once, from either deck.
     private func front(_ word: Vocab) -> some View {
-        VStack(spacing: 14) {
-            Text(word.kana)
-                .font(Theme.jp(56))
-                .minimumScaleFactor(0.4)
-                .multilineTextAlignment(.center)
-            if word.displaysKanji {
-                Text(word.kanji).font(Theme.jp(22)).foregroundStyle(.secondary)
+        VocabFront(vocab: word)
+    }
+
+    private func toggleFlip(_ word: Vocab) {
+        withAnimation { flipped.toggle() }
+        if flipped {
+            if !flippedThisCard {
+                flippedThisCard = true
+                Track.event("flashcard_flip", ["lesson": lesson.number])
             }
+            readDetails(word)
+        } else {
+            detailPlayer.stop()
         }
+    }
+
+    private func readDetails(_ word: Vocab) {
+        guard soundOn else { return }
+        pronouncer.stop()
+        detailPlayer.stop()
+        detailPlayer.toggle([word],
+                            mode: store.isPremium ? .withExample : .japanese,
+                            language: language, loops: false)
     }
 
     /// Mirrored, so it reads the right way round once the card has turned.
     private func back(_ word: Vocab) -> some View {
-        VocabFace(vocab: word, revealed: true,
+        VocabFace(vocab: word,
                   speakExample: {
                       pronouncer.speak(example: word)
                       Track.event("play_example", ["lesson": lesson.number,
@@ -152,7 +174,7 @@ struct FlashcardView: View {
     /// already switched. The gesture is the control on a deck; the only thing worth
     /// teaching is the one that isn't discoverable.
     private var footer: some View {
-        Text(L.t("Long-press to see details"))
+        Text(L.t("Double-tap for details"))
             .font(.caption2)
             .foregroundStyle(.tertiary)
     }
@@ -164,6 +186,7 @@ struct FlashcardView: View {
     /// showing and would then silently skip the word — the same reason Learn does it here.
     private func turnPage(_ dir: Int) {
         guard !entries.isEmpty else { return }
+        detailPlayer.stop()
         flipped = false
         flippedThisCard = false
         if ordered {

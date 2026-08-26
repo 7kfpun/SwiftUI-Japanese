@@ -18,10 +18,6 @@ import WidgetKit
 /// tested on them is what premium buys.
 struct TodayView: View {
     @AppStorage(Pref.translationLanguage) private var language = VocabStore.deviceDefaultLanguage
-    @AppStorage(Pref.kanjiShown)       private var showKanji = true
-    @AppStorage(Pref.kanaShown)        private var showKana = true
-    @AppStorage(Pref.romajiShown)      private var showRomaji = true
-    @AppStorage(Pref.translationShown) private var showTranslation = true
     @AppStorage(Pref.soundOn)          private var soundOn = true
     @Environment(\.pronouncer) private var pronouncer
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -43,10 +39,14 @@ struct TodayView: View {
     /// Furthest card reached in this deck, so `today_swipe` reports depth rather than
     /// raw swipe count — back-and-forth on the same two cards isn't engagement.
     @State private var deepestCard = 1
-    /// Held down — the card shows its back. Released, it turns straight back;
-    /// same hold-to-peek as Flashcards and Practice, so one gesture means one thing
-    /// everywhere a card has a back.
+    /// Double-tap turns the card over and it *stays* over; double-tap again turns it
+    /// back (kf, 2026-08-26 — the hold was fatiguing for actually reading the entry).
+    /// A single tap reads: the word on the front, the whole entry on the back.
     @State private var flipped = false
+    /// Reads the flipped entry aloud — the read-along four-leg sequence (word,
+    /// meaning, sentence, its meaning) on a one-word list. Free users get the word
+    /// leg: the spoken meaning is the same paid feature it is in Read along.
+    @State private var detailPlayer = LessonPlayer()
     /// This card already logged its flip — `today_flip` counts cards peeked, not
     /// presses, matching `flashcard_flip` and `practice_peek`.
     @State private var flippedThisCard = false
@@ -95,7 +95,7 @@ struct TodayView: View {
                 if let word = current { cardStack(word) } else { ProgressView().frame(maxHeight: .infinity) }
                 // The gesture is invisible until tried — same one-line teacher as
                 // Flashcards, in the slot the cards-left footer used to hold.
-                Text(L.t("Long-press to see details"))
+                Text(L.t("Double-tap for details"))
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
@@ -155,6 +155,7 @@ struct TodayView: View {
                 .presentationDetents([.medium, .large])
             }
             .onChange(of: language) { loadPicks() }
+            .onDisappear { detailPlayer.stop() }
         }
     }
 
@@ -211,33 +212,8 @@ struct TodayView: View {
         .accessibilityLabel(L.t("Word %@ of %@", "\(index + 1)", "\(picks.count)"))
     }
 
-    /// The card-field toggles, moved off the canvas into the toolbar (design: the
-    /// "Show" pill). Same `Pref` keys and the same `toggle_field` event as the
-    /// `CardOptionsBar` this replaces on Today — Learn keeps the bar, and the two
-    /// screens still cannot disagree about what a card shows.
-    private var showMenu: some View {
-        Menu {
-            Section(L.t("Shown on the card")) {
-                fieldToggle($showKana, L.t("Kana"), "kana")
-                fieldToggle($showKanji, L.t("Kanji"), "kanji")
-                fieldToggle($showRomaji, L.t("Romaji"), "romaji")
-                fieldToggle($showTranslation, L.t("Meaning"), "meaning")
-            }
-            Divider()
-            fieldToggle($soundOn, L.t("Read aloud automatically"), "sound")
-        } label: {
-            Label(L.t("Show"), systemImage: "eye")
-        }
-    }
-
-    private func fieldToggle(_ value: Binding<Bool>, _ title: String, _ name: String) -> some View {
-        Toggle(title, isOn: Binding(
-            get: { value.wrappedValue },
-            set: { on in
-                value.wrappedValue = on
-                Track.event("toggle_field", ["field": name, "shown": on])
-            }))
-    }
+    /// The shared Show menu — same component Flashcards mounts, see `CardShowMenu`.
+    private var showMenu: some View { CardShowMenu() }
 
     /// To the lesson's mode list — not into the rung itself — or to the Lessons list when
     /// the lesson is behind the paywall, since the deck here is never gated and a free
@@ -283,22 +259,17 @@ struct TodayView: View {
                           axis: (x: 0, y: 1, z: 0))
         .animation(reduceMotion ? .easeOut(duration: 0.15) : .spring(duration: 0.45),
                    value: flipped)
-        .onTapGesture { pronouncer.speak(word) }
-        // Hold to look, release to turn back — the details (the example above all)
-        // live on the back, whatever the Show menu hides on the front.
-        .onLongPressGesture(minimumDuration: CardFlip.hold) {
-            if !flippedThisCard {
-                flippedThisCard = true
-                Track.event("today_flip", ["lesson": lessonNumber])
-            }
-            withAnimation { flipped = true }
-        } onPressingChanged: { pressing in
-            if !pressing, flipped { withAnimation { flipped = false } }
+        // Double-tap first: attached before the single tap, so the tap waits for the
+        // double to fail rather than firing twice on every flip.
+        .onTapGesture(count: 2) { toggleFlip(word) }
+        .onTapGesture {
+            if flipped { readDetails(word) } else { pronouncer.speak(word) }
         }
         .sensoryFeedback(.impact(weight: .light), trigger: flipped)
         .cardPager(canPage: { picks.count > 1 }) { dir in
             let count = picks.count
             index = dir > 0 ? (index + 1) % count : (index - 1 + count) % count
+            detailPlayer.stop()
             flipped = false
             flippedThisCard = false
             autoPlay()   // explicit: every completed page-turn speaks the new word
@@ -314,11 +285,35 @@ struct TodayView: View {
         }
     }
 
+    private func toggleFlip(_ word: Vocab) {
+        withAnimation { flipped.toggle() }
+        if flipped {
+            if !flippedThisCard {
+                flippedThisCard = true
+                Track.event("today_flip", ["lesson": lessonNumber])
+            }
+            readDetails(word)
+        } else {
+            detailPlayer.stop()
+        }
+    }
+
+    /// The full entry, spoken. `.japanese` without premium: hearing the meaning read
+    /// aloud is exactly what Read along sells, and this must not be its free door.
+    private func readDetails(_ word: Vocab) {
+        guard soundOn else { return }
+        pronouncer.stop()
+        detailPlayer.stop()
+        detailPlayer.toggle([word],
+                            mode: store.isPremium ? .withExample : .japanese,
+                            language: language, loops: false)
+    }
+
     /// Mirrored, so it reads the right way round once the card has turned. Full
     /// details regardless of the Show menu — the flip is the way to see everything,
     /// and the example sentence lives only here.
     private func back(_ word: Vocab) -> some View {
-        VocabFace(vocab: word, revealed: true,
+        VocabFace(vocab: word,
                   speakExample: {
                       pronouncer.speak(example: word)
                       Track.event("play_example", ["lesson": word.lesson,
@@ -355,51 +350,8 @@ struct TodayView: View {
 
                 Spacer(minLength: 10)
 
-                // The written form leads (design): kanji as the hero with the kana
-                // reading above it, exactly as furigana orders them — or the kana
-                // itself as hero for kana-only words. Each line still obeys its
-                // toggle, so the Show menu means the same thing it always has.
-                VStack(spacing: 9) {
-                    if word.displaysKanji, showKanji {
-                        if showKana {
-                            Text(word.kana)
-                                .font(Theme.jp(15))
-                                .foregroundStyle(.secondary)
-                                .kerning(1.5)
-                        }
-                        Text(word.kanji)
-                            .font(Theme.jp(46))
-                            .minimumScaleFactor(0.4)
-                            .multilineTextAlignment(.center)
-                    } else if showKana {
-                        Text(word.kana)
-                            .font(Theme.jp(46))
-                            .minimumScaleFactor(0.4)
-                            .multilineTextAlignment(.center)
-                    }
-                    if showRomaji {
-                        Text(word.romaji)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .kerning(0.8)
-                    }
-                    if showTranslation {
-                        Rectangle().fill(Theme.line)
-                            .frame(width: 34, height: 1)
-                            .padding(.vertical, 5)
-                        Text(word.translation)
-                            .font(Theme.title(.title3))
-                            .multilineTextAlignment(.center)
-                        // The usage note, where the data carries one — the line the
-                        // design shows under the meaning (「あのひと」的禮貌說法).
-                        if let note = word.dictionary, !note.isEmpty {
-                            Text(note)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                        }
-                    }
-                }
+                // The shared toggle-driven face — one front for both browse decks.
+                VocabFront(vocab: word)
 
                 Spacer(minLength: 10)
             }

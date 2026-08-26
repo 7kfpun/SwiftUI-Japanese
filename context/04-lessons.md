@@ -342,8 +342,14 @@ it was and what came next were all inferred from one highlighted row.
 
 Back after the merge, and **browse-only**. Swipe to turn (`CardPager`, the same modifier
 Learn pages with), ordered or random via a picker (`Pref.flashcardsOrdered` — its own key,
-not Learn's, because the two are different sittings), **hold to flip** for the meaning,
-romaji and example, release to turn back.
+not Learn's, because the two are different sittings), **double-tap to flip** — the card
+*stays* flipped for reading, a single tap re-reads (front: the word; back: the whole
+entry through `LessonPlayer`'s four-leg sequence, meaning legs premium exactly as in
+Read along), double-tap again to turn back. Practice alone keeps hold-to-peek, because
+there a peek must cost something to hold. The front is the shared toggle-driven `VocabFront`; the toolbar
+keeps the report flag and mounts the same `CardShowMenu` as Today, with the sound toggle
+living inside the menu on both decks — so what a card front shows is one choice made
+once, from either screen.
 
 Two corrections worth keeping: the pager sat on the enclosing `ZStack`, so the peek
 layers flung along with the front card and the deck left as one slab — it belongs on the
@@ -364,8 +370,14 @@ confidence, not recall. What survived is the part that never needed a verdict: m
 words one at a time, at your own pace. Ordered is the default here (Practice's queue
 shuffles) because a first walk through a lesson wants the order the course teaches in.
 
-`VocabFace` — the card back — is shared with Practice's reveal (`Components.swift`), so a
-word looks the same wherever it is turned over.
+`VocabFace` — the card back — is shared with Practice's reveal and the Today card's back
+(`Components.swift`), so a word looks the same wherever it is turned over. Set as a
+**dictionary entry, not a poster** (kf): left-aligned, the word reduced to a headword
+line with its reading and romaji, the meaning and usage note beneath, and the **example
+in a `Theme.canvas` inset pane at 21pt columns** — the biggest thing on the face by
+structure and size both, because flipping means "help me understand this word". The
+front is the shared `VocabFront`, whose kana/kanji/romaji/meaning lines the Show menu
+toggles on both decks alike.
 
 ## §3 Match — pair the columns (`Lessons/MatchView.swift`)
 

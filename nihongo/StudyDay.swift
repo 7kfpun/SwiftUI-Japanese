@@ -230,16 +230,11 @@ struct StreakBadge: View {
                 }
                 .font(.footnote.weight(.bold))
                 .foregroundStyle(Color.streak)
-                .padding(.horizontal, 9)
-                .padding(.vertical, 4)
-                .background(Color.streak.opacity(streak.studiedToday ? 0.15 : 0.10), in: Capsule())
-                .overlay(
-                    // Only the at-risk state is outlined. A filled capsule reads as
-                    // settled; an outlined one reads as unfinished, which is exactly the
-                    // difference being communicated.
-                    Capsule().strokeBorder(Color.streak.opacity(streak.atRisk ? 0.55 : 0),
-                                           lineWidth: 1)
-                )
+                // No self-drawn capsule: iOS 26 wraps toolbar items in their own
+                // circular chrome, and the badge's tinted pill inside the system's
+                // white circle read as a button in a button. The states survive
+                // without it — hollow/filled flame for open/done, the pulse for
+                // at-risk.
             }
             .buttonStyle(.plain)
             .accessibilityElement(children: .combine)

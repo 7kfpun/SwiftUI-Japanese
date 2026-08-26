@@ -122,7 +122,8 @@ deliberately picks a sample word that *has* a distinct kanji (`09-intro-and-surv
 | `EmptyStatePanel` | Progress, Bookmarks | Art over one line of guidance on the canvas; the art closure is the one per-site difference |
 | `IconCount` | `ScoreBadge`, Kana Flashcards header | Tinted icon+number atom; `Image`+`Text`, never `Label` (toolbars strip a `Label`'s text) |
 | `KanaDirectionBar` | Kana Classic/Listening, Kana Swipe | from → to with bordered swap buttons; listening replaces the prompt side with a speaker |
-| `ExampleSentenceView(translation:)` | `VocabFace`, vocab rows, Read along playlist | The furigana columns now take the translated line too — three screens stacked the same pair in three fonts |
+| `ExampleSentenceView(translation:)` | `VocabFace`, vocab rows, Read along playlist | The furigana columns take the translated line too; `columnSize` scales a whole column (lists 14, card backs 18 — the flip exists to read the sentence, so there it is the biggest thing) |
+| `VocabFront` + `CardShowMenu` | Today, lesson Flashcards | The toggle-driven card front and the toolbar Show menu that drives it — one choice, either deck, same `Pref` keys and `toggle_field` event as Learn's `CardOptionsBar` |
 
 The 2026-08 extraction pass (everything from `CardSwipe` down) came out of an audit
 that found each of these copied at two to six call sites, already drifting. The two
