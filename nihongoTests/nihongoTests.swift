@@ -123,7 +123,7 @@ struct DataTests {
         // Lower bar than the rating: this asks for a recommendation, not a public verdict.
         #expect(SharePrompt.challengesRequired == 7)
         #expect(SharePrompt.challengesRequired < RatingPrompt.challengesRequired)
-        // The windows are deliberately the *same* two months — the prompts are separated
+        // The windows are deliberately the *same* forty days — the prompts are separated
         // by what they ask for and by the rating's precedence, not by cadence. What must
         // never converge is the storage: one key would let each silence the other.
         #expect(SharePrompt.askAgainAfter == RatingPrompt.askAgainAfter)
@@ -1120,6 +1120,73 @@ struct PremiumTests {
         #expect(!RatingPrompt.shouldAsk(isPremium: true, passed: true, passedCount: enough - 1))
     }
 
+    /// The stuck prompt fires on the outcome the other two refuse, and only after a run of
+    /// them. The first miss staying silent is the whole design: asking there would turn an
+    /// ordinary retry into a suggestion that something is broken.
+    @Test func stuckPromptNeedsAFailedRunAndARunOfThem() {
+        let enough = FeedbackPrompt.missesRequired
+        // The window is ambient state — a real run on this simulator could have stamped it,
+        // and then the positive case below would fail for a reason that isn't the subject.
+        let savedAsk = UserDefaults.standard.object(forKey: Pref.feedbackAskedAt)
+        defer { UserDefaults.standard.set(savedAsk, forKey: Pref.feedbackAskedAt) }
+        UserDefaults.standard.removeObject(forKey: Pref.feedbackAskedAt)
+
+        #expect(FeedbackPrompt.shouldAsk(passed: false, missCount: enough))
+        // A pass never reaches it, however many earlier runs fell short.
+        #expect(!FeedbackPrompt.shouldAsk(passed: true, missCount: enough))
+        // One stumble is not a pattern.
+        #expect(!FeedbackPrompt.shouldAsk(passed: false, missCount: enough - 1))
+        #expect(!FeedbackPrompt.shouldAsk(passed: false, missCount: 0))
+        #expect(FeedbackPrompt.missesRequired > 1)
+    }
+
+    /// The structural reason this prompt needs no precedence rule, unlike the recommend
+    /// nudge: no outcome exists where it and either of the other two are both willing. If
+    /// someone ever relaxes the `!passed` here, or the `passed` there, this is what says so.
+    @Test func stuckPromptCanNeverShareAnOccasionWithTheOtherTwo() {
+        for passed in [true, false] {
+            for count in [0, 7, 14, 21, 50] {
+                let stuck = FeedbackPrompt.shouldAsk(passed: passed, missCount: count)
+                let rating = RatingPrompt.shouldAsk(isPremium: true, passed: passed,
+                                                    passedCount: count)
+                let share = SharePrompt.shouldAsk(passed: passed, passedCount: count,
+                                                  ratingShown: false)
+                #expect(!(stuck && rating))
+                #expect(!(stuck && share))
+            }
+        }
+        // Same cadence as the other two, and never the same storage — one shared key would
+        // let whichever fired last silence the rest.
+        #expect(FeedbackPrompt.askAgainAfter == RatingPrompt.askAgainAfter)
+        #expect(Pref.feedbackAskedAt != Pref.ratingAskedAt)
+        #expect(Pref.feedbackAskedAt != Pref.shareAskedAt)
+        #expect(Pref.challengeMissCount != Pref.feedbackAskedAt)
+    }
+
+    /// The tally has to survive across runs, because the three misses it counts are three
+    /// separate sittings — a counter that reset would never reach the bar.
+    @Test func missTallyAccumulatesAndResetClearsIt() {
+        let key = Pref.challengeMissCount
+        let saved = UserDefaults.standard.object(forKey: key)
+        let savedAsk = UserDefaults.standard.object(forKey: Pref.feedbackAskedAt)
+        defer {
+            UserDefaults.standard.set(saved, forKey: key)
+            UserDefaults.standard.set(savedAsk, forKey: Pref.feedbackAskedAt)
+        }
+
+        UserDefaults.standard.removeObject(forKey: key)
+        #expect(FeedbackPrompt.missCount == 0)
+        #expect(FeedbackPrompt.recordMiss() == 1)
+        #expect(FeedbackPrompt.recordMiss() == 2)
+        #expect(FeedbackPrompt.missCount == 2)
+
+        // Reset clears the tally as well as the timer: clearing only the timer would leave
+        // a prompt armed to fire on the very next miss, which is not a fresh install.
+        FeedbackPrompt.resetAsked()
+        #expect(FeedbackPrompt.missCount == 0)
+        #expect(FeedbackPrompt.lastAskedAt == nil)
+    }
+
     /// Reading the Japanese aloud is free on every lesson — locked or not, premium or not.
     /// Only the meanings are paid, and only the meanings get cut short.
     ///
@@ -1673,7 +1740,7 @@ struct SurveyTests {
     /// Every closed-set value in the feedback payload, against the rules' own lists. A value
     /// the app can produce but the rules reject is a submission that vanishes.
     @Test func feedbackEnumsAreWithinWhatTheRulesAccept() {
-        let sources: Set<String> = ["settings", "rating", "hidden", "card"]
+        let sources: Set<String> = ["settings", "rating", "hidden", "card", "stuck"]
         #expect(Set(Feedback.Source.allCases.map(\.rawValue)) == sources)
         let areas: Set<String> = ["audio", "kana", "lesson", "challenge",
                                   "today", "watch", "purchase", "other"]

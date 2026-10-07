@@ -114,8 +114,12 @@ service cloud.firestore {
                     && request.resource.data.email.size() <= 254
                     // `card` is the flag on a practice screen — the route that
                     // arrives already knowing which word it is about, and the only
-                    // one that fills `lesson` and `item`.
-                    && request.resource.data.source in ['settings', 'rating', 'hidden', 'card']
+                    // one that fills `lesson` and `item`. `stuck` is the prompt
+                    // after a third missed run — the one route the app offers
+                    // unasked, and the only population writing in while the app is
+                    // actively failing them.
+                    && request.resource.data.source in ['settings', 'rating', 'hidden',
+                                                        'card', 'stuck']
                     // 1-5 when opened from the star row, 0 otherwise — present
                     // either way, so a complaint reads next to its own rating.
                     && request.resource.data.stars is int

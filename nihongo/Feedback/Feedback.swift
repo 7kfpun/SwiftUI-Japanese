@@ -29,9 +29,15 @@ enum Feedback {
     /// grouped by, so a new route needs a new value — and the rules' `source in [...]` list
     /// has to gain it in the same edit or every one of these writes is rejected.
     ///
+    /// `stuck` is the fifth, and the only one the app offers to someone who did *not* ask
+    /// for it and did *not* just rate it: `FeedbackPrompt` raises it after a third missed
+    /// run. Worth its own value because the population is the opposite of `rating`'s —
+    /// these rows come from people the app is currently failing, and reading them mixed in
+    /// with volunteered prose would hide exactly the pattern they exist to show.
+    ///
     /// `CaseIterable` so `SurveyTests` can pin the whole set against that list.
     enum Source: String, CaseIterable {
-        case settings, rating, hidden, card
+        case settings, rating, hidden, card, stuck
     }
 
     /// What the report is about. Small and closed so the collection is sortable at all,

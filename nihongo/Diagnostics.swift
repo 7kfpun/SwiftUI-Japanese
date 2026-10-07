@@ -55,6 +55,12 @@ struct DiagnosticsView: View {
     @State private var shareAskedAt = SharePrompt.lastAskedAt
     @State private var showSharePrompt = false
     @State private var showShareSheet = false
+    /// Same mirroring, for the prompt that fires on a *failed* rung. The miss tally needs
+    /// one too: it is a plain integer key, so the row would otherwise keep showing the
+    /// count from when the screen opened.
+    @State private var feedbackAskedAt = FeedbackPrompt.lastAskedAt
+    @State private var missCount = FeedbackPrompt.missCount
+    @State private var showStuckPrompt = false
 
     private struct FeedbackRequest: Identifiable {
         let id = UUID()
@@ -126,6 +132,32 @@ struct DiagnosticsView: View {
                     Text("Recommend to a friend")
                 } footer: {
                     Text("Fires after a passed rung once \(SharePrompt.challengesRequired) rungs are cleared, at most once every \(Int(SharePrompt.askAgainAfter / 86_400)) days. It stands down entirely on any rung where the star row appears — the rating is additionally rate-limited by Apple, so a wasted occasion costs it more. Sends people to \(Course.current.appStoreURL).")
+                }
+
+                Section {
+                    // Same discipline again: the real nudge, and the real sheet it leads
+                    // to, with only `shouldAsk` bypassed.
+                    Button("Show the stuck nudge") { showStuckPrompt = true }
+                    Button("Open feedback as 'stuck'") {
+                        feedbackRequest = FeedbackRequest(source: .stuck, stars: 0)
+                    }
+                    LabeledContent("Nudge last shown",
+                                   value: feedbackAskedAt
+                                       .map { $0.formatted(date: .abbreviated, time: .shortened) }
+                                       ?? "never")
+                    LabeledContent("Missed runs recorded", value: "\(missCount)")
+                    LabeledContent("Misses required", value: "\(FeedbackPrompt.missesRequired)")
+                    Button("Reset the window and the tally") {
+                        FeedbackPrompt.resetAsked()
+                        feedbackAskedAt = FeedbackPrompt.lastAskedAt
+                        missCount = FeedbackPrompt.missCount
+                    }
+                } header: {
+                    Text("Stuck on a rung")
+                } footer: {
+                    // Spelling out the exclusivity, because it is the reason this prompt
+                    // needs no precedence rule and the other two do.
+                    Text("Fires after a rung that was *failed*, once \(FeedbackPrompt.missesRequired) runs have fallen short, at most once every \(Int(FeedbackPrompt.askAgainAfter / 86_400)) days. The star row and the recommend nudge both require a pass, so this one can never collide with either. Rows arrive with source 'stuck' and no stars — the rules must already accept that value or every one of them is rejected.")
                 }
 
                 Section {
@@ -218,6 +250,14 @@ struct DiagnosticsView: View {
             .shareSheet(isPresented: $showShareSheet,
                         items: [SharePrompt.appStoreURL(campaign: .prompt),
                                             SharePrompt.shareText(campaign: .prompt)])
+            // Routed the real way — the nudge hands off to the feedback sheet through the
+            // same `feedbackRequest` the rows above use, so what a tester sees is the flow
+            // and not an approximation of it.
+            .sheet(isPresented: $showStuckPrompt) {
+                StuckFeedbackPrompt {
+                    feedbackRequest = FeedbackRequest(source: .stuck, stars: 0)
+                }
+            }
         }
     }
 

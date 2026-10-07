@@ -1,0 +1,121 @@
+# Publishes `firestore.rules` to the kf-nihongo Firebase project.
+#
+# Why this exists: the rules close every collection's field set with `hasOnly`/`hasAll`
+# and pin the closed-value lists (`source in [...]`, `kind in [...]`). A rules change that
+# is merged but never deployed does not fail loudly — it rejects *every* matching write,
+# visible only as a console line and a `survey_failed` event. Deploying on merge means the
+# rules are live before any build carrying the matching app change can reach anyone.
+#
+# Scope is load-bearing. `firebase.json` declares `hosting` as well as `firestore`, so a
+# bare `firebase deploy` would publish the website too. Every command here is pinned to
+# `--only firestore:rules`; keep it that way.
+#
+# Setup: one repository secret, `FIREBASE_SERVICE_ACCOUNT`, holding the JSON key of a
+# service account with the "Firebase Rules Admin" and "Firebase Admin SDK Administrator
+# Service Agent" roles on kf-nihongo. Without it the deploy job fails closed rather than
+# silently skipping, because a workflow that quietly does nothing is the failure mode this
+# file is meant to remove.
+name: Firestore rules
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - firestore.rules
+      - firebase.json
+      - .firebaserc
+      - .github/workflows/firestore-rules.yml
+  pull_request:
+    paths:
+      - firestore.rules
+      - firebase.json
+      - .firebaserc
+      - nihongo/Feedback/Feedback.swift
+      - .github/workflows/firestore-rules.yml
+  workflow_dispatch:
+
+concurrency:
+  # One deploy at a time; a superseded push has nothing worth finishing.
+  group: firestore-rules-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Catches the mistake that motivated the workflow: adding a `Feedback.Source` case and
+  # forgetting the rules' own list, which rejects every write from the new route. The Swift
+  # suite checks this too (`SurveyTests.feedbackEnumsAreWithinWhatTheRulesAccept`), but that
+  # needs a Mac runner — this runs on every pull request for free.
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Feedback sources match the rules
+        run: |
+          python3 - <<'PY'
+          import re, sys, pathlib
+
+          swift = pathlib.Path("nihongo/Feedback/Feedback.swift").read_text(encoding="utf-8")
+          rules = pathlib.Path("firestore.rules").read_text(encoding="utf-8")
+
+          match = re.search(r"enum Source: String, CaseIterable \{\s*case ([^\n}]+)", swift)
+          if not match:
+              sys.exit("could not find Feedback.Source in Feedback.swift")
+          cases = {c.strip() for c in match.group(1).split(",") if c.strip()}
+
+          # The rules list may wrap across lines, so flatten before matching.
+          flat = " ".join(rules.split())
+          listed = re.search(r"data\.source in \[([^\]]+)\]", flat)
+          if not listed:
+              sys.exit("could not find the source list in firestore.rules")
+          allowed = {v.strip().strip("'\"") for v in listed.group(1).split(",")}
+
+          if cases != allowed:
+              sys.exit(
+                  "Feedback.Source and firestore.rules disagree.\n"
+                  f"  only in Swift: {sorted(cases - allowed) or 'none'}\n"
+                  f"  only in rules: {sorted(allowed - cases) or 'none'}\n"
+                  "A source the rules reject is a submission that vanishes silently."
+              )
+          print("sources agree:", ", ".join(sorted(cases)))
+          PY
+
+  deploy:
+    # Only from main, and only after validate passes. Pull requests never deploy — a fork's
+    # PR must not be able to publish rules.
+    if: github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: firebase
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install firebase-tools
+        run: npm install -g firebase-tools
+
+      - name: Write the service account key
+        env:
+          KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "::error::FIREBASE_SERVICE_ACCOUNT is not set — rules were NOT deployed."
+            exit 1
+          fi
+          printf '%s' "$KEY" > "$RUNNER_TEMP/firebase-key.json"
+
+      - name: Deploy the rules
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-key.json
+        # `--only firestore:rules` is the whole safety story — see this file's header.
+        run: |
+          firebase deploy \
+            --only firestore:rules \
+            --project kf-nihongo \
+            --non-interactive \
+            --message "${{ github.sha }}"
+
+      - name: Remove the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/firebase-key.json"

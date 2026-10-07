@@ -58,16 +58,21 @@ enum SharePrompt {
 
     // MARK: - The nudge
 
-    /// Two months, at most. Long enough that it reads as a suggestion rather than a
+    /// Forty days, at most. Long enough that it reads as a suggestion rather than a
     /// campaign; short enough to catch someone in a stretch of real use.
-    static let askAgainAfter: TimeInterval = 60 * 24 * 60 * 60
+    ///
+    /// Equal to `RatingPrompt.askAgainAfter` and moved with it when that was cut from
+    /// sixty — a test pins the two together. Cadence is deliberately not what separates
+    /// these prompts; what they ask for is.
+    static let askAgainAfter: TimeInterval = 40 * 24 * 60 * 60
 
     /// Rungs passed before the app suggests anything — about a lesson's worth.
     ///
-    /// A third of the rating's 21, and deliberately: that one asks for a public verdict on
-    /// the App Store, which needs a body of experience behind it. This asks someone to
-    /// mention the app to a friend, which needs only that the app has visibly worked for
-    /// them.
+    /// Deliberately below the rating's bar: that one asks for a public verdict on the App
+    /// Store, which needs a body of experience behind it. This asks someone to mention the
+    /// app to a friend, which needs only that the app has visibly worked for them. This
+    /// number stayed at 7 when the rating's was cut to 14, so the gap narrowed from
+    /// threefold to double — the ordering is what the test pins, and what matters.
     static let challengesRequired = 7
 
     static var lastAskedAt: Date? {

@@ -50,9 +50,19 @@ enum Pref {
     static let ratingAskedAt       = "ratingAskedAt"
     /// When the "recommend it to a friend" nudge was last shown, as
     /// `timeIntervalSince1970`. Separate from `ratingAskedAt` on purpose: the two prompts
-    /// have different audiences and different windows (monthly here, quarterly there),
-    /// and sharing a key would make each one silence the other — see `SharePrompt`.
+    /// ask different things of the same person, and sharing a key would make each one
+    /// silence the other — see `SharePrompt`.
     static let shareAskedAt        = "shareAskedAt"
+    /// When the stuck-feedback prompt was last shown, as `timeIntervalSince1970`. Its own
+    /// key for the same reason the other two have theirs — see `FeedbackPrompt`.
+    static let feedbackAskedAt     = "feedbackAskedAt"
+    /// How many challenge runs have fallen short on this install.
+    ///
+    /// A local tally, not progress: `ChallengeResult` keeps only the *best* score per rung
+    /// (see `better(_:_:)`), so a miss leaves nothing behind to count and the number can't
+    /// be derived after the fact. Never written to a server and never read as achievement —
+    /// its only reader is `FeedbackPrompt.missesRequired`.
+    static let challengeMissCount  = "challengeMissCount"
 
     // MARK: Notifications (see nihongo/StreakReminder.swift)
 

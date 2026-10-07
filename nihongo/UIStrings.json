@@ -325,7 +325,8 @@
     "You answer": "You answer",
     "Your best only goes up — replaying never costs a star you have.": "Your best only goes up — replaying never costs a star you have.",
     "You see": "You see",
-    "Your rating comes with this message.": "Your rating comes with this message."
+    "Your rating comes with this message.": "Your rating comes with this message.",
+    "Stuck on this one?": "Stuck on this one?"
   },
   "zh": {
     "Kana": "假名",
@@ -653,7 +654,8 @@
     "You answer": "答什么",
     "Your best only goes up — replaying never costs a star you have.": "最佳成绩只会往上，重玩不会扣掉已拿到的星星。",
     "You see": "看什么",
-    "Your rating comes with this message.": "你的评分会随这条留言一起发送。"
+    "Your rating comes with this message.": "你的评分会随这条留言一起发送。",
+    "Stuck on this one?": "这一关卡住了吗？"
   },
   "zh-Hant": {
     "Kana": "假名",
@@ -981,7 +983,8 @@
     "You answer": "答什麼",
     "Your best only goes up — replaying never costs a star you have.": "最佳成績只會往上，重玩不會扣掉已拿到的星星。",
     "You see": "看什麼",
-    "Your rating comes with this message.": "你的評分會隨這則訊息一起送出。"
+    "Your rating comes with this message.": "你的評分會隨這則訊息一起送出。",
+    "Stuck on this one?": "這一關卡住了嗎？"
   },
   "vi": {
     "Kana": "Kana",
@@ -1309,7 +1312,8 @@
     "You answer": "Bạn trả lời",
     "Your best only goes up — replaying never costs a star you have.": "Điểm tốt nhất chỉ tăng — chơi lại không mất sao đã có.",
     "You see": "Bạn thấy",
-    "Your rating comes with this message.": "Đánh giá của bạn sẽ được gửi kèm."
+    "Your rating comes with this message.": "Đánh giá của bạn sẽ được gửi kèm.",
+    "Stuck on this one?": "Bạn đang mắc kẹt ở phần này?"
   },
   "de": {
     "Kana": "Kana",
@@ -1637,7 +1641,8 @@
     "You answer": "Du antwortest",
     "Your best only goes up — replaying never costs a star you have.": "Dein Bestwert steigt nur — ein neuer Versuch kostet keinen Stern.",
     "You see": "Du siehst",
-    "Your rating comes with this message.": "Deine Bewertung wird mitgesendet."
+    "Your rating comes with this message.": "Deine Bewertung wird mitgesendet.",
+    "Stuck on this one?": "Kommst du hier nicht weiter?"
   },
   "th": {
     "Kana": "คานะ",
@@ -1965,7 +1970,8 @@
     "You answer": "สิ่งที่ตอบ",
     "Your best only goes up — replaying never costs a star you have.": "สถิติดีที่สุดมีแต่เพิ่ม เล่นซ้ำไม่เสียดาวที่ได้แล้ว",
     "You see": "สิ่งที่เห็น",
-    "Your rating comes with this message.": "คะแนนของคุณจะถูกส่งไปพร้อมข้อความนี้"
+    "Your rating comes with this message.": "คะแนนของคุณจะถูกส่งไปพร้อมข้อความนี้",
+    "Stuck on this one?": "ติดอยู่ตรงนี้ไหม"
   },
   "my": {
     "Kana": "ကာနာ",
@@ -2293,7 +2299,8 @@
     "You answer": "ဖြေရသည်",
     "Your best only goes up — replaying never costs a star you have.": "အကောင်းဆုံးရမှတ်မှာ တက်ရုံသာဖြစ်ပြီး ပြန်ကစားခြင်းက ကြယ်မဆုံးရှုံးပါ။",
     "You see": "မြင်ရသည်",
-    "Your rating comes with this message.": "သင့်အဆင့်သတ်မှတ်ချက် ဤစာနှင့်အတူ ပါသွားမည်။"
+    "Your rating comes with this message.": "သင့်အဆင့်သတ်မှတ်ချက် ဤစာနှင့်အတူ ပါသွားမည်။",
+    "Stuck on this one?": "ဒီအဆင့်မှာ ပိတ်နေလား?"
   },
   "es": {
     "Kana": "Kana",
@@ -2621,7 +2628,8 @@
     "You answer": "Respondes",
     "Your best only goes up — replaying never costs a star you have.": "Tu mejor marca solo sube: repetir nunca te quita una estrella.",
     "You see": "Ves",
-    "Your rating comes with this message.": "Tu valoración se envía con este mensaje."
+    "Your rating comes with this message.": "Tu valoración se envía con este mensaje.",
+    "Stuck on this one?": "¿Te has atascado aquí?"
   },
   "fr": {
     "Kana": "Kana",
@@ -2949,7 +2957,8 @@
     "You answer": "Tu réponds",
     "Your best only goes up — replaying never costs a star you have.": "Ton meilleur score ne fait que monter — rejouer ne coûte aucune étoile.",
     "You see": "Tu vois",
-    "Your rating comes with this message.": "Votre note est envoyée avec ce message."
+    "Your rating comes with this message.": "Votre note est envoyée avec ce message.",
+    "Stuck on this one?": "Tu bloques sur celui-ci ?"
   },
   "it": {
     "Kana": "Kana",
@@ -3277,7 +3286,8 @@
     "You answer": "Rispondi",
     "Your best only goes up — replaying never costs a star you have.": "Il tuo record sale soltanto: rigiocare non toglie stelle.",
     "You see": "Vedi",
-    "Your rating comes with this message.": "La tua valutazione viene inviata con questo messaggio."
+    "Your rating comes with this message.": "La tua valutazione viene inviata con questo messaggio.",
+    "Stuck on this one?": "Ti sei bloccato qui?"
   },
   "ru": {
     "Kana": "Кана",
@@ -3605,7 +3615,8 @@
     "You answer": "Вы отвечаете",
     "Your best only goes up — replaying never costs a star you have.": "Лучший результат только растёт — повтор не отнимет звезду.",
     "You see": "Вы видите",
-    "Your rating comes with this message.": "Ваша оценка отправится вместе с сообщением."
+    "Your rating comes with this message.": "Ваша оценка отправится вместе с сообщением.",
+    "Stuck on this one?": "Застряли на этом?"
   },
   "bn": {
     "Kana": "কানা",
@@ -3933,7 +3944,8 @@
     "You answer": "আপনি উত্তর দেবেন",
     "Your best only goes up — replaying never costs a star you have.": "আপনার সেরা ফল কেবল বাড়ে — আবার খেললে পাওয়া তারা যায় না।",
     "You see": "আপনি দেখবেন",
-    "Your rating comes with this message.": "আপনার রেটিং এই বার্তার সঙ্গে যাবে।"
+    "Your rating comes with this message.": "আপনার রেটিং এই বার্তার সঙ্গে যাবে।",
+    "Stuck on this one?": "এখানে আটকে গেছেন?"
   },
   "hi": {
     "Kana": "काना",
@@ -4261,7 +4273,8 @@
     "You answer": "आप जवाब देंगे",
     "Your best only goes up — replaying never costs a star you have.": "आपका सर्वश्रेष्ठ सिर्फ़ बढ़ता है — दोबारा खेलने से सितारा नहीं जाता।",
     "You see": "आप देखेंगे",
-    "Your rating comes with this message.": "आपकी रेटिंग इस संदेश के साथ जाएगी।"
+    "Your rating comes with this message.": "आपकी रेटिंग इस संदेश के साथ जाएगी।",
+    "Stuck on this one?": "यहाँ अटक गए?"
   },
   "ta": {
     "Kana": "கானா",
@@ -4589,7 +4602,8 @@
     "You answer": "நீங்கள் பதிலளிப்பது",
     "Your best only goes up — replaying never costs a star you have.": "உங்கள் சிறந்த மதிப்பெண் உயரும் மட்டுமே — மீண்டும் விளையாடினால் நட்சத்திரம் போகாது.",
     "You see": "நீங்கள் பார்ப்பது",
-    "Your rating comes with this message.": "உங்கள் மதிப்பீடு இச்செய்தியுடன் செல்லும்."
+    "Your rating comes with this message.": "உங்கள் மதிப்பீடு இச்செய்தியுடன் செல்லும்.",
+    "Stuck on this one?": "இதில் சிக்கிக்கொண்டீர்களா?"
   },
   "te": {
     "Kana": "కానా",
@@ -4917,7 +4931,8 @@
     "You answer": "మీరు జవాబిచ్చేది",
     "Your best only goes up — replaying never costs a star you have.": "మీ అత్యుత్తమ స్కోరు పెరుగుతుంది మాత్రమే — మళ్లీ ఆడితే నక్షత్రం పోదు.",
     "You see": "మీరు చూసేది",
-    "Your rating comes with this message.": "మీ రేటింగ్ ఈ సందేశంతో పాటు వెళుతుంది."
+    "Your rating comes with this message.": "మీ రేటింగ్ ఈ సందేశంతో పాటు వెళుతుంది.",
+    "Stuck on this one?": "ఇక్కడ ఇరుక్కుపోయారా?"
   },
   "ne": {
     "Kana": "काना",
@@ -5245,7 +5260,8 @@
     "You answer": "तपाईं जवाफ दिनुहुन्छ",
     "Your best only goes up — replaying never costs a star you have.": "तपाईंको उत्कृष्ट अङ्क बढ्छ मात्र — फेरि खेल्दा तारा जाँदैन।",
     "You see": "तपाईं देख्नुहुन्छ",
-    "Your rating comes with this message.": "तपाईंको मूल्याङ्कन यो सन्देशसँगै जान्छ।"
+    "Your rating comes with this message.": "तपाईंको मूल्याङ्कन यो सन्देशसँगै जान्छ।",
+    "Stuck on this one?": "यहाँ अड्किनुभयो?"
   },
   "fil": {
     "Kana": "Kana",
@@ -5573,7 +5589,8 @@
     "You answer": "Isasagot mo",
     "Your best only goes up — replaying never costs a star you have.": "Tumataas lang ang pinakamahusay mo — hindi nababawasan ang bituin.",
     "You see": "Makikita mo",
-    "Your rating comes with this message.": "Kasama ang rating mo sa mensaheng ito."
+    "Your rating comes with this message.": "Kasama ang rating mo sa mensaheng ito.",
+    "Stuck on this one?": "Nahihirapan ka ba rito?"
   },
   "id": {
     "Kana": "Kana",
@@ -5901,7 +5918,8 @@
     "You answer": "Yang dijawab",
     "Your best only goes up — replaying never costs a star you have.": "Nilai terbaikmu hanya naik — mengulang tak mengurangi bintang.",
     "You see": "Yang dilihat",
-    "Your rating comes with this message.": "Penilaian ikut terkirim bersama pesan ini."
+    "Your rating comes with this message.": "Penilaian ikut terkirim bersama pesan ini.",
+    "Stuck on this one?": "Kesulitan di bagian ini?"
   },
   "ko": {
     "Kana": "가나",
@@ -6229,6 +6247,7 @@
     "You answer": "답하는 것",
     "Your best only goes up — replaying never costs a star you have.": "최고 기록은 오르기만 해요 — 다시 해도 별은 줄지 않아요.",
     "You see": "보는 것",
-    "Your rating comes with this message.": "보내신 별점도 함께 전달돼요."
+    "Your rating comes with this message.": "보내신 별점도 함께 전달돼요.",
+    "Stuck on this one?": "이 단계에서 막히셨나요?"
   }
 }

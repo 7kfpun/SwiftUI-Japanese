@@ -30,6 +30,12 @@ struct ChallengeView: View {
     /// Raised after the nudge dismisses — see `ShareSheetPrompt`, which can't present the
     /// system share sheet from a view that is already going away.
     @State private var showShareSheet = false
+    /// The ask after a third missed run, and the sheet it leads to. Two flags for the same
+    /// reason the share pair needs two: `StuckFeedbackPrompt` dismisses itself before the
+    /// feedback sheet can be presented, and presenting from a view on its way out is
+    /// silently dropped.
+    @State private var showStuckPrompt = false
+    @State private var showStuckFeedback = false
     /// What the star row returned, or nil if it was dismissed without an answer.
     @State private var ratedStars: Int?
     /// The same number, kept for the feedback sheet to carry. Separate because
@@ -195,6 +201,14 @@ struct ChallengeView: View {
         .shareSheet(isPresented: $showShareSheet,
                     items: [SharePrompt.appStoreURL(campaign: .prompt),
                                             SharePrompt.shareText(campaign: .prompt)])
+        .sheet(isPresented: $showStuckPrompt) {
+            StuckFeedbackPrompt { showStuckFeedback = true }
+        }
+        // No stars: this route never passed through the star row, and sending 0 is what
+        // tells a stuck row from a low-rated one in the same collection.
+        .sheet(isPresented: $showStuckFeedback) {
+            FeedbackView(source: .stuck)
+        }
     }
 
     // MARK: - The briefing
@@ -546,12 +560,33 @@ struct ChallengeView: View {
             return   // the celebration is the only thing on screen this time
         }
 
+        // A missed rung is the other branch entirely: both prompts below require a pass, so
+        // nothing here can contend with them for the occasion — see `FeedbackPrompt`.
+        guard model.passed else { return askForFeedbackIfStuck() }
+
         // Order matters and is the whole point: the rating gets first refusal, and the
         // share nudge only runs if it declined. Two sheets stacked on one passed rung
         // reads as begging, and Apple rate-limits the rating to a handful a year while
         // this one comes back next month regardless.
         let asked = askForRatingIfEarned()
         if !asked { askForShareIfEarned() }
+    }
+
+    /// The ask that belongs to a *failed* run: not "how do you feel about this", which is
+    /// what a rating would be asking here, but "what is getting in the way".
+    ///
+    /// The tally is counted on every miss and the prompt only follows the third, so the
+    /// first two stumbles pass without comment — see `FeedbackPrompt.missesRequired`. Same
+    /// deferral as the other two, so the result screen is behind the sheet rather than
+    /// appearing under it.
+    private func askForFeedbackIfStuck() {
+        let misses = FeedbackPrompt.recordMiss()
+        guard FeedbackPrompt.shouldAsk(passed: model.passed, missCount: misses) else { return }
+        FeedbackPrompt.markAsked()
+        Track.event("stuck_feedback_shown", ["lesson": lesson.number,
+                                             "index": model.index,
+                                             "misses": misses])
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { showStuckPrompt = true }
     }
 
     /// A just-passed rung is the one moment the app is unambiguously working, so it's

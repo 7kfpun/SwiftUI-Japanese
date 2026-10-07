@@ -24,11 +24,13 @@ enum RatingPrompt {
     /// every star tap writes a `Survey.Rating` row before branching, so a later ask buys
     /// sentiment over time even on the occasions Apple's sheet never appears.
     ///
-    /// Two months, which still sits inside Apple's own cap of about three review
-    /// impressions per year rather than fighting it. Asking monthly would mostly produce
-    /// star rows whose 4★+ half leads nowhere, which reads to the user as a prompt that
-    /// does nothing.
-    static let askAgainAfter: TimeInterval = 60 * 24 * 60 * 60
+    /// Forty days, cut from sixty: the old window produced so few star rows that the
+    /// sentiment they collect barely moved, and at this length a year still holds about
+    /// nine occasions against Apple's cap of roughly three review impressions — so the
+    /// throttle, not this number, stays the binding constraint on the 4★+ half. Shorter
+    /// again would start producing star rows whose high half visibly leads nowhere, which
+    /// reads to the user as a prompt that does nothing.
+    static let askAgainAfter: TimeInterval = 40 * 24 * 60 * 60
 
     /// When the star row was last shown, or `nil` if it never has been.
     static var lastAskedAt: Date? {
@@ -82,9 +84,12 @@ enum RatingPrompt {
     /// use — enough that there's something to rate, and high enough that the ask lands on
     /// people who stayed rather than people who looked.
     ///
-    /// Deliberately three times the share nudge's bar: this one asks for a public verdict
-    /// on the App Store, that one asks someone to mention the app to a friend.
-    static let challengesRequired = 21
+    /// Cut from 21 to widen the funnel: at 21 the bar was clearing so few people that the
+    /// star row — and with it the low half that feeds the feedback sheet — almost never
+    /// ran. Still comfortably above the share nudge's bar, because this one asks for a
+    /// public verdict on the App Store and that one asks someone to mention the app to a
+    /// friend; the ratio between them narrowed, the ordering did not.
+    static let challengesRequired = 14
 
     /// Whether to ask after this challenge.
     ///
