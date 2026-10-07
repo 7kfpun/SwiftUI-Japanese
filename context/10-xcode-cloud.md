@@ -20,9 +20,9 @@ carries is `ci_scripts/`, which Xcode Cloud finds by convention next to
 | `nihongo/Secrets.plist`, `nihongo/GoogleService-Info.plist` | git-ignored keys | base64 secret env vars on the workflow |
 
 Without the secrets a build behaves like a fresh clone — Google **test** ad units,
-Firebase skipped — which is fine for tests. An **archive** without them carries
-test ads; for now the script only warns (see TODO), so such a build is fine for
-internal TestFlight but must not be submitted to the App Store.
+Firebase skipped — which is fine for tests. An **archive** without them would ship
+test ads, so the script stops when `CI_XCODEBUILD_ACTION=archive` and either
+plist is missing.
 
 | Env var (mark *Secret*) | Written to |
 |---|---|
@@ -59,12 +59,13 @@ Then, in GitHub → branch protection, make the *PR — tests* check required.
 
 ## TODO
 
-- [ ] Add `MINNA_SECRETS_PLIST` and `MINNA_GOOGLE_SERVICE_INFO_PLIST` (Secret)
+- [x] Add `MINNA_SECRETS_PLIST` and `MINNA_GOOGLE_SERVICE_INFO_PLIST` (Secret)
       to the archive workflow.
-- [ ] Then turn the archive warning in `ci_post_clone.sh` back into `exit 1`.
-- [ ] Turn the workflow on; set Distribution Preparation and a TestFlight
-      Internal Testing post-action.
-- [ ] Grant `7kfpun/minna` under Xcode Cloud → Settings → Repositories.
+- [x] Turn the archive warning in `ci_post_clone.sh` back into `exit 1`.
+- [x] Grant `7kfpun/minna` under Xcode Cloud → Settings → Repositories.
+- [ ] Fix the archive compile failure (exit 65 on Xcode 27).
+- [ ] Set Distribution Preparation and a TestFlight Internal Testing
+      post-action.
 - [ ] Set the starting build number above the last upload (26).
 - [ ] Add the *PR — tests* workflow and make it a required GitHub check.
 

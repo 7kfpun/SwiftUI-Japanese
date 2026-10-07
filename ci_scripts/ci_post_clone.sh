@@ -45,12 +45,11 @@ write_plist() { # $1 = env var name, $2 = destination
 write_plist MINNA_SECRETS_PLIST              nihongo/Secrets.plist
 write_plist MINNA_GOOGLE_SERVICE_INFO_PLIST  nihongo/GoogleService-Info.plist
 
-# TODO: once both secret env vars are set on the workflow, turn this warning
-# back into `exit 1` so an archive can never carry test ad units.
 if [ "${CI_XCODEBUILD_ACTION:-}" = "archive" ]; then
   for f in nihongo/Secrets.plist nihongo/GoogleService-Info.plist; do
     if [ ! -f "$f" ]; then
-      echo "warning: archiving without $f — test ad units, no Firebase. Not for App Store release." >&2
+      echo "error: archiving without $f would ship test ad units / no Firebase. Set the workflow's secret env vars." >&2
+      exit 1
     fi
   done
 fi
