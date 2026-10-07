@@ -57,18 +57,6 @@ a person each time (`CLAUDE.md`). Store metadata stays `fastlane ios metadata`.
 
 Then, in GitHub → branch protection, make the *PR — tests* check required.
 
-## TODO
-
-- [x] Add `MINNA_SECRETS_PLIST` and `MINNA_GOOGLE_SERVICE_INFO_PLIST` (Secret)
-      to the archive workflow.
-- [x] Turn the archive warning in `ci_post_clone.sh` back into `exit 1`.
-- [x] Grant `7kfpun/minna` under Xcode Cloud → Settings → Repositories.
-- [ ] Fix the archive compile failure (exit 65 on Xcode 27).
-- [ ] Set Distribution Preparation and a TestFlight Internal Testing
-      post-action.
-- [ ] Set the starting build number above the last upload (26).
-- [ ] Add the *PR — tests* workflow and make it a required GitHub check.
-
 ## Known gaps
 
 - **UI tests run too.** The `nihongo` scheme's test action includes
