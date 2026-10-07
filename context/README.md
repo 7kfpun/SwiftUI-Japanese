@@ -23,6 +23,7 @@ Read this folder cold-start, in roughly this order:
 | `07-ux-ui.md` | The visual language: color tokens (dynamic light/dark), the typography rules and their measurements, the Tinder-like swipe pattern shared across five screens, and a few non-obvious layout decisions. |
 | `08-analytics.md` | The `Track` API, the full event catalog, the paywall source-attribution pattern, Firebase Performance, and the three kinds of notification. |
 | `09-intro-and-survey.md` | The six-card first-launch tour and the three questions it asks; the `survey_intro` Firestore collection, its write-only security rules, and the App Check setup that guards them — the app's only server write. |
+| `10-xcode-cloud.md` | CI: what `ci_scripts/ci_post_clone.sh` supplies to a clean clone (submodule, generated data, secrets), the one-time Xcode Cloud/GitHub setup, and the suggested workflows. |
 
 `02` and `06` were split out of `00`/`04` because both subjects were smeared
 across several files and each is load-bearing enough to contradict quietly.
