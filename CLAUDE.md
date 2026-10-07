@@ -16,9 +16,8 @@ first and follow its index; it is kept current and is the fastest way in.
   an archive, an upload, capturing App Store screenshots. "Explicitly" means they named
   the build, the archive or the upload. It is never implied by a request to change code,
   fix a bug, or update the store listing.
-- **Never create a git commit.** Editing, staging, `git status`/`git diff` are fine.
-  When asked for a commit *message*: `type: lowercase description`, and no mention of
-  Claude or Claude Code anywhere in it.
+- **Commit messages:** `type: lowercase description`, and no mention of Claude or
+  Claude Code anywhere in it.
 - **"Publish to the App Store" means the metadata**, not a binary. It is
   `fastlane ios metadata app:<app>` — description, keywords, promotional text, release
   notes — and that is the whole job unless a build is named. Shipping a binary is a
