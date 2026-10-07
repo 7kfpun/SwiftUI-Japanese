@@ -342,11 +342,11 @@ it was and what came next were all inferred from one highlighted row.
 
 Back after the merge, and **browse-only**. Swipe to turn (`CardPager`, the same modifier
 Learn pages with), ordered or random via a picker (`Pref.flashcardsOrdered` — its own key,
-not Learn's, because the two are different sittings), **double-tap to flip** — the card
-*stays* flipped for reading, a single tap re-reads (front: the word; back: the whole
-entry through `LessonPlayer`'s four-leg sequence, meaning legs premium exactly as in
-Read along), double-tap again to turn back. Practice alone keeps hold-to-peek, because
-there a peek must cost something to hold. The front is the shared toggle-driven `VocabFront`; the toolbar
+not Learn's, because the two are different sittings), and **two flips that coexist**:
+hold to peek (release turns back) and double-tap to flip *and stay* for reading —
+a single tap re-reads (front: the word; back: the whole entry through `LessonPlayer`'s
+four-leg sequence, meaning legs premium exactly as in Read along), double-tap again to
+turn back. Practice has only the hold, because there a peek must cost something. The front is the shared toggle-driven `VocabFront`; the toolbar
 keeps the report flag and mounts the same `CardShowMenu` as Today, with the sound toggle
 living inside the menu on both decks — so what a card front shows is one choice made
 once, from either screen.

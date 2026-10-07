@@ -29,6 +29,10 @@ struct FlashcardView: View {
     /// Reads the flipped entry aloud — see `TodayView.readDetails`, same rule: the
     /// spoken meaning is Read along's paid feature, so free users get the word leg.
     @State private var detailPlayer = LessonPlayer()
+    /// The flip came from a hold, so releasing turns it back — a double-tap flip is
+    /// sticky and ignores the release. Both gestures coexist (kf): the hold is the
+    /// quick peek, the double-tap is for settling in to read.
+    @State private var holdPeek = false
     /// This card already logged its flip — `flashcard_flip` counts cards peeked, not
     /// presses, so it stays comparable with `practice_peek` across the two screens.
     @State private var flippedThisCard = false
@@ -114,6 +118,16 @@ struct FlashcardView: View {
         .onTapGesture {
             if flipped { readDetails(word) } else { pronouncer.speak(word) }
         }
+        .onLongPressGesture(minimumDuration: CardFlip.hold) {
+            guard !flipped else { return }
+            holdPeek = true
+            setFlipped(true, word)
+        } onPressingChanged: { pressing in
+            if !pressing, holdPeek {
+                holdPeek = false
+                setFlipped(false, word)
+            }
+        }
         .sensoryFeedback(.impact(weight: .light), trigger: flipped)
     }
 
@@ -125,8 +139,13 @@ struct FlashcardView: View {
     }
 
     private func toggleFlip(_ word: Vocab) {
-        withAnimation { flipped.toggle() }
-        if flipped {
+        holdPeek = false
+        setFlipped(!flipped, word)
+    }
+
+    private func setFlipped(_ on: Bool, _ word: Vocab) {
+        withAnimation { flipped = on }
+        if on {
             if !flippedThisCard {
                 flippedThisCard = true
                 Track.event("flashcard_flip", ["lesson": lesson.number])
@@ -188,6 +207,7 @@ struct FlashcardView: View {
         guard !entries.isEmpty else { return }
         detailPlayer.stop()
         flipped = false
+        holdPeek = false
         flippedThisCard = false
         if ordered {
             index = (index + (dir > 0 ? 1 : -1) + entries.count) % entries.count

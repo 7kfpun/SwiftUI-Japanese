@@ -677,11 +677,12 @@ struct Deferred<Content: View>: View {
 /// home. `canDrag` is each screen's own reason the card is currently pinned;
 /// `canCommit` covers Practice's held-flipped card, where releasing a drag must
 /// spring back no matter how far it travelled.
-/// How long Practice's card must be held before it peeks — the browse decks moved
-/// to a double-tap toggle (2026-08-26), but Practice keeps the hold on purpose: a
-/// peek there must *cost* something to keep, because a right answer after reading
-/// the back is uncredited. 0.2s is markedly snappier than the 0.5s system default
-/// while staying clear of the tap that speaks the word.
+/// How long a card must be held before it turns over — one number for Today,
+/// Flashcards and Practice. On the browse decks the hold is the quick peek
+/// (release turns back) beside the sticky double-tap; on Practice it is the only
+/// flip, because a peek there must cost something to keep. 0.2s is markedly
+/// snappier than the 0.5s system default while staying clear of the tap that
+/// speaks the word.
 enum CardFlip {
     static let hold: TimeInterval = 0.2
 }

@@ -47,6 +47,10 @@ struct TodayView: View {
     /// meaning, sentence, its meaning) on a one-word list. Free users get the word
     /// leg: the spoken meaning is the same paid feature it is in Read along.
     @State private var detailPlayer = LessonPlayer()
+    /// The flip came from a hold, so releasing turns it back — a double-tap flip is
+    /// sticky and ignores the release. Both gestures coexist (kf): the hold is the
+    /// quick peek, the double-tap is for settling in to read.
+    @State private var holdPeek = false
     /// This card already logged its flip — `today_flip` counts cards peeked, not
     /// presses, matching `flashcard_flip` and `practice_peek`.
     @State private var flippedThisCard = false
@@ -265,12 +269,23 @@ struct TodayView: View {
         .onTapGesture {
             if flipped { readDetails(word) } else { pronouncer.speak(word) }
         }
+        .onLongPressGesture(minimumDuration: CardFlip.hold) {
+            guard !flipped else { return }
+            holdPeek = true
+            setFlipped(true, word)
+        } onPressingChanged: { pressing in
+            if !pressing, holdPeek {
+                holdPeek = false
+                setFlipped(false, word)
+            }
+        }
         .sensoryFeedback(.impact(weight: .light), trigger: flipped)
         .cardPager(canPage: { picks.count > 1 }) { dir in
             let count = picks.count
             index = dir > 0 ? (index + 1) % count : (index - 1 + count) % count
             detailPlayer.stop()
             flipped = false
+            holdPeek = false
             flippedThisCard = false
             autoPlay()   // explicit: every completed page-turn speaks the new word
             // Today is the landing tab, so "did anyone go past the first card" is the
@@ -286,8 +301,13 @@ struct TodayView: View {
     }
 
     private func toggleFlip(_ word: Vocab) {
-        withAnimation { flipped.toggle() }
-        if flipped {
+        holdPeek = false
+        setFlipped(!flipped, word)
+    }
+
+    private func setFlipped(_ on: Bool, _ word: Vocab) {
+        withAnimation { flipped = on }
+        if on {
             if !flippedThisCard {
                 flippedThisCard = true
                 Track.event("today_flip", ["lesson": lessonNumber])
