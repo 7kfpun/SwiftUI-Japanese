@@ -13,11 +13,15 @@ echo "== action: ${CI_XCODEBUILD_ACTION:-?}  scheme: ${CI_XCODE_SCHEME:-?}  bran
 # Xcode Cloud clones submodules itself once the `minna` repo is granted under
 # App Store Connect → Xcode Cloud → Settings → Repositories. The update is a
 # fallback; with no access it fails here instead of shipping an empty app.
-if [ ! -d minna/vocab ]; then
+# The course data sits one level down, at minna/minna/ — the path
+# build-minna-data.py reads.
+if [ ! -d minna/minna/vocab ]; then
   git submodule update --init minna || true
 fi
-if [ ! -d minna/vocab ]; then
-  echo "error: the minna submodule is missing — grant Xcode Cloud access to 7kfpun/minna." >&2
+if [ ! -d minna/minna/vocab ]; then
+  echo "error: minna/minna/vocab is missing — grant Xcode Cloud access to 7kfpun/minna." >&2
+  git submodule status minna >&2 || true
+  ls -la minna >&2 || true
   exit 1
 fi
 
