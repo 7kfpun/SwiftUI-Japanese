@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 /// First launch: a five-card tour that also asks the three questions worth asking before
