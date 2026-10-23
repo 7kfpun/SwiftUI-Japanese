@@ -62,7 +62,6 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AAF4E00130250001001F7D2E"
             BuildableName = "WatchApp.app"
-            BlueprintName = "WatchApp"
             ReferencedContainer = "container:nihongo.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -98,7 +97,6 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AAF4E00130250001001F7D2E"
             BuildableName = "WatchApp.app"
-            BlueprintName = "WatchApp"
             ReferencedContainer = "container:nihongo.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
