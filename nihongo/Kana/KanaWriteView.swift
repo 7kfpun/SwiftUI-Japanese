@@ -73,6 +73,7 @@ struct KanaWriteView: View {
                 .onTapGesture { pronouncer.speak(kana: answer) }
 
             drawingCanvas
+                .avoidingFold()
 
             scoreRow
 

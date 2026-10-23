@@ -29,15 +29,23 @@ own doc (`02-challenge-ladder.md`); this one covers everything around it.
   an empty track on all 50 rows would read as "nothing works" rather than "nothing
   started" — and the bar has a fixed width so the bars line up down the list instead of
   jittering with each row's title length.
-- The counts come from **one** `ChallengeResult` fetch per appear
-  (`reloadProgress`), tallied per lesson, collapsing duplicate rows by rung first — a
-  CloudKit merge can leave two rows for one rung and counting both would overfill the
-  bar. Refreshing on appear is what makes the bar update behind you when you finish a
-  rung and navigate back.
-- **The navigation stack lives on `Router`**, not in the view, so the widget's
-  "Ready for Challenge N?" link can push a lesson into a tab the user isn't on. Row taps
-  append to the same path, so a deep link and a tap leave the user in the same place with
-  a working back button either way.
+- The counts come from **one** live `@Query` over `ChallengeResult` (`passedByLesson`),
+  tallied per lesson, collapsing duplicate rows by rung first — a CloudKit merge can
+  leave two rows for one rung and counting both would overfill the bar. Live rather
+  than fetched on appear because in the split view the list never leaves the screen:
+  a rung finished in the detail column has to move its bar in place.
+- **A `NavigationSplitView`, not a stack** (2026-10, for iPhone Duo). On a
+  regular-width screen — iPad, the Duo open — the list is the sidebar and the selected
+  lesson's `SelectModeView` sits beside it, with "Choose a lesson" in the detail until
+  one is picked. On a compact one — every other iPhone, the Duo closed — it collapses
+  to the push navigation the tab always had. The detail is re-resolved by lesson number
+  (so a language switch shows the new meanings) and `.id`'d by it (so each lesson gets
+  its own state).
+- **The selection and the lesson's inner stack live on `Router`** (`selectedLesson`,
+  `lessonPath`), not in the view, so the widget's "Ready for Challenge N?" link can open
+  a lesson in a tab the user isn't on. Row taps set the same selection, so a deep link
+  and a tap leave the user in the same place. Changing the selection empties
+  `lessonPath`, so picking another lesson never lands mid-mode.
 - `VocabRow` (also reused by search results, `VocabListView` and `BookmarksView`) is
   **one left-aligned stack** — kana, kanji, then the meaning under the word it belongs
   to (design 3a; the old layout pushed the meaning to the row's far edge, splitting each

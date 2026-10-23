@@ -190,6 +190,16 @@ final class Store {
     /// Premium if any premium product is currently entitled — an active subscription or
     /// the owned lifetime unlock.
     func refreshEntitlement() async {
+        #if DEBUG
+        // Screenshot runs launched with "-PREMIUM" show the app as a subscriber sees it:
+        // every lesson open, no lock in the way. Debug builds only, so no shipped binary
+        // can be talked into it — and it returns before `Track`, so it never reports a
+        // premium user who isn't one.
+        if ProcessInfo.processInfo.arguments.contains("-PREMIUM") {
+            isPremium = true
+            return
+        }
+        #endif
         var entitled: [String] = []
         for await result in Transaction.currentEntitlements {
             guard case .verified(let t) = result, t.revocationDate == nil,

@@ -24,6 +24,12 @@ final class ScreenshotTests: XCTestCase {
         // would save a picture of the tour as `01-today`, and the other tests would fall
         // through their guards and capture nothing while still reporting success.
         app.launchArguments += ["-introAnswered", "YES"]
+        // Opt-in premium (Debug builds only — see `Store.refreshEntitlement`), set from
+        // the command line with `TEST_RUNNER_SCREENSHOT_PREMIUM=1 xcodebuild test …`. Off
+        // by default because `test14Paywall` needs a free user to have a paywall to show.
+        if ProcessInfo.processInfo.environment["SCREENSHOT_PREMIUM"] == "1" {
+            app.launchArguments += ["-PREMIUM"]
+        }
         app.launch()
     }
 
@@ -89,6 +95,16 @@ final class ScreenshotTests: XCTestCase {
         openTab("Lessons")
         guard wait(app.staticTexts["Lesson 1"]) else { return }
         shot("00-lessons")
+    }
+
+    /// The list with a lesson open beside it — the split view a regular-width screen
+    /// (iPhone Duo open, iPad) shows. On a narrow screen the same steps capture the
+    /// lesson pushed over the list instead.
+    @MainActor
+    func test08bLessonSplit() throws {
+        openTab("Lessons")
+        guard tap(row("Lesson 1")), wait(app.staticTexts["Vocab List"]) else { return }
+        shot("08-lesson-split")
     }
 
     @MainActor

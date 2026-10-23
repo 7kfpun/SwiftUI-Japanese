@@ -6,12 +6,13 @@ struct LessonListView: View {
     @State private var query = ""
     @State private var group = 0
     @State private var searchDebounce: Task<Void, Never>?
-    @Environment(\.modelContext) private var context
-    /// challenges passed, keyed by lesson — one fetch for the whole list rather than
-    /// a query per visible row.
-    @State private var passed: [Int: Int] = [:]
-    /// The stack lives on the router so the widget's "Ready for Challenge N?" link can
-    /// push lesson + rung directly. Row taps append to the same path.
+    /// Every challenge result — one query for the whole list rather than one per visible
+    /// row. Live rather than fetched on appear: in the split view the list never leaves
+    /// the screen, so a challenge finished beside it has to move its bar in place.
+    @Query private var results: [ChallengeResult]
+    /// The selection and the lesson's inner stack live on the router so the widget's
+    /// "Ready for Challenge N?" link can open a lesson directly. Row taps set the same
+    /// selection.
     @Environment(Router.self) private var router
     private static let groups = Course.current.groups
 
@@ -22,11 +23,16 @@ struct LessonListView: View {
     /// four fields per entry, which is ~8k allocations for Minna and ~32k for JLPT; read
     /// as a computed property from three places it ran that three times per keystroke and
     /// stuttered the keyboard.
-    private var results: [Vocab] { searchVocab(query, in: VocabStore.allVocab(language)) }
+    private var hits: [Vocab] { searchVocab(query, in: VocabStore.allVocab(language)) }
 
     var body: some View {
         @Bindable var router = router
-        NavigationStack(path: $router.lessonPath) {
+        // Sidebar and detail on a regular-width screen — iPad, iPhone Duo open — so the
+        // fifty rows stop being a narrow strip down one side of a wide display. Narrow
+        // screens (every other iPhone, the Duo closed) collapse it back to the push
+        // navigation this tab always had.
+        let passed = passedByLesson
+        NavigationSplitView {
             VStack(spacing: 0) {
                 if query.isEmpty {
                     Picker("", selection: $group) {
@@ -41,7 +47,7 @@ struct LessonListView: View {
                     // What the band adds up to, under the band's own control. The rows
                     // each carry a lesson's standing; this is the only place that says
                     // how the *group* is going, which is the question the picker asks.
-                    Text(groupSummary)
+                    Text(groupSummary(passed))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -49,7 +55,7 @@ struct LessonListView: View {
                         .padding(.top, 8)
                 }
 
-                List {
+                List(selection: $router.selectedLesson) {
                     if query.isEmpty {
                         ForEach(Self.groups[group].range, id: \.self) { n in
                             NavigationLink(value: VocabStore.lesson(n, language)) {
@@ -61,7 +67,7 @@ struct LessonListView: View {
                         }
                     } else {
                         // One evaluation, shared by the rows and the header count.
-                        let hits = results
+                        let hits = self.hits
                         Section {
                             if hits.isEmpty {
                                 // Names the query and what is searchable. "0 results"
@@ -92,9 +98,8 @@ struct LessonListView: View {
             }
             .background(Color(.systemGroupedBackground))   // match the grouped List behind the picker
             .navigationTitle(L.t("Lessons"))
-            .onAppear { Track.screen("lessons"); reloadProgress() }
+            .onAppear { Track.screen("lessons") }
             .onChange(of: group) { Track.event("lesson_group", ["group": group]) }
-            .navigationDestination(for: Lesson.self) { SelectModeView(lesson: $0) }
             .searchable(text: $query, prompt: L.t("Search vocabulary"))
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
@@ -111,20 +116,32 @@ struct LessonListView: View {
                                                  "results": searchVocab(q, in: VocabStore.allVocab(language)).count])
                 }
             }
+        } detail: {
+            NavigationStack(path: $router.lessonPath) {
+                if let selected = router.selectedLesson {
+                    // Re-resolved by number, so a lesson opened before a language switch
+                    // shows the new language's meanings. `.id` gives each lesson its own
+                    // state — without it, picking another row beside an open lesson
+                    // would keep the last one's scroll position and toggles.
+                    SelectModeView(lesson: VocabStore.lesson(selected.number, language))
+                        .id(selected.number)
+                } else {
+                    // Only ever seen on a wide screen: a narrow one shows the list
+                    // itself when nothing is selected.
+                    ContentUnavailableView(L.t("Choose a lesson"), systemImage: "list.bullet")
+                }
+            }
         }
+        .onChange(of: router.selectedLesson) { router.lessonPath = NavigationPath() }
     }
 
-    /// One fetch of every passed challenge, tallied per lesson. Refreshed on appear so
-    /// finishing a challenge and navigating back updates the bar behind you. Collapse
-    /// by challenge id first: a CloudKit merge can leave duplicate rows for the same
-    /// rung, and counting both would overfill the bar.
     /// "Lesson 1–13 · 13 lessons · 6 challenges passed" — the band's range, its size,
     /// and how much of it is behind you.
     ///
     /// Counted from the same `passed` tally the rows use, so the summary and the bars
     /// can never disagree; a second fetch here would be a second source of truth for one
     /// number.
-    private var groupSummary: String {
+    private func groupSummary(_ passed: [Int: Int]) -> String {
         let band = Self.groups[group]
         let cleared = band.range.reduce(0) { $0 + (passed[$1] ?? 0) }
         let lessons = L.t("%@ lessons", "\(band.range.count)")
@@ -132,11 +149,12 @@ struct LessonListView: View {
         return "\(L.t("Lesson %@", "\(band.first)–\(band.last)")) · \(lessons) · \(rungs)"
     }
 
-    private func reloadProgress() {
-        let descriptor = FetchDescriptor<ChallengeResult>()
-        let rows = (try? context.fetch(descriptor)) ?? []
-        let unique = Dictionary(rows.map { ($0.id, $0) }, uniquingKeysWith: ChallengeResult.better)
-        passed = unique.values.filter(\.isPassed).reduce(into: [:]) { tally, row in
+    /// Passed challenges, tallied per lesson. Collapse by challenge id first: a CloudKit
+    /// merge can leave duplicate rows for the same rung, and counting both would
+    /// overfill the bar.
+    private var passedByLesson: [Int: Int] {
+        let unique = Dictionary(results.map { ($0.id, $0) }, uniquingKeysWith: ChallengeResult.better)
+        return unique.values.filter(\.isPassed).reduce(into: [:]) { tally, row in
             tally[row.lesson, default: 0] += 1
         }
     }

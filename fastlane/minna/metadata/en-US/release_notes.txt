@@ -1,8 +1,9 @@
-Version 3.0.2
+Version 3.0.4
 
-Unlock more without paying — three stars on every challenge in the opening lessons opens the whole Beginning 1 group, free
-Daily reminders — an optional nudge on days you haven't studied yet, and silence on the days you have
-A 12-month plan joins the 1, 3 and 6-month options
-Bookmarks and the vocabulary list are easier to read
+Made for iPhone Duo — unfold it and the lesson list sits beside the lesson you're studying
+The same side-by-side lessons on iPad
+Handwriting practice stays clear of the fold, so every stroke is scored fairly
+Hold a card on Today or in Flashcards to peek at its meaning
+Small fixes and improvements
 
 Tell us what's next in Settings → Feedback!

@@ -1,8 +1,9 @@
-Version 3.0.2
+Version 3.0.4
 
-Débloquez plus sans payer : trois étoiles à chaque défi des premières leçons ouvrent tout le groupe Débutant 1
-Rappels quotidiens : optionnels, seulement les jours sans révision, silencieux les autres
-Un abonnement de 12 mois rejoint ceux de 1, 3 et 6 mois
-Favoris et liste de vocabulaire plus lisibles
+Conçu pour l'iPhone Duo : dépliez-le et la liste des leçons s'affiche à côté de la leçon en cours
+Les mêmes leçons côte à côte sur iPad
+L'écriture manuscrite évite la pliure, pour que chaque trait soit noté équitablement
+Maintenez une carte dans Aujourd'hui ou dans Cartes mémo pour voir son sens
+Petites corrections et améliorations
 
 Dites-nous la suite dans Réglages → Commentaires !

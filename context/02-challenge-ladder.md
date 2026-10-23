@@ -188,7 +188,7 @@ So a sync race can inflate nothing and lose nothing. The readers that matter:
 | `totalPassed(context:)` | the rating prompt | dedupes by `id` **first** — counting both twins would fire the prompt early |
 | `firstUnpassed(total:results:)` | Today's deck | lowest unpassed rung, nil once cleared |
 
-`LessonListView.reloadProgress` does the same collapse by hand for its 50-row tally,
+`LessonListView.passedByLesson` does the same collapse by hand for its 50-row tally,
 because it needs every lesson in one fetch rather than one ladder.
 
 ## One run (`ChallengeView`)

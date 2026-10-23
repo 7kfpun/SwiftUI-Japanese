@@ -11,8 +11,13 @@ import SwiftUI
     enum Tab: Hashable { case today, kana, lessons, progress, settings }
 
     var tab: Tab = .today
-    /// The Lessons tab's stack. Ordinary row taps append to this too, so a deep link and
-    /// a tap leave the user in the same place, with a working back button either way.
+    /// The Lessons tab's open lesson — the split view's sidebar selection. Row taps set
+    /// it too, so a deep link and a tap leave the user in the same place: beside the
+    /// list on a wide screen (iPad, iPhone Duo open), pushed over it on a narrow one,
+    /// with a working back button there either way.
+    var selectedLesson: Lesson?
+    /// The stack *inside* the open lesson — modes, the vocab list, a challenge. Cleared
+    /// whenever the lesson changes, so picking another lesson never lands mid-mode.
     var lessonPath = NavigationPath()
 
     /// Replay the first-launch tour on demand — the hidden long-press in Settings.
@@ -28,6 +33,7 @@ import SwiftUI
     /// behind the paywall: the list is the honest destination, since pushing into a
     /// lesson the user can't open would only dead-end them a screen deeper.
     func openLessonList() {
+        selectedLesson = nil
         lessonPath = NavigationPath()
         tab = .lessons
     }
@@ -39,12 +45,11 @@ import SwiftUI
     /// abandons, not attempts — the rung is one more tap away, and that tap is the
     /// difference between being asked and being committed.
     ///
-    /// Rebuilt from empty rather than appended, so a second link doesn't stack lessons
-    /// on top of wherever the user had wandered.
+    /// The inner stack is emptied rather than kept, so a second link doesn't land inside
+    /// wherever the user had wandered.
     func openLesson(_ lesson: Lesson) {
-        var path = NavigationPath()
-        path.append(lesson)
-        lessonPath = path
+        selectedLesson = lesson
+        lessonPath = NavigationPath()
         tab = .lessons
     }
 }

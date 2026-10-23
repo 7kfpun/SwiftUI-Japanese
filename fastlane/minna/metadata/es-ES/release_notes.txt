@@ -1,8 +1,9 @@
-Versión 3.0.2
+Versión 3.0.4
 
-Desbloquea más sin pagar: tres estrellas en cada desafío de las primeras lecciones abren todo el grupo Principiante 1
-Recordatorios diarios: opcionales, solo los días que aún no has estudiado, y silencio el resto
-Un plan de 12 meses se suma a los de 1, 3 y 6
-Guardados y la lista de vocabulario se leen mejor
+Hecha para el iPhone Duo: al desplegarlo, la lista de lecciones queda junto a la lección que estás estudiando
+Las mismas lecciones lado a lado en el iPad
+La práctica de escritura evita el pliegue, para que cada trazo se puntúe con justicia
+Mantén pulsada una tarjeta en Hoy o en Tarjetas para ver su significado
+Pequeñas correcciones y mejoras
 
 Dinos qué sigue en Ajustes → Comentarios.

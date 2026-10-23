@@ -655,6 +655,42 @@ extension View {
             ScrollView { self }
         }
     }
+
+    /// Keeps a drawing surface on one side of iPhone Duo's fold.
+    ///
+    /// On the inner display the hinge is a `.division` reserved region running down the
+    /// middle of the screen — exactly where a full-width canvas centres its glyph — and
+    /// a stroke drawn across the crease is a stroke drawn badly, then scored as one.
+    /// The surface takes the larger side instead. With no division crossing it (every
+    /// other iPhone, the outer display, iPad, anything before iOS 27.1) it keeps the
+    /// whole frame.
+    func avoidingFold() -> some View {
+        GeometryReader { geo in
+            let rect = FoldAvoidance.usable(in: geo)
+            frame(width: rect.width, height: rect.height)
+                .position(x: rect.midX, y: rect.midY)
+        }
+    }
+}
+
+private enum FoldAvoidance {
+    static func usable(in geo: GeometryProxy) -> CGRect {
+        let bounds = CGRect(origin: .zero, size: geo.size)
+        guard #available(iOS 27.1, *),
+              let fold = geo.reservedRegions(kind: .division)
+                .first(where: { $0.frame.intersects(bounds) })?.frame
+        else { return bounds }
+        // Either side of the fold, whichever way it runs; a vertical hinge leaves the
+        // above/below candidates empty and they drop out, and vice versa.
+        let sides = [
+            CGRect(x: bounds.minX, y: bounds.minY, width: fold.minX - bounds.minX, height: bounds.height),
+            CGRect(x: fold.maxX, y: bounds.minY, width: bounds.maxX - fold.maxX, height: bounds.height),
+            CGRect(x: bounds.minX, y: bounds.minY, width: bounds.width, height: fold.minY - bounds.minY),
+            CGRect(x: bounds.minX, y: fold.maxY, width: bounds.width, height: bounds.maxY - fold.maxY),
+        ]
+        return sides.filter { $0.width > 0 && $0.height > 0 }
+            .max { $0.width * $0.height < $1.width * $1.height } ?? bounds
+    }
 }
 
 /// Defers a destination's construction until navigation actually renders it.

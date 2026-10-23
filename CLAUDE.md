@@ -42,6 +42,7 @@ first and follow its index; it is kept current and is the fastest way in.
 | `nihongo/Resources/audio/cheer/` | `scripts/build-minna-data.py` ← the submodule's `voices/cheer-<voice>-<key>.m4a` |
 | `web/**` (except `privacy.html`, `terms.html`) | `scripts/build-web.py` — all copy lives in its `T` dict |
 | `fastlane/minna/screenshots/**` | `fastlane/generate_framed_screenshots.py` ← `fastlane/minna/screenshot_raw/` |
+| `fastlane/minna/screenshots_duo/**` | the same script's `duo` device ← `screenshot_raw/duo/` — uploaded by hand; fastlane has no Duo type |
 
 ## Seams — go through them, don't bypass
 
@@ -81,8 +82,8 @@ first and follow its index; it is kept current and is the fastest way in.
 - **A new `@Model` needs its CloudKit schema deployed to Production before release.**
   Running in Xcode only creates it in Development. Ship without pressing *Deploy Schema
   Changes* and the type silently never syncs for App Store users — no crash, no error,
-  progress just never leaves the device. `StudyDay` (the streak) is the current one
-  awaiting this in **both** containers.
+  progress just never leaves the device. `StudyDay` (the streak) was the
+  most recent, deployed to Production in **both** containers before 3.0.4.
 - **Day stamps use `StudyDay.calendar`, never `Calendar.current`.** The region setting
   changes the calendar, and under a Buddhist one today's year component is 2569 — so a
   stored `yyyymmdd` would be reinterpreted, and every recorded day would move. Gregorian
