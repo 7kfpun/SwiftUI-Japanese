@@ -81,6 +81,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -97,58 +98,127 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
 
-      # Scan the two lockfiles explicitly. A missing parser, a non-JSON
-      # result, or zero extracted packages fails the job. Exit 1 or any
-      # vulnerability id fails the job. There is no severity gate: osv-scanner
-      # scan does not take a high/critical cutoff.
+      # Scan both lockfiles. A missing parser, non-JSON output, or zero
+      # extracted packages fails the job. Any known vulnerability fails it.
+      # Findings are also written to one PR comment so the failure is not
+      # only a red check. There is no severity gate.
       - name: Dependency scan
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
           curl -fsSL -o /tmp/osv-scanner \
             "https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64"
           sudo install -m 0755 /tmp/osv-scanner /usr/local/bin/osv-scanner
           osv-scanner --version
+          mkdir -p /tmp/osv
+          : > /tmp/osv/manifest.txt
           scan_lock() {
             file="$1"
             if [ ! -f "$file" ]; then
               echo "::error::lockfile not found: ${file}"
               exit 1
             fi
-            out="$(mktemp)"
+            out="/tmp/osv/$(printf '%s' "$file" | tr '/' '_').json"
             set +e
             osv-scanner scan source --format json --lockfile "$file" >"$out"
             code=$?
             set -e
-            if [ "$code" -ne 0 ] && [ "$code" -ne 1 ]; then
-              echo "::error::osv-scanner could not scan ${file} (exit ${code}). Refusing a silent pass."
-              cat "$out" || true
-              exit 1
-            fi
-            python3 - "$out" "$file" "$code" <<'PY'
-          import json, sys
-          out, label, code = sys.argv[1], sys.argv[2], int(sys.argv[3])
-          try:
-              data = json.load(open(out))
-          except Exception as exc:
-              print(f"::error::osv-scanner did not return JSON for {label}: {exc}")
-              sys.exit(1)
-          packages = 0
-          ids = []
-          for result in data.get("results") or []:
-              for pkg in result.get("packages") or []:
-                  packages += 1
-                  name = (pkg.get("package") or {}).get("name", "?")
-                  for vuln in pkg.get("vulnerabilities") or []:
-                      ids.append(f"{vuln.get('id', '?')} ({name})")
-          print(f"{label}: {packages} packages, {len(ids)} vulnerability records, scanner exit {code}")
-          if packages == 0:
-              print(f"::error::osv-scanner extracted no packages from {label}. The lockfile was not recognized; refusing a silent pass.")
-              sys.exit(1)
-          if ids or code == 1:
-              shown = ", ".join(sorted(set(ids))[:40]) or f"scanner exit {code}"
-              print(f"::error::known vulnerabilities in {label}: {shown}")
-              sys.exit(1)
-          PY
+            printf '%s %s %s\n' "$code" "$file" "$out" >> /tmp/osv/manifest.txt
           }
           scan_lock Gemfile.lock
           scan_lock nihongo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          python3 - /tmp/osv/manifest.txt <<'PY'
+          import json, os, sys
+          from pathlib import Path
+
+          rows = []
+          errors = []
+          notes = []
+          for line in Path(sys.argv[1]).read_text().splitlines():
+              code_s, label, out = line.split(" ", 2)
+              code = int(code_s)
+              try:
+                  data = json.loads(Path(out).read_text() or "{}")
+              except Exception as exc:
+                  errors.append(f"`{label}`: osv-scanner exit {code}, output was not JSON ({exc}).")
+                  continue
+              packages = 0
+              found = []
+              for result in data.get("results") or []:
+                  for pkg in result.get("packages") or []:
+                      packages += 1
+                      info = pkg.get("package") or {}
+                      name = info.get("name") or "?"
+                      version = info.get("version") or "?"
+                      for vuln in pkg.get("vulnerabilities") or []:
+                          summary = (vuln.get("summary") or "").replace("|", "/").replace("\n", " ").strip()
+                          if len(summary) > 160:
+                              summary = summary[:157] + "..."
+                          found.append((label, name, version, vuln.get("id") or "?", summary))
+              notes.append(f"`{label}`: {packages} packages, scanner exit {code}")
+              print(notes[-1])
+              if packages == 0:
+                  errors.append(f"`{label}`: extracted no packages (exit {code}). The lockfile was not recognized.")
+              elif code not in (0, 1):
+                  errors.append(f"`{label}`: osv-scanner failed with exit {code}.")
+              elif code == 1 and not found:
+                  errors.append(f"`{label}`: scanner exit 1 with no vulnerability records in the JSON.")
+              rows.extend(found)
+
+          def link(vid):
+              if vid.startswith("GHSA-"):
+                  return f"https://github.com/advisories/{vid}"
+              return f"https://osv.dev/vulnerability/{vid}"
+
+          failed = bool(rows or errors)
+          lines = ["<!-- ci-vuln-report -->", ""]
+          if failed:
+              lines.append("**Dependency scan failed.**")
+              lines.append("")
+              seen = set()
+              if rows:
+                  lines += ["| Lockfile | Package | Advisory |", "|---|---|---|"]
+                  for label, name, version, vid, summary in rows:
+                      key = (label, name, version, vid)
+                      if key in seen:
+                          continue
+                      seen.add(key)
+                      detail = f" — {summary}" if summary else ""
+                      lines.append(f"| `{label}` | `{name}` {version} | [{vid}]({link(vid)}){detail} |")
+                  lines.append("")
+              if errors:
+                  lines.append("Scan errors:")
+                  lines.append("")
+                  lines += [f"- {item}" for item in errors]
+                  lines.append("")
+              ids = sorted({item[3] for item in rows})
+              if ids:
+                  print("::error::known vulnerabilities: " + ", ".join(ids[:40]))
+              for item in errors:
+                  print(f"::error::{item}")
+          else:
+              lines.append("**Dependency scan passed.** No known vulnerabilities in the scanned lockfiles.")
+              lines.append("")
+          lines += [f"- {note}" for note in notes]
+          lines += ["", f"[View workflow run]({os.environ['RUN_URL']})", ""]
+          Path("/tmp/osv/comment.md").write_text("\n".join(lines) + "\n")
+          Path("/tmp/osv/exitcode").write_text("1\n" if failed else "0\n")
+          Path("/tmp/osv/comment_needed").write_text("1\n" if failed else "0\n")
+          PY
+          marker='<!-- ci-vuln-report -->'
+          needed=$(tr -d '[:space:]' < /tmp/osv/comment_needed)
+          existing=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments?per_page=100" \
+            --jq "map(select((.body // \"\") | contains(\"${marker}\"))) | .[0].id // empty")
+          if [ "$needed" = "1" ] || [ -n "$existing" ]; then
+            if [ -n "$existing" ]; then
+              jq -n --rawfile body /tmp/osv/comment.md '{body: $body}' \
+                | gh api --method PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${existing}" --input -
+            else
+              gh pr comment "$PR_NUMBER" --body-file /tmp/osv/comment.md
+            fi
+          fi
+          exit "$(tr -d '[:space:]' < /tmp/osv/exitcode)"
+
