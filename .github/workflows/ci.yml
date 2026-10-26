@@ -1,0 +1,183 @@
+name: CI
+
+# Same gate as feature/claude-review-action's Claude review workflow:
+# non-draft PRs whose head is feature/* and whose base is main.
+# synchronize is included, so every push to an open PR re-runs.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests
+    if: >-
+      github.event.pull_request.draft == false &&
+      startsWith(github.head_ref, 'feature/') &&
+      github.base_ref == 'main'
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # nihongoTests reads bundled JSON and clips that are gitignored and
+      # produced by ci_scripts/ci_post_clone.sh from the private minna
+      # submodule. GITHUB_TOKEN cannot read that other repo.
+      - name: Generate bundled course data
+        env:
+          MINNA_REPO_TOKEN: ${{ secrets.MINNA_REPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          askpass="$(mktemp)"
+          helper="$(mktemp)"
+          cleanup() {
+            git config --local --unset-all credential.helper || true
+            git config --local --unset-all url.https://github.com/.insteadOf || true
+            rm -f "$askpass" "$helper"
+          }
+          trap cleanup EXIT
+          if [ -n "${MINNA_REPO_TOKEN}" ]; then
+            cat > "$askpass" <<'EOF'
+          #!/bin/sh
+          case "$1" in
+            *Username*) printf '%s\n' "x-access-token" ;;
+            *) printf '%s\n' "$MINNA_REPO_TOKEN" ;;
+          esac
+          EOF
+            cat > "$helper" <<'EOF'
+          #!/bin/sh
+          case "$1" in
+            get)
+              printf 'username=x-access-token\n'
+              printf 'password=%s\n' "$MINNA_REPO_TOKEN"
+              ;;
+          esac
+          EOF
+            chmod 700 "$askpass" "$helper"
+            export GIT_ASKPASS="$askpass"
+            export GIT_TERMINAL_PROMPT=0
+            # Empty value clears helpers inherited from the runner (osxkeychain),
+            # which would otherwise prompt and hang the job.
+            git config --local credential.helper ""
+            git config --local --add credential.helper "$helper"
+            git config --local url."https://github.com/".insteadOf "git@github.com:"
+          fi
+          set +e
+          sh ci_scripts/ci_post_clone.sh
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            echo "::error::Course data generation failed. nihongoTests needs scripts/build-minna-data.py output from the private submodule 7kfpun/minna. Add repository secret MINNA_REPO_TOKEN with contents:read on that repo."
+            exit "$status"
+          fi
+
+      # generic/platform=iOS Simulator only builds. xcodebuild will not run
+      # tests on that placeholder. iPhone 17 Pro / iOS 26.5 is the concrete
+      # simulator that satisfies IPHONEOS_DEPLOYMENT_TARGET = 26.5 and is
+      # preinstalled on macos-latest (older runtimes on the image are
+      # ineligible). -only-testing:nihongoTests skips nihongoUITests. The
+      # jlpt scheme, which hosts jlptUITests, is not invoked.
+      # CODE_SIGNING_ALLOWED=NO: the project sets DEVELOPMENT_TEAM and the
+      # runner has no Apple certificate.
+      - name: Unit tests
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          xcodebuild test \
+            -project nihongo.xcodeproj \
+            -scheme nihongo \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
+            -only-testing:nihongoTests \
+            CODE_SIGNING_ALLOWED=NO
+
+  vulnerabilities:
+    name: Vulnerabilities
+    if: >-
+      github.event.pull_request.draft == false &&
+      startsWith(github.head_ref, 'feature/') &&
+      github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Fails the job when a secret is found. No GITLEAKS_LICENSE: this
+      # repository is under the personal account 7kfpun, and the action
+      # requires that secret only for organization accounts.
+      - name: Secrets scan
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+
+      # Scan the two lockfiles explicitly. A missing parser, a non-JSON
+      # result, or zero extracted packages fails the job. Exit 1 or any
+      # vulnerability id fails the job. There is no severity gate: osv-scanner
+      # scan does not take a high/critical cutoff.
+      - name: Dependency scan
+        run: |
+          set -euo pipefail
+          curl -fsSL -o /tmp/osv-scanner \
+            "https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64"
+          sudo install -m 0755 /tmp/osv-scanner /usr/local/bin/osv-scanner
+          osv-scanner --version
+          scan_lock() {
+            file="$1"
+            if [ ! -f "$file" ]; then
+              echo "::error::lockfile not found: ${file}"
+              exit 1
+            fi
+            out="$(mktemp)"
+            set +e
+            osv-scanner scan source --format json --lockfile "$file" >"$out"
+            code=$?
+            set -e
+            if [ "$code" -ne 0 ] && [ "$code" -ne 1 ]; then
+              echo "::error::osv-scanner could not scan ${file} (exit ${code}). Refusing a silent pass."
+              cat "$out" || true
+              exit 1
+            fi
+            python3 - "$out" "$file" "$code" <<'PY'
+          import json, sys
+          out, label, code = sys.argv[1], sys.argv[2], int(sys.argv[3])
+          try:
+              data = json.load(open(out))
+          except Exception as exc:
+              print(f"::error::osv-scanner did not return JSON for {label}: {exc}")
+              sys.exit(1)
+          packages = 0
+          ids = []
+          for result in data.get("results") or []:
+              for pkg in result.get("packages") or []:
+                  packages += 1
+                  name = (pkg.get("package") or {}).get("name", "?")
+                  for vuln in pkg.get("vulnerabilities") or []:
+                      ids.append(f"{vuln.get('id', '?')} ({name})")
+          print(f"{label}: {packages} packages, {len(ids)} vulnerability records, scanner exit {code}")
+          if packages == 0:
+              print(f"::error::osv-scanner extracted no packages from {label}. The lockfile was not recognized; refusing a silent pass.")
+              sys.exit(1)
+          if ids or code == 1:
+              shown = ", ".join(sorted(set(ids))[:40]) or f"scanner exit {code}"
+              print(f"::error::known vulnerabilities in {label}: {shown}")
+              sys.exit(1)
+          PY
+          }
+          scan_lock Gemfile.lock
+          scan_lock nihongo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
