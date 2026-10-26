@@ -32,54 +32,25 @@ jobs:
 
       # nihongoTests reads bundled JSON and clips that are gitignored and
       # produced by ci_scripts/ci_post_clone.sh from the private minna
-      # submodule. GITHUB_TOKEN cannot read that other repo.
+      # submodule. GITHUB_TOKEN cannot read that other repo. MINNA_DEPLOY_KEY
+      # is a read-only deploy key on 7kfpun/minna; the submodule URL is SSH.
       - name: Generate bundled course data
         env:
-          MINNA_REPO_TOKEN: ${{ secrets.MINNA_REPO_TOKEN }}
+          MINNA_DEPLOY_KEY: ${{ secrets.MINNA_DEPLOY_KEY }}
         run: |
           set -euo pipefail
-          askpass="$(mktemp)"
-          helper="$(mktemp)"
-          cleanup() {
-            git config --local --unset-all credential.helper || true
-            git config --local --unset-all url.https://github.com/.insteadOf || true
-            rm -f "$askpass" "$helper"
-          }
-          trap cleanup EXIT
-          if [ -n "${MINNA_REPO_TOKEN}" ]; then
-            cat > "$askpass" <<'EOF'
-          #!/bin/sh
-          case "$1" in
-            *Username*) printf '%s\n' "x-access-token" ;;
-            *) printf '%s\n' "$MINNA_REPO_TOKEN" ;;
-          esac
-          EOF
-            cat > "$helper" <<'EOF'
-          #!/bin/sh
-          case "$1" in
-            get)
-              printf 'username=x-access-token\n'
-              printf 'password=%s\n' "$MINNA_REPO_TOKEN"
-              ;;
-          esac
-          EOF
-            chmod 700 "$askpass" "$helper"
-            export GIT_ASKPASS="$askpass"
-            export GIT_TERMINAL_PROMPT=0
-            # Empty value clears helpers inherited from the runner (osxkeychain),
-            # which would otherwise prompt and hang the job.
-            git config --local credential.helper ""
-            git config --local --add credential.helper "$helper"
-            git config --local url."https://github.com/".insteadOf "git@github.com:"
+          if [ -z "${MINNA_DEPLOY_KEY}" ]; then
+            echo "::error::Missing MINNA_DEPLOY_KEY. nihongoTests needs the private submodule 7kfpun/minna. The secret is a read-only deploy key for that repo."
+            exit 1
           fi
-          set +e
+          install -d -m 700 "${HOME}/.ssh"
+          key_file="${HOME}/.ssh/minna_deploy"
+          trap 'rm -f "$key_file"' EXIT
+          printf '%s\n' "${MINNA_DEPLOY_KEY}" > "$key_file"
+          chmod 600 "$key_file"
+          ssh-keyscan -t ed25519 github.com >> "${HOME}/.ssh/known_hosts"
+          export GIT_SSH_COMMAND="ssh -i ${key_file} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
           sh ci_scripts/ci_post_clone.sh
-          status=$?
-          set -e
-          if [ "$status" -ne 0 ]; then
-            echo "::error::Course data generation failed. nihongoTests needs scripts/build-minna-data.py output from the private submodule 7kfpun/minna. Add repository secret MINNA_REPO_TOKEN with contents:read on that repo."
-            exit "$status"
-          fi
 
       # generic/platform=iOS Simulator only builds. xcodebuild will not run
       # tests on that placeholder. iPhone 17 Pro / iOS 26.5 is the concrete
