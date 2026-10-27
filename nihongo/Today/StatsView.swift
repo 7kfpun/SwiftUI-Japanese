@@ -17,22 +17,13 @@ struct StatsView: View {
     @State private var streak = Streak(days: [])
     @State private var daysStudied = 0
     @State private var challengesPassed = 0
+    @State private var challengesTotal = 0
     @State private var kanaLearned = 0
+    @State private var kanaTotal = 0
     @State private var bookmarkCount = 0
-
-    /// Every rung of every lesson in this course. Arithmetic over the bundled data, so it
-    /// follows `Course.current` — 50 lessons of Minna or 201 of JLPT — with no constant
-    /// to keep in step.
-    private var challengesTotal: Int {
-        (1...Course.current.lessonCount).reduce(0) { $0 + Challenge.count(wordCount: VocabStore.wordCount($1)) }
-    }
-
-    /// Distinct kana cells in the chart, counted rather than hardcoded: the chart is
-    /// generated from the submodule and a literal here would rot the moment it changed.
-    private var kanaTotal: Int {
-        let cells = (KanaData.seion + KanaData.dakuon + KanaData.youon).flatMap { $0 }
-        return Set(cells.filter { !$0.isEmpty }.map(\.romaji)).count
-    }
+    /// The rendered card. Nil until the numbers are loaded, and nil when there is
+    /// nothing to share yet — a zero card would be a picture of not having started.
+    @State private var shareCard: ShareCardFile?
 
     var body: some View {
         NavigationStack {
@@ -51,9 +42,36 @@ struct StatsView: View {
                     // The streak is the reason to come back, so it gets the top of
                     // the screen rather than a row among five equals.
                     Section {
-                        StreakHero(streak: streak)
-                            .listRowInsets(EdgeInsets())
-                            .listRowBackground(Color.clear)
+                        VStack(spacing: 4) {
+                            StreakHero(streak: streak)
+                            if let shareCard {
+                                ShareLink(item: shareCard,
+                                          subject: Text(L.t("Share progress")),
+                                          message: Text(SharePrompt.shareText(campaign: .progress)),
+                                          preview: SharePreview(
+                                            L.t("%@-day streak", "\(streak.current)"),
+                                            image: Image(uiImage: shareCard.image))) {
+                                    Label(L.t("Share progress"), systemImage: "square.and.arrow.up")
+                                        .font(Theme.title(.subheadline))
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 12)
+                                        .foregroundStyle(Theme.accent)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(Theme.accent, lineWidth: 1.5)
+                                        )
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.horizontal, 20)
+                                .padding(.bottom, 4)
+                                .simultaneousGesture(TapGesture().onEnded {
+                                    Track.event("share_opened", ["source": "progress"])
+                                })
+                            }
+                        }
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
                     }
                     row("trophy", L.t("Best streak"), "\(streak.best)")
                     row("calendar", L.t("Days studied"), "\(daysStudied)")
@@ -129,27 +147,21 @@ struct StatsView: View {
     /// One fetch per model, on appear. Nothing here can change while this screen is up —
     /// every counter moves only by answering something, which happens on another tab.
     private func reload() {
-        let days = (try? context.fetch(FetchDescriptor<StudyDay>())) ?? []
-        // By `Set`, not `count`: a sync merge can leave two rows for the same day, and
-        // counting both would report more days studied than the calendar contains.
-        let unique = Set(days.map(\.day))
-        daysStudied = unique.count
-        streak = Streak(days: unique)
-
-        let results = (try? context.fetch(FetchDescriptor<ChallengeResult>())) ?? []
-        challengesPassed = Dictionary(results.map { ($0.id, $0) },
-                                      uniquingKeysWith: ChallengeResult.better)
-            .values.filter(\.isPassed).count
+        // One derivation for the screen and the card. The dedupe rules live on
+        // `ProgressStats` — a second copy here is how the two would drift.
+        let stats = ProgressStats.load(context: context)
+        daysStudied = stats.daysStudied
+        streak = stats.streak
+        challengesPassed = stats.challengesPassed
+        challengesTotal = stats.challengesTotal
+        kanaLearned = stats.kanaLearned
+        kanaTotal = stats.kanaTotal
 
         // Deduped by word, matching `Bookmark.all` — a merge can leave two rows for one
         // word, and counting both would promise more on the shelf than it holds.
         bookmarkCount = Bookmark.all(context: context).count
 
-        let kana = (try? context.fetch(FetchDescriptor<KanaResult>())) ?? []
-        // Same dedupe, by kana: the most recent row for each is the one that counts.
-        kanaLearned = Dictionary(kana.map { ($0.romaji, $0) },
-                                 uniquingKeysWith: { $0.timestamp >= $1.timestamp ? $0 : $1 })
-            .values.filter(\.isCorrect).count
+        shareCard = daysStudied > 0 ? ShareCard.render(stats).map(ShareCardFile.init(image:)) : nil
     }
 }
 

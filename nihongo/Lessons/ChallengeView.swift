@@ -30,6 +30,10 @@ struct ChallengeView: View {
     /// Raised after the nudge dismisses — see `ShareSheetPrompt`, which can't present the
     /// system share sheet from a view that is already going away.
     @State private var showShareSheet = false
+    /// Built when the nudge is accepted, so the card is rendered then and not on every
+    /// frame of the result screen. Starts empty; the sheet is not presented until it
+    /// has been filled.
+    @State private var promptShareItems: [Any] = []
     /// What the star row returned, or nil if it was dismissed without an answer.
     @State private var ratedStars: Int?
     /// The same number, kept for the feedback sheet to carry. Separate because
@@ -187,14 +191,16 @@ struct ChallengeView: View {
             .presentationDetents([.medium])
         }
         .sheet(isPresented: $showSharePrompt) {
-            ShareSheetPrompt { showShareSheet = true }
+            ShareSheetPrompt {
+                promptShareItems = ShareCard.activityItems(campaign: .prompt, context: context)
+                showShareSheet = true
+            }
         }
         // The system share sheet, raised only after the nudge has gone. `.shareSheet` is
         // this app's wrapper; the modifier form is used rather than a `ShareLink` because
         // the trigger is a button inside a sheet that no longer exists by then.
-        .shareSheet(isPresented: $showShareSheet,
-                    items: [SharePrompt.appStoreURL(campaign: .prompt),
-                                            SharePrompt.shareText(campaign: .prompt)])
+        // The streak card rides along with the listing when it renders.
+        .shareSheet(isPresented: $showShareSheet, items: promptShareItems)
     }
 
     // MARK: - The briefing

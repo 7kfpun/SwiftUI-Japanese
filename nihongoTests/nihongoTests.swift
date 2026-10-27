@@ -1,6 +1,7 @@
 import Testing
 import Foundation
 import SwiftData
+import SwiftUI
 import AVFoundation
 import UIKit
 @testable import nihongo
@@ -139,7 +140,7 @@ struct DataTests {
         // Every share carries a campaign token, and every token still resolves to this
         // course's listing — a tagged link that pointed at the other app, or dropped the
         // path while adding the query, would look fine and send installs elsewhere.
-        for campaign in [SharePrompt.Campaign.prompt, .settings] {
+        for campaign in [SharePrompt.Campaign.prompt, .settings, .progress] {
             let url = SharePrompt.appStoreURL(campaign: campaign)
             #expect(url.absoluteString.hasPrefix(Course.current.appStoreURL))
             #expect(SharePrompt.shareText(campaign: campaign).contains(url.absoluteString))
@@ -156,6 +157,8 @@ struct DataTests {
 
         // Distinct tokens, or the whole exercise reports one undifferentiated number.
         #expect(SharePrompt.Campaign.prompt.rawValue != SharePrompt.Campaign.settings.rawValue)
+        #expect(SharePrompt.Campaign.progress.rawValue != SharePrompt.Campaign.prompt.rawValue)
+        #expect(SharePrompt.Campaign.progress.rawValue != SharePrompt.Campaign.settings.rawValue)
     }
 
     /// The analytics profile carries what only the app knows, and nothing that could
@@ -1171,14 +1174,77 @@ struct PremiumTests {
     }
 }
 
+// MARK: - Share card and Read along links
+
+@MainActor
+struct ShareCardTests {
+    private func context() throws -> ModelContext {
+        let container = try ModelContainer(
+            for: StudyDay.self, ChallengeResult.self, KanaResult.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        return ModelContext(container)
+    }
+
+    /// The card and the Progress screen share this derivation. A duplicate day, a
+    /// weaker duplicate challenge row, and an older wrong kana answer must not inflate it.
+    @Test func countsUniqueDaysAndOnlyRealPasses() throws {
+        let ctx = try context()
+        ctx.insert(StudyDay(day: 20260811, answers: 1))
+        ctx.insert(StudyDay(day: 20260811, answers: 4))
+        ctx.insert(StudyDay(day: 20260810, answers: 1))
+        ctx.insert(ChallengeResult(lesson: 1, index: 1, bestScore: 100, stars: 3,
+                                   attempts: 1, completedAt: .now))
+        ctx.insert(ChallengeResult(lesson: 1, index: 1, bestScore: 40, stars: 0,
+                                   attempts: 1, completedAt: nil))
+        ctx.insert(ChallengeResult(lesson: 1, index: 2, bestScore: 50, stars: 0,
+                                   attempts: 1, completedAt: nil))
+        ctx.insert(KanaResult(romaji: "a", isCorrect: true))
+        ctx.insert(KanaResult(romaji: "a", isCorrect: false,
+                              timestamp: .now.addingTimeInterval(-60)))
+        ctx.insert(KanaResult(romaji: "ka", isCorrect: false))
+
+        let stats = ProgressStats.load(context: ctx)
+        #expect(stats.daysStudied == 2)
+        #expect(stats.streak.days == Set([20260811, 20260810]))
+        #expect(stats.challengesPassed == 1)
+        #expect(stats.kanaLearned == 1)
+        #expect(stats.challengesTotal > stats.challengesPassed)
+        #expect(stats.kanaTotal > stats.kanaLearned)
+    }
+
+    /// A tap while the player is already up must not rebuild the stack under it.
+    @Test func openReadAlongLeavesARunningPlayerAlone() {
+        let router = Router()
+        let lesson = Lesson(number: 3, entries: [])
+        router.readAlongLesson = 3
+        router.openReadAlong(lesson)
+        #expect(router.tab == .lessons)
+        #expect(router.lessonPath.count == 0)
+
+        router.readAlongLesson = nil
+        router.openReadAlong(lesson)
+        #expect(router.lessonPath.count == 2)
+    }
+}
+
+struct ReadAlongLinkTests {
+    /// The link names a lesson. It must not grow a user, session or activity id —
+    /// the query is the whole payload.
+    @Test func deepLinkNamesOnlyTheLesson() throws {
+        let url = try #require(ReadAlongLink.url(lesson: 12))
+        #expect(url.scheme == "nihongo")
+        #expect(url.host == "read")
+        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        #expect(items.map(\.name) == ["lesson"])
+        #expect(items.first?.value == "12")
+    }
+}
+
 // MARK: - Lesson playback sequencing
 
 /// The wrap in `LessonPlayer`. Only the pure step function is reachable without audio and
 /// a screen, which is why it exists — the rest is delegate callbacks.
 struct LessonPlayerTests {
-
-
-
     /// Every mode that reads past the word is premium — the gate is on *that*, so a
     /// fourth mode reading something else is paid without `Gating` being edited.
     @Test func everyModeBeyondTheWordIsPremium() {
