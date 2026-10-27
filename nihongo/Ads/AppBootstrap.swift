@@ -58,7 +58,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         RatingPrompt.migrateLegacyFlagIfNeeded()
 
         #if canImport(FirebaseCore)
-        if Bundle.main.url(forResource: "GoogleService-Info", withExtension: "plist") != nil {
+        // The Xcode project copies GoogleService-Info.plist into the bundle, so CI
+        // (and a fresh clone) must ship a file for the build to succeed. The example
+        // / placeholder keys are not a real Firebase app — configuring with them
+        // traps the process in Firebase Installations before tests can start.
+        // Only configure when the plist looks like a real console download.
+        if let plistURL = Bundle.main.url(forResource: "GoogleService-Info", withExtension: "plist"),
+           Self.isRealGoogleServicePlist(plistURL) {
             #if canImport(FirebaseAppCheck)
             // Must be installed *before* configure() — the factory is consulted as
             // Firebase starts, and setting it afterwards leaves the first requests
@@ -108,6 +114,21 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 
         return true
     }
+
+    /// True when GoogleService-Info.plist carries console-issued IDs, not the
+    /// `config/GoogleService-Info.example.plist` placeholders (or CI stubs).
+    private static func isRealGoogleServicePlist(_ url: URL) -> Bool {
+        guard let dict = NSDictionary(contentsOf: url) as? [String: Any] else { return false }
+        let apiKey = (dict["API_KEY"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let appId = (dict["GOOGLE_APP_ID"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if apiKey.isEmpty || appId.isEmpty { return false }
+        let placeholders = ["YOUR_", "your-", "Placeholder", "ci-placeholder", "XXXXXXXX"]
+        let blob = apiKey + appId
+        if placeholders.contains(where: { blob.contains($0) }) { return false }
+        // Real Firebase iOS API keys start with "AIza"; App IDs look like 1:123:ios:hex.
+        return apiKey.hasPrefix("AIza") && appId.contains(":ios:")
+    }
+
 
     // Firebase's app-delegate proxy is disabled (`FirebaseAppDelegateProxyEnabled = NO`
     // in both Info.plists) so it can't fight OneSignal over these callbacks. That makes
