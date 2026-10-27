@@ -180,8 +180,8 @@ quiz: the card is no longer a step of its own, so nothing logs it.
 | `rating_dismissed` | source; +lesson from the ladder | closed without picking |
 | `review_requested` | — | SKStoreReviewController asked |
 | `share_prompt_shown` / `share_prompt_dismissed` | lesson, passed_total / accepted | the recommend-a-friend nudge |
-| `share_opened` | source (prompt/settings) | share sheet opened |
-| `share_completed` | source, completed, activity | the share sheet closed — **also on cancel**, as `completed: false` with `activity: none`, so this is not a conversion count on its own. Only the prompt path can emit it (Settings shares through `ShareLink`, which has no completion handler), so `source` is always `prompt` |
+| `share_opened` | source (prompt/settings/progress) | share sheet opened. `progress` is the streak card on Progress |
+| `share_completed` | source, completed, activity | the share sheet closed — **also on cancel**, as `completed: false` with `activity: none`, so this is not a conversion count on its own. Only the prompt path can emit it (Settings and the Progress card share through `ShareLink`, which has no completion handler), so `source` is always `prompt` |
 | `notification_opt_in` | source (intro/streak), accepted; +streak from streak | soft ask answered |
 | `notification_opt_in_dismissed` | streak | soft-ask sheet swiped away |
 | `notification_permission` | granted | the one-shot iOS alert — logged only when the status was `.notDetermined`, i.e. when the alert could actually appear |
@@ -196,6 +196,7 @@ quiz: the card is no longer a step of its own, so nothing logs it.
 | `survey_failed` | collection | a Firestore write was rejected — usually stale rules |
 | `ad_failed` / `interstitial_shown` / `interstitial_failed` | error where relevant; `ad_failed` adds slot | ad lifecycle — `slot` is which banner placement failed, so one broken unit doesn't read as every ad failing |
 | `widget_open` / `widget_challenge_open` | lesson (+index) | launched via widget deep link |
+| `read_along_open` | lesson | `nihongo://read?lesson=N` from the Read along Live Activity. The query is the lesson number only |
 | `push_registered` / `push_register_failed` / `fcm_token` | error / present | APNs registration |
 | `notification_opened` | kind (streak_reminder/push) | a notification was tapped |
 | `feedback_opened` / `feedback_dismissed` | source; dismiss adds message_length, kind, area, stars | sheet opened / abandoned — the picks ride the abandon so half-filled reports are visible |

@@ -88,6 +88,9 @@ struct nihongoApp: App {
     ///
     /// `nihongo://challenge?lesson=N&index=C` — the "Ready for Challenge C?" call to
     /// action, which lands on that lesson's mode list rather than the app's front door.
+    ///
+    /// `nihongo://read?lesson=N` — the Read along Live Activity. Lands on that lesson's
+    /// player. The query is the lesson number and nothing else.
     private func handle(_ url: URL) {
         guard url.scheme == "nihongo" else { return }
         let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
@@ -118,6 +121,19 @@ struct nihongoApp: App {
                     ?? VocabStore.deviceDefaultLanguage
                 router.openLesson(VocabStore.lesson(n, language))
             }
+
+        case "read":
+            // Read along's Japanese-only pass is free on every lesson, so a locked
+            // lesson still opens the player. An unknown number has nowhere to go
+            // except the list.
+            guard let n = int("lesson"), Course.current.hasLesson(n) else {
+                router.openLessonList()
+                return
+            }
+            Track.event("read_along_open", ["lesson": n])
+            let language = UserDefaults.standard.string(forKey: Pref.translationLanguage)
+                ?? VocabStore.deviceDefaultLanguage
+            router.openReadAlong(VocabStore.lesson(n, language))
 
         default:
             break

@@ -95,6 +95,10 @@ struct LessonListView: View {
             .onAppear { Track.screen("lessons"); reloadProgress() }
             .onChange(of: group) { Track.event("lesson_group", ["group": group]) }
             .navigationDestination(for: Lesson.self) { SelectModeView(lesson: $0) }
+            .navigationDestination(for: Router.ReadAlongRoute.self) { route in
+                let lesson = VocabStore.lesson(route.lesson, language)
+                ReadAlongView(lesson: lesson, words: lesson.entries)
+            }
             .searchable(text: $query, prompt: L.t("Search vocabulary"))
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)

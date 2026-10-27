@@ -242,6 +242,17 @@
 			<string>3qcr597p9d.skadnetwork</string>
 		</dict>
 	</array>
+	<!--
+	  Read along's Lock Screen / Dynamic Island. This is the whole capability:
+	  local ActivityKit updates do not add an entitlements key, and this feature
+	  does not request a push token. The Developer Portal needs nothing new —
+	  the App ID already has Push, which this activity does not use.
+	  Confirm after install: Settings → Japanese Daily → Live Activities.
+	  JLPT's plist stays without this key; that app does not embed the widget
+	  that draws the activity, and the controller does not start one there.
+	-->
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UIAppFonts</key>
 	<array>
 		<string>KanjiStrokeOrders_v4.005.ttf</string>

@@ -18,6 +18,7 @@ struct ReadAlongView: View {
     @AppStorage(Pref.translationLanguage) private var language = VocabStore.deviceDefaultLanguage
     @AppStorage(Pref.playbackRate) private var playbackRate = 1.0
     @Environment(Store.self) private var store
+    @Environment(Router.self) private var router
     @Environment(\.pronouncer) private var pronouncer
     @State private var player = LessonPlayer()
     @State private var showPaywall = false
@@ -84,11 +85,29 @@ struct ReadAlongView: View {
         .onAppear {
             Track.screen("read_along", ["lesson": lesson.number])
             ModeVisits.mark(lesson: lesson.number, mode: "read_along")
+            router.readAlongLesson = lesson.number
+            // The island's pause button runs in the app process and has no view to
+            // call. The closure is the player, and it comes down with the screen.
+            ReadAlongRemote.toggle = { [player, number = lesson.number] in
+                guard player.isPlaying else { return }
+                let pausing = !player.isPaused
+                Track.event("read_all_pause", ["lesson": number, "paused": pausing])
+                if pausing { player.pause() } else { player.resume() }
+            }
             // Opening this screen is the request: nobody arrives here to look at a
             // stopped player. The old menu made starting a second, separate decision.
             if !player.isPlaying { start(.japanese) }
+            publishActivity()
         }
-        .onDisappear { player.stop(); player.onFinished = nil; player.onLap = nil }
+        .onDisappear {
+            ReadAlongRemote.toggle = nil
+            if router.readAlongLesson == lesson.number { router.readAlongLesson = nil }
+            player.stop()
+            player.onFinished = nil
+            player.onLap = nil
+            ReadAlongActivity.end()
+        }
+        .onChange(of: activityState) { _, _ in publishActivity() }
         .sheet(isPresented: $showPaywall) {
             PaywallView(source: paywallSource, lesson: lesson.number)
         }
@@ -402,6 +421,42 @@ struct ReadAlongView: View {
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14)
             .stroke(isCurrent ? Theme.accent : Color.clear, lineWidth: 2))
+    }
+
+    // MARK: - Live Activity
+
+    /// Nil once the player has stopped, which is the signal to end the activity.
+    /// A pause keeps a value, with `isPlaying` false, so the island stays up.
+    private var activityState: ReadAlongAttributes.ContentState? {
+        guard player.isPlaying, player.count > 0, let word = player.currentWord else { return nil }
+        let index = player.currentIndex ?? 0
+        let moving = !player.isPaused
+        return ReadAlongAttributes.ContentState(
+            lessonTitle: L.t("Lesson %@", "\(lesson.number)"),
+            word: word.kana,
+            index: index,
+            count: player.count,
+            isPlaying: moving,
+            progressLabel: L.t("Word %@ of %@", "\(index + 1)", "\(player.count)"),
+            statusLabel: moving ? L.t("Playing") : L.t("Paused"),
+            actionLabel: moving ? L.t("Pause") : L.t("Resume"),
+            modeLabel: Self.modeLabel(player.mode))
+    }
+
+    private static func modeLabel(_ mode: ReadMode) -> String {
+        switch mode {
+        case .japanese:    return L.t("Word")
+        case .withMeaning: return L.t("+ Meaning")
+        case .withExample: return L.t("+ Example")
+        }
+    }
+
+    private func publishActivity() {
+        if let activityState {
+            ReadAlongActivity.sync(lesson: lesson.number, state: activityState)
+        } else {
+            ReadAlongActivity.end()
+        }
     }
 
     // MARK: - Playback
