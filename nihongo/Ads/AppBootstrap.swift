@@ -108,8 +108,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         // Non-personalized ads only: we deliberately ship without App Tracking
         // Transparency, so ads must never use the IDFA. No ATT prompt, no tracking
         // declaration in App Privacy — at the cost of lower ad personalization/eCPM.
-        MobileAds.shared.requestConfiguration.publisherPrivacyPersonalizationState = .disabled
-        MobileAds.shared.start(completionHandler: nil)
+        // Skip under XCTest/CI — MobileAds.start can stall the test host bootstrap.
+        let underTest = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || ProcessInfo.processInfo.environment["CI"] == "true"
+        if !underTest {
+            MobileAds.shared.requestConfiguration.publisherPrivacyPersonalizationState = .disabled
+            MobileAds.shared.start(completionHandler: nil)
+        }
         #endif
 
         return true
