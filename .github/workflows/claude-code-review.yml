@@ -27,6 +27,8 @@ jobs:
           fetch-depth: 1
 
       - name: Claude PR review
+        # Token/API errors must not block the PR; review is advisory.
+        continue-on-error: true
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}

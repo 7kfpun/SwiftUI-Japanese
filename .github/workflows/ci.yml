@@ -1,0 +1,260 @@
+name: CI
+
+# Same gate as feature/claude-review-action's Claude review workflow:
+# non-draft PRs whose head is feature/* and whose base is main.
+# synchronize is included, so every push to an open PR re-runs.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests
+    if: >-
+      github.event.pull_request.draft == false &&
+      startsWith(github.head_ref, 'feature/') &&
+      github.base_ref == 'main'
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # nihongoTests reads bundled JSON and clips that are gitignored and
+      # produced by ci_scripts/ci_post_clone.sh from the private minna
+      # submodule. GITHUB_TOKEN cannot read that other repo. MINNA_DEPLOY_KEY
+      # is a read-only deploy key on 7kfpun/minna; the submodule URL is SSH.
+      - name: Generate bundled course data
+        env:
+          MINNA_DEPLOY_KEY: ${{ secrets.MINNA_DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${MINNA_DEPLOY_KEY}" ]; then
+            echo "::error::Missing MINNA_DEPLOY_KEY. nihongoTests needs the private submodule 7kfpun/minna. The secret is a read-only deploy key for that repo."
+            exit 1
+          fi
+          install -d -m 700 "${HOME}/.ssh"
+          key_file="${HOME}/.ssh/minna_deploy"
+          trap 'rm -f "$key_file"' EXIT
+          printf '%s\n' "${MINNA_DEPLOY_KEY}" > "$key_file"
+          chmod 600 "$key_file"
+          ssh-keyscan -t ed25519 github.com >> "${HOME}/.ssh/known_hosts"
+          export GIT_SSH_COMMAND="ssh -i ${key_file} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
+          sh ci_scripts/ci_post_clone.sh
+
+      # Xcode CopyPlistFile requires these paths. They are gitignored; examples
+      # under config/ are enough to build and run unit tests in CI.
+      - name: Prepare gitignored plists
+        run: |
+          set -euo pipefail
+          cp config/Secrets.example.plist nihongo/Secrets.plist
+          cp config/GoogleService-Info.example.plist nihongo/GoogleService-Info.plist
+          # Firebase Installations rejects placeholder YOUR_API_KEY shapes and
+          # can crash the host. Use the same 39-char A-prefixed form as TWAQI CI.
+          /usr/libexec/PlistBuddy -c "Set :API_KEY AciPlaceholderKeyForUnitTests0000000000" nihongo/GoogleService-Info.plist || true
+          /usr/libexec/PlistBuddy -c "Set :GCM_SENDER_ID 123456789012" nihongo/GoogleService-Info.plist || true
+          /usr/libexec/PlistBuddy -c "Set :PROJECT_ID ci-placeholder" nihongo/GoogleService-Info.plist || true
+          /usr/libexec/PlistBuddy -c "Set :BUNDLE_ID com.kfpun.nihongo" nihongo/GoogleService-Info.plist || true
+          /usr/libexec/PlistBuddy -c "Set :GOOGLE_APP_ID 1:123456789012:ios:abcdefabcdefabcdefabcdef" nihongo/GoogleService-Info.plist || true
+          /usr/libexec/PlistBuddy -c "Set :STORAGE_BUCKET ci-placeholder.appspot.com" nihongo/GoogleService-Info.plist || true
+          ls -la nihongo/Secrets.plist nihongo/GoogleService-Info.plist
+
+      # generic/platform=iOS Simulator only builds. xcodebuild will not run
+      # tests on that placeholder. iPhone 17 Pro / iOS 26.5 is the concrete
+      # simulator that satisfies IPHONEOS_DEPLOYMENT_TARGET = 26.5 and is
+      # preinstalled on macos-latest (older runtimes on the image are
+      # ineligible). -only-testing:nihongoTests skips nihongoUITests. The
+      # jlpt scheme, which hosts jlptUITests, is not invoked.
+      # CODE_SIGNING_ALLOWED=NO: the project sets DEVELOPMENT_TEAM and the
+      # runner has no Apple certificate.
+      - name: Unit tests
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          xcodebuild test \
+            -project nihongo.xcodeproj \
+            -scheme nihongo \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
+            -only-testing:nihongoTests \
+            CODE_SIGNING_ALLOWED=NO
+
+  vulnerabilities:
+    name: Vulnerabilities
+    if: >-
+      github.event.pull_request.draft == false &&
+      startsWith(github.head_ref, 'feature/') &&
+      github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Fails the job when a secret is found. No GITLEAKS_LICENSE: this
+      # repository is under the personal account 7kfpun, and the action
+      # requires that secret only for organization accounts.
+      - name: Secrets scan
+        # Advisory: a secret finding should warn, not block the PR.
+        continue-on-error: true
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+
+      # Scan both lockfiles. Known vulnerabilities, parse issues, and
+      # unrecognized lockfile formats warn and are written to one PR
+      # comment; they do not fail the check. There is no severity gate.
+      - name: Dependency scan
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          curl -fsSL -o /tmp/osv-scanner \
+            "https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64"
+          sudo install -m 0755 /tmp/osv-scanner /usr/local/bin/osv-scanner
+          osv-scanner --version
+          mkdir -p /tmp/osv
+          : > /tmp/osv/manifest.txt
+          scan_lock() {
+            file="$1"
+            if [ ! -f "$file" ]; then
+              echo "::error::lockfile not found: ${file}"
+              exit 1
+            fi
+            out="/tmp/osv/$(printf '%s' "$file" | tr '/' '_').json"
+            set +e
+            osv-scanner scan source --format json --lockfile "$file" >"$out"
+            code=$?
+            set -e
+            printf '%s %s %s\n' "$code" "$file" "$out" >> /tmp/osv/manifest.txt
+          }
+          scan_lock Gemfile.lock
+          scan_lock nihongo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          python3 - /tmp/osv/manifest.txt <<'PY'
+          import json, os, sys
+          from pathlib import Path
+
+          rows = []
+          errors = []
+          notes = []
+          for line in Path(sys.argv[1]).read_text().splitlines():
+              code_s, label, out = line.split(" ", 2)
+              code = int(code_s)
+              try:
+                  data = json.loads(Path(out).read_text() or "{}")
+              except Exception as exc:
+                  errors.append(f"`{label}`: osv-scanner exit {code}, output was not JSON ({exc}).")
+                  continue
+              packages = 0
+              found = []
+              for result in data.get("results") or []:
+                  for pkg in result.get("packages") or []:
+                      packages += 1
+                      info = pkg.get("package") or {}
+                      name = info.get("name") or "?"
+                      version = info.get("version") or "?"
+                      for vuln in pkg.get("vulnerabilities") or []:
+                          summary = (vuln.get("summary") or "").replace("|", "/").replace("\n", " ").strip()
+                          if len(summary) > 160:
+                              summary = summary[:157] + "..."
+                          found.append((label, name, version, vuln.get("id") or "?", summary))
+              notes.append(f"`{label}`: {packages} packages, scanner exit {code}")
+              print(notes[-1])
+              if packages == 0:
+                  # Xcode 16+ Package.resolved "pins" format may not parse yet.
+                  # Treat as a warning so the check stays advisory.
+                  notes.append(f"`{label}`: extracted no packages (exit {code}); lockfile format may be unrecognized.")
+                  print(f"::warning file={label}::extracted no packages (exit {code})")
+              elif code not in (0, 1):
+                  errors.append(f"`{label}`: osv-scanner failed with exit {code}.")
+              elif code == 1 and not found:
+                  errors.append(f"`{label}`: scanner exit 1 with no vulnerability records in the JSON.")
+              rows.extend(found)
+
+          def link(vid):
+              if vid.startswith("GHSA-"):
+                  return f"https://github.com/advisories/{vid}"
+              return f"https://osv.dev/vulnerability/{vid}"
+
+          has_findings = bool(rows)
+          has_errors = bool(errors)
+          lines = ["<!-- ci-vuln-report -->", ""]
+          if has_errors:
+              lines.append("**Dependency scan failed.**")
+          elif has_findings:
+              lines.append("**Dependency scan found vulnerabilities.** The check warns and does not fail.")
+          else:
+              lines.append("**Dependency scan passed.** No known vulnerabilities in the scanned lockfiles.")
+          lines.append("")
+          seen = set()
+          unique = []
+          for item in rows:
+              key = (item[0], item[1], item[2], item[3])
+              if key in seen:
+                  continue
+              seen.add(key)
+              unique.append(item)
+          if unique:
+              lines += ["| Lockfile | Package | Advisory |", "|---|---|---|"]
+              for label, name, version, vid, summary in unique:
+                  detail = f" — {summary}" if summary else ""
+                  lines.append(f"| `{label}` | `{name}` {version} | [{vid}]({link(vid)}){detail} |")
+              lines.append("")
+          if errors:
+              lines.append("Scan errors:")
+              lines.append("")
+              lines += [f"- {item}" for item in errors]
+              lines.append("")
+          for label, name, version, vid, summary in unique:
+              detail = f" — {summary}" if summary else ""
+              message = f"{name} {version} {vid}{detail}".replace("::", " ")
+              print(f"::warning file={label}::{message}")
+          for item in errors:
+              print(f"::error::{item}")
+          lines += [f"- {note}" for note in notes]
+          lines += ["", f"[View workflow run]({os.environ['RUN_URL']})", ""]
+          body = "\n".join(lines) + "\n"
+          Path("/tmp/osv/comment.md").write_text(body)
+          Path("/tmp/osv/exitcode").write_text("0\n")  # warning-only: never fail the check
+          Path("/tmp/osv/comment_needed").write_text("1\n" if (has_findings or has_errors) else "0\n")
+          summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary_path and (has_findings or has_errors):
+              visible = "\n".join(line for line in lines if not line.startswith("<!--"))
+              with Path(summary_path).open("a") as handle:
+                  handle.write(visible.lstrip("\n") + "\n")
+          PY
+          marker='<!-- ci-vuln-report -->'
+          needed=$(tr -d '[:space:]' < /tmp/osv/comment_needed)
+          existing=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments?per_page=100" \
+            --jq "map(select((.body // \"\") | contains(\"${marker}\"))) | .[0].id // empty")
+          if [ "$needed" = "1" ] || [ -n "$existing" ]; then
+            if [ -n "$existing" ]; then
+              jq -n --rawfile body /tmp/osv/comment.md '{body: $body}' \
+                | gh api --method PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${existing}" --input -
+            else
+              gh pr comment "$PR_NUMBER" --body-file /tmp/osv/comment.md
+            fi
+          fi
+          # Warning only — findings already emitted as ::warning / PR comment.
+          exit 0
+
+
