@@ -57,16 +57,11 @@ jobs:
       - name: Prepare gitignored plists
         run: |
           set -euo pipefail
+          # Xcode Copy Bundle Resources requires these paths. Examples are enough
+          # to build; AppBootstrap skips FirebaseApp.configure() for placeholder
+          # keys so the test host does not trap in Firebase Installations.
           cp config/Secrets.example.plist nihongo/Secrets.plist
           cp config/GoogleService-Info.example.plist nihongo/GoogleService-Info.plist
-          # Firebase Installations rejects placeholder YOUR_API_KEY shapes and
-          # can crash the host. Use the same 39-char A-prefixed form as TWAQI CI.
-          /usr/libexec/PlistBuddy -c "Set :API_KEY AciPlaceholderKeyForUnitTests0000000000" nihongo/GoogleService-Info.plist || true
-          /usr/libexec/PlistBuddy -c "Set :GCM_SENDER_ID 123456789012" nihongo/GoogleService-Info.plist || true
-          /usr/libexec/PlistBuddy -c "Set :PROJECT_ID ci-placeholder" nihongo/GoogleService-Info.plist || true
-          /usr/libexec/PlistBuddy -c "Set :BUNDLE_ID com.kfpun.nihongo" nihongo/GoogleService-Info.plist || true
-          /usr/libexec/PlistBuddy -c "Set :GOOGLE_APP_ID 1:123456789012:ios:abcdefabcdefabcdefabcdef" nihongo/GoogleService-Info.plist || true
-          /usr/libexec/PlistBuddy -c "Set :STORAGE_BUCKET ci-placeholder.appspot.com" nihongo/GoogleService-Info.plist || true
           ls -la nihongo/Secrets.plist nihongo/GoogleService-Info.plist
 
       # generic/platform=iOS Simulator only builds. xcodebuild will not run
