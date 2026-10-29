@@ -1585,24 +1585,26 @@ struct TodayTests {
 
 // MARK: - Survey submissions
 
-/// The survey schemas are enforced *server-side* by `firestore.rules`, whose `hasOnly` /
-/// `hasAll` lists must match the app's field names exactly. A mismatch rejects every write
-/// with no user-visible symptom — the failure surfaces only as a console line and a
-/// `survey_failed` event — so these tests transcribe the published rules and compare.
+/// Survey rows are created in Directus collections whose columns must match the app's field
+/// names exactly. A mismatch fails the write (or, under an all-fields policy, drops the
+/// value) with no user-visible symptom — the failure surfaces only as a console line and a
+/// `survey_failed` event — so these tests transcribe the column lists and compare.
 ///
 /// This is the test that was missing when the shared context was introduced: the app began
-/// sending five new fields while the deployed rules still closed on the old set, which would
-/// have silently rejected every intro submission.
+/// sending five new fields while the deployed (then Firestore) schema still closed on the old
+/// set, which would have silently rejected every intro submission.
 struct SurveyTests {
-    /// Transcribed from `firestore.rules`' `context()`. Update both together, never one.
-    private static let ruleContextKeys: Set<String> = [
+    /// Transcribed from the Directus columns every `japanese_survey_*` collection shares,
+    /// minus the server's own `id`, `date_created` and `archived`. Update both together,
+    /// never one.
+    private static let columnContextKeys: Set<String> = [
         "platform", "app_version", "os", "device",
         "os_language", "app_language", "vocab_language", "region",
         "is_premium", "tier", "challenges_passed", "kana_answered",
         "sound_on", "analytics_excluded", "shown_fields",
         "text_size", "appearance", "last_screen",
         "knows_kana", "goal", "textbook_lesson",
-        "debug", "v", "at",
+        "debug", "v",
     ]
 
     /// The primitive initializer, which is the only one a test can use: the convenience one
@@ -1612,62 +1614,91 @@ struct SurveyTests {
                        kanaAnswered: 0, textSize: "L", appearance: "light")
     }
 
-    @Test func contextKeysMatchThePublishedRules() {
-        #expect(Survey.Context.keys == Self.ruleContextKeys)
-        // `fields` omits `at` deliberately — the server stamps it, so the map the app
-        // builds is the declared set minus that one key.
-        #expect(Set(context.fields.keys) == Self.ruleContextKeys.subtracting(["at"]))
+    @Test func contextKeysMatchTheDirectusColumns() {
+        #expect(Survey.Context.keys == Self.columnContextKeys)
+        // No timestamp: Directus stamps `date_created` itself, so the map the app builds is
+        // exactly the declared set.
+        #expect(Set(context.fields.keys) == Self.columnContextKeys)
     }
 
     /// The intro adds no fields of its own any more — its three answers are context fields
-    /// that every collection carries, which is why the rules take `hasExactly(data, [])`
-    /// there. `submit(_ intro:)` still merges them, to decide the *value*, not the key set.
+    /// that every collection carries. `submit(_ intro:)` still merges them, to decide the
+    /// *value*, not the key set.
     @Test func introSubmissionIsExactlyTheContext() {
         let answers: Set<String> = ["knows_kana", "textbook_lesson", "goal"]
         #expect(answers.isSubset(of: Survey.Context.keys))
-        let all = Set(context.fields.keys).union(answers)
-        #expect(all == Self.ruleContextKeys.subtracting(["at"]))
-        // Values the rules pin to a closed set.
+        let intro = Survey.Intro(knowsKana: "both", textbookLesson: 3, goal: "travel")
+        let row = Survey.fields(intro, context: context)
+        #expect(Set(row.keys) == Self.columnContextKeys)
+        // The answers from this run win over whatever `Pref` holds.
+        #expect(row["knows_kana"] as? String == "both")
+        #expect(row["textbook_lesson"] as? Int == 3)
+        #expect(row["goal"] as? String == "travel")
+        // Values the columns expect from a closed set.
         #expect(context.fields["platform"] as? String == "iOS")
     }
 
-    /// One row per star tap, in its own collection — `survey_feedback` requires a non-empty
-    /// `message`, which a rating has no way to supply.
+    /// One row per star tap, in its own collection — `japanese_survey_feedback` requires a
+    /// non-empty `message`, which a rating has no way to supply.
     @Test func ratingSubmissionCarriesContextPlusItsStars() {
         let own: Set<String> = ["stars"]
-        let all = Set(context.fields.keys).union(own)
-        #expect(all == Self.ruleContextKeys.subtracting(["at"]).union(own))
-        // The rules accept 1-5 only: no answer writes no row rather than a 0.
+        let row = Survey.fields(Survey.Rating(stars: 4), context: context)
+        #expect(Set(row.keys) == Self.columnContextKeys.union(own))
+        #expect(row["stars"] as? Int == 4)
+        // 1-5 only: no answer writes no row rather than a 0.
         #expect(Survey.Rating(stars: 1).stars >= 1)
         #expect(Survey.Rating(stars: 5).stars <= 5)
     }
 
-    /// Transcribed from `firestore.rules`' `survey_feedback` own-field list. The three
-    /// second-level fields (`area`, `lesson`, `item`) are the reason this is spelled out
-    /// separately: they were added to the payload and the rules in one change, and the
-    /// moment those two lists disagree every feedback write is rejected with nothing to
-    /// show for it but a console line.
-    private static let ruleFeedbackKeys: Set<String> = [
+    /// Transcribed from `japanese_survey_feedback`'s own columns. The three second-level
+    /// fields (`area`, `lesson`, `item`) are the reason this is spelled out separately: they
+    /// were added to the payload and the schema in one change, and the moment those two lists
+    /// disagree every feedback write fails with nothing to show for it but a console line.
+    private static let columnFeedbackKeys: Set<String> = [
         "kind", "area", "message", "email", "source", "stars", "lesson", "item",
     ]
 
     @Test func feedbackSubmissionCarriesContextPlusItsOwnFields() {
-        let all = Set(context.fields.keys).union(Self.ruleFeedbackKeys)
-        #expect(all == Self.ruleContextKeys.subtracting(["at"]).union(Self.ruleFeedbackKeys))
-        // The payload the app actually builds, not just the declared set — a field named in
-        // the rules but never sent fails `hasAll` exactly as loudly as an unexpected one
-        // fails `hasOnly`.
+        // The payload the app actually builds, not just the declared set — a column the app
+        // never fills is as wrong as a field with no column.
         let draft = FeedbackDraft(kind: .bug, area: .audio, message: "no sound", stars: 3)
         let submission = draft.submission(source: .settings)
         #expect(submission != nil)
-        #expect(Set(Self.feedbackPayload(submission!).keys) == Self.ruleFeedbackKeys)
+        let row = Survey.fields(submission!, context: context)
+        #expect(Set(row.keys) == Self.columnContextKeys.union(Self.columnFeedbackKeys))
+        #expect(row["area"] as? String == "audio")
+        #expect(row["message"] as? String == "no sound")
     }
 
-    /// The same merge `Survey.submit(_ feedback:)` performs, minus the context — kept here
-    /// because the real one writes to Firestore and can't be inspected.
-    private static func feedbackPayload(_ f: Survey.Feedback) -> [String: Any] {
-        ["kind": f.kind, "area": f.area, "message": f.message, "email": f.email,
-         "source": f.source, "stars": f.stars, "lesson": f.lesson, "item": f.item]
+    /// The create call itself: `POST /items/<collection>` with the bearer token and the row
+    /// as a flat JSON object — nothing added on the way out, in particular no identifier.
+    @Test func directusCreateRequestCarriesExactlyTheRow() throws {
+        #expect(Survey.Directus.introCollection == "japanese_survey_intro")
+        #expect(Survey.Directus.ratingCollection == "japanese_survey_rating")
+        #expect(Survey.Directus.feedbackCollection == "japanese_survey_feedback")
+
+        let row = Survey.fields(Survey.Rating(stars: 2), context: context)
+        let request = try #require(Survey.Directus.createRequest(
+            collection: Survey.Directus.ratingCollection, fields: row, token: "test-token"))
+        #expect(request.httpMethod == "POST")
+        #expect(request.url?.absoluteString == "https://cms.wahthefox.com/items/japanese_survey_rating")
+        #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer test-token")
+        #expect(request.value(forHTTPHeaderField: "Content-Type") == "application/json")
+
+        let body = try #require(request.httpBody)
+        let sent = try #require(try JSONSerialization.jsonObject(with: body) as? [String: Any])
+        #expect(Set(sent.keys) == Self.columnContextKeys.union(["stars"]))
+        // Booleans stay booleans and ints stay ints, which is what the columns are typed as.
+        #expect(sent["is_premium"] as? Bool == false)
+        #expect(sent["stars"] as? Int == 2)
+    }
+
+    /// A rejection is reported with Directus's own message, which names the field or
+    /// permission at fault — the console line is the only diagnostic there is.
+    @Test func directusFailureNamesTheCause() {
+        let body = Data(#"{"errors":[{"message":"Value too long."}]}"#.utf8)
+        #expect(Survey.Directus.describe(status: 400, body: body) == "HTTP 400 — Value too long.")
+        #expect(Survey.Directus.describe(status: 502, body: Data()) == "HTTP 502")
     }
 
     /// Every closed-set value in the feedback payload, against the rules' own lists. A value

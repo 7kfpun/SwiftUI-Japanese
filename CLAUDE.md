@@ -56,13 +56,16 @@ first and follow its index; it is kept current and is the fastest way in.
 
 ## Invariants that bite
 
-- **Firestore rules must ship with the app.** `hasOnly`/`hasAll` close each collection's
-  field set, so adding a field without republishing `firestore.rules` rejects **every**
-  write, visible only as a console line and a `survey_failed` event.
-  `SurveyTests.contextKeysMatchThePublishedRules` guards this — keep it passing.
+- **Survey columns must exist before the app sends them.** Rows go to Directus
+  (`https://cms.wahthefox.com`, `japanese_survey_{intro,rating,feedback}`) through a
+  create-only static token in the git-ignored `Secrets.plist` (`directusToken`). Adding a
+  field to `Survey.Context` or a payload without adding the column fails **every** write,
+  visible only as a console line and a `survey_failed` event. No token bundled means every
+  submission is a silent no-op. `SurveyTests.contextKeysMatchTheDirectusColumns` guards the
+  key set — keep it passing, and add the column first.
 - **The app never mints or sends a persistent identifier of its own.** No IDFA, IDFV,
   vendor UUID or minted install ID in anything *this code* writes — above all `Survey`,
-  whose Firestore documents carry no user, session or reply channel. It ships without App
+  whose Directus rows carry no user, session or reply channel. It ships without App
   Tracking Transparency and forces non-personalized ads. Device *characteristics* (model,
   OS, language, region) are fine; anything that joins two rows to one person is not, and
   `Survey.Context.model` is a characteristic precisely because every unit of a model
