@@ -120,11 +120,11 @@ for n in range(1, 51):
         out.append(entry)
     lessons.append({"number": n, "entries": out})
 
-translations = {L: {str(n): json.load(open(f"{SRC}/{L}/{n}.json")) for n in range(1, 51)} for L in LANGS}
+translations = {L: {str(n): json.load(open(f"{SRC}/words/{L}/{n}.json")) for n in range(1, 51)} for L in LANGS}
 
-# Example-sentence translations exist for a subset of languages (en, zh, zh-Hant so
-# far). Derived from the folders actually present, not a list here — a new language
-# upstream should appear by regenerating, not by editing this script.
+# Example-sentence translations are derived from the folders actually present, not a
+# list here — they arrived upstream a few languages at a time, and a new one should
+# appear by regenerating, not by editing this script.
 EX_SRC = os.path.join(SRC, "examples")
 example_langs = sorted(d for d in os.listdir(EX_SRC)
                        if os.path.isdir(os.path.join(EX_SRC, d))) if os.path.isdir(EX_SRC) else []
