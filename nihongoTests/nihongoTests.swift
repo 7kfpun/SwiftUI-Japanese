@@ -2055,10 +2055,15 @@ struct LocalizationTests {
 
 @MainActor
 struct PersistenceTests {
+    /// `cloudKitDatabase: .none` on every test store: the host app carries the iCloud
+    /// entitlement, so an in-memory store still gets a CloudKit mirror. On a simulator
+    /// with no iCloud account its error recovery tears down the store's connections, and
+    /// the next fetch kills the test host ("No eligible connection available") along
+    /// with every suite still queued behind it.
     private func makeContext() throws -> ModelContext {
         let container = try ModelContainer(
             for: KanaResult.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
         return ModelContext(container)
     }
 
@@ -2527,7 +2532,7 @@ struct ChallengeResultTests {
     private func makeContext() throws -> ModelContext {
         let container = try ModelContainer(
             for: ChallengeResult.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
         return ModelContext(container)
     }
 
@@ -2820,7 +2825,7 @@ struct IntroTests {
 
         let container = try ModelContainer(
             for: ChallengeResult.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
         let ctx = ModelContext(container)
         #expect(try ctx.fetch(FetchDescriptor<ChallengeResult>()).isEmpty)
         #expect(ChallengeResult.totalPassed(context: ctx) == 0)
