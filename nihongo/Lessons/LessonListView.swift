@@ -13,6 +13,8 @@ struct LessonListView: View {
     /// The stack lives on the router so the widget's "Ready for Challenge N?" link can
     /// push lesson + rung directly. Row taps append to the same path.
     @Environment(Router.self) private var router
+    @Environment(Store.self) private var store
+    @Environment(Unlock.self) private var unlock
     private static let groups = Course.current.groups
 
     /// Search hits for the current query.
@@ -42,7 +44,7 @@ struct LessonListView: View {
                     // each carry a lesson's standing; this is the only place that says
                     // how the *group* is going, which is the question the picker asks.
                     Text(groupSummary)
-                        .font(.footnote)
+                        .font(Theme.title(.footnote, weight: .regular))
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 20)
@@ -51,12 +53,31 @@ struct LessonListView: View {
 
                 List {
                     if query.isEmpty {
-                        ForEach(Self.groups[group].range, id: \.self) { n in
-                            NavigationLink(value: VocabStore.lesson(n, language)) {
-                                LessonRow(number: n,
-                                          done: passed[n] ?? 0,
-                                          total: Challenge.count(
-                                            wordCount: VocabStore.lesson(n, language).entries.count))
+                        // Where the learner is, whichever band is showing — the list's
+                        // one call to action, so finding your place in fifty rows is
+                        // never the first job.
+                        if let next = continueLesson {
+                            Section {
+                                NavigationLink(value: VocabStore.lesson(next, language)) {
+                                    ContinueCard(number: next,
+                                                 done: passed[next] ?? 0,
+                                                 total: Challenge.count(wordCount: VocabStore.wordCount(next)))
+                                }
+                                .navigationLinkIndicatorVisibility(.hidden)
+                                .listRowBackground(Color.primary)
+                            }
+                        }
+                        Section {
+                            ForEach(Self.groups[group].range, id: \.self) { n in
+                                let lesson = VocabStore.lesson(n, language)
+                                NavigationLink(value: lesson) {
+                                    LessonRow(number: n,
+                                              preview: lesson.entries.prefix(3).map(\.kanji),
+                                              done: passed[n] ?? 0,
+                                              total: Challenge.count(wordCount: lesson.entries.count),
+                                              locked: Gating.isLocked(lesson: n, isPremium: store.isPremium,
+                                                                      earnedFirstGroup: unlock.earnedFirstGroup))
+                                }
                             }
                         }
                     } else {
@@ -84,8 +105,7 @@ struct LessonListView: View {
                         } header: {
                             // Spelled out rather than `Section(_ title:)` so the count
                             // can take the section-header face like every other header.
-                            Text(L.t("%@ results", "\(hits.count)"))
-                                .font(Theme.title(.footnote))
+                            SectionLabel(text: L.t("%@ results", "\(hits.count)"))
                         }
                     }
                 }
@@ -132,6 +152,16 @@ struct LessonListView: View {
         return "\(L.t("Lesson %@", "\(band.first)–\(band.last)")) · \(lessons) · \(rungs)"
     }
 
+    /// The first lesson still holding an unpassed challenge — the rule Today's deck
+    /// follows, read from the same `passed` tally as the rows. Nil once everything is
+    /// passed: there is nowhere to continue *to*, and pointing at lesson 50 would be a
+    /// call to action with no action behind it.
+    private var continueLesson: Int? {
+        (1...Course.current.lessonCount).first { n in
+            (passed[n] ?? 0) < Challenge.count(wordCount: VocabStore.wordCount(n))
+        }
+    }
+
     private func reloadProgress() {
         let descriptor = FetchDescriptor<ChallengeResult>()
         let rows = (try? context.fetch(descriptor)) ?? []
@@ -142,11 +172,59 @@ struct LessonListView: View {
     }
 }
 
-/// A lesson row with its challenge progress — the bar is the reason to come back, so
-/// it sits on the screen you see most rather than one level in. Laid out to match the
-/// promo site's lesson list: numbered badge, title, then the bar trailing.
-private struct LessonRow: View {
+/// The list's one inverted card: the lesson you're on, and how far up its ladder.
+/// The same ink fill as the lesson screen's "Up next" hero, so the two read as one
+/// thread — this card is how you get to that one.
+private struct ContinueCard: View {
     let number: Int, done: Int, total: Int
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Text("\(number)")
+                .font(Theme.title(.title2, weight: .bold))
+                .monospacedDigit()
+                .frame(minWidth: 48, minHeight: 48)
+                .background(Color(.systemBackground).opacity(0.12), in: Theme.rounded(Theme.Radius.card))
+            VStack(alignment: .leading, spacing: 4) {
+                Text(L.t("Up next"))
+                    .font(.caption.weight(.semibold))
+                    .textCase(.uppercase)
+                    .opacity(0.7)
+                Text(L.t("Lesson %@", "\(number)"))
+                    .font(Theme.title(.title3, weight: .bold))
+                // The hero's light-on-ink track: the default track is a grey wash
+                // that vanishes on the ink fill, and an empty bar read as no bar.
+                CapsuleBar(fraction: total > 0 ? Double(done) / Double(total) : 0,
+                           track: Color(.systemBackground).opacity(0.25))
+                    .padding(.top, 2)
+                Text(L.t("%@ challenges passed", "\(done)"))
+                    .font(.footnote)
+                    .opacity(0.7)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            // Drawn here in the card's ink, in place of the list's own indicator —
+            // the system grey all but disappears on this fill.
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .opacity(0.7)
+                .accessibilityHidden(true)
+        }
+        .foregroundStyle(Color(.systemBackground))
+        .padding(.vertical, 6)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// A lesson row with its challenge progress — the ring is the reason to come back, so
+/// it sits on the screen you see most rather than one level in. Numbered badge, title,
+/// the lesson's first few words, then the standing trailing.
+private struct LessonRow: View {
+    let number: Int
+    /// The first words of the lesson, so fifty rows that all say "Lesson n" each say
+    /// what is *in* them — the thing a returning learner actually remembers.
+    let preview: [String]
+    let done: Int, total: Int
+    let locked: Bool
 
     private var fraction: Double { total > 0 ? Double(done) / Double(total) : 0 }
 
@@ -154,37 +232,64 @@ private struct LessonRow: View {
         HStack(spacing: 12) {
             Text("\(number)")
                 .font(.subheadline.weight(.semibold).monospacedDigit())
-                .foregroundStyle(Theme.accent)
-                .frame(width: 32, height: 32)
-                .background(Theme.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 9))
+                .foregroundStyle(locked ? Color.secondary : Theme.accent)
+                .frame(minWidth: 36, minHeight: 36)
+                .background(Theme.wash(locked ? Color.secondary : Theme.accent),
+                            in: Theme.rounded(Theme.Radius.chip))
 
-            // The row's name, so it takes the title face — but at the weight it already
-            // had. `Theme.title`'s default semibold across all fifty rows reads as fifty
-            // headings competing with each other rather than a list.
-            Text(L.t("Lesson %@", "\(number)"))
-                .font(Theme.title(.body, weight: .regular))
+            VStack(alignment: .leading, spacing: 2) {
+                // The row's name, so it takes the title face — but at the weight it
+                // already had. `Theme.title`'s default semibold across all fifty rows
+                // reads as fifty headings competing rather than a list.
+                Text(L.t("Lesson %@", "\(number)"))
+                    .font(Theme.title(.body, weight: .regular))
+                Text(preview.joined(separator: "・"))
+                    .font(Theme.jp(.subheadline))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
 
             Spacer(minLength: 12)
 
-            // Untouched lessons show nothing at all — an empty track and a "0 / 6" on
+            // Untouched lessons show nothing at all — an empty ring and a "0 / 6" on
             // all fifty rows would read as "nothing works" rather than "nothing
-            // started". Once a lesson is under way the count leads the bar: the bar
-            // says *roughly how far*, the numbers say exactly, and on a ladder of six
-            // rungs the difference between 4 and 5 is worth reading rather than
-            // estimating from 16pt of fill.
-            if done > 0 {
+            // started". Once under way the count leads the ring: the ring says
+            // *roughly how far*, the numbers say exactly.
+            if locked {
+                // Amber, not red: a lock is an offer, not an error.
+                Image(systemName: "lock.fill")
+                    .font(.footnote)
+                    .foregroundStyle(Theme.streak)
+            } else if done > 0 {
                 Text("\(done) / \(total)")
                     .font(.footnote.monospacedDigit())
                     .foregroundStyle(.secondary)
-                // Fixed width so the bars line up down the list instead of jittering
-                // with each row's title length.
-                CapsuleBar(fraction: fraction, width: 92)
+                ProgressRing(fraction: fraction)
             }
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(done > 0
                             ? L.t("Lesson %@", "\(number)") + ", \(done) / \(total)"
                             : L.t("Lesson %@", "\(number)"))
+    }
+}
+
+/// A lesson's ladder as a ring — compact enough to sit beside a count in a list row.
+/// Scales with the footnote it sits next to rather than taking a fixed size.
+struct ProgressRing: View {
+    let fraction: Double
+    @ScaledMetric(relativeTo: .footnote) private var size: CGFloat = 20
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(Theme.line, lineWidth: size * 0.18)
+            Circle()
+                .trim(from: 0, to: max(0, min(1, fraction)))
+                .stroke(Theme.accent, style: StrokeStyle(lineWidth: size * 0.18, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
     }
 }
 
@@ -340,7 +445,7 @@ struct VocabRow: View {
                 // An inset pane, so the sentence reads as the row's attachment rather
                 // than another row — Theme.canvas on the Theme.surface card, per the
                 // house rule that inset panes take canvas.
-                .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 10))
+                .background(Theme.canvas, in: Theme.rounded(Theme.Radius.inset))
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)

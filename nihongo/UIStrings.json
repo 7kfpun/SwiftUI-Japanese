@@ -325,7 +325,12 @@
     "You answer": "You answer",
     "Your best only goes up — replaying never costs a star you have.": "Your best only goes up — replaying never costs a star you have.",
     "You see": "You see",
-    "Your rating comes with this message.": "Your rating comes with this message."
+    "Your rating comes with this message.": "Your rating comes with this message.",
+    "Last 12 weeks": "Last 12 weeks",
+    "%@ days": "%@ days",
+    "Details": "Details",
+    "Two choices per card — the app keeps score": "Two choices per card — the app keeps score",
+    "Continue": "Continue"
   },
   "zh": {
     "Kana": "假名",
@@ -653,7 +658,12 @@
     "You answer": "答什么",
     "Your best only goes up — replaying never costs a star you have.": "最佳成绩只会往上，重玩不会扣掉已拿到的星星。",
     "You see": "看什么",
-    "Your rating comes with this message.": "你的评分会随这条留言一起发送。"
+    "Your rating comes with this message.": "你的评分会随这条留言一起发送。",
+    "Last 12 weeks": "最近 12 周",
+    "%@ days": "%@ 天",
+    "Details": "详情",
+    "Two choices per card — the app keeps score": "每张卡两个选项——由应用计分",
+    "Continue": "继续"
   },
   "zh-Hant": {
     "Kana": "假名",
@@ -981,7 +991,12 @@
     "You answer": "答什麼",
     "Your best only goes up — replaying never costs a star you have.": "最佳成績只會往上，重玩不會扣掉已拿到的星星。",
     "You see": "看什麼",
-    "Your rating comes with this message.": "你的評分會隨這則訊息一起送出。"
+    "Your rating comes with this message.": "你的評分會隨這則訊息一起送出。",
+    "Last 12 weeks": "最近 12 週",
+    "%@ days": "%@ 天",
+    "Details": "詳情",
+    "Two choices per card — the app keeps score": "每張卡兩個選項——由 App 計分",
+    "Continue": "繼續"
   },
   "vi": {
     "Kana": "Kana",
@@ -1309,7 +1324,12 @@
     "You answer": "Bạn trả lời",
     "Your best only goes up — replaying never costs a star you have.": "Điểm tốt nhất chỉ tăng — chơi lại không mất sao đã có.",
     "You see": "Bạn thấy",
-    "Your rating comes with this message.": "Đánh giá của bạn sẽ được gửi kèm."
+    "Your rating comes with this message.": "Đánh giá của bạn sẽ được gửi kèm.",
+    "Last 12 weeks": "12 tuần qua",
+    "%@ days": "%@ ngày",
+    "Details": "Chi tiết",
+    "Two choices per card — the app keeps score": "Mỗi thẻ hai lựa chọn — ứng dụng tự chấm điểm",
+    "Continue": "Tiếp tục"
   },
   "de": {
     "Kana": "Kana",
@@ -1637,7 +1657,12 @@
     "You answer": "Du antwortest",
     "Your best only goes up — replaying never costs a star you have.": "Dein Bestwert steigt nur — ein neuer Versuch kostet keinen Stern.",
     "You see": "Du siehst",
-    "Your rating comes with this message.": "Deine Bewertung wird mitgesendet."
+    "Your rating comes with this message.": "Deine Bewertung wird mitgesendet.",
+    "Last 12 weeks": "Letzte 12 Wochen",
+    "%@ days": "%@ Tage",
+    "Details": "Details",
+    "Two choices per card — the app keeps score": "Zwei Antworten pro Karte – die App zählt mit",
+    "Continue": "Weiter"
   },
   "th": {
     "Kana": "คานะ",
@@ -1965,7 +1990,12 @@
     "You answer": "สิ่งที่ตอบ",
     "Your best only goes up — replaying never costs a star you have.": "สถิติดีที่สุดมีแต่เพิ่ม เล่นซ้ำไม่เสียดาวที่ได้แล้ว",
     "You see": "สิ่งที่เห็น",
-    "Your rating comes with this message.": "คะแนนของคุณจะถูกส่งไปพร้อมข้อความนี้"
+    "Your rating comes with this message.": "คะแนนของคุณจะถูกส่งไปพร้อมข้อความนี้",
+    "Last 12 weeks": "12 สัปดาห์ที่ผ่านมา",
+    "%@ days": "%@ วัน",
+    "Details": "รายละเอียด",
+    "Two choices per card — the app keeps score": "การ์ดละ 2 ตัวเลือก — แอปเป็นผู้ให้คะแนน",
+    "Continue": "ดำเนินการต่อ"
   },
   "my": {
     "Kana": "ကာနာ",
@@ -2293,7 +2323,12 @@
     "You answer": "ဖြေရသည်",
     "Your best only goes up — replaying never costs a star you have.": "အကောင်းဆုံးရမှတ်မှာ တက်ရုံသာဖြစ်ပြီး ပြန်ကစားခြင်းက ကြယ်မဆုံးရှုံးပါ။",
     "You see": "မြင်ရသည်",
-    "Your rating comes with this message.": "သင့်အဆင့်သတ်မှတ်ချက် ဤစာနှင့်အတူ ပါသွားမည်။"
+    "Your rating comes with this message.": "သင့်အဆင့်သတ်မှတ်ချက် ဤစာနှင့်အတူ ပါသွားမည်။",
+    "Last 12 weeks": "လွန်ခဲ့သော 12 ပတ်",
+    "%@ days": "%@ ရက်",
+    "Details": "အသေးစိတ်",
+    "Two choices per card — the app keeps score": "ကတ်တစ်ခုလျှင် ရွေးစရာ ၂ ခု — အမှတ်ကို အက်ပ်က မှတ်ပေးသည်",
+    "Continue": "ဆက်လုပ်မည်"
   },
   "es": {
     "Kana": "Kana",
@@ -2621,7 +2656,12 @@
     "You answer": "Respondes",
     "Your best only goes up — replaying never costs a star you have.": "Tu mejor marca solo sube: repetir nunca te quita una estrella.",
     "You see": "Ves",
-    "Your rating comes with this message.": "Tu valoración se envía con este mensaje."
+    "Your rating comes with this message.": "Tu valoración se envía con este mensaje.",
+    "Last 12 weeks": "Últimas 12 semanas",
+    "%@ days": "%@ días",
+    "Details": "Detalles",
+    "Two choices per card — the app keeps score": "Dos opciones por tarjeta: la app lleva la cuenta",
+    "Continue": "Continuar"
   },
   "fr": {
     "Kana": "Kana",
@@ -2949,7 +2989,12 @@
     "You answer": "Tu réponds",
     "Your best only goes up — replaying never costs a star you have.": "Ton meilleur score ne fait que monter — rejouer ne coûte aucune étoile.",
     "You see": "Tu vois",
-    "Your rating comes with this message.": "Votre note est envoyée avec ce message."
+    "Your rating comes with this message.": "Votre note est envoyée avec ce message.",
+    "Last 12 weeks": "12 dernières semaines",
+    "%@ days": "%@ jours",
+    "Details": "Détails",
+    "Two choices per card — the app keeps score": "Deux choix par carte — l’app compte les points",
+    "Continue": "Continuer"
   },
   "it": {
     "Kana": "Kana",
@@ -3277,7 +3322,12 @@
     "You answer": "Rispondi",
     "Your best only goes up — replaying never costs a star you have.": "Il tuo record sale soltanto: rigiocare non toglie stelle.",
     "You see": "Vedi",
-    "Your rating comes with this message.": "La tua valutazione viene inviata con questo messaggio."
+    "Your rating comes with this message.": "La tua valutazione viene inviata con questo messaggio.",
+    "Last 12 weeks": "Ultime 12 settimane",
+    "%@ days": "%@ giorni",
+    "Details": "Dettagli",
+    "Two choices per card — the app keeps score": "Due scelte per carta: il punteggio lo tiene l’app",
+    "Continue": "Continua"
   },
   "ru": {
     "Kana": "Кана",
@@ -3605,7 +3655,12 @@
     "You answer": "Вы отвечаете",
     "Your best only goes up — replaying never costs a star you have.": "Лучший результат только растёт — повтор не отнимет звезду.",
     "You see": "Вы видите",
-    "Your rating comes with this message.": "Ваша оценка отправится вместе с сообщением."
+    "Your rating comes with this message.": "Ваша оценка отправится вместе с сообщением.",
+    "Last 12 weeks": "Последние 12 недель",
+    "%@ days": "%@ дн.",
+    "Details": "Подробнее",
+    "Two choices per card — the app keeps score": "Два варианта на карточку — счёт ведёт приложение",
+    "Continue": "Продолжить"
   },
   "bn": {
     "Kana": "কানা",
@@ -3933,7 +3988,12 @@
     "You answer": "আপনি উত্তর দেবেন",
     "Your best only goes up — replaying never costs a star you have.": "আপনার সেরা ফল কেবল বাড়ে — আবার খেললে পাওয়া তারা যায় না।",
     "You see": "আপনি দেখবেন",
-    "Your rating comes with this message.": "আপনার রেটিং এই বার্তার সঙ্গে যাবে।"
+    "Your rating comes with this message.": "আপনার রেটিং এই বার্তার সঙ্গে যাবে।",
+    "Last 12 weeks": "গত 12 সপ্তাহ",
+    "%@ days": "%@ দিন",
+    "Details": "বিস্তারিত",
+    "Two choices per card — the app keeps score": "প্রতি কার্ডে দুটি বিকল্প — স্কোর রাখে অ্যাপ",
+    "Continue": "চালিয়ে যান"
   },
   "hi": {
     "Kana": "काना",
@@ -4261,7 +4321,12 @@
     "You answer": "आप जवाब देंगे",
     "Your best only goes up — replaying never costs a star you have.": "आपका सर्वश्रेष्ठ सिर्फ़ बढ़ता है — दोबारा खेलने से सितारा नहीं जाता।",
     "You see": "आप देखेंगे",
-    "Your rating comes with this message.": "आपकी रेटिंग इस संदेश के साथ जाएगी।"
+    "Your rating comes with this message.": "आपकी रेटिंग इस संदेश के साथ जाएगी।",
+    "Last 12 weeks": "पिछले 12 सप्ताह",
+    "%@ days": "%@ दिन",
+    "Details": "विवरण",
+    "Two choices per card — the app keeps score": "हर कार्ड पर दो विकल्प — स्कोर ऐप रखता है",
+    "Continue": "जारी रखें"
   },
   "ta": {
     "Kana": "கானா",
@@ -4589,7 +4654,12 @@
     "You answer": "நீங்கள் பதிலளிப்பது",
     "Your best only goes up — replaying never costs a star you have.": "உங்கள் சிறந்த மதிப்பெண் உயரும் மட்டுமே — மீண்டும் விளையாடினால் நட்சத்திரம் போகாது.",
     "You see": "நீங்கள் பார்ப்பது",
-    "Your rating comes with this message.": "உங்கள் மதிப்பீடு இச்செய்தியுடன் செல்லும்."
+    "Your rating comes with this message.": "உங்கள் மதிப்பீடு இச்செய்தியுடன் செல்லும்.",
+    "Last 12 weeks": "கடந்த 12 வாரங்கள்",
+    "%@ days": "%@ நாட்கள்",
+    "Details": "விவரங்கள்",
+    "Two choices per card — the app keeps score": "ஒவ்வொரு அட்டைக்கும் இரண்டு தேர்வுகள் — மதிப்பெண்ணை ஆப் கணக்கிடும்",
+    "Continue": "தொடரவும்"
   },
   "te": {
     "Kana": "కానా",
@@ -4917,7 +4987,12 @@
     "You answer": "మీరు జవాబిచ్చేది",
     "Your best only goes up — replaying never costs a star you have.": "మీ అత్యుత్తమ స్కోరు పెరుగుతుంది మాత్రమే — మళ్లీ ఆడితే నక్షత్రం పోదు.",
     "You see": "మీరు చూసేది",
-    "Your rating comes with this message.": "మీ రేటింగ్ ఈ సందేశంతో పాటు వెళుతుంది."
+    "Your rating comes with this message.": "మీ రేటింగ్ ఈ సందేశంతో పాటు వెళుతుంది.",
+    "Last 12 weeks": "గత 12 వారాలు",
+    "%@ days": "%@ రోజులు",
+    "Details": "వివరాలు",
+    "Two choices per card — the app keeps score": "ప్రతి కార్డుకు రెండు ఎంపికలు — స్కోరు యాప్ లెక్కిస్తుంది",
+    "Continue": "కొనసాగించు"
   },
   "ne": {
     "Kana": "काना",
@@ -5245,7 +5320,12 @@
     "You answer": "तपाईं जवाफ दिनुहुन्छ",
     "Your best only goes up — replaying never costs a star you have.": "तपाईंको उत्कृष्ट अङ्क बढ्छ मात्र — फेरि खेल्दा तारा जाँदैन।",
     "You see": "तपाईं देख्नुहुन्छ",
-    "Your rating comes with this message.": "तपाईंको मूल्याङ्कन यो सन्देशसँगै जान्छ।"
+    "Your rating comes with this message.": "तपाईंको मूल्याङ्कन यो सन्देशसँगै जान्छ।",
+    "Last 12 weeks": "पछिल्ला 12 हप्ता",
+    "%@ days": "%@ दिन",
+    "Details": "विवरण",
+    "Two choices per card — the app keeps score": "प्रत्येक कार्डमा दुई विकल्प — अंक एपले राख्छ",
+    "Continue": "जारी राख्नुहोस्"
   },
   "fil": {
     "Kana": "Kana",
@@ -5573,7 +5653,12 @@
     "You answer": "Isasagot mo",
     "Your best only goes up — replaying never costs a star you have.": "Tumataas lang ang pinakamahusay mo — hindi nababawasan ang bituin.",
     "You see": "Makikita mo",
-    "Your rating comes with this message.": "Kasama ang rating mo sa mensaheng ito."
+    "Your rating comes with this message.": "Kasama ang rating mo sa mensaheng ito.",
+    "Last 12 weeks": "Nakaraang 12 linggo",
+    "%@ days": "%@ araw",
+    "Details": "Mga detalye",
+    "Two choices per card — the app keeps score": "Dalawang pagpipilian bawat card — ang app ang nagbibilang",
+    "Continue": "Magpatuloy"
   },
   "id": {
     "Kana": "Kana",
@@ -5901,7 +5986,12 @@
     "You answer": "Yang dijawab",
     "Your best only goes up — replaying never costs a star you have.": "Nilai terbaikmu hanya naik — mengulang tak mengurangi bintang.",
     "You see": "Yang dilihat",
-    "Your rating comes with this message.": "Penilaian ikut terkirim bersama pesan ini."
+    "Your rating comes with this message.": "Penilaian ikut terkirim bersama pesan ini.",
+    "Last 12 weeks": "12 minggu terakhir",
+    "%@ days": "%@ hari",
+    "Details": "Detail",
+    "Two choices per card — the app keeps score": "Dua pilihan per kartu — aplikasi yang mencatat skor",
+    "Continue": "Lanjutkan"
   },
   "ko": {
     "Kana": "가나",
@@ -6229,6 +6319,11 @@
     "You answer": "답하는 것",
     "Your best only goes up — replaying never costs a star you have.": "최고 기록은 오르기만 해요 — 다시 해도 별은 줄지 않아요.",
     "You see": "보는 것",
-    "Your rating comes with this message.": "보내신 별점도 함께 전달돼요."
+    "Your rating comes with this message.": "보내신 별점도 함께 전달돼요.",
+    "Last 12 weeks": "최근 12주",
+    "%@ days": "%@일",
+    "Details": "자세히",
+    "Two choices per card — the app keeps score": "카드마다 두 가지 선택지 — 채점은 앱이 해요",
+    "Continue": "계속"
   }
 }

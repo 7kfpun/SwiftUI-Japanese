@@ -135,8 +135,8 @@ struct ShareSheetPrompt: View {
                 Label(L.t("Share the app"), systemImage: "square.and.arrow.up")
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
-                    .background(Theme.accent, in: RoundedRectangle(cornerRadius: 12))
-                    .foregroundStyle(.white)
+                    .background(Theme.accent, in: Theme.rounded(Theme.Radius.row))
+                    .foregroundStyle(Theme.onAccent)
                     .font(.body.weight(.semibold))
             }
             .buttonStyle(.plain)
