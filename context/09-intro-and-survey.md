@@ -128,76 +128,63 @@ by prior experience and motive: this app ships **no user identifier of any kind*
 so there is no key to join a second submission back on, and denormalising the
 answers onto it is the substitute.
 
-## Firestore — the one server write
+## Directus — the one server write
 
 `nihongo/Survey.swift`. Everything else in this app is on-device or in the user's
 own iCloud; a survey answer is content someone chose to send us, so it goes
 somewhere readable.
 
-### `survey_intro`
+Until the Directus move the rows went to Firestore (`survey_*` collections, closed by
+`firestore.rules` and attested with App Check). `firestore.rules` and the App Check
+setup in `Ads/AppBootstrap.swift` are still in the repo, but `Survey` no longer writes
+to Firestore at all.
 
-One document per **completed** run. Skips and partial runs write nothing —
-`IntroAnswers.submission(vocabLanguage:appLanguage:)` returns `nil` unless all
-three answers are present, because the schema is closed and a half-answered row
-can't be told from a deliberate `0` after the fact. Drop-off is counted in
-Analytics instead.
+### Where rows go
 
-Eleven fields, snake_case to match the Analytics param convention rather than the
-camelCase `Pref` keys — the two datasets get read side by side:
-`knows_kana`, `textbook_lesson`, `goal`, `vocab_language`, `app_language`,
-`app_version`, `os`, `platform`, `debug`, `v`, `at`.
+`POST https://cms.wahthefox.com/items/<collection>` with a JSON body and
+`Authorization: Bearer <token>` — `Survey.Directus.createRequest`. Three collections:
 
-`debug` is true for a Debug build. It exists because `Survey` deliberately
-doesn't honour the analytics opt-out (below), so development runs write real rows
-into the same collection as real users — this is what filters them out. Note the
-rules' `hasOnly`/`hasAll` closes the field set, so **adding or removing a field
-here means re-publishing the rules, or every write starts failing.**
+| Collection | Row |
+|---|---|
+| `japanese_survey_intro` | one per **completed** intro run — the shared context, with this run's three answers winning |
+| `japanese_survey_rating` | one per star tap — context + `stars` (1…5) |
+| `japanese_survey_feedback` | one per feedback sheet — context + `kind`, `area`, `message`, `email`, `source`, `stars`, `lesson`, `item` |
 
-`at` is `FieldValue.serverTimestamp()`: device clocks lie, and Firestore's
-offline queue can land a write hours after the tap that made it.
+Every row carries the identical `Survey.Context` map (`Survey.Context.keys`), snake_case
+to match the Analytics param convention rather than the camelCase `Pref` keys — the two
+datasets get read side by side. Directus adds `id`, `date_created` (the server-stamped
+time, which replaced Firestore's `at`) and `archived`, which the server presets to
+`false` and is the soft-delete flag. The app never sends any of those three.
 
-### Rules (`firestore.rules`)
+Skips and partial intro runs write nothing — `IntroAnswers.submission(...)` returns
+`nil` unless all three answers are present — and drop-off is counted in Analytics
+instead.
 
-Create-only. `allow read, update, delete: if false` — denying update/delete
-matters as much as denying read, since auto-IDs are unguessable but not secret
-and "write-only" must not mean "may overwrite". Reading results is the project
-owner's job via the console or a service account, both of which bypass rules, so
-denying `read` costs nothing operationally.
+`debug` is true for a Debug build. It exists because `Survey` deliberately doesn't
+honour the analytics opt-out (below), so development runs write real rows into the
+same collection as real users — this is what filters them out.
 
-`hasOnly` + `hasAll` close the field set to exactly those eleven keys, and the enum
-checks on `knows_kana`/`goal`/`platform` mean a client-side typo can't silently
-invent a sixth `goal` value that splits the data at analysis time.
+**Adding or removing a field means adding or removing the Directus column first**, or
+every write fails. `SurveyTests.contextKeysMatchTheDirectusColumns` and its siblings
+transcribe the column lists and compare.
 
-The file is declared in `firebase.json` (`"firestore": { "rules": "firestore.rules" }`),
-so it deploys from the repo (`firebase deploy --only firestore:rules`) rather than only
-by pasting into the console Rules tab — which matters because the field set is closed and
-a schema change *must* ship with a rules change.
+### The token — who may write
 
-**The Rules Playground can't verify this ruleset.** It makes you supply `at` as a
-literal timestamp, which won't equal the `request.time` it generates, so a
-`create` simulation fails on that clause even though a real write passes. Comment
-that line out to exercise the rest, or test with a real build.
+A static Directus token for the *Japanese App* role, whose only policy is `create` on
+the three collections: no read, update or delete. It is read from the git-ignored
+`nihongo/Secrets.plist` key `directusToken` (template: `config/Secrets.example.plist`);
+Xcode Cloud writes that file from `MINNA_SECRETS_PLIST`, and `ci_post_clone.sh` refuses
+to archive without the key. No token bundled — a fresh clone — makes every submission a
+silent no-op; Diagnostics shows *Survey token: bundled / missing*.
 
-### App Check — who may write
+The token ships inside the binary, so treat it as extractable: the create-only scope is
+what keeps it harmless, not secrecy. The worst a leaked token can do is append rows.
+Unlike the Firestore rules, nothing on the app side validates *values* server-side
+unless the Directus fields themselves carry validation.
 
-There is no Firebase Auth: no accounts, and deliberately no identifier (the app
-ships without ATT and `PrivacyInfo.xcprivacy` declares no collected
-identifiers). Anonymous Auth would mint a persistent UID per install and undo
-that. So the rules bound *what* can be written and **App Check** bounds *who*:
-
-- `SurveyAppCheckFactory` in `Ads/AppBootstrap.swift`, installed **before**
-  `FirebaseApp.configure()` — the factory is consulted as Firebase starts.
-- Release uses `AppAttestProvider`; DEBUG uses `AppCheckDebugProvider`, because
-  App Attest cannot run on the Simulator. Register the token DEBUG prints under
-  App Check → Apps → Manage debug tokens.
-- `nihongo.entitlements` sets `appattest-environment` to **`production`**, not
-  Xcode's default `development`. Debug and Release share one entitlements file,
-  so only one value ships, and it has to be the one TestFlight needs. Nothing is
-  lost locally because DEBUG doesn't use App Attest at all. **Re-adding the App
-  Attest capability in Xcode silently resets this to `development`**, and the
-  failure mode — writes rejected only in TestFlight — is miserable to debug.
-- Enforcement is a console toggle (App Check → APIs → Cloud Firestore). Until
-  it's on, anything that can reach the endpoint can write.
+Requests use an ephemeral `URLSession` with `waitsForConnectivity`, which stands in for
+Firestore's offline queue only while the app is running — a submission made offline
+and followed by the app being killed is lost.
 
 ### Why `Survey` ignores the analytics opt-out
 
@@ -212,12 +199,10 @@ nothing marks them.
 
 ### Reading the results
 
-The console's Data tab shows every document, unsampled — but it's a document
-browser, not a table: one document at a time, no aggregation, no CSV export. Fine
-for reading answers, painful for computing anything. A local script with a
-service account is the practical path. The Stream-to-BigQuery extension would be
-the dashboard answer but needs the **Blaze** plan; the project is on Spark, where
-Firestore's free tier is far beyond survey volume.
+In the Directus admin at `https://cms.wahthefox.com`, as an account with read access
+(the app's token has none). Filter `debug = false` and `archived = false`; archiving a
+row is the soft delete. Older answers sent before the Directus move stay in the
+Firestore console's `survey_*` collections and are not migrated.
 
 ## Analytics
 
@@ -232,10 +217,11 @@ dashboard. `intro_done` always carries all three keys, using `"unanswered"` /
 `-1` sentinels, so a funnel can count "asked but not answered" rather than
 finding a param missing.
 
-A rules rejection surfaces in `addDocument`'s completion handler, not at the call
-site — offline persistence applies the write locally first and only learns it was
-refused on flush. Swallowing that would make a misconfigured rule look exactly
-like success, hence `survey_failed` plus an unconditional `print`.
+A Directus rejection arrives as a non-2xx status, not a thrown error — URLSession only
+throws for transport failures. Both count as a failure: swallowing either would make a
+missing column or a revoked token look exactly like success, hence `survey_failed`
+(`collection` is the Directus collection name) plus an unconditional `print` that
+includes Directus's own error message.
 
 ## Related fix: the meanings-language default
 

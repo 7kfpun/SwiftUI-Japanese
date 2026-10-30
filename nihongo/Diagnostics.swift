@@ -165,7 +165,7 @@ struct DiagnosticsView: View {
                 } header: {
                     Text("Submitted context")
                 } footer: {
-                    Text("Every survey row carries exactly these fields, plus the answers and a server-stamped `at`. The key set has to match firestore.rules — if it doesn't, every write is rejected and the only sign is a console line.")
+                    Text("Every survey row carries exactly these fields, plus the answers; Directus stamps date_created. The key set has to match the Directus columns — if it doesn't, every write fails and the only sign is a console line.")
                 }
 
                 Section {
@@ -179,13 +179,16 @@ struct DiagnosticsView: View {
                             .foregroundStyle(.secondary)
                     }
                     LabeledContent("Firebase", value: Self.isFirebaseConfigured ? "configured" : "not configured")
+                    // Survey rows go to Directus, not Firebase, and need their own token —
+                    // without it every submission is a silent no-op.
+                    LabeledContent("Survey token", value: Survey.Directus.isConfigured ? "bundled" : "missing")
                 } header: {
                     Text("App Check")
                 } footer: {
                     // The token has to be pasted into Firebase → App Check → Apps → Manage
                     // debug tokens, which is why it needs to be copyable from the device
                     // rather than fished out of an Xcode console the tester may not have.
-                    Text("Register this under App Check → Apps → Manage debug tokens, or every survey write from this install is rejected. DEBUG only — Release builds attest with App Attest and have no token.")
+                    Text("Register this under App Check → Apps → Manage debug tokens, or Firebase calls that enforce App Check are rejected from this install. Survey writes go to Directus and don't use it. DEBUG only — Release builds attest with App Attest and have no token.")
                 }
 
                 Section("Build") {
@@ -196,7 +199,7 @@ struct DiagnosticsView: View {
             .navigationTitle("Diagnostics")
             .navigationBarTitleDisplayMode(.inline)
             // The screen is developer-only and deliberately unlocalised, but it still
-            // owns a rating prompt and a Firestore write — `last_screen` has to be able
+            // owns a rating prompt and a survey write — `last_screen` has to be able
             // to name it when one of those reports a failure.
             .onAppear { Track.screen("diagnostics") }
             .toolbar {

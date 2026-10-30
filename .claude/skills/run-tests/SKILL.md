@@ -119,7 +119,7 @@ supposed to be annoying:
 - `LocalizationTests` fails on an English-only string, a lost `%@`, or an
   unescaped `%` — most of its tests are that check — see the
   `check-i18n-parity` skill.
-- `SurveyTests.contextKeysMatchThePublishedRules` fails when `Survey.Context`
-  and `firestore.rules` disagree. That is not a test to edit alone: it means the
-  rules must be republished with the build — see the `deploy-firestore-rules`
-  skill.
+- `SurveyTests.contextKeysMatchTheDirectusColumns` fails when `Survey.Context`
+  and its transcription of the `japanese_survey_*` Directus columns disagree. That
+  is not a test to edit alone: the column has to exist in Directus before a build
+  sends it, or every survey write fails.

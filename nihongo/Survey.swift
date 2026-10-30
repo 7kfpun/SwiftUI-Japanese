@@ -5,12 +5,6 @@ import UIKit
 #if canImport(SwiftData)
 import SwiftData
 #endif
-#if canImport(FirebaseCore)
-import FirebaseCore
-#endif
-#if canImport(FirebaseFirestore)
-import FirebaseFirestore
-#endif
 
 /// Survey submissions — the one place in the app that writes to a server.
 ///
@@ -20,11 +14,12 @@ import FirebaseFirestore
 /// A survey answer is different in kind: it's content the user chose to send us,
 /// so it goes somewhere we can actually read it back.
 ///
-/// Write-only by construction. The security rules (`firestore.rules`) deny read,
-/// update and delete outright and validate the whole document shape server-side,
-/// so a decompiled build yields no way to read other people's answers and no way
-/// to overwrite them — only to append one well-formed row. Attestation that the
-/// caller *is* this app comes from App Check (see `AppBootstrap`).
+/// Write-only by construction. Rows go to Directus (`Directus` below) with a static
+/// token whose policy grants `create` on the three survey collections and nothing
+/// else — no read, no update, no delete — so a decompiled build yields no way to read
+/// other people's answers and no way to overwrite them, only to append a row. Rows
+/// are soft-deleted server-side through an `archived` flag the server presets; the
+/// app never sends it.
 ///
 /// Deliberately no user identifier of any kind. The app ships without App
 /// Tracking Transparency and its privacy manifest declares no collected
@@ -34,7 +29,7 @@ import FirebaseFirestore
 /// foreign key.
 enum Survey {
     /// Bumped when a field is added or removed, so whatever reads these rows can tell a
-    /// missing field from an unanswered one. Rules require it present.
+    /// missing field from an unanswered one.
     ///
     /// 2: every collection now carries the shared `Context` below, and `survey_intro`
     /// stopped naming the two languages itself (the context already reports them).
@@ -188,12 +183,12 @@ enum Survey {
             self.appearance = appearance
         }
 
-        /// The map, minus `at` — that one is the server's to stamp (see `submit`).
+        /// The map. There is no timestamp in it: Directus stamps `date_created` itself.
         ///
-        /// Every key here is in the rules' `hasOnly`/`hasAll` list for *both* collections.
-        /// Adding one without republishing the rules rejects every write in the app, and
-        /// the rejection is invisible except as a console line, so `SurveyTests` pins the
-        /// key set against a transcription of the published list.
+        /// Every key here is a column in all three Directus collections. Adding one without
+        /// adding the column fails the write (or, if the token's policy allows all fields,
+        /// drops the value), and either way the only sign is a console line, so
+        /// `SurveyTests` pins the key set against a transcription of the columns.
         var fields: [String: Any] {
             [
                 // The field exists so an Android client could one day share the
@@ -259,8 +254,9 @@ enum Survey {
             ]
         }
 
-        /// The full key set, including the `at` that `submit` adds — the invariant the
-        /// rules enforce and `SurveyTests` guards.
+        /// The full key set — the invariant the Directus columns follow and `SurveyTests`
+        /// guards. `at` left with Firestore: it was a `serverTimestamp()` sentinel, and
+        /// Directus's own `date_created` is the same server-stamped time.
         static let keys: Set<String> = [
             "platform", "app_version", "os", "device", "os_language",
             "app_language", "vocab_language", "region",
@@ -268,36 +264,50 @@ enum Survey {
             "sound_on", "analytics_excluded",
             "shown_fields", "text_size", "appearance", "last_screen",
             "knows_kana", "goal", "textbook_lesson",
-            "debug", "v", "at",
+            "debug", "v",
         ]
     }
 
     /// Field names are snake_case to match the Analytics param convention
     /// (`is_premium`, `query_length`) rather than the camelCase `Pref` keys —
-    /// these two datasets get read side by side, and the rules' `hasOnly` list
-    /// has to match this map exactly or the write is rejected.
+    /// these two datasets get read side by side, and the Directus columns are
+    /// named after this map exactly.
     /// `survey_intro` adds no keys of its own any more: the three answers are context
     /// fields now, carried by every collection. The merge stays because it decides which
     /// *value* wins — the answers from this run rather than a re-read of `Pref`, so the row
     /// can't depend on `IntroAnswers.save()` having landed first. The key set is identical
-    /// either way, which is why the rules take `hasExactly(data, [])` here.
+    /// either way.
     static func submit(_ intro: Intro, context: Context) {
-        submit(collection: "survey_intro", fields: context.fields.merging([
-            "knows_kana": intro.knowsKana,
-            "textbook_lesson": intro.textbookLesson,
-            "goal": intro.goal,
-        ]) { _, answer in answer })
+        submit(collection: Directus.introCollection, fields: fields(intro, context: context))
     }
 
     /// One row per star tap. See `Rating` on why this isn't a `survey_feedback` row.
     static func submit(_ rating: Rating, context: Context) {
-        submit(collection: "survey_rating", fields: context.fields.merging([
-            "stars": rating.stars,
-        ]) { _, answer in answer })
+        submit(collection: Directus.ratingCollection, fields: fields(rating, context: context))
     }
 
     static func submit(_ feedback: Feedback, context: Context) {
-        submit(collection: "survey_feedback", fields: context.fields.merging([
+        submit(collection: Directus.feedbackCollection, fields: fields(feedback, context: context))
+    }
+
+    /// The rows `submit` sends, split out so `SurveyTests` can inspect the real merge rather
+    /// than a hand-copy of it.
+    static func fields(_ intro: Intro, context: Context) -> [String: Any] {
+        context.fields.merging([
+            "knows_kana": intro.knowsKana,
+            "textbook_lesson": intro.textbookLesson,
+            "goal": intro.goal,
+        ]) { _, answer in answer }
+    }
+
+    static func fields(_ rating: Rating, context: Context) -> [String: Any] {
+        context.fields.merging([
+            "stars": rating.stars,
+        ]) { _, answer in answer }
+    }
+
+    static func fields(_ feedback: Feedback, context: Context) -> [String: Any] {
+        context.fields.merging([
             "kind": feedback.kind,
             "area": feedback.area,
             "message": feedback.message,
@@ -306,12 +316,12 @@ enum Survey {
             "stars": feedback.stars,
             "lesson": feedback.lesson,
             "item": feedback.item,
-        ]) { _, answer in answer })
+        ]) { _, answer in answer }
     }
 
-    /// The actual write. No-op unless Firestore is linked *and* Firebase is
-    /// configured (a fresh open-source clone has no `GoogleService-Info.plist`),
-    /// mirroring how `Track` and `BannerAd` stay silent in that build.
+    /// The actual write. No-op unless a Directus token is bundled (a fresh open-source
+    /// clone has no `Secrets.plist`), mirroring how `Track` and `BannerAd` stay silent in
+    /// that build.
     private static func submit(collection: String, fields: [String: Any]) {
         // Deliberately NOT gated on `Pref.analyticsExcluded` or `#if DEBUG`, unlike
         // everything in `Track`. That switch governs passive telemetry — events the
@@ -322,28 +332,31 @@ enum Survey {
         // breaks unnoticed.
         //
         // Consequence: development submissions land in the same collection as real
-        // ones and nothing distinguishes them.
-        #if canImport(FirebaseFirestore)
-        guard FirebaseApp.app() != nil else { return }
-        var payload = fields
-        // Server-stamped, not device-claimed: clocks lie, and Firestore's offline
-        // queue can land this write hours after the tap that made it. The rules
-        // require `at == request.time`, so this has to be the sentinel.
-        payload["at"] = FieldValue.serverTimestamp()
+        // ones, told apart only by `debug`.
+        guard let token = Directus.token,
+              let request = Directus.createRequest(collection: collection, fields: fields, token: token)
+        else { return }
 
         #if DEBUG
-        print("survey: submitting to \(collection) — \(payload.keys.sorted().joined(separator: ","))")
+        print("survey: submitting to \(collection) — \(fields.keys.sorted().joined(separator: ","))")
         #endif
-        Firestore.firestore().collection(collection).addDocument(data: payload) { error in
-            // A rules rejection arrives *here*, not at the call: offline
-            // persistence applies the write locally first and only learns it was
-            // refused on flush. Swallowing this would make a misconfigured rule
-            // or a missing App Check token look exactly like success.
-            if let error {
+        Task {
+            // A rejection arrives as a status code, not a thrown error: URLSession only
+            // throws for transport failures. Swallowing either would make a missing
+            // column or a revoked token look exactly like success.
+            let failure: String?
+            do {
+                let (data, response) = try await Directus.session.data(for: request)
+                let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+                failure = (200..<300).contains(status) ? nil : Directus.describe(status: status, body: data)
+            } catch {
+                failure = error.localizedDescription
+            }
+            if let failure {
                 // The print is the DEBUG-visible half: `Track` still honours the
                 // analytics opt-out, because a failure *count* is telemetry even
                 // though the answer it failed to send isn't.
-                print("survey: \(collection) write failed — \(error.localizedDescription)")
+                print("survey: \(collection) write failed — \(failure)")
                 Track.event("survey_failed", ["collection": collection])
             } else {
                 #if DEBUG
@@ -351,7 +364,68 @@ enum Survey {
                 #endif
             }
         }
-        #endif
+    }
+
+    /// The Directus instance survey rows are created in — `POST /items/<collection>`.
+    ///
+    /// The token is a static Directus token for a role whose only policy is `create` on
+    /// these three collections. It ships inside the binary, so it is treated as
+    /// extractable: what keeps it harmless is that scope, not secrecy. It still lives in
+    /// the git-ignored `Secrets.plist` (`directusToken`, see `config/Secrets.example.plist`)
+    /// so it stays out of the open-source repo, and CI writes that file from a secret.
+    enum Directus {
+        static let baseURL = URL(string: "https://cms.wahthefox.com")!
+
+        static let introCollection = "japanese_survey_intro"
+        static let ratingCollection = "japanese_survey_rating"
+        static let feedbackCollection = "japanese_survey_feedback"
+
+        /// `nil` when no `Secrets.plist` is bundled or it has no `directusToken` — which
+        /// turns every submission into a no-op rather than a request bound to fail.
+        static let token: String? = {
+            guard let url = Bundle.main.url(forResource: "Secrets", withExtension: "plist"),
+                  let secrets = NSDictionary(contentsOf: url),
+                  let token = secrets["directusToken"] as? String
+            else { return nil }
+            let trimmed = token.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        }()
+
+        static var isConfigured: Bool { token != nil }
+
+        /// Ephemeral, so nothing about these requests — cookies, cache — outlives them on
+        /// the device. `waitsForConnectivity` stands in, while the app is running, for the
+        /// offline queue Firestore used to provide: a submission tapped on a train waits
+        /// for a connection instead of failing at once.
+        static let session: URLSession = {
+            let configuration = URLSessionConfiguration.ephemeral
+            configuration.waitsForConnectivity = true
+            return URLSession(configuration: configuration)
+        }()
+
+        /// The create call for one row. `nil` only if `fields` isn't JSON — which a map of
+        /// strings, ints and bools always is.
+        static func createRequest(collection: String, fields: [String: Any], token: String) -> URLRequest? {
+            guard let body = try? JSONSerialization.data(withJSONObject: fields, options: [.sortedKeys])
+            else { return nil }
+            var request = URLRequest(url: baseURL.appending(components: "items", collection))
+            request.httpMethod = "POST"
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = body
+            return request
+        }
+
+        /// `"HTTP 403 — You don't have permission …"`: the status plus Directus's own first
+        /// error message, which names the field or permission at fault.
+        static func describe(status: Int, body: Data) -> String {
+            struct Response: Decodable {
+                struct Error: Decodable { let message: String }
+                let errors: [Error]?
+            }
+            let message = (try? JSONDecoder().decode(Response.self, from: body))?.errors?.first?.message
+            return "HTTP \(status)" + (message.map { " — \($0)" } ?? "")
+        }
     }
 }
 

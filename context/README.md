@@ -22,7 +22,7 @@ Read this folder cold-start, in roughly this order:
 | `06-monetization.md` | `Gating` and the free tier, the product lineup and its legacy IDs, the paywall's price maths, the rating prompt's star-row-before-Apple design, and every ad slot and throttle. |
 | `07-ux-ui.md` | The visual language: color tokens (dynamic light/dark), the typography rules and their measurements, the Tinder-like swipe pattern shared across five screens, and a few non-obvious layout decisions. |
 | `08-analytics.md` | The `Track` API, the full event catalog, the paywall source-attribution pattern, Firebase Performance, and the three kinds of notification. |
-| `09-intro-and-survey.md` | The six-card first-launch tour and the three questions it asks; the `survey_intro` Firestore collection, its write-only security rules, and the App Check setup that guards them — the app's only server write. |
+| `09-intro-and-survey.md` | The six-card first-launch tour and the three questions it asks; the three `japanese_survey_*` Directus collections, the create-only token that writes them — the app's only server write. |
 | `10-xcode-cloud.md` | CI: what `ci_scripts/ci_post_clone.sh` supplies to a clean clone (submodule, generated data, secrets), the one-time Xcode Cloud/GitHub setup, and the suggested workflows. |
 
 `02` and `06` were split out of `00`/`04` because both subjects were smeared
