@@ -97,11 +97,6 @@ struct TodayView: View {
                 warmupBanner
                 if picks.count > 1 { deckSegments }
                 if let word = current { cardStack(word) } else { ProgressView().frame(maxHeight: .infinity) }
-                // The gesture is invisible until tried — same one-line teacher as
-                // Flashcards, in the slot the cards-left footer used to hold.
-                Text(L.t("Double-tap for details"))
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
             }
             .padding()
             .background(Theme.canvas)
@@ -169,9 +164,15 @@ struct TodayView: View {
     /// preparing, and the banner must not promise a rung `firstUnpassed` said is gone.
     private var warmupBanner: some View {
         Button(action: openChallenge) {
-            HStack(spacing: 11) {
-                Image(systemName: hasNext ? "flag" : "checkmark.seal.fill")
-                    .foregroundStyle(Theme.accent)
+            HStack(spacing: 12) {
+                // A filled disc, not a bare glyph: the banner is the screen's one
+                // way forward, and the plate alone read as a caption.
+                Image(systemName: hasNext ? "flag.fill" : "checkmark.seal.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.onAccent)
+                    .frame(minWidth: 36, minHeight: 36)
+                    .background(Theme.accent, in: Circle())
+                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(hasNext ? L.t("Warming up for Challenge %@", "\(upNext)")
                                  : L.t("All challenges passed"))
@@ -192,9 +193,8 @@ struct TodayView: View {
             }
             .padding(.horizontal, 14).padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.accent.opacity(0.5)))
-            .contentShape(RoundedRectangle(cornerRadius: 16))
+            .accentPlate()
+            .contentShape(Theme.rounded(Theme.Radius.card))
         }
         .buttonStyle(.plain)
     }
@@ -202,14 +202,18 @@ struct TodayView: View {
     /// One slim segment per card: filled for seen, mid for the current, faint for what
     /// is still to come — the deck's length made visible without a number.
     private var deckSegments: some View {
-        HStack(spacing: 5) {
-            ForEach(picks.indices, id: \.self) { i in
-                Capsule()
-                    .fill(i < index ? Color.primary
-                          : i == index ? Color.secondary
-                          : Theme.line)
-                    .frame(height: 4)
+        HStack(spacing: 10) {
+            HStack(spacing: 4) {
+                ForEach(picks.indices, id: \.self) { i in
+                    Capsule()
+                        .fill(i <= index ? Theme.accent : Theme.line)
+                        .frame(height: 4)
+                }
             }
+            Text("\(index + 1) / \(picks.count)")
+                .font(Theme.title(.caption))
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
         }
         .animation(.easeOut(duration: 0.2), value: index)
         .accessibilityElement(children: .ignore)
@@ -255,8 +259,10 @@ struct TodayView: View {
         // 3D turn rotates, so on the back it would render mirror-written.
         SwipeCard(showsHint: picks.count > 1 && !flipped) {
             ZStack {
-                back(word).opacity(flipped ? 1 : 0)
-                front(word).opacity(flipped ? 0 : 1)
+                // Hit-testing follows the face: a transparent face still takes taps,
+                // and the front's buttons would answer from behind the turned card.
+                back(word).opacity(flipped ? 1 : 0).allowsHitTesting(flipped)
+                front(word).opacity(flipped ? 0 : 1).allowsHitTesting(!flipped)
             }
         }
         .rotation3DEffect(.degrees(flipped && !reduceMotion ? 180 : 0),
@@ -352,7 +358,7 @@ struct TodayView: View {
                         .font(.caption.weight(.medium))
                         .foregroundStyle(Theme.accent)
                         .padding(.horizontal, 11).padding(.vertical, 5)
-                        .background(Theme.accent.opacity(0.12), in: Capsule())
+                        .background(Theme.wash(Theme.accent), in: Capsule())
                     Spacer()
                     // Its own button: the card's tap also speaks, but a visible control
                     // is what tells anyone the card *can* talk.
@@ -374,8 +380,30 @@ struct TodayView: View {
                 VocabFront(vocab: word)
 
                 Spacer(minLength: 10)
+
+                // Either side of the card's own "⟨ Swipe ⟩" whisper. The details
+                // button is the double-tap made visible — the gesture used to be
+                // taught by a footer line under the deck, and a control teaches it
+                // without one.
+                HStack {
+                    BookmarkStars(vocab: word, glyph: .title3)
+                        .id(word.id)
+                        .frame(minWidth: 44, minHeight: 44)
+                    Spacer()
+                    Button { toggleFlip(word) } label: {
+                        Image(systemName: "info.circle")
+                            .font(.title3)
+                            .foregroundStyle(.secondary)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(L.t("Details"))
+                    .accessibilityHint(L.t("Double-tap for details"))
+                }
             }
-            .padding(18)
+            .padding([.horizontal, .top], 18)
+            .padding(.bottom, 4)
     }
 
     /// Deal the study deck: every word the next unpassed challenge can ask — its new

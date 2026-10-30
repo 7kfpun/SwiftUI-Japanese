@@ -100,6 +100,8 @@ struct BookmarkStars: View {
     /// Told when the tier changes, so an owner can re-read its map. Without it the
     /// "Bookmarked" chip's count would sit wrong until the screen reappeared.
     var onChange: ((Int?) -> Void)? = nil
+    /// Caption in a list row; a card's toolbar row passes a larger style.
+    var glyph: Font = .caption
     @Environment(\.modelContext) private var context
     @State private var loaded: Int?
 
@@ -126,7 +128,7 @@ struct BookmarkStars: View {
                     Text("\(stars)").font(.caption2.weight(.semibold)).monospacedDigit()
                 }
             }
-            .font(.caption)
+            .font(glyph)
             .foregroundStyle(stars == nil ? Color.secondary.opacity(0.35) : Theme.accent)
             .contentShape(Rectangle())
         }

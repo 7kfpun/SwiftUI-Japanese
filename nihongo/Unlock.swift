@@ -84,8 +84,8 @@ struct EarnedUnlockCard: View {
                     .font(Theme.title(.headline))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Theme.accent, in: RoundedRectangle(cornerRadius: 14))
-                    .foregroundStyle(.white)
+                    .background(Theme.accent, in: Theme.rounded(Theme.Radius.row))
+                    .foregroundStyle(Theme.onAccent)
             }
             .buttonStyle(.plain)
         }

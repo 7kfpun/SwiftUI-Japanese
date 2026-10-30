@@ -21,6 +21,27 @@ a white background):
 | `canvas` | `.secondarySystemBackground` | `.systemBackground` | screen background behind cards |
 | `line` | `.separator` | white @ 22% alpha | card/tile hairline |
 | `shadow` | black @ 10% alpha | `.clear` | card drop shadow |
+| `streak` | amber | lifted amber | streaks, the earn-path, locks that aren't errors |
+| `star` | deep gold | lifted gold | earned challenge stars |
+| `onAccent` | near-black ink, both modes | same | labels sitting on an `accent` fill |
+
+`streak` and `star` follow the same rule as the feedback colours: one hue, softened
+in dark so it doesn't bloom. `onAccent` does not flip with the appearance. White
+on the teal fails contrast in both modes (the dark accent is the brighter of the
+two), so accent-filled chips and pills use the ink instead.
+
+Corners and lift live on `Theme` too, so screens stop inventing them:
+
+| Token | Value | Where |
+|---|---|---|
+| `Radius.tick` / `inset` / `chip` / `row` / `card` / `pill` / `deck` / `hero` | 4 / 10 / 12 / 14 / 16 / 18 / 20 / 22 | study-calendar squares, panes, wells, rows, panels, pills, the swipe deck, the lesson hero |
+| `Elevation.restBlur` / `deckBlur` | 8 / 16 | a panel among panels, vs the one card that should float |
+| `rounded(_:)` | continuous corner | every one of those |
+
+`cardChrome` and `accentPlate` (`Components.swift`) are the two shapes those
+tokens draw: a surface card with a hairline, and a tinted callout that is a wash
+plus a hairline rather than a fill. Dark mode still lifts with the lighter
+surface and the line — `shadow` stays clear there.
 
 Two things worth understanding, not just copying:
 
@@ -36,9 +57,10 @@ Two things worth understanding, not just copying:
   saturation `#2ECC40`/`#FF4136` on near-black reads as neon glow; the dark
   variants are toned down so they still read as "right"/"wrong" without
   fighting the background.
-- Green/red stay **exclusive to answer feedback** — that restraint (no other
-  use of saturated color anywhere in the UI) is most of what makes the app
-  still feel like the RN original.
+- Green and red stay **exclusive to answer feedback**. The only other saturated
+  colours are the amber streak and the gold star, and neither of those is a
+  verdict — that restraint is most of what makes the app still feel like the
+  RN original.
 
 ## Typography
 
@@ -50,6 +72,11 @@ Three Japanese faces plus one title face, all through `Theme` —
   (明朝, serif). Used for most Japanese body/headword text (Learn's assembled
   answer, Practice prompts, card faces, Today's card). No bundled font file —
   this is the one place to change it.
+
+  `Theme.jp(_ style:)` is the same face at a Dynamic Type style rather than a point
+  size, for Japanese that sits in running text instead of a glyph slot — the lesson
+  rows' word previews. Its base is the style's *default* size; `relativeTo` applies
+  the user's scale, so starting from the current size would apply it twice.
 
   Mincho because the design specifies it: its mocks set every Japanese string in
   **Noto Serif JP** against a sans UI. Noto Serif JP isn't on iOS and bundling it
@@ -105,9 +132,10 @@ letters have none.
   Japanese glyph rather than styled like text. Two kinds of caller, both
   deliberately outside the Dynamic Type contract:
   - *Layouts with no slack* — the Challenge result percentage (56) between a
-    stars row and a verdict line, and Kana Write's romaji prompt (40) directly
-    above a drawing canvas. Through `title(.largeTitle)` they'd shrink to 34pt
-    and then grow until they pushed their neighbours off screen.
+    stars row and a verdict line, the Progress streak count (56) beside its
+    flame, and Kana Write's romaji prompt (40) directly above a drawing canvas.
+    Through `title(.largeTitle)` they'd shrink to 34pt and then grow until they
+    pushed their neighbours off screen.
   - *The Latin half of a script-switchable slot* — the table above. Those must
     take the **same** point size as the Japanese face they alternate with, or
     switching script would resize the card.
@@ -313,6 +341,16 @@ from the opposite side; a corner `SwipeStamp` previews the outcome you're draggi
 toward, fading in so it reaches full strength exactly where the swipe would commit.
 Where a verdict is involved the stamp is paired with an *icon* change, never colour
 alone — red and green are the same colour to roughly 8% of men.
+
+## Ink cards
+
+One inverted card per screen at most — `Color.primary` fill, `systemBackground`
+foreground, so it is black in light and white in dark. The lesson screen's Practice
+hero, the Lessons list's "Up next" card and Settings' "Unlock all lessons" card. An
+accent glyph on one sits in an `accent.opacity(0.18)` well (`wash` vanishes on ink),
+progress tracks use `systemBackground.opacity(0.25)`, and a `NavigationLink` in a
+`List` hides its indicator and draws its own chevron in the card's ink. In a `Form`
+the card is its own `Section`, or it shares a rounded group half ink and half white.
 
 ## Interaction & feedback principles (kept from the original)
 

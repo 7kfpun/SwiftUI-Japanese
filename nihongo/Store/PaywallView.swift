@@ -7,6 +7,10 @@ struct PaywallView: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var legal: LegalDoc?
+    /// The plan the Continue button will buy. Choosing and paying are two steps: a row
+    /// that charged on touch made a scroll that landed on it a purchase sheet, and gave
+    /// no moment to compare. Nil until products load, then the best-value plan.
+    @State private var selectedID: Product.ID?
 
     /// Where this paywall was triggered from — `settings`, `locked_mode`,
     /// `locked_challenge`, `read_all_meanings`. Values are stable ASCII keys, never
@@ -57,7 +61,7 @@ struct PaywallView: View {
                         .multilineTextAlignment(.leading)
                         .padding(12)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12))
+                        .accentPlate(radius: Theme.Radius.row, tint: Theme.streak)
                     }
 
                     features
@@ -67,10 +71,12 @@ struct PaywallView: View {
                     } else if store.productsUnavailable {
                         unavailable
                     } else {
-                        VStack(spacing: 12) {
+                        VStack(spacing: 10) {
                             ForEach(store.subscriptions) { subscriptionRow($0) }
                         }
+                        .accessibilityElement(children: .contain)
                         if let lifetime = store.lifetime { lifetimeRow(lifetime) }
+                        continueButton
                     }
 
                     Button(L.t("Restore Purchases")) {
@@ -113,7 +119,10 @@ struct PaywallView: View {
             }
             // Retry on open. Products load once at launch, so a user who started the
             // app offline would otherwise face an empty paywall for the whole session.
-            .task { if store.products.isEmpty { await store.load() } }
+            .task {
+                if store.products.isEmpty { await store.load() }
+                if selectedID == nil { selectedID = (bestValue ?? store.subscriptions.first ?? store.lifetime)?.id }
+            }
             .onChange(of: store.isPremium) { if store.isPremium { dismiss() } }
         }
     }
@@ -164,7 +173,8 @@ struct PaywallView: View {
             feature(L.t("Study offline, anywhere"))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 4)
+        .padding(14)
+        .cardChrome()
     }
 
     /// Takes already-localized text, not a key: two of these need a number interpolated
@@ -172,11 +182,58 @@ struct PaywallView: View {
     /// ambiguity that lets a caller pass a key where text is wanted and ship the raw key.
     private func feature(_ text: String) -> some View {
         HStack(spacing: 12) {
+            // Accent, not green. Green is an answer verdict, and this list is a promise.
             Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(Theme.correct)
+                .foregroundStyle(Theme.accent)
             Text(text).font(.subheadline)
             Spacer(minLength: 0)
         }
+    }
+
+    /// The one purchase action, under the plans. Disabled while a purchase is in flight
+    /// so a second tap can't queue a second sheet.
+    @ViewBuilder
+    private var continueButton: some View {
+        let selected = store.products.first { $0.id == selectedID }
+        PrimaryPillButton {
+            guard let selected else { return }
+            Task { await store.purchase(selected, source: source) }
+        } label: {
+            if store.purchasingID != nil {
+                ProgressView().tint(Color(.systemBackground))
+            } else {
+                Text(L.t("Continue")).font(Theme.title(.headline))
+            }
+        }
+        .disabled(selected == nil || store.purchasingID != nil)
+        .padding(.top, 4)
+    }
+
+    /// The radio and the border are the selection — never a fill, the app's rule for
+    /// every chosen state.
+    private func planChrome<Label: View>(_ product: Product,
+                                         @ViewBuilder label: () -> Label) -> some View {
+        let isSelected = product.id == selectedID
+        return Button {
+            selectedID = product.id
+        } label: {
+            HStack(alignment: .center, spacing: 12) {
+                Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
+                    .font(.title3)
+                    .foregroundStyle(isSelected ? Theme.accent : Color.secondary)
+                    .accessibilityHidden(true)
+                label()
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(Theme.surface, in: Theme.rounded(Theme.Radius.row))
+            .overlay(Theme.rounded(Theme.Radius.row)
+                .stroke(isSelected ? Theme.accent : Theme.line, lineWidth: isSelected ? 2 : 1))
+            .contentShape(Theme.rounded(Theme.Radius.row))
+        }
+        .buttonStyle(.plain)
+        .disabled(store.purchasingID != nil)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     /// A subscription option: term, price, and — the point of this row — the monthly
@@ -184,9 +241,7 @@ struct PaywallView: View {
     /// arithmetic to find the cheaper deal, which mostly means they didn't.
     private func subscriptionRow(_ product: Product) -> some View {
         let isBest = product.id == bestValue?.id
-        return Button {
-            Task { await store.purchase(product, source: source) }
-        } label: {
+        return planChrome(product) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
@@ -196,36 +251,24 @@ struct PaywallView: View {
                                 .font(.caption2.weight(.bold))
                                 .padding(.horizontal, 7).padding(.vertical, 3)
                                 .background(Theme.accent, in: Capsule())
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Theme.onAccent)
                         }
                     }
                     if let saved = savingsPercent(product) {
                         Text(L.t("Save %@%", "\(saved)"))
-                            .font(.caption).foregroundStyle(Theme.correct)
+                            .font(.caption).foregroundStyle(Theme.accent)
                     }
                 }
                 Spacer()
-                if store.purchasingID == product.id {
-                    ProgressView()
-                } else {
-                    VStack(alignment: .trailing, spacing: 3) {
-                        Text(product.displayPrice).font(Theme.title(.headline)).foregroundStyle(Theme.accent)
-                        if let each = perMonthDisplay(product), months(product) > 1 {
-                            Text(L.t("%@ / month", each))
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
+                VStack(alignment: .trailing, spacing: 3) {
+                    Text(product.displayPrice).font(Theme.title(.headline)).foregroundStyle(Theme.accent)
+                    if let each = perMonthDisplay(product), months(product) > 1 {
+                        Text(L.t("%@ / month", each))
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(isBest ? Theme.accent.opacity(0.08) : Theme.surface,
-                        in: RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14)
-                .stroke(isBest ? Theme.accent : Theme.line, lineWidth: isBest ? 2 : 1))
         }
-        .buttonStyle(.plain)
-        .disabled(store.purchasingID != nil)
     }
 
     /// Lifetime, set apart below a divider. It's a different commitment from a
@@ -240,9 +283,7 @@ struct PaywallView: View {
             }
             .padding(.top, 4)
 
-            Button {
-                Task { await store.purchase(product, source: source) }
-            } label: {
+            planChrome(product) {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(L.t("Lifetime")).font(Theme.title(.headline))
@@ -250,19 +291,9 @@ struct PaywallView: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    if store.purchasingID == product.id {
-                        ProgressView()
-                    } else {
-                        Text(product.displayPrice).font(Theme.title(.headline)).foregroundStyle(Theme.accent)
-                    }
+                    Text(product.displayPrice).font(Theme.title(.headline)).foregroundStyle(Theme.accent)
                 }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.line))
             }
-            .buttonStyle(.plain)
-            .disabled(store.purchasingID != nil)
         }
     }
 

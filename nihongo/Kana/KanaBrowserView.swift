@@ -252,8 +252,22 @@ struct KanaTileView: View {
             .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(border, lineWidth: 1.5))
+        .background(Theme.surface, in: Theme.rounded(Theme.Radius.chip))
+        .overlay(Theme.rounded(Theme.Radius.chip)
+            .stroke(border, lineWidth: lastCorrect == nil ? 1 : 1.5))
+        // The verdict's glyph beside its colour, as everywhere else in the app — a
+        // green and a red border are one colour to roughly 8% of men.
+        .overlay(alignment: .topTrailing) {
+            if let lastCorrect {
+                Image(systemName: lastCorrect ? "checkmark" : "xmark")
+                    .font(.caption2.weight(.heavy))
+                    .imageScale(.small)
+                    .foregroundStyle(border)
+                    .padding(5)
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityValue(lastCorrect.map { L.t($0 ? "Correct!" : "Wrong") } ?? "")
     }
 }
 

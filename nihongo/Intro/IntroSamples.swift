@@ -269,7 +269,7 @@ struct IntroChallengeRungs: View {
                     .frame(width: 28, height: 28)
                 if state.isPassed {
                     Image(systemName: "checkmark")
-                        .font(.caption.weight(.bold)).foregroundStyle(.white)
+                        .font(.caption.weight(.bold)).foregroundStyle(Theme.onAccent)
                 } else {
                     Text("\(index)")
                         .font(.caption.weight(.semibold))

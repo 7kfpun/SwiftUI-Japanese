@@ -51,8 +51,39 @@ struct SettingsView: View {
                             }
                         }
                     } else {
-                        Button(L.t("Unlock all lessons")) { showPaywall = true }
-                        Button(L.t("Restore Purchases")) { Task { await store.restore(source: "settings") } }
+                        // The ink card the lesson screen's hero uses: the one offer on
+                        // this screen, and a plain blue row read as just another setting.
+                        Button { showPaywall = true } label: {
+                            HStack(spacing: 14) {
+                                Image(systemName: "crown.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(Theme.accent)
+                                    .frame(minWidth: 44, minHeight: 44)
+                                    .background(Theme.accent.opacity(0.18),
+                                                in: Theme.rounded(Theme.Radius.row))
+                                    .accessibilityHidden(true)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(L.t("Unlock all lessons"))
+                                        .font(Theme.title(.headline))
+                                    Text(L.t("No ads, ever"))
+                                        .font(.footnote)
+                                        .opacity(0.7)
+                                }
+                                Spacer(minLength: 8)
+                                Image(systemName: "chevron.right")
+                                    .font(.footnote.weight(.semibold))
+                                    .opacity(0.7)
+                            }
+                            .foregroundStyle(Color(.systemBackground))
+                            .padding(.vertical, 6)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        // The action's name stays the button's name — VoiceOver and the
+                        // screenshot tests both find it by "Unlock all lessons".
+                        .accessibilityLabel(L.t("Unlock all lessons"))
+                        .accessibilityHint(L.t("No ads, ever"))
+                        .listRowBackground(Color.primary)
                     }
                 } header: {
                     // Section headers keep the size and secondary colour a grouped list
@@ -60,6 +91,14 @@ struct SettingsView: View {
                     // rows, same split as everywhere else. Promoting them to `.headline`
                     // would make the labels compete with the settings they label.
                     Text(L.t("Premium")).font(Theme.title(.footnote))
+                }
+
+                // Its own group, so the ink card above keeps all four corners rather than
+                // sharing a rounded block half black and half white.
+                if !store.isPremium {
+                    Section {
+                        Button(L.t("Restore Purchases")) { Task { await store.restore(source: "settings") } }
+                    }
                 }
 
                 Section {

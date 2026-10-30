@@ -206,9 +206,9 @@ struct Streak: Equatable {
 /// Amber. Deliberately not green or red — those are answer feedback and nothing else —
 /// and deliberately not `Theme.accent`, so a streak at risk reads as a different kind of
 /// message from every other accented control on the screen. It is also simply the colour
-/// a flame is.
+/// a flame is. The pair itself lives on `Theme.streak` so dark mode can soften it.
 extension Color {
-    static let streak = Color(red: 0.98, green: 0.58, blue: 0.13)
+    static var streak: Color { Theme.streak }
 }
 
 struct StreakBadge: View {
@@ -263,10 +263,10 @@ struct StreakHero: View {
         VStack(spacing: 14) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Image(systemName: streak.studiedToday ? "flame.fill" : "flame")
-                    .font(.system(size: 40))
+                    .font(Theme.display(40, weight: .semibold))
                     .symbolEffect(.pulse, options: .repeating, isActive: streak.atRisk)
                 Text("\(streak.current)")
-                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .font(Theme.display(56))
                     .monospacedDigit()
                     // One of the few deliberate fixed sizes in the app: this is the
                     // display slot Theme documents, and the number is the screen.
@@ -286,7 +286,11 @@ struct StreakHero: View {
             countdown
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 24)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 22)
+        // Resting lift, not the deck's: this card lives in a list row, and a
+        // 16pt shadow gets clipped by the cell into a smudge.
+        .cardChrome(radius: Theme.Radius.deck)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(L.t("%@-day streak", "\(streak.current)"))
     }
@@ -332,20 +336,20 @@ struct StreakHero: View {
     /// Seven dots. The gaps are the point — a missed day is a hole you can see, which
     /// argues for not making another one far better than any sentence could.
     private var week: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             ForEach(streak.lastWeek(), id: \.day) { entry in
                 VStack(spacing: 5) {
                     Circle()
                         .fill(entry.studied ? Color.streak : Color.secondary.opacity(0.15))
-                        .frame(width: 12, height: 12)
+                        .frame(width: 14, height: 14)
                         .overlay(
                             // Today gets a ring whether or not it's filled, so the eye
                             // lands on the one day still in the user's hands.
                             Circle().strokeBorder(Color.streak,
                                                   lineWidth: entry.day == streak.today ? 2 : 0)
-                                .frame(width: 19, height: 19)
+                                .frame(width: 22, height: 22)
                         )
-                        .frame(width: 19, height: 19)
+                        .frame(width: 22, height: 22)
                     Text(weekdayLetter(entry.day))
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
