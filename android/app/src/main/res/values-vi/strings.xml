@@ -104,6 +104,8 @@
     <string name="arg_stars">%1$s sao</string>
     <string name="not_now">Để sau</string>
     <string name="seion">Seion</string>
+    <string name="turn_sound_off">Tắt âm thanh</string>
+    <string name="turn_sound_on">Bật âm thanh</string>
     <string name="dakuon">Dakuon</string>
     <string name="youon">Youon</string>
     <string name="skip">Bỏ qua</string>

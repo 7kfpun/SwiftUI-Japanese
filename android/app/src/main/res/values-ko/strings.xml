@@ -104,6 +104,8 @@
     <string name="arg_stars">별 %1$s개</string>
     <string name="not_now">나중에</string>
     <string name="seion">청음</string>
+    <string name="turn_sound_off">소리 끄기</string>
+    <string name="turn_sound_on">소리 켜기</string>
     <string name="dakuon">탁음</string>
     <string name="youon">요음</string>
     <string name="skip">건너뛰기</string>

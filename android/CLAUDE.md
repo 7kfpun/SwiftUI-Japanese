@@ -125,6 +125,35 @@ Screens call `StopSoundOnExit()`; the host also stops on `ON_STOP`.
   `NotPremium` until FOX-158 supplies Pro.
 - `Licenses.voicevox` holds the required credit lines; `LicensesScreen` is what Settings (FOX-159) links to.
 
+## Kana tab (`kana/`, FOX-152)
+
+Port of `nihongo/Kana/` and `context/03-kana.md`. `KanaTab` is a small state-based stack (browser, mode list,
+one of five modes; Back pops one level) over a `KanaEnv` (container, `LocalPronouncer`, glyph rasteriser).
+All of Kana is free: nothing here is gated. The browser rotates `TileScript` (あ, ア, A) from one toolbar
+button; its **index is the persisted `kanaTileScript` pref**, so append, never reorder. Tiles border green or
+red from the latest `KanaResult` for the romaji, with a check or cross beside the colour.
+
+- Modes: Flashcards (the shared `ui/components/FlashcardScreen` + `FlashDeck`, writes nothing), Classic and
+  Listening (`KanaQuizModel`, 4 options), Swipe (2 options, `SwipeCard`, 90 dp threshold), Write.
+  Every answer is recorded, right or wrong, through `ProgressRepository.recordKana`, which also writes the
+  study day. Write records on Next, only when something was drawn.
+- Faces follow the content's script (`glyphStyle`): kana on `jpStrokes`/`jpBold`, romaji on `Theme.display`.
+- **Write scoring** is `KanaSketch`, a stroke-for-stroke port of iOS `KanaSketch.swift`: 48x48 grid with a 12%
+  margin, per-axis stretch, symmetric chamfer + 5x 6x6 zone term, `100 - distance * 3.5`, minus 10 per stroke of
+  difference; pass is 80 *and* the exact textbook stroke count. Only the glyph rasteriser
+  (`AndroidGlyphRasterizer`) is platform code; everything after it is pure Kotlin.
+- **Shared fixtures:** `app/src/test/resources/kana/sketch-fixtures.json` is dumped from the real Swift by
+  `python3 scripts/dump-kana-sketch-fixtures.py` (macOS, `swiftc`, no Xcode build). `KanaSketchTest` asserts
+  digit stripping, glyph grids, chamfer/zone/distance (1e-9) and score arithmetic **exactly**. Rasterising the user's
+  strokes is **toleranced**: CoreGraphics anti-aliases where Android lights a cell by centre distance, so up to
+  6% of cells may differ and end-to-end scores must agree within 2 points (measured worst: 1).
+- **Template fonts differ, on purpose:** iOS takes the best of five (KanjiStrokeOrders, YuKyokasho, Klee, Tsukushi
+  A Round Gothic, Hiragino Sans W6); the last four are Apple fonts. Android uses KanjiStrokeOrders plus Noto Serif
+  JP bold and regular. The shared fixtures therefore cover the KanjiStrokeOrders template only. Handwritten
+  (textbook) letterforms are the loss, so a sloppy-but-right glyph may score a little lower than on iOS.
+- The on-screen template scales its digit-strip threshold by the rendered font size (iOS scales by bitmap size,
+  which leaves digits on the aspect-fit glyph).
+
 ## Strings (FOX-150)
 
 `scripts/build-android-strings.py` (stdlib only) writes `res/values/strings.xml` (English, the
