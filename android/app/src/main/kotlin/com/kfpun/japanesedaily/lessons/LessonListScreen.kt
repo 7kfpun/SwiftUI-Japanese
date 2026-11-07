@@ -47,6 +47,8 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
+import com.kfpun.japanesedaily.ads.AdSlot
+import com.kfpun.japanesedaily.ads.UseBannerSlot
 import com.kfpun.japanesedaily.analytics.Track
 import com.kfpun.japanesedaily.analytics.TrackEvents
 import com.kfpun.japanesedaily.analytics.TrackScreens
@@ -77,6 +79,8 @@ fun LessonListScreen(env: LessonsEnv, nav: LessonsNav, modifier: Modifier = Modi
     val isPremium = LocalPremium.current.isPremium
     val groups = Course.current.groups
     var query by rememberSaveable { mutableStateOf("") }
+    // The search results are the one place this tab's banner reports as its own `search` slot.
+    UseBannerSlot(if (query.isNotBlank()) AdSlot.Search else null)
     var group by rememberSaveable { mutableIntStateOf(0) }
     val results by remember { env.container.progress.observeChallenges() }.collectAsState(emptyMap())
     val passed = remember(results) { LessonStanding.passedByLesson(results.values) }

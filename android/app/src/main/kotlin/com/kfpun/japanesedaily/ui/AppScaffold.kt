@@ -13,8 +13,10 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -23,9 +25,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
+import com.kfpun.japanesedaily.ads.BannerSlotState
+import com.kfpun.japanesedaily.ads.LocalBannerSlot
 import com.kfpun.japanesedaily.kana.KanaTab
 import com.kfpun.japanesedaily.lessons.LessonsTab
-import com.kfpun.japanesedaily.lessons.PaywallHost
 import com.kfpun.japanesedaily.lessons.rememberLessonsNav
 import com.kfpun.japanesedaily.settings.SettingsTab
 
@@ -39,16 +42,17 @@ enum class Tab(@StringRes val label: Int, @DrawableRes val icon: Int) {
 }
 
 @Composable
-fun AppScaffold(startTab: Tab = Tab.Today, banner: @Composable () -> Unit = {}) {
+fun AppScaffold(startTab: Tab = Tab.Today, banner: @Composable (Tab) -> Unit = {}) {
     var selected by rememberSaveable { mutableStateOf(startTab) }
     val lessonsNav = rememberLessonsNav()
-    PaywallHost {
+    val bannerSlot = remember { BannerSlotState() }
+    CompositionLocalProvider(LocalBannerSlot provides bannerSlot) {
         Scaffold(
             bottomBar = {
                 Column {
-                    // The per-tab ad banner slot (FOX-158 fills it): above the tab bar, in a column rather
-                    // than a safe-area inset, so a pushed screen's bottom button never renders under it.
-                    banner()
+                    // The ad banner slot (FOX-158): above the tab bar, in a column rather than a safe-area
+                    // inset, so a pushed screen's bottom button never renders under it.
+                    banner(selected)
                     TabBar(selected) { selected = it }
                 }
             }

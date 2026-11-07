@@ -337,6 +337,10 @@
     <string name="details">Подробнее</string>
     <string name="two_choices_per_card_the_app_keeps_score">Два варианта на карточку — счёт ведёт приложение</string>
     <string name="s_continue">Продолжить</string>
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">Подписки продлеваются автоматически, если не отменить их минимум за 24 часа до конца периода. Оплата списывается с вашего аккаунта Google Play; управлять подпиской можно в Google Play.</string>
+    <string name="no_purchases_found_for_this_google_account">Для этого аккаунта Google покупки не найдены.</string>
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">Ваш платёж обрабатывается. Premium включится после его завершения.</string>
+    <string name="the_purchase_didn_t_go_through_please_try_again">Покупка не состоялась. Попробуйте ещё раз.</string>
     <string name="text_size">Размер текста</string>
     <string name="appearance">Оформление</string>
     <string name="system">Системная</string>

@@ -8,11 +8,10 @@ import com.kfpun.japanesedaily.audio.PremiumStatus
  * What the Lessons tab needs from the rest of the app, as composition locals with safe defaults, so
  * this feature compiles and runs before the tickets that supply them land:
  *
- * - [LocalPremium]: whether the user has Pro. FOX-158 (billing) provides the real one; the default
- *   [NotPremium] fails closed.
- * - [LocalOpenPaywall]: opens the paywall. FOX-158 provides the real screen; until then `AppScaffold`
- *   shows a placeholder dialog.
- * - [LocalLessonExits]: the interstitial hooks (FOX-158's ads). No-ops until wired.
+ * - [LocalPremium]: whether the user has Pro. `MainActivity` provides `ProRepository` (one source); the
+ *   default [NotPremium] fails closed.
+ * - [LocalOpenPaywall]: opens the paywall. `MainActivity` provides `AppContainer.openPaywall`.
+ * - [LocalLessonExits]: the interstitial hooks. `MainActivity` provides the throttled interstitial.
  */
 val LocalPremium = staticCompositionLocalOf<PremiumStatus> { NotPremium }
 
@@ -26,7 +25,7 @@ val LocalOpenPaywall = staticCompositionLocalOf { OpenPaywall { _, _ -> } }
 /**
  * Called when a practice screen is left. `answered` is whether anything was graded this sitting
  * (`PracticeModel.answered > 0`, `MatchModel.attempts > 0`): the same gate iOS uses for its
- * way-out interstitial, which the ads ticket wires up and which only non-premium users see.
+ * way-out interstitial, which `MainActivity` wires to the throttled interstitial; only non-premium users see it.
  */
 interface LessonExits {
     fun onLeavePractice(answered: Boolean) = Unit

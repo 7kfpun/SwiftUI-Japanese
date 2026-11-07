@@ -337,6 +337,10 @@
     <string name="details">விவரங்கள்</string>
     <string name="two_choices_per_card_the_app_keeps_score">ஒவ்வொரு அட்டைக்கும் இரண்டு தேர்வுகள் — மதிப்பெண்ணை ஆப் கணக்கிடும்</string>
     <string name="s_continue">தொடரவும்</string>
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">காலம் முடிவதற்கு குறைந்தது 24 மணி நேரத்திற்கு முன் ரத்து செய்யாவிட்டால் சந்தாக்கள் தானாகப் புதுப்பிக்கப்படும். கட்டணம் உங்கள் Google Play கணக்கில் வசூலிக்கப்படும்; Google Play இல் நிர்வகிக்கலாம்.</string>
+    <string name="no_purchases_found_for_this_google_account">இந்த Google கணக்கிற்கு வாங்குதல்கள் எதுவும் இல்லை.</string>
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">உங்கள் கட்டணம் நிலுவையில் உள்ளது. முடிந்ததும் பிரீமியம் இயக்கப்படும்.</string>
+    <string name="the_purchase_didn_t_go_through_please_try_again">வாங்குதல் முடியவில்லை. மீண்டும் முயலவும்.</string>
     <string name="text_size">எழுத்து அளவு</string>
     <string name="appearance">தோற்றம்</string>
     <string name="system">சாதனம்போல்</string>

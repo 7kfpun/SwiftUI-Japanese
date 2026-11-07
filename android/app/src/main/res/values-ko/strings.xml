@@ -337,6 +337,10 @@
     <string name="details">자세히</string>
     <string name="two_choices_per_card_the_app_keeps_score">카드마다 두 가지 선택지 — 채점은 앱이 해요</string>
     <string name="s_continue">계속</string>
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">구독은 기간이 끝나기 최소 24시간 전에 취소하지 않으면 자동으로 갱신됩니다. 결제는 Google Play 계정으로 청구되며, Google Play에서 관리할 수 있어요.</string>
+    <string name="no_purchases_found_for_this_google_account">이 Google 계정에서 구매 내역을 찾지 못했어요.</string>
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">결제가 보류 중이에요. 완료되면 프리미엄이 켜져요.</string>
+    <string name="the_purchase_didn_t_go_through_please_try_again">구매가 완료되지 않았어요. 다시 시도해 주세요.</string>
     <string name="text_size">글자 크기</string>
     <string name="appearance">화면 스타일</string>
     <string name="system">시스템</string>

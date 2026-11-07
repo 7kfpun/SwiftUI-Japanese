@@ -337,6 +337,10 @@
     <string name="details">အသေးစိတ်</string>
     <string name="two_choices_per_card_the_app_keeps_score">ကတ်တစ်ခုလျှင် ရွေးစရာ ၂ ခု — အမှတ်ကို အက်ပ်က မှတ်ပေးသည်</string>
     <string name="s_continue">ဆက်လုပ်မည်</string>
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">စာရင်းသွင်းမှုများသည် ကာလပြီးဆုံးမည့် ၂၄ နာရီအလိုအထိ မပယ်ဖျက်ပါက အလိုအလျောက် သက်တမ်းတိုးသွားပါမည်။ ငွေကို သင့် Google Play အကောင့်မှ ကောက်ခံပါမည်၊ Google Play တွင် စီမံနိုင်ပါသည်။</string>
+    <string name="no_purchases_found_for_this_google_account">ဤ Google အကောင့်အတွက် ဝယ်ယူမှု မတွေ့ပါ။</string>
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">သင့်ငွေပေးချေမှု ဆိုင်းငံ့ထားသည်။ ပြီးစီးသည်နှင့် ပရီမီယံ ဖွင့်ပေးပါမည်။</string>
+    <string name="the_purchase_didn_t_go_through_please_try_again">ဝယ်ယူမှု မအောင်မြင်ပါ။ ထပ်ကြိုးစားပါ။</string>
     <string name="text_size">စာလုံးအရွယ်အစား</string>
     <string name="appearance">အသွင်အပြင်</string>
     <string name="system">စနစ်အတိုင်း</string>

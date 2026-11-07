@@ -672,6 +672,14 @@
     <string name="two_choices_per_card_the_app_keeps_score">Two choices per card — the app keeps score</string>
     <!-- Continue -->
     <string name="s_continue">Continue</string>
+    <!-- Subscriptions renew automatically unless canceled at least 24 hours before the period ends. Payment is charged to your Google Play account; manage it in Google Play. -->
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">Subscriptions renew automatically unless canceled at least 24 hours before the period ends. Payment is charged to your Google Play account; manage it in Google Play.</string>
+    <!-- No purchases found for this Google account. -->
+    <string name="no_purchases_found_for_this_google_account">No purchases found for this Google account.</string>
+    <!-- Your payment is pending. Premium turns on once it completes. -->
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">Your payment is pending. Premium turns on once it completes.</string>
+    <!-- The purchase didn't go through. Please try again. -->
+    <string name="the_purchase_didn_t_go_through_please_try_again">The purchase didn\'t go through. Please try again.</string>
     <!-- Text size -->
     <string name="text_size">Text size</string>
     <!-- Appearance -->

@@ -117,6 +117,9 @@ android {
         // files. Noto Serif JP lives in src/main/assets/fonts with its OFL text in assets/licenses.
         getByName("main") {
             assets.directories.add(rootProject.file("../nihongo/Fonts").path)
+            // The Terms of Use and Privacy Policy the paywall shows (iOS ships the same .txt files). Read in
+            // place; the folder's LegalView.swift is dropped from the package by ignoreAssetsPatterns below.
+            assets.directories.add(rootProject.file("../nihongo/Legal").path)
         }
         getByName("minna") {
             assets.directories.add(minnaResources.path)
@@ -167,6 +170,7 @@ android {
     // The audio clips are read through AssetFileDescriptor, which needs them stored uncompressed.
     androidResources {
         noCompress += listOf("m4a", "mp3")
+        ignoreAssetsPatterns += "*.swift"
     }
 
     testOptions {
@@ -261,6 +265,11 @@ dependencies {
     // Play In-App Review, the rating prompt's 4-star hand-off (FOX-159).
     implementation(libs.play.review)
     ksp(libs.androidx.room.compiler)
+
+    // Pro and ads (FOX-158): Play Billing, AdMob, Google's consent form.
+    implementation(libs.play.billing)
+    implementation(libs.play.services.ads)
+    implementation(libs.google.ump)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

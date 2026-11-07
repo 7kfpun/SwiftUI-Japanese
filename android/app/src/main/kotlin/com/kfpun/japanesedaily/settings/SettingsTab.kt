@@ -45,12 +45,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kfpun.japanesedaily.R
+import com.kfpun.japanesedaily.ads.AdConsent
 import com.kfpun.japanesedaily.analytics.AnalyticsExclusionFooter
 import com.kfpun.japanesedaily.analytics.PaywallSource
 import com.kfpun.japanesedaily.analytics.Track
 import com.kfpun.japanesedaily.analytics.TrackEvents
 import com.kfpun.japanesedaily.analytics.TrackScreens
 import com.kfpun.japanesedaily.audio.LicensesScreen
+import com.kfpun.japanesedaily.billing.ProPlan
 import com.kfpun.japanesedaily.data.AppContainer
 import com.kfpun.japanesedaily.data.prefs.Pref
 import com.kfpun.japanesedaily.feedback.Feedback
@@ -107,7 +109,6 @@ private fun LicensesPage(modifier: Modifier, onBack: () -> Unit) {
 private fun SettingsList(modifier: Modifier, onLicenses: () -> Unit, onFeedback: () -> Unit) {
     val context = LocalContext.current
     val container = remember { AppContainer.from(context) }
-    val pro by container.pro.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { Track.screen(TrackScreens.SETTINGS) }
 
     Column(
@@ -125,13 +126,13 @@ private fun SettingsList(modifier: Modifier, onLicenses: () -> Unit, onFeedback:
             color = Theme.colors.ink,
             modifier = Modifier.padding(horizontal = 4.dp)
         )
-        PremiumSection(container, pro)
+        PremiumSection(container)
         InterfaceSection(container)
         MeaningsSection(container)
         DisplaySection(context)
         RemindersSection(container)
         FeedbackSection(onFeedback)
-        LegalSection(pro, onLicenses)
+        LegalSection(onLicenses)
         // The version line and the hidden developer gestures: seven taps toggle the analytics opt-out, a long
         // press replays the intro. One line, no visible affordance.
         AnalyticsExclusionFooter(
@@ -142,20 +143,21 @@ private fun SettingsList(modifier: Modifier, onLicenses: () -> Unit, onFeedback:
 }
 
 @Composable
-private fun PremiumSection(container: AppContainer, pro: ProState) {
+private fun PremiumSection(container: AppContainer) {
     val context = LocalContext.current
-    // The seams the Lessons ticket owns: entitlement and the paywall come from composition locals that
-    // FOX-158 provides for real; only tier, restore and manage live in ProActions.
+    val scope = rememberCoroutineScope()
+    // Entitlement and the paywall are the composition-local seams every gate uses (provided by MainActivity).
     val isPremium = LocalPremium.current.isPremium
     val openPaywall = LocalOpenPaywall.current
     SettingsGroup(header = stringResource(R.string.premium)) {
         if (isPremium) {
             SettingsRow(stringResource(R.string.premium_active), value = null)
-            if (pro.tier != "lifetime") {
+            // A lifetime purchase has nothing to manage (iOS hides the row too).
+            if (container.pro.tier != ProPlan.LIFETIME.analyticsName) {
                 RowDivider()
                 SettingsRow(stringResource(R.string.manage_subscription), onClick = {
                     Track.event(TrackEvents.MANAGE_SUBSCRIPTION)
-                    container.pro.manageSubscription(context)
+                    openUrl(context, subscriptionsUrl(context.packageName), "subscriptions", trackScreen = false)
                 })
             }
         } else {
@@ -183,7 +185,19 @@ private fun PremiumSection(container: AppContainer, pro: ProState) {
     }
     if (!isPremium) {
         SettingsGroup {
-            SettingsRow(stringResource(R.string.restore_purchases), onClick = { container.pro.restore("settings") })
+            SettingsRow(stringResource(R.string.restore_purchases), onClick = {
+                scope.launch {
+                    val outcome = container.pro.restore()
+                    Track.event(
+                        TrackEvents.RESTORE,
+                        mapOf(
+                            "outcome" to outcome.analyticsName,
+                            "source" to "settings",
+                            "premium" to container.pro.isPremium
+                        )
+                    )
+                }
+            })
         }
     }
 }
@@ -404,13 +418,13 @@ private fun FeedbackSection(onFeedback: () -> Unit) {
 }
 
 @Composable
-private fun LegalSection(pro: ProState, onLicenses: () -> Unit) {
+private fun LegalSection(onLicenses: () -> Unit) {
     val context = LocalContext.current
-    val container = remember { AppContainer.from(context) }
+    val privacyOptions by AdConsent.privacyOptionsRequired.collectAsStateWithLifecycle()
     SettingsGroup(header = stringResource(R.string.legal)) {
-        if (pro.privacyOptionsRequired) {
+        if (privacyOptions) {
             SettingsRow(stringResource(R.string.privacy_options), onClick = {
-                context.findActivity()?.let { container.pro.showPrivacyOptions(it) }
+                context.findActivity()?.let { AdConsent.showPrivacyOptions(it) }
             })
             RowDivider()
         }
@@ -424,8 +438,12 @@ private fun LegalSection(pro: ProState, onLicenses: () -> Unit) {
     }
 }
 
-internal fun openUrl(context: Context, url: String, doc: String) {
-    Track.screen(TrackScreens.LEGAL, mapOf("doc" to doc))
+/** Play's subscription centre for this app ("Manage subscription"). */
+internal fun subscriptionsUrl(packageName: String) =
+    "https://play.google.com/store/account/subscriptions?package=$packageName"
+
+internal fun openUrl(context: Context, url: String, doc: String, trackScreen: Boolean = true) {
+    if (trackScreen) Track.screen(TrackScreens.LEGAL, mapOf("doc" to doc))
     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     try {
         context.startActivity(intent)

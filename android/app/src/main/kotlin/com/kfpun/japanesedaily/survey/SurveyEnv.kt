@@ -13,7 +13,6 @@ import kotlinx.coroutines.withContext
  */
 suspend fun AppContainer.surveyContext(context: Context): Survey.Context = withContext(Dispatchers.IO) {
     val app = context.applicationContext
-    val pro = pro.state.value
     AppInfo.surveyContext(
         app,
         prefs,
