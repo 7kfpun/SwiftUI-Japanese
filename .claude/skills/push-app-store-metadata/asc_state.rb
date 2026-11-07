@@ -1,8 +1,7 @@
 # READ-ONLY diagnostic for the push-app-store-metadata skill. Makes GETs only.
 #
 #   cd <repo root>
-#   PATH=/usr/bin:/bin:/usr/sbin:/sbin /usr/bin/bundle exec \
-#     ruby .claude/skills/push-app-store-metadata/asc_state.rb
+#   bundle exec ruby .claude/skills/push-app-store-metadata/asc_state.rb
 #
 # Prints: every App Store version and its appVersionState, whether fastlane's
 # `get_edit_app_store_version` can see one (the thing `deliver` needs), and which

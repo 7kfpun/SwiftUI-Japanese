@@ -172,7 +172,7 @@ exists but no code path consumes it — the script has no watch device bucket.
 Generating is not uploading. `fastlane ios screenshots` (the `deliver` lane) is the
 upload, it is outward-facing, and `CLAUDE.md` says **never publish without being
 asked**. It also shares both of the traps in the `push-app-store-metadata` skill —
-the pinned `PATH=/usr/bin:… /usr/bin/bundle exec` invocation, and `deliver`'s
+the Ruby/bundler setup fastlane needs (Homebrew Ruby, `bundle exec`), and `deliver`'s
 inability to see a version whose state isn't in its hardcoded filter. Read that
 skill before running it, starting with its read-only `asc_state.rb`.
 
