@@ -459,6 +459,8 @@ struct VocabListView: View {
             }
         }
         .safeAreaInset(edge: .top, spacing: 0) { cutChips }
+        .readableWidth()
+        .background(Color(.systemGroupedBackground))
         .sheet(item: $reporting) { item in
             FeedbackView(source: .card, item: item)
         }

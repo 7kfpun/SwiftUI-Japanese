@@ -97,7 +97,7 @@ struct PaywallView: View {
                     .font(.caption2)
                 }
                 .padding()
-                .frame(maxWidth: .infinity)
+                .readableWidth()
             }
             .background(Theme.canvas)
             .navigationTitle(L.t("Premium"))

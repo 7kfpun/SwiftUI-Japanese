@@ -201,6 +201,8 @@ struct SettingsView: View {
                         }
                 }
             }
+            .readableWidth()
+            .background(Color(.systemGroupedBackground))
             .navigationTitle(L.t("Settings"))
             .sheet(item: $legal) { doc in LegalView(titleKey: doc.titleKey, resource: doc.rawValue) }
             .onAppear { Track.screen("settings") }

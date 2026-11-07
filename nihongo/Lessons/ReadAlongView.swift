@@ -20,6 +20,9 @@ struct ReadAlongView: View {
     @Environment(Store.self) private var store
     @Environment(\.pronouncer) private var pronouncer
     @State private var player = LessonPlayer()
+    /// A landscape phone has no height to spare for a pinned player: the card scrolls
+    /// away with the playlist instead, so the playlist keeps the whole screen.
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var showPaywall = false
     /// Which gate opened the paywall — the meanings preview running out, or the speed
     /// dial. One sheet, two reasons, and the funnel is worthless if they report as one.
@@ -44,18 +47,11 @@ struct ReadAlongView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            playerCard
-                .padding(.horizontal, 16)
-                .padding(.bottom, 14)
-
-            SectionLabel(text: L.t("Playlist"))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 6)
-
+            if verticalSizeClass != .compact { header }
             playlist
         }
         .padding(.top, 12)
+        .readableWidth()
         .background(Theme.canvas)
         .navigationTitle(L.t("Read along"))
         .navigationBarTitleDisplayMode(.inline)
@@ -89,6 +85,21 @@ struct ReadAlongView: View {
         .onDisappear { player.stop(); player.onFinished = nil; player.onLap = nil }
         .sheet(isPresented: $showPaywall) {
             PaywallView(source: paywallSource, lesson: lesson.number)
+        }
+    }
+
+    /// The player and the playlist's label: pinned above the list normally, the first
+    /// thing *in* the list on a landscape phone.
+    private var header: some View {
+        VStack(spacing: 0) {
+            playerCard
+                .padding(.horizontal, 16)
+                .padding(.bottom, 14)
+
+            SectionLabel(text: L.t("Playlist"))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 6)
         }
     }
 
@@ -273,6 +284,7 @@ struct ReadAlongView: View {
     private var playlist: some View {
         ScrollViewReader { proxy in
             ScrollView {
+                if verticalSizeClass == .compact { header }
                 LazyVStack(spacing: 8) {
                     ForEach(Array(words.enumerated()), id: \.element.id) { i, word in
                         row(i, word).id(word.id)

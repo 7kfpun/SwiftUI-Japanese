@@ -70,6 +70,7 @@ struct IntroView: View {
             footer
         }
         .padding()
+        .cardScreen()
         .background(Theme.canvas)
         .onAppear {
             Track.screen("intro")
@@ -102,6 +103,9 @@ struct IntroView: View {
                 content
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(20)
+                    // A card capped at `cardMaxHeight` must still never clip its text:
+                    // scrolls only if the content doesn't fit.
+                    .scrollableWhenCramped()
             }
             // On the card, *not* on the ZStack. `cardPager` applies its offset and rotation
             // to whatever it modifies, so attaching it outside flings the peek layers along
@@ -110,7 +114,7 @@ struct IntroView: View {
             // trap `Flashcards.swift`'s own comment warns about.
             .cardPager(fling: $fling) { turn($0) }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .cardFrame()
     }
 
     private var footer: some View {

@@ -196,6 +196,8 @@ struct DiagnosticsView: View {
                     LabeledContent("Configuration", value: AppInfo.isDebugBuild ? "Debug" : "Release")
                 }
             }
+            .readableWidth()
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Diagnostics")
             .navigationBarTitleDisplayMode(.inline)
             // The screen is developer-only and deliberately unlocalised, but it still

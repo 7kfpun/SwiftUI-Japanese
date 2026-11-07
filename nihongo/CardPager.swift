@@ -45,7 +45,8 @@ struct CardPager: ViewModifier {
         guard !animating else { return }
         guard canPage() else { withAnimation(.spring) { drag = 0 }; return }
         animating = true
-        let out: CGFloat = dir > 0 ? -500 : 500      // forward flings left, like a page turn
+        // Forward flings left, like a page turn.
+        let out: CGFloat = dir > 0 ? -ScreenLayout.exitDistance : ScreenLayout.exitDistance
         withAnimation(.easeOut(duration: 0.18)) { drag = out }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
             page(dir)
