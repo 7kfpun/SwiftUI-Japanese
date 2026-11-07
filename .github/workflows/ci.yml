@@ -22,7 +22,7 @@ jobs:
     if: >-
       github.event.pull_request.draft == false &&
       startsWith(github.head_ref, 'feature/') &&
-      github.base_ref == 'main'
+      (github.base_ref == 'main' || github.base_ref == 'feature/fox-145-android')
     runs-on: macos-latest
     timeout-minutes: 90
     steps:
@@ -89,7 +89,7 @@ jobs:
     if: >-
       github.event.pull_request.draft == false &&
       startsWith(github.head_ref, 'feature/') &&
-      github.base_ref == 'main'
+      (github.base_ref == 'main' || github.base_ref == 'feature/fox-145-android')
     runs-on: ubuntu-latest
     permissions:
       contents: read
