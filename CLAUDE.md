@@ -41,6 +41,7 @@ first and follow its index; it is kept current and is the fastest way in.
 | `Apps/jlpt/Resources/JLPTData.json`, `Resources/audio/` | `scripts/build-jlpt-data.py` ← the same submodule's `jlpt/` half |
 | `nihongo/Resources/audio/cheer/` | `scripts/build-minna-data.py` ← the submodule's `voices/cheer-<voice>-<key>.m4a` |
 | `web/**` (except `privacy.html`, `terms.html`) | `scripts/build-web.py` — all copy lives in its `T` dict |
+| `android/app/src/main/res/values*/strings.xml`, `res/xml/locales_config.xml` | `scripts/build-android-strings.py` ← `nihongo/UIStrings.json` |
 | `fastlane/minna/screenshots/**` | `fastlane/generate_framed_screenshots.py` ← `fastlane/minna/screenshot_raw/` |
 
 ## Seams — go through them, don't bypass

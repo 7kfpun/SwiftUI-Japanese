@@ -24,11 +24,11 @@ import com.kfpun.japanesedaily.R
 
 /** The five tabs, in the iOS app's order. Icons are Material Symbols (outlined). */
 enum class Tab(@StringRes val label: Int, @DrawableRes val icon: Int) {
-    Today(R.string.tab_today, R.drawable.ic_tab_today),
-    Kana(R.string.tab_kana, R.drawable.ic_tab_translate),
-    Lessons(R.string.tab_lessons, R.drawable.ic_tab_lessons),
-    Progress(R.string.tab_progress, R.drawable.ic_tab_progress),
-    Settings(R.string.tab_settings, R.drawable.ic_tab_settings)
+    Today(R.string.today, R.drawable.ic_tab_today),
+    Kana(R.string.kana, R.drawable.ic_tab_translate),
+    Lessons(R.string.lessons, R.drawable.ic_tab_lessons),
+    Progress(R.string.progress, R.drawable.ic_tab_progress),
+    Settings(R.string.settings, R.drawable.ic_tab_settings)
 }
 
 @Composable

@@ -30,15 +30,15 @@ Setup, commands and config are in [`README.md`](README.md).
 
 `nihongo/Resources/{MinnaData.json,KanaChart.json,audio/}` come from
 `scripts/build-minna-data.py`; the `minna` flavour packages that folder as its assets. Strings
-come from `nihongo/UIStrings.json` (FOX-150 generates `res/values*/strings.xml` from it). Edit
-the generators or the source JSON, never the output.
+come from `nihongo/UIStrings.json`, generated into `res/values*/strings.xml` (see Strings below).
+Edit the generators or the source JSON, never the output.
 
 ## Rules carried over from the iOS CLAUDE.md
 
 - **Strings: the `L.t` rule.** Every user-facing string is a generated string resource with an
-  entry in `UIStrings.json` for all 19 languages, never a literal in Kotlin. Until FOX-150
-  lands, `res/values/strings.xml` holds only what the scaffold needs. Add a string by adding it
-  to `UIStrings.json`, not by hand to `strings.xml`.
+  entry in `UIStrings.json` for all 19 languages, never a literal in Kotlin. Add a string by
+  adding it to `UIStrings.json`, then run `python3 scripts/build-android-strings.py` and commit
+  the output. Only `app_name` is hand-written (`values/app_name.xml`).
 - **Typography and colour: `Theme` only** (`ui/Theme.kt` and what FOX-149 grows it into). No
   literal fonts or colours at call sites. Green and red are exclusive to answer feedback;
   selection is an accent *border*, never a fill. Dynamic type: `sp` text, no fixed-height
@@ -82,3 +82,36 @@ Check `nihongo/Store.swift` and `nihongo/Challenge.swift` before writing a claim
 5-tab `AppScaffold`). Tabs: Today, Kana, Lessons, Progress, Settings, in the iOS order, with
 Material Symbols icons. Keep shared files (`MainActivity`, navigation, `libs.versions.toml`,
 `Theme`) to small additive edits so parallel tickets merge cleanly.
+
+## Strings (FOX-150)
+
+`scripts/build-android-strings.py` (stdlib only) writes `res/values/strings.xml` (English, the
+default), one `values-<qualifier>/strings.xml` per other language, and `res/xml/locales_config.xml`.
+The output is **committed**, and the `Android` CI job runs `build-android-strings.py --check`,
+which fails when any file is missing, stale or unexpected. Rerun the script after any
+`UIStrings.json` change.
+
+- **Folders:** `zh` (Simplified) is `values-b+zh+Hans`, `zh-Hant` is `values-b+zh+Hant`,
+  Indonesian is `values-in`, the rest `values-<code>` (`fil`, `my`, `ne`, `ta`, `te`, `bn`, ...).
+- **Names:** from the English key: lowercase, `%@` becomes `arg`, `%` becomes `pct`, runs of
+  non-alphanumerics become `_` (`"Clear %@"` is `R.string.clear_arg`, `"Lessons"` is
+  `R.string.lessons`). A name that starts with a digit or is a Java keyword (`s_interface`) gets `s_`; one over 60 characters is cut
+  with a sha1 suffix; two keys that map to one name both get a sha1 suffix. The default file keeps
+  each original key in a comment above its string, so grep the key to find the name.
+- **Values:** `%@` becomes `%1$s`, `%2$s`... in order; `%%` stays `%%` (the app formats these
+  with `getString(id, args)`); apostrophes, quotes, backslash, `& < >`, newlines, a leading `@`
+  or `?` and edge spaces are escaped. A string with no placeholder uses a plain `%` and
+  `formatted="false"`.
+- **Parity:** `StringResourcesTest` (port of the iOS `LocalizationTests`) checks every language has
+  every key with the same placeholders, and that `AppLanguage` and `locales_config.xml` agree.
+
+### Language switching
+
+`locale/AppLanguage` is the 19 languages in iOS `L.languageOrder`; `locale/AppLocale` stores the
+choice (`appLanguage`, as on iOS) and applies it with `AppCompatDelegate.setApplicationLocales`.
+`locales_config.xml` puts the languages in the phone's per-app language setting (Android 13+), and
+the `AppLocalesMetadataHolderService` entry keeps the choice on 12 and below. `null` means follow
+the phone. Anything without an activity (widget, notification, worker) must read text through
+`AppLocale.localizedContext(context).getString(...)`, never the plain context. The Settings
+picker (a later ticket) calls `AppLocale.set` and labels each language by its own name
+(`Locale.forLanguageTag(tag).getDisplayName(locale)`).
