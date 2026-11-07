@@ -154,6 +154,28 @@ red from the latest `KanaResult` for the romaji, with a check or cross beside th
 - The on-screen template scales its digit-strip threshold by the rendered font size (iOS scales by bitmap size,
   which leaves digits on the aspect-fit glyph).
 
+## Lessons tab (`lessons/`, FOX-153)
+
+Port of `nihongo/Lessons/` and `context/04-lessons.md`. `LessonsTab` is a state-based stack (`LessonsNav`, hoisted
+in `AppScaffold`, string-encoded routes) over a `LessonsEnv` (container + current meaning language; null while
+the course data decodes off the main thread). Screens: list + search, `SelectModeScreen` (the one place gating is
+enforced), Practice, Vocab List, Read along, Flashcards, Match, Learn, Bookmarks.
+
+- **Gating is pure** (`Gating`, port of iOS `Gating`): lessons 1-5 free, the earned first band
+  (`hasEarnedFirstGroup`, three stars on every rung of the free lessons), `isLocked(earnedFirstGroup = false)` fails
+  closed, Read along's meanings preview 7 words then the paywall, the speed dial is Pro, only subscribers loop.
+  `LessonStanding` tallies results for the list rows, the lock and the earn hint.
+- **Seams other tickets fill** (`Ports.kt`, `ChallengeEntry.kt`, `LessonsTab.kt`): `LocalPremium` (FOX-158, defaults
+  `NotPremium`), `LocalOpenPaywall` (hosted by `PaywallHost`, a *placeholder dialog* until FOX-158 swaps in the real
+  paywall), `LocalLessonExits.onLeavePractice/onLeaveMatch(answered)` (the interstitial hook), and
+  `LocalOpenChallenge` (**FOX-154's entry point**: the rung strip, next-up and retry cards are drawn read-only and
+  call it; replace `nextQuestions` with the pool size).
+- **Models are pure Kotlin** (`PracticeModel`, `MatchModel`, `LearnModel`, `LessonPlayer`) with Compose state for the
+  screen and an injectable `Random`; the mirrored iOS tests are in `app/src/test/.../lessons/`. Practice writes only
+  `PracticeProgress` stages (through `StageStore`); Flashcards writes nothing at all.
+- Not ported yet: the report flag and swipe-to-report (the Feedback sheet is FOX-157's), and no screen reaches
+  `BookmarksScreen` until Progress/Settings push `LessonRoute.Bookmarks`.
+
 ## Strings (FOX-150)
 
 `scripts/build-android-strings.py` (stdlib only) writes `res/values/strings.xml` (English, the

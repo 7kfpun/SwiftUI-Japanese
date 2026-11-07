@@ -59,11 +59,30 @@ class AudioPronouncer(
         }
     }
 
-    override fun speakExample(vocab: Vocab) {
+    override fun speakExample(vocab: Vocab, rate: Float, onDone: () -> Unit) {
         val path = store.exampleAudioPath(vocab)
-        playClip(path, 1f, {}) {
-            vocab.example?.spoken?.let { live(it, 1f, {}) }
+        playClip(path, rate, onDone) {
+            val spoken = vocab.example?.spoken
+            if (spoken != null) live(spoken, rate, onDone)
         }
+    }
+
+    override fun speakMeaning(text: String, languageTag: String, rate: Float, onDone: () -> Unit) {
+        stop()
+        if (text.isBlank()) return
+        if (!focus.request(onLost = ::stop)) return
+        tts.speak(
+            TtsRequest(text, languageTag, Speech.TTS_RATE * rate),
+            // No voice for the learner's language: say nothing and move on rather than stall the run.
+            onUnavailable = {
+                focus.abandon()
+                onDone()
+            },
+            onDone = {
+                focus.abandon()
+                onDone()
+            }
+        )
     }
 
     override fun stop() {
