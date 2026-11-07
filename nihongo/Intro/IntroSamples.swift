@@ -135,6 +135,7 @@ struct IntroModeSample: View {
                     chip(word, side: 0, isAnswer: true)
                     chip(other, side: 1, isAnswer: false)
                 }
+                .fixedSize(horizontal: false, vertical: true)   // same pair rule as Practice
             }
         }
     }

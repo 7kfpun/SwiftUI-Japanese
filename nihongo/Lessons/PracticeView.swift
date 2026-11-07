@@ -646,6 +646,8 @@ struct PracticeView: View {
             optionChip(side: 0)
             optionChip(side: 1)
         }
+        // The two answers always share one height, whichever one wraps.
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     /// What the current question asks, in words. Mirrors `ChallengeView.promptLabel`,
