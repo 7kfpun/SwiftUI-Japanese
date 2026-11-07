@@ -48,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -58,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
 import com.kfpun.japanesedaily.analytics.TrackEvents
 import com.kfpun.japanesedaily.audio.LocalPronouncer
+import com.kfpun.japanesedaily.data.AppContainer
 import com.kfpun.japanesedaily.data.vocab.Vocab
 import java.util.Locale
 
@@ -373,10 +375,17 @@ private fun MeaningsCard(samples: IntroSamples, language: String, onLanguage: (S
 /** Card 2: Kana is free in full; asks whether the learner reads kana. */
 @Composable
 private fun KanaCard(selected: String?, onSelect: (String) -> Unit) {
+    // Tap あ to hear it, through the same Pronouncer (and bundled clip) as the Kana tab; iOS does the same.
+    val pronouncer = LocalPronouncer.current
+    val context = LocalContext.current
+    val a = remember { AppContainer.from(context).kana.seion.flatten().firstOrNull { it.romaji == "a" } }
     Text(
-        "あ",
+        a?.hiragana ?: "あ",
         style = MaterialTheme.typography.displayLarge,
-        color = MaterialTheme.colorScheme.primary
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier
+            .semantics { a?.let { contentDescription = it.romaji } }
+            .clickable(enabled = a != null) { a?.let(pronouncer::speak) }
     )
     Heading(stringResource(R.string.all_of_kana_is_free))
     Caption(stringResource(R.string.the_chart_the_quizzes_and_drawing_a_kana_to_have_you_d9028e4))

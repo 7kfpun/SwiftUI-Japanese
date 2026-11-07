@@ -337,4 +337,16 @@
     <string name="details">Chi tiết</string>
     <string name="two_choices_per_card_the_app_keeps_score">Mỗi thẻ hai lựa chọn — ứng dụng tự chấm điểm</string>
     <string name="s_continue">Tiếp tục</string>
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">Gói đăng ký tự động gia hạn trừ khi bị hủy ít nhất 24 giờ trước khi kết thúc kỳ. Khoản phí được tính vào tài khoản Google Play của bạn; quản lý trong Google Play.</string>
+    <string name="no_purchases_found_for_this_google_account">Không tìm thấy giao dịch mua nào cho tài khoản Google này.</string>
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">Thanh toán của bạn đang chờ xử lý. Gói cao cấp sẽ bật khi hoàn tất.</string>
+    <string name="the_purchase_didn_t_go_through_please_try_again">Giao dịch chưa thành công. Vui lòng thử lại.</string>
+    <string name="text_size">Cỡ chữ</string>
+    <string name="appearance">Giao diện</string>
+    <string name="system">Theo hệ thống</string>
+    <string name="light">Sáng</string>
+    <string name="dark">Tối</string>
+    <string name="rate_the_app">Đánh giá ứng dụng</string>
+    <string name="privacy_options">Tùy chọn quyền riêng tư</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">Thông báo của ứng dụng này đã bị tắt trong cài đặt hệ thống.</string>
 </resources>

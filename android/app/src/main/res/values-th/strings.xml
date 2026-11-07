@@ -337,4 +337,16 @@
     <string name="details">รายละเอียด</string>
     <string name="two_choices_per_card_the_app_keeps_score">การ์ดละ 2 ตัวเลือก — แอปเป็นผู้ให้คะแนน</string>
     <string name="s_continue">ดำเนินการต่อ</string>
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">การสมัครสมาชิกจะต่ออายุอัตโนมัติ เว้นแต่จะยกเลิกอย่างน้อย 24 ชั่วโมงก่อนสิ้นสุดรอบ ค่าใช้จ่ายจะเรียกเก็บจากบัญชี Google Play ของคุณ จัดการได้ใน Google Play</string>
+    <string name="no_purchases_found_for_this_google_account">ไม่พบการซื้อสำหรับบัญชี Google นี้</string>
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">การชำระเงินของคุณอยู่ระหว่างดำเนินการ พรีเมียมจะเปิดใช้เมื่อเสร็จสมบูรณ์</string>
+    <string name="the_purchase_didn_t_go_through_please_try_again">การซื้อไม่สำเร็จ โปรดลองอีกครั้ง</string>
+    <string name="text_size">ขนาดตัวอักษร</string>
+    <string name="appearance">รูปลักษณ์</string>
+    <string name="system">ตามระบบ</string>
+    <string name="light">สว่าง</string>
+    <string name="dark">มืด</string>
+    <string name="rate_the_app">ให้คะแนนแอป</string>
+    <string name="privacy_options">ตัวเลือกความเป็นส่วนตัว</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">การแจ้งเตือนของแอปนี้ถูกปิดในการตั้งค่าระบบ</string>
 </resources>

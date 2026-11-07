@@ -73,8 +73,8 @@ Check `nihongo/Store.swift` and `nihongo/Challenge.swift` before writing a claim
 - **All audio is synthesised (VOICEVOX for Minna), never native-speaker recordings** — never
   claim "native audio". VOICEVOX needs a visible credit.
 - Subscriptions: 1, 3, 6, 12 months + lifetime; product ids are case-sensitive and immutable.
-  Minna uses uppercase `3M`/`6M`/`12M` and `premium.lifetime` on iOS; Play product ids are
-  FOX-158's to create.
+  Minna uses uppercase `3M`/`6M`/`12M` and `premium.lifetime` on iOS; the Play ids are separate
+  and recorded under *Pro and ads* below.
 - No third-party trademark (the textbook name) in any store field.
 
 ## Layout
@@ -91,7 +91,7 @@ font-follows-script rule: `KanaForm`/`VocabForm.isJapanese`), `ui/components/` (
 ad banner slot above the tab bar. Noto Serif JP is in `assets/fonts` (OFL text in `assets/licenses`);
 KanjiStrokeOrders is packaged in place from `nihongo/Fonts`. The debug-only catalog
 (`src/debug/.../CatalogActivity`) renders every token and component:
-`adb shell am start -n com.kfpun.japanesedaily/.catalog.CatalogActivity [--es section tokens|type|cards|options|empty]`.
+`adb shell am start -n com.kfpun.japanesedaily/.catalog.CatalogActivity [--es section tokens|type|cards|options|empty|rating]`.
 
 ## Data layer (`data/`, FOX-148)
 
@@ -121,8 +121,8 @@ Screens call `StopSoundOnExit()`; the host also stops on `ON_STOP`.
 
 - `AudioVoice.Alternate.suffix` (`-kenzaki`) must equal `ALT_SUFFIX` in `build-minna-data.py`;
   `AudioTest` reads the script. `speakText` is TTS only (bare text tiles); `speak(K)` uses the kana clip.
-- Rates: `PlaybackRates.effective(stored, premium)`; only 1x is free. `PremiumStatus` defaults to
-  `NotPremium` until FOX-158 supplies Pro.
+- Rates: `PlaybackRates.effective(stored, premium)`; only 1x is free. `PremiumStatus` is
+  implemented by `ProRepository` (`AppContainer.premium`); `NotPremium` is only the default for tests.
 - `Licenses.voicevox` holds the required credit lines; `LicensesScreen` is what Settings (FOX-159) links to.
 
 ## Kana tab (`kana/`, FOX-152)
@@ -245,3 +245,78 @@ the phone. Anything without an activity (widget, notification, worker) must read
 `AppLocale.localizedContext(context).getString(...)`, never the plain context. The Settings
 picker (a later ticket) calls `AppLocale.set` and labels each language by its own name
 (`Locale.forLanguageTag(tag).getDisplayName(locale)`).
+
+## Pro and ads (`billing/`, `ads/`, FOX-158)
+
+Port of `Store`/`PaywallView` and `Ads`; `context/06-monetization.md` is the spec. **One source of
+Pro:** `ProRepository` (`AppContainer.pro`, also `AppContainer.premium` as the `PremiumStatus` the
+gating and the audio rates read). It is re-read from Play on every start (`AppContainer.preload`),
+cached in its own DataStore file (`pro.preferences_pb`, left out of every backup), and keeps the cached
+value when Play is unreachable. Play's purchase list drops expired, refunded and on-hold
+subscriptions, so Pro turns off by itself; a lifetime purchase stays. Pending payments are not Pro.
+
+### Play Console must hold exactly this (permanent once created)
+
+| Product | Id | Type |
+|---|---|---|
+| Subscription | `premium.subscription` | one subscription, four base plans |
+| Base plans | `p1m`, `p3m`, `p6m`, `p12m` | auto-renewing, 1, 3, 6 and 12 months, no offers |
+| Lifetime | `premium.lifetime` | one-time (in-app) product, non-consumable |
+
+The ids live on `Course.Products`; `ProProductsTest` pins them. Plan names and `Best value` are built
+from the app's own strings, never from Play titles; Play only supplies the prices.
+
+### What is wired, and what screens call
+
+`MainActivity` provides the Lessons seams (`lessons/Ports.kt`): `LocalPremium` is a view of `ProRepository`
+(one source), `LocalOpenPaywall` is `AppContainer.openPaywall(source, lesson)`, and `LocalLessonExits`
+(`onLeavePractice` / `onLeaveMatch`) is the throttled interstitial, shown only when something was answered.
+`Gating` stays pure and takes `isPremium`; screens pass `LocalPremium.current.isPremium`.
+
+- `container.openPaywall(PaywallSource.X, lesson)` shows the paywall (`PaywallHost`, composed in
+  `MainActivity`); a no-op for Pro. It closes itself when Pro turns on. Terms of Use and Privacy
+  Policy are shown in-app from `nihongo/Legal/*.txt`, packaged in place (`LegalDialog`).
+- `container.onChallengeFinished()` is the ladder's interstitial hook (**not yet wired**, FOX-154): call it
+  when a run reaches its end, never mid-run. `container.onLeavePractice(answered)` is the same throttle.
+- One banner sits above the tab bar (`AppScaffold(banner = ...)`): Today, Kana, Lessons, Progress and
+  Settings(`about`) by tab. A pushed screen with its own slot calls `UseBannerSlot(AdSlot.X)`: Select mode,
+  Vocab List and the Lessons search results do. `AdBanner(AdSlot.X)` takes no space for Pro, before consent,
+  or until an ad loads.
+- `AdConsent.privacyOptionsRequired` / `AdConsent.showPrivacyOptions(activity)` are the Settings
+  (FOX-159) entry point for UMP's privacy options form.
+- Ads are always non-personalized (`npa=1` on every request). Unit ids come from
+  `secrets.properties` (`AD_UNIT_ID_*`), falling back to Google's test ids in the example file.
+
+### Debug-only demo billing
+
+`adb shell am start -n com.kfpun.japanesedaily/.MainActivity --ez demo_billing true --es open_paywall settings`
+sells five made-up plans from `DemoBillingGateway` (in memory, every purchase succeeds, gone on
+the next launch) and opens the paywall. Both extras are ignored by release builds.
+
+## Settings, reminder, feedback and rating (`settings/`, `feedback/`, `rating/`, FOX-159)
+
+Port of `SettingsView`, `StreakReminder`, `NotificationOptIn`, `Feedback/` and `RatingPrompt`. `SettingsTab` is the Settings
+tab (Licenses is pushed over it with Back, Feedback is a full-screen dialog). Rows: Premium (the `LocalPremium` and
+`LocalOpenPaywall` seams, `container.pro.restore()`, Play's subscription centre, hidden for lifetime), app language
+(`AppLocale.set`), vocabulary language (`Prefs.setTranslationLanguage`), appearance and text size, reminder, feedback, Rate the
+app (Play page, always reachable), Privacy options (only when `AdConsent.privacyOptionsRequired`), Privacy policy / Terms
+(`kf-nihongo.web.app`), Licenses (VOICEVOX credits and both font licences from assets) and the version footer: seven taps
+toggle the analytics opt-out, a long press calls `IntroLauncher.replay()`.
+
+- **Appearance and text size are SharedPreferences, not DataStore** (`settings` file, like `AppLocale`): they must be applied
+  in `Application.onCreate` before any activity. Appearance is `AppCompatDelegate.setDefaultNightMode`; text size is a
+  multiplier (85/100/115/130%) on the phone's font scale through `ProvideTextScale`, and is folded into the survey's `text_size`.
+- **Reminder = one pending inexact alarm** (`setAndAllowWhileIdle`, no exact-alarm permission). `StreakReminder.nextFire` is
+  pure (today if still ahead and not studied, else tomorrow, at the hour in the user's zone); `StreakReminderEngine` plans on
+  every launch, first answer of a day, boot, update, clock and time-zone change (`RescheduleReceiver`) and re-checks at fire
+  time (`ReminderReceiver`: toggle, permission, studied today). A seven-day horizon (`Pref.reminderRemaining`) is refilled by a
+  launch or an answer, not by a reboot. Text goes through `AppLocale.localizedContext`; no streak number is baked in.
+- **The permission is only ever asked from an explicit opt-in** (`rememberReminderOptIn`: the Settings toggle and the intro's
+  "Remind me"); a refusal leaves the toggle off and the footer links to the system notification page. `NotificationOptIn`
+  holds the 60-day soft-ask policy and the streak-7 milestone rule for the Today ticket to call.
+- **Rating:** `container.rating.onRungPassed(totalPassed)` is the hook the ladder calls after a *passed* rung. After 21 passed
+  rungs and at most every 60 days (stamped when shown) `RatingHost` shows the star row; every tap writes a
+  `japanese_survey_rating` row, then 4-5 stars go to Play In-App Review and 1-3 to the feedback screen with the stars
+  attached. "Not now" leads nowhere. Not a rating gate: Settings -> Rate the app is always there.
+- **Feedback** drops iOS's `watch` area (no Wear OS). `FeedbackDraft` is the testable model; `AppContainer.surveyContext` builds
+  the shared row context (premium, tier, counts, text size, appearance).

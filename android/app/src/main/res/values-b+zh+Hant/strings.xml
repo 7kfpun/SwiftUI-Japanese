@@ -337,4 +337,16 @@
     <string name="details">詳情</string>
     <string name="two_choices_per_card_the_app_keeps_score">每張卡兩個選項——由 App 計分</string>
     <string name="s_continue">繼續</string>
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">訂閱會自動續訂，除非在目前週期結束前至少 24 小時取消。費用將從您的 Google Play 帳戶扣款；可在 Google Play 中管理。</string>
+    <string name="no_purchases_found_for_this_google_account">這個 Google 帳號下找不到購買紀錄。</string>
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">您的付款處理中，完成後將自動啟用進階版。</string>
+    <string name="the_purchase_didn_t_go_through_please_try_again">購買未能完成，請再試一次。</string>
+    <string name="text_size">文字大小</string>
+    <string name="appearance">外觀</string>
+    <string name="system">跟隨系統</string>
+    <string name="light">淺色</string>
+    <string name="dark">深色</string>
+    <string name="rate_the_app">為App評分</string>
+    <string name="privacy_options">隱私權選項</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">此App的通知已在系統設定中關閉。</string>
 </resources>

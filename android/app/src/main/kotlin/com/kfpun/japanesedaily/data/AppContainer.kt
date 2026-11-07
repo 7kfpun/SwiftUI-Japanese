@@ -4,6 +4,17 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import com.kfpun.japanesedaily.ads.AdConsent
+import com.kfpun.japanesedaily.ads.AdMobInterstitials
+import com.kfpun.japanesedaily.audio.PremiumStatus
+import com.kfpun.japanesedaily.billing.BillingGateway
+import com.kfpun.japanesedaily.billing.DataStoreEntitlementStore
+import com.kfpun.japanesedaily.billing.DemoBillingGateway
+import com.kfpun.japanesedaily.billing.InMemoryEntitlementStore
+import com.kfpun.japanesedaily.billing.PaywallController
+import com.kfpun.japanesedaily.billing.PlayBillingGateway
+import com.kfpun.japanesedaily.billing.ProRepository
+import com.kfpun.japanesedaily.billing.UnavailableBillingGateway
 import com.kfpun.japanesedaily.data.prefs.Prefs
 import com.kfpun.japanesedaily.data.progress.PracticeProgress
 import com.kfpun.japanesedaily.data.progress.ProgressDatabase
@@ -13,6 +24,8 @@ import com.kfpun.japanesedaily.data.vocab.AndroidAssetSource
 import com.kfpun.japanesedaily.data.vocab.AssetSource
 import com.kfpun.japanesedaily.data.vocab.KanaData
 import com.kfpun.japanesedaily.data.vocab.VocabStore
+import com.kfpun.japanesedaily.rating.RatingCoordinator
+import com.kfpun.japanesedaily.settings.Reminders
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,7 +45,9 @@ class AppContainer(
     preferences: DataStore<Preferences>,
     val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
     val course: Course = Course.current,
-    onFirstAnswerToday: (Streak) -> Unit = {}
+    onFirstAnswerToday: (Streak) -> Unit = {},
+    billing: BillingGateway = UnavailableBillingGateway,
+    entitlements: com.kfpun.japanesedaily.billing.EntitlementStore = InMemoryEntitlementStore()
 ) {
     val vocab = VocabStore(assets, course)
     val kana = KanaData(assets)
@@ -40,16 +55,38 @@ class AppContainer(
     val practice = PracticeProgress(database.practice(), scope)
     val prefs = Prefs(preferences)
 
+    /** The one source of Pro (FOX-158): Play Billing, re-read on every start, cached on the device. */
+    val pro = ProRepository(billing, entitlements, scope)
+
+    /** Gating and the audio rates read this; it is [pro]. */
+    val premium: PremiumStatus get() = pro
+
+    val paywall = PaywallController(pro)
+
+    /** The ad hooks: the interstitial for `onLeavePractice` / `onChallengeFinished`, shown for free users only. */
+    val interstitials = AdMobInterstitials(pro.entitlement, AdConsent.canRequestAds)
+
+    /** The hook gated screens call to sell Pro. [source] is a `PaywallSource` key. A no-op for Pro users. */
+    fun openPaywall(source: String, lesson: Int? = null) = paywall.open(source, lesson)
+
+    /** Leaving Practice. Shows an interstitial (at most one per 3 minutes) only if [answered] anything. */
+    fun onLeavePractice(answered: Boolean) = interstitials.onLeavePractice(answered)
+
+    /** The rating prompt. The ladder calls `rating.onRungPassed(totalPassed)` after every passed rung. */
+    val rating = RatingCoordinator(prefs, scope)
+
     /**
-     * Hooks other tickets wire up, no-ops by default. [onChallengeFinished] fires when a finished run's screen is
-     * left (FOX-158 shows the interstitial there, never mid-run); [onRungPassed] gets the total of rungs passed
-     * after each pass that did not earn the unlock (FOX-159 decides whether to ask for a rating).
+     * The ladder's hooks (FOX-154), wired to the pieces FOX-158 and FOX-159 supply. [onChallengeFinished] fires when a
+     * finished run's screen is left, never mid-run: it shows the interstitial (free users only, throttled).
+     * [onRungPassed] gets the total of rungs passed after each pass that did not earn the unlock: the rating prompt.
      */
     @Volatile
-    var onChallengeFinished: (com.kfpun.japanesedaily.ladder.ChallengeRun) -> Unit = {}
+    var onChallengeFinished: (
+        com.kfpun.japanesedaily.ladder.ChallengeRun
+    ) -> Unit = { interstitials.onChallengeFinished() }
 
     @Volatile
-    var onRungPassed: (totalPassed: Int) -> Unit = {}
+    var onRungPassed: (totalPassed: Int) -> Unit = { rating.onRungPassed(it) }
 
     /** Decodes the course data and loads Practice stages off the main thread, at launch. */
     fun preload() {
@@ -57,11 +94,21 @@ class AppContainer(
             vocab.preload()
             practice.load()
         }
+        // Pro is re-read from Play on every start.
+        scope.launch { pro.refresh() }
     }
 
     companion object {
         @Volatile
         private var instance: AppContainer? = null
+
+        @Volatile
+        private var demoBilling = false
+
+        /** Debug builds only (`--ez demo_billing true`): sell made-up plans without Play. Before the first [from]. */
+        fun useDemoBilling() {
+            if (com.kfpun.japanesedaily.BuildConfig.DEBUG && instance == null) demoBilling = true
+        }
 
         fun from(context: Context): AppContainer = instance ?: synchronized(this) {
             instance ?: create(context.applicationContext).also { instance = it }
@@ -72,7 +119,11 @@ class AppContainer(
             database = ProgressDatabase.open(context),
             preferences = PreferenceDataStoreFactory.create {
                 context.filesDir.resolve("datastore/prefs.preferences_pb")
-            }
+            },
+            billing = if (demoBilling) DemoBillingGateway() else PlayBillingGateway(context),
+            entitlements = DataStoreEntitlementStore(context),
+            // Studying today cancels today's reminder: the plan is re-derived from the new streak.
+            onFirstAnswerToday = { Reminders.reschedule(context) }
         )
     }
 }

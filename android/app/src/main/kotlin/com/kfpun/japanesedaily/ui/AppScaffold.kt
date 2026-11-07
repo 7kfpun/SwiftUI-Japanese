@@ -13,9 +13,11 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -24,11 +26,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
-import com.kfpun.japanesedaily.analytics.AnalyticsExclusionFooter
+import com.kfpun.japanesedaily.ads.BannerSlotState
+import com.kfpun.japanesedaily.ads.LocalBannerSlot
 import com.kfpun.japanesedaily.kana.KanaTab
 import com.kfpun.japanesedaily.lessons.LessonsTab
-import com.kfpun.japanesedaily.lessons.PaywallHost
 import com.kfpun.japanesedaily.lessons.rememberLessonsNav
+import com.kfpun.japanesedaily.settings.SettingsTab
 import com.kfpun.japanesedaily.today.TodayNav
 import com.kfpun.japanesedaily.today.TodayTab
 
@@ -44,7 +47,7 @@ enum class Tab(@StringRes val label: Int, @DrawableRes val icon: Int) {
 @Composable
 fun AppScaffold(
     startTab: Tab = Tab.Today,
-    banner: @Composable () -> Unit = {},
+    banner: @Composable (Tab) -> Unit = {},
     tabRequest: Tab? = null,
     onTabRequestHandled: () -> Unit = {}
 ) {
@@ -57,13 +60,14 @@ fun AppScaffold(
             onTabRequestHandled()
         }
     }
-    PaywallHost {
+    val bannerSlot = remember { BannerSlotState() }
+    CompositionLocalProvider(LocalBannerSlot provides bannerSlot) {
         Scaffold(
             bottomBar = {
                 Column {
-                    // The per-tab ad banner slot (FOX-158 fills it): above the tab bar, in a column rather
-                    // than a safe-area inset, so a pushed screen's bottom button never renders under it.
-                    banner()
+                    // The ad banner slot (FOX-158): above the tab bar, in a column rather than a safe-area
+                    // inset, so a pushed screen's bottom button never renders under it.
+                    banner(selected)
                     TabBar(selected) { selected = it }
                 }
             }
@@ -88,6 +92,8 @@ fun AppScaffold(
 
                 Tab.Lessons -> LessonsTab(lessonsNav, Modifier.padding(padding))
 
+                Tab.Settings -> SettingsTab(Modifier.padding(padding))
+
                 else -> PlaceholderScreen(selected, Modifier.padding(padding))
             }
         }
@@ -99,10 +105,6 @@ fun AppScaffold(
 private fun PlaceholderScreen(tab: Tab, modifier: Modifier = Modifier) {
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(stringResource(tab.label), style = MaterialTheme.typography.headlineMedium)
-        // The hidden analytics opt-out (FOX-160); the real Settings screen keeps this footer.
-        if (tab == Tab.Settings) {
-            AnalyticsExclusionFooter(Modifier.align(Alignment.BottomCenter).padding(16.dp))
-        }
     }
 }
 

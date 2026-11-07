@@ -50,6 +50,9 @@ object Pref {
     const val DEFAULT_REMINDER_HOUR = 20
     val streakReminderHour = PrefKey(intPreferencesKey("streakReminderHour"), DEFAULT_REMINDER_HOUR)
 
+    /** Reminder days left before a quiet install stops being nudged; refilled by every open (FOX-159). */
+    val reminderRemaining = PrefKey(intPreferencesKey("reminderRemaining"), 0)
+
     val introAnswered = PrefKey(booleanPreferencesKey("introAnswered"), false)
 
     /** "none" / "hiragana" / "both"; the only intro answer anything acts on. Empty until answered. */

@@ -337,4 +337,16 @@
     <string name="details">Mga detalye</string>
     <string name="two_choices_per_card_the_app_keeps_score">Dalawang pagpipilian bawat card — ang app ang nagbibilang</string>
     <string name="s_continue">Magpatuloy</string>
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">Awtomatikong nire-renew ang mga subscription maliban kung kakanselahin nang hindi bababa sa 24 oras bago matapos ang panahon. Sisingilin ang bayad sa iyong Google Play account; i-manage ito sa Google Play.</string>
+    <string name="no_purchases_found_for_this_google_account">Walang nakitang binili para sa Google account na ito.</string>
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">Nakabinbin ang iyong bayad. Mag-o-on ang Premium kapag natapos ito.</string>
+    <string name="the_purchase_didn_t_go_through_please_try_again">Hindi natuloy ang pagbili. Pakisubukan muli.</string>
+    <string name="text_size">Laki ng teksto</string>
+    <string name="appearance">Hitsura</string>
+    <string name="system">Sistema</string>
+    <string name="light">Maliwanag</string>
+    <string name="dark">Madilim</string>
+    <string name="rate_the_app">I-rate ang app</string>
+    <string name="privacy_options">Mga opsyon sa privacy</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">Naka-off ang mga notification para sa app na ito sa mga setting ng system.</string>
 </resources>

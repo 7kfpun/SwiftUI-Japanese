@@ -35,6 +35,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
+import com.kfpun.japanesedaily.ads.AdSlot
+import com.kfpun.japanesedaily.ads.UseBannerSlot
 import com.kfpun.japanesedaily.analytics.Track
 import com.kfpun.japanesedaily.analytics.TrackEvents
 import com.kfpun.japanesedaily.analytics.TrackScreens
@@ -53,6 +55,7 @@ import com.kfpun.japanesedaily.ui.components.SymbolIcon
  */
 @Composable
 fun VocabListScreen(lessonNumber: Int, env: LessonsEnv, nav: LessonsNav, modifier: Modifier = Modifier) {
+    UseBannerSlot(AdSlot.VocabList)
     val container = env.container
     val entries = remember(lessonNumber, env.language) { env.lesson(lessonNumber).entries }
     val tiers by rememberBookmarkTiers(container)
