@@ -353,7 +353,10 @@ struct SwipeOptionChip: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 14)
-            .frame(maxWidth: .infinity, minHeight: 96)   // min, not fixed: long glosses need room
+            // min, not fixed: long glosses need room. `maxHeight: .infinity` lets the shorter chip of a
+            // pair grow to its partner's height — every pair row is `.fixedSize(horizontal: false,
+            // vertical: true)`, so the row is as tall as the taller chip and both fill it.
+            .frame(maxWidth: .infinity, minHeight: 96, maxHeight: .infinity)
             .contentShape(Rectangle())                   // the whole chip is the target
         }
         .buttonStyle(.plain)

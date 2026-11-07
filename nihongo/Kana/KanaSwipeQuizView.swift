@@ -37,6 +37,7 @@ struct KanaSwipeQuizView: View {
                 optionChip(leftOption, side: 0)
                 optionChip(rightOption, side: 1)
             }
+            .fixedSize(horizontal: false, vertical: true)   // one height for the pair, whichever wraps
         }
         .padding()
         .cardScreen()
