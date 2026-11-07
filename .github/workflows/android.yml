@@ -1,0 +1,141 @@
+name: Android
+
+# The Android app under android/ (FOX-147): ktlint, Android lint, JVM unit tests and a debug
+# build, with the example config only (no secrets beyond the read-only course-data deploy key).
+#
+# Every pull request to main or to the Android integration branch gets a single "Android"
+# check, so branch protection can require it. It is green straight away when nothing the
+# Android build reads changed. That is why pull_request has no paths filter: a filtered-out
+# workflow never reports, and a required check that never reports blocks the merge.
+#
+# The build reads the generated course data in place (nihongo/Resources), so the job produces
+# it exactly as ci.yml does, from the private `minna` submodule.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, feature/fox-145-android]
+  push:
+    branches: [main]
+    paths:
+      - "android/**"
+      - "nihongo/Resources/**"
+      - "nihongo/UIStrings.json"
+      - ".github/workflows/android.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  android:
+    name: Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Find Android changes
+        id: changes
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          paths=(android/ nihongo/Resources/ nihongo/UIStrings.json .github/workflows/android.yml)
+          build=true
+          case "$EVENT" in
+            pull_request)
+              if git diff --quiet "$PR_BASE...$PR_HEAD" -- "${paths[@]}"; then
+                build=false
+              fi
+              ;;
+            push)
+              # A first push or a force push may leave no usable base: build.
+              if [ "$PUSH_BEFORE" != 0000000000000000000000000000000000000000 ] \
+                && git cat-file -e "$PUSH_BEFORE^{commit}" 2>/dev/null \
+                && git diff --quiet "$PUSH_BEFORE" "$PUSH_AFTER" -- "${paths[@]}"; then
+                build=false
+              fi
+              ;;
+          esac
+          echo "Build Android: $build"
+          echo "build=$build" >> "$GITHUB_OUTPUT"
+
+      # Same step as ci.yml: GITHUB_TOKEN cannot read the private 7kfpun/minna repo, so
+      # MINNA_DEPLOY_KEY (a read-only deploy key on it) fetches the submodule, and
+      # ci_scripts/ci_post_clone.sh runs scripts/build-minna-data.py to write
+      # nihongo/Resources (MinnaData.json, KanaChart.json, audio/).
+      - name: Generate bundled course data
+        if: steps.changes.outputs.build == 'true'
+        env:
+          MINNA_DEPLOY_KEY: ${{ secrets.MINNA_DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${MINNA_DEPLOY_KEY}" ]; then
+            echo "::error::Missing MINNA_DEPLOY_KEY. The Android build packages the course data generated from the private submodule 7kfpun/minna. The secret is a read-only deploy key for that repo."
+            exit 1
+          fi
+          install -d -m 700 "${HOME}/.ssh"
+          key_file="${HOME}/.ssh/minna_deploy"
+          trap 'rm -f "$key_file"' EXIT
+          printf '%s\n' "${MINNA_DEPLOY_KEY}" > "$key_file"
+          chmod 600 "$key_file"
+          ssh-keyscan -t ed25519 github.com >> "${HOME}/.ssh/known_hosts"
+          export GIT_SSH_COMMAND="ssh -i ${key_file} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
+          sh ci_scripts/ci_post_clone.sh
+
+      - name: Set up JDK 17
+        if: steps.changes.outputs.build == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle (with cache)
+        if: steps.changes.outputs.build == 'true'
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          # Only main writes the cache; pull requests read it.
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: Lint, unit tests and debug build
+        if: steps.changes.outputs.build == 'true'
+        working-directory: android
+        # The runner's preinstalled Android SDK (ANDROID_HOME); AGP fetches a
+        # missing platform or build-tools on its own. No secrets: the build
+        # uses secrets.example.properties and no google-services.json.
+        run: ./gradlew ktlintCheck lint test assembleDebug --stacktrace
+
+      # The flavour packages nihongo/Resources as assets in place; prove the debug APK has them.
+      - name: Check the APK carries the course data
+        if: steps.changes.outputs.build == 'true'
+        run: |
+          set -euo pipefail
+          apk=android/app/build/outputs/apk/minna/debug/app-minna-debug.apk
+          unzip -l "$apk" > "$RUNNER_TEMP/apk.txt"
+          for f in assets/MinnaData.json assets/KanaChart.json; do
+            grep -q " $f$" "$RUNNER_TEMP/apk.txt" || { echo "::error::$f is missing from the debug APK"; exit 1; }
+          done
+          grep -q " assets/audio/vocab/" "$RUNNER_TEMP/apk.txt" || { echo "::error::assets/audio/vocab is missing from the debug APK"; exit 1; }
+
+      - name: Upload lint and test reports
+        if: failure() && steps.changes.outputs.build == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-reports
+          path: |
+            android/app/build/reports/
+            android/app/build/test-results/
+          retention-days: 7

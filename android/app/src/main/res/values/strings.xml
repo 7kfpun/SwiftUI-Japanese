@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Placeholder English strings. FOX-150 generates this file, and one per language, from
+     nihongo/UIStrings.json; do not add copy here by hand beyond what the scaffold needs. -->
+<resources>
+    <string name="app_name">Japanese Daily</string>
+    <string name="tab_today">Today</string>
+    <string name="tab_kana">Kana</string>
+    <string name="tab_lessons">Lessons</string>
+    <string name="tab_progress">Progress</string>
+    <string name="tab_settings">Settings</string>
+</resources>

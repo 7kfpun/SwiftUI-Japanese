@@ -228,6 +228,11 @@ Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
   "१८ भाषा"), so a new language makes 18 files wrong at once. Grep the count across
   `fastlane/*/metadata/*/description.txt` whenever `UIStrings.json` gains a language.
 
+## Android
+
+The Android port lives in `android/`; read `android/CLAUDE.md` before touching it. Its rules
+extend this file, and the iOS hard rules above (no build or launch of the *iOS* app) still stand.
+
 ## Documentation
 
 `context/` describes source-of-truth files, not the other way around. When a doc and the

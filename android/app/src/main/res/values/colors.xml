@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Minna's teal accent (Shared/Course.swift accentLight). -->
+    <color name="ic_launcher_background">#0FB0BF</color>
+</resources>
