@@ -46,6 +46,29 @@ class AdaptiveTest {
     }
 
     @Test
+    fun twoPanesNeedSevenTwentyWideAndANonCompactHeight() {
+        assertFalse("7in tablet portrait", Adaptive.twoPane(600, 960))
+        assertTrue("small tablet portrait edge", Adaptive.twoPane(720, 1280))
+        assertFalse("phone landscape", Adaptive.twoPane(915, 411))
+        assertTrue("foldable unfolded", Adaptive.twoPane(841, 701))
+        assertTrue("10in tablet landscape", Adaptive.twoPane(1280, 800))
+        assertFalse("just under 720", Adaptive.twoPane(719, 1280))
+        assertFalse("height just compact", Adaptive.twoPane(1280, 479))
+        assertTrue("height just regular", Adaptive.twoPane(1280, 480))
+    }
+
+    @Test
+    fun theRightPaneIsAlwaysClearlyLargerThanTheList() {
+        val rail = 80
+        for (width in 720..2400 step 20) {
+            assertTrue(Adaptive.twoPane(width, 800))
+            val list = Adaptive.listPaneWidthDp((width - rail).toFloat())
+            val right = width - rail - list
+            assertTrue("width $width: right $right vs list $list", right > list * 1.25f)
+        }
+    }
+
+    @Test
     fun openingALessonReplacesTheRightPaneAndKeepsTheSelection() {
         val nav = LessonsNav()
         nav.openLesson(3)

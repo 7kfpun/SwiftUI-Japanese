@@ -19,15 +19,15 @@ import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.ladder.ChallengeScreen
 import com.kfpun.japanesedaily.ui.Adaptive
 import com.kfpun.japanesedaily.ui.Theme
-import com.kfpun.japanesedaily.ui.isRegularWidth
+import com.kfpun.japanesedaily.ui.isTwoPane
 import kotlinx.coroutines.flow.first
 
-/** True inside the right pane of the two-pane Lessons tab (regular width): its root screen has no Back. */
+/** True inside the right pane of the two-pane Lessons tab (720 dp wide, not compact height): its root screen has no Back. */
 val LocalTwoPane = compositionLocalOf { false }
 
 /**
- * The Lessons tab: the list, and the screens pushed from it, as a hoisted [LessonsNav] stack. At regular width
- * (600 dp and up) it is two panes instead: the list on the left (a third of the window) and the stack on the right,
+ * The Lessons tab: the list, and the screens pushed from it, as a hoisted [LessonsNav] stack. When the window has room for two panes
+ * (at least 720 dp wide and not compact height) it is two panes instead: the list on the left (a third of the window) and the stack on the right,
  * so a lesson and the modes it opens never cover the list. Both layouts read the one stack, so moving between
  * widths keeps the selected lesson and the screen open in it.
  */
@@ -39,7 +39,7 @@ fun LessonsTab(nav: LessonsNav, modifier: Modifier = Modifier) {
         Box(modifier.fillMaxSize().background(Theme.colors.canvas))
         return
     }
-    val twoPane = isRegularWidth()
+    val twoPane = isTwoPane()
     // In two panes the root of the right pane is a lesson's mode picker, which has no screen behind it to pop to.
     BackHandler(enabled = nav.stack.size > if (twoPane) 1 else 0) { nav.pop() }
     // FOX-154: every tap on an open rung pushes the run.

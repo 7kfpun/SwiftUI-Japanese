@@ -358,8 +358,9 @@ toggle the analytics opt-out, a long press calls `IntroLauncher.replay()`.
 ## Large screens (`ui/Adaptive.kt`, FOX-166)
 
 Tablets, foldables and landscape phones follow the same rules as the iOS iPad ticket. Everything is decided from the **window**
-(`currentWindowAdaptiveInfo`), never the device: regular width is 600 dp and up, compact height is under 480 dp. `Adaptive` holds the
-numbers (pure, `AdaptiveTest`), `ProvideWindowLayout` provides them, `isRegularWidth()` / `isCompactHeight()` read them.
+(`LocalWindowInfo`, in dp), never the device: regular width is 600 dp and up (the rail), compact height is under 480 dp, and **two panes need
+the window to be at least 720 dp wide AND not compact height** (`Adaptive.twoPane`). `Adaptive` holds the numbers (pure, `AdaptiveTest`),
+`ProvideWindowLayout` provides them, `isRegularWidth()` / `isCompactHeight()` / `isTwoPane()` read them.
 
 - **Bar or rail:** `AppScaffold` uses `NavigationSuiteScaffold` with the layout forced from the width (bar under 600, rail from 600). The ad
   banner sits in a column under the tab content, so beside a rail it is above the content's bottom edge, never under the rail.
@@ -368,12 +369,14 @@ numbers (pure, `AdaptiveTest`), `ProvideWindowLayout` provides them, `isRegularW
   parameter), and the result is the same: every title sits directly under the status bar.
 - **Readable width:** `ReadableWidth` caps a tab at 640 dp and centres it (background stays full-bleed); `LessonScreenFrame` does the same for every pushed
   lesson screen, and `IntroHost` for the intro cards.
-- **Two panes (Lessons only):** at regular width `LessonsTab` is a Row, the list on the left (a third of the width, 280 to 400 dp) and the same
+- **Two panes (Lessons only):** the user's rule is that the right pane is always clearly larger than the left, never equal or smaller, so two panes
+  need room: at least 720 dp wide and not compact height. Below that (a 7" tablet or an unfolded foldable in portrait, any phone in landscape, a narrow
+  split-screen window) Lessons stays single-pane with push navigation, while the rail still shows from 600 dp. Otherwise `LessonsTab` is a Row, the list on the left (a third of the width, 280 to 400 dp) and the same
   `LessonsNav` stack on the right. Picking a lesson is `nav.openLesson(n)`, which replaces the stack, so modes push *inside* the right pane. With nothing
   open, the up-next lesson is selected (once, into the stack). The selected row has the accent border. The right pane's root (`SelectModeScreen`) has no
   Back (`LocalTwoPane`). Settings and Progress stay one centred column (their rows open dialogs or a single pushed screen).
 - **State survives fold, rotate and resize:** `MainActivity` handles `orientation|screenSize|smallestScreenSize|screenLayout|density|keyboard...` itself, so a
-  round (Practice queue, Match board, Challenge rung) is never recreated; the Lessons routes are one `movableContentOf`, so crossing 600 dp moves them between
+  round (Practice queue, Match board, Challenge rung) is never recreated; the Lessons routes are one `movableContentOf`, so crossing the two-pane threshold moves them between
   the full-width slot and the right pane without disposing them. Locale and night mode still recreate (the nav stack is saved; a round is not).
 - **Cards:** the card box is `weight(1f, fill = false)` capped at `CARD_MAX_HEIGHT_DP` (560), so the answer buttons sit right under it. `ScrollIfShort` wraps
   the card screens (Practice, Flashcards, Match, Challenge play, Today, the Kana modes): under 560 dp of window height the content keeps 560 dp and the screen scrolls.

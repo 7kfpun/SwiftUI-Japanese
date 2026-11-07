@@ -9,13 +9,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 
 /**
@@ -28,6 +29,9 @@ object Adaptive {
 
     /** Every tab's content and every pushed screen is capped at this width and centred. */
     const val READABLE_MAX_WIDTH_DP = 640
+
+    /** Lessons shows two panes only from this window width (dp) up, and only when the height is not compact. */
+    const val TWO_PANE_MIN_WIDTH_DP = 720
 
     /** The two-pane list column: about a third of the width, never narrower or wider than this. */
     const val LIST_PANE_MIN_DP = 280
@@ -46,26 +50,46 @@ object Adaptive {
 
     fun isCompactHeight(heightDp: Int): Boolean = heightDp < COMPACT_HEIGHT_DP
 
+    /**
+     * Two panes (list and detail side by side) need room, so the right pane is always clearly larger than the left:
+     * the window is at least [TWO_PANE_MIN_WIDTH_DP] wide AND its height is not compact. Below that (a 7" tablet or a
+     * foldable in portrait, any phone in landscape, a narrow split-screen window) Lessons stays single-pane with push
+     * navigation, while the rail still shows from [REGULAR_MIN_WIDTH_DP].
+     */
+    fun twoPane(widthDp: Int, heightDp: Int): Boolean = widthDp >= TWO_PANE_MIN_WIDTH_DP && !isCompactHeight(heightDp)
+
     /** Width of the left (list) pane for a window [totalDp] wide: one third, clamped to 280..400. Never 50/50. */
     fun listPaneWidthDp(totalDp: Float): Float =
         (totalDp / 3f).coerceIn(LIST_PANE_MIN_DP.toFloat(), LIST_PANE_MAX_DP.toFloat())
 }
 
 /** What the current window allows. Provided once by `AppScaffold`; read anywhere below it. */
-data class WindowLayout(val regularWidth: Boolean = false, val compactHeight: Boolean = false)
+data class WindowLayout(
+    val regularWidth: Boolean = false,
+    val compactHeight: Boolean = false,
+    val twoPane: Boolean = false
+)
 
 val LocalWindowLayout = compositionLocalOf { WindowLayout() }
 
-/** Reads the window size class (dp of the window, not the screen) and provides it to [content]. */
+/** Reads the window's own size in dp (not the screen's, not a size-class bucket) and provides it to [content]. */
 @Composable
 fun ProvideWindowLayout(content: @Composable () -> Unit) {
-    val size = currentWindowAdaptiveInfo().windowSizeClass
+    val size = LocalWindowInfo.current.containerSize
+    val density = LocalDensity.current.density
+    val widthDp = (size.width / density).toInt()
+    val heightDp = (size.height / density).toInt()
     val layout = WindowLayout(
-        regularWidth = Adaptive.isRegularWidth(size.minWidthDp),
-        compactHeight = Adaptive.isCompactHeight(size.minHeightDp)
+        regularWidth = Adaptive.isRegularWidth(widthDp),
+        compactHeight = Adaptive.isCompactHeight(heightDp),
+        twoPane = Adaptive.twoPane(widthDp, heightDp)
     )
     CompositionLocalProvider(LocalWindowLayout provides layout, content = content)
 }
+
+@Composable
+@ReadOnlyComposable
+fun isTwoPane(): Boolean = LocalWindowLayout.current.twoPane
 
 @Composable
 @ReadOnlyComposable
