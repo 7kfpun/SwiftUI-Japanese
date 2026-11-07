@@ -84,6 +84,15 @@ Check `nihongo/Store.swift` and `nihongo/Challenge.swift` before writing a claim
 Material Symbols icons. Keep shared files (`MainActivity`, navigation, `libs.versions.toml`,
 `Theme`) to small additive edits so parallel tickets merge cleanly.
 
+Design system (FOX-149): `ui/Theme.kt` (colour tokens, type scale, faces), `ui/Faces.kt` (the
+font-follows-script rule: `KanaForm`/`VocabForm.isJapanese`), `ui/components/` (`SwipeCard`,
+`CardStackPeek`, `cardPager`, `cardSwipe`, `QuizOptionButton`, `SwipeOptionChip`, `OptionGrid`,
+`EmptyStatePanel`, `cardChrome`/`accentPlate`/`selectionBorder`). `AppScaffold(banner = ...)` has the
+ad banner slot above the tab bar. Noto Serif JP is in `assets/fonts` (OFL text in `assets/licenses`);
+KanjiStrokeOrders is packaged in place from `nihongo/Fonts`. The debug-only catalog
+(`src/debug/.../CatalogActivity`) renders every token and component:
+`adb shell am start -n com.kfpun.japanesedaily/.catalog.CatalogActivity [--es section tokens|type|cards|options|empty]`.
+
 ## Data layer (`data/`, FOX-148)
 
 One entry point, `AppContainer.from(context)`, gives `vocab` (`VocabStore`: 50 lessons, 2100
