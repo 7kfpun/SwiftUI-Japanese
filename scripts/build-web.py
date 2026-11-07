@@ -19,6 +19,11 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
 BASE_URL = "https://japanesedaily.wahthefox.com"
 APP_STORE = "https://apps.apple.com/app/id1447639161"
+# The Android listing (FOX-161). The link is written for the package's final URL, but the site must not
+# point at a listing that is not public yet, so the badge is OFF by default. Turn it on for the build
+# that ships after the app is live: `python3 scripts/build-web.py --all --google-play` (or
+# SHOW_GOOGLE_PLAY=1). Flag off, the generated pages are byte-for-byte what they were before.
+GOOGLE_PLAY = "https://play.google.com/store/apps/details?id=com.kfpun.japanesedaily"
 
 # The Open Graph / Twitter card image.  Crawlers reject relative URLs, so this
 # is absolute and shared by every locale — only its alt text is translated.
@@ -257,7 +262,7 @@ $faq_jsonld
   .appstore-badge svg { width: 28px; height: 34px; flex: none; }
   .appstore-badge .badge-text { text-align: left; line-height: 1.2; }
   .appstore-badge .badge-text small { display: block; font-size: 0.68rem; font-weight: 400; opacity: 0.85; }
-  .appstore-badge .badge-text strong { display: block; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }
+  .appstore-badge .badge-text strong { display: block; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }$gp_css
 
   .scroll-hint {
     position: absolute;
@@ -808,7 +813,7 @@ $faq_jsonld
             <small>Download on the</small>
             <strong>App Store</strong>
           </span>
-        </a>
+        </a>$gp_hero
         <span class="free-note"><span class="dot-green" aria-hidden="true">●</span> $free_note</span>
       </div>
     </div>
@@ -1039,7 +1044,7 @@ $faq_jsonld
         <small>Download on the</small>
         <strong>App Store</strong>
       </span>
-    </a>
+    </a>$gp_bottom
   </section>
 </main>
 
@@ -1048,7 +1053,7 @@ $switcher_block
   <nav class="legal" aria-label="Legal">
     <a href="/privacy.html">$privacy</a>
     <a href="/terms.html">$terms</a>
-    <a href="$app_store" rel="noopener">App Store</a>
+    <a href="$app_store" rel="noopener">App Store</a>$gp_footer
   </nav>
   <p>&copy; 2026 Japanese Daily 每日日本語. $rights</p>
 </footer>
@@ -1336,6 +1341,7 @@ T = {
     f7d="The word of the day on your Home Screen, Lock Screen and Apple Watch — learn before you even unlock.",
     quiz_title="Try it: a Lesson 1 quiz",
     quiz_badge="Interactive — no download needed",
+    gp_small="Get it on",
     quiz_sub="Real vocabulary from Lesson 1 — right here in your browser.",
     q_prompt="What does this word mean?",
     q_score="You got {x} out of {y}!",
@@ -1394,6 +1400,7 @@ T = {
     f7d="今日单词出现在主屏幕、锁定屏幕和 Apple Watch 上 —— 解锁之前就能学习。",
     quiz_title="试一试：第1课小测验",
     quiz_badge="互动体验 — 无需下载",
+    gp_small="立即下载，前往",
     quiz_sub="第 1 课的真实词汇，就在浏览器里。",
     q_prompt="这个词是什么意思？",
     q_score="答对 {x} / {y} 题！",
@@ -1452,6 +1459,7 @@ T = {
     f7d="今日單字出現在主畫面、鎖定畫面與 Apple Watch 上 —— 解鎖前就能學習。",
     quiz_title="試試看：第1課小測驗",
     quiz_badge="互動體驗 — 無需下載",
+    gp_small="立即下載，前往",
     quiz_sub="第 1 課的真實單字，就在瀏覽器裡。",
     q_prompt="這個字是什麼意思？",
     q_score="答對 {x} / {y} 題！",
@@ -1510,6 +1518,7 @@ T = {
     f7d="Từ của ngày hiện trên Màn hình chính, Màn hình khóa và Apple Watch — học trước cả khi mở khóa.",
     quiz_title="Thử ngay: bài kiểm tra Bài 1",
     quiz_badge="Tương tác — không cần tải app",
+    gp_small="Tải xuống trên",
     quiz_sub="Từ vựng thật của Bài 1 — ngay trong trình duyệt.",
     q_prompt="Từ này nghĩa là gì?",
     q_score="Bạn đúng {x}/{y} câu!",
@@ -1568,6 +1577,7 @@ T = {
     f7d="Das Wort des Tages auf Home- und Sperrbildschirm und auf der Apple Watch — lernen, noch bevor du entsperrst.",
     quiz_title="Probier's aus: Quiz zu Lektion 1",
     quiz_badge="Interaktiv — keine Installation nötig",
+    gp_small="Jetzt bei",
     quiz_sub="Echte Vokabeln aus Lektion 1 — direkt im Browser.",
     q_prompt="Was bedeutet dieses Wort?",
     q_score="{x} von {y} richtig!",
@@ -1626,6 +1636,7 @@ T = {
     f7d="คำของวันนี้อยู่บนหน้าจอโฮม หน้าจอล็อก และ Apple Watch — เรียนได้ก่อนปลดล็อกเสียอีก",
     quiz_title="ลองเลย: แบบทดสอบบทที่ 1",
     quiz_badge="โต้ตอบได้ — ไม่ต้องติดตั้งแอป",
+    gp_small="ดาวน์โหลดบน",
     quiz_sub="คำศัพท์จริงจากบทที่ 1 — ทดลองได้ในเบราว์เซอร์",
     q_prompt="คำนี้แปลว่าอะไร",
     q_score="ตอบถูก {x} จาก {y} ข้อ!",
@@ -1684,6 +1695,7 @@ T = {
     f7d="ယနေ့စကားလုံးက Home Screen၊ Lock Screen နှင့် Apple Watch ပေါ်တွင် — ဖုန်းမဖွင့်ခင်ကတည်းက လေ့လာနိုင်။",
     quiz_title="စမ်းကြည့်ပါ — သင်ခန်းစာ ၁ ဉာဏ်စမ်း",
     quiz_badge="အပြန်အလှန်တုံ့ပြန်နိုင်သည် — အက်ပ်ဒေါင်းလုဒ်မလိုပါ",
+    gp_small="ဒေါင်းလုဒ်လုပ်ရန်",
     quiz_sub="သင်ခန်းစာ ၁ မှ စစ်မှန်သော ဝေါဟာရများ — ဘရောက်ဇာထဲမှာပင်။",
     q_prompt="ဤစကားလုံး၏ အဓိပ္ပာယ်က ဘာလဲ။",
     q_score="{y} ခုမှ {x} ခု မှန်သည်!",
@@ -1742,6 +1754,7 @@ T = {
     f7d="La palabra del día en la pantalla de inicio, en la de bloqueo y en el Apple Watch — aprende antes de desbloquear.",
     quiz_title="Pruébalo: test de la Lección 1",
     quiz_badge="Interactivo — sin descargar nada",
+    gp_small="Disponible en",
     quiz_sub="Vocabulario real de la Lección 1 — aquí, en tu navegador.",
     q_prompt="¿Qué significa esta palabra?",
     q_score="¡{x} de {y} correctas!",
@@ -1800,6 +1813,7 @@ T = {
     f7d="Le mot du jour sur l'écran d'accueil, l'écran verrouillé et l'Apple Watch — apprenez avant même de déverrouiller.",
     quiz_title="Essayez : le quiz de la leçon 1",
     quiz_badge="Interactif — aucun téléchargement requis",
+    gp_small="Disponible sur",
     quiz_sub="Du vrai vocabulaire de la leçon 1 — directement dans votre navigateur.",
     q_prompt="Que signifie ce mot ?",
     q_score="{x} sur {y} !",
@@ -1858,6 +1872,7 @@ T = {
     f7d="La parola del giorno sulla schermata Home, sulla schermata di blocco e su Apple Watch — impari prima ancora di sbloccare.",
     quiz_title="Provalo: un quiz della Lezione 1",
     quiz_badge="Interattivo — nessun download",
+    gp_small="Scarica su",
     quiz_sub="Vocabolario vero della Lezione 1 — qui nel tuo browser.",
     q_prompt="Che cosa significa questa parola?",
     q_score="{x} risposte giuste su {y}!",
@@ -1916,6 +1931,7 @@ T = {
     f7d="Слово дня на домашнем экране, экране блокировки и Apple Watch — учитесь ещё до разблокировки.",
     quiz_title="Попробуйте: тест по уроку 1",
     quiz_badge="Интерактивно — без установки приложения",
+    gp_small="Скачать в",
     quiz_sub="Настоящая лексика из первого урока — прямо в браузере.",
     q_prompt="Что значит это слово?",
     q_score="Правильно {x} из {y}!",
@@ -1974,6 +1990,7 @@ T = {
     f7d="আজকের শব্দ হোম স্ক্রিন, লক স্ক্রিন ও Apple Watch-এ — আনলক করার আগেই শিখে নিন।",
     quiz_title="চেষ্টা করুন: পাঠ ১-এর কুইজ",
     quiz_badge="ইন্টারেক্টিভ — অ্যাপ ডাউনলোডের প্রয়োজন নেই",
+    gp_small="ডাউনলোড করুন",
     quiz_sub="পাঠ ১-এর আসল শব্দভাণ্ডার — সরাসরি আপনার ব্রাউজারে।",
     q_prompt="এই শব্দটির অর্থ কী?",
     q_score="আপনি {y}-এর মধ্যে {x} সঠিক করেছেন!",
@@ -2032,6 +2049,7 @@ T = {
     f7d="आज का शब्द होम स्क्रीन, लॉक स्क्रीन और Apple Watch पर — अनलॉक करने से पहले ही सीख लें।",
     quiz_title="आज़माएँ: पाठ 1 का क्विज़",
     quiz_badge="इंटरैक्टिव — ऐप डाउनलोड करने की ज़रूरत नहीं",
+    gp_small="डाउनलोड करें",
     quiz_sub="पाठ 1 की असली शब्दावली — सीधे आपके ब्राउज़र में।",
     q_prompt="इस शब्द का मतलब क्या है?",
     q_score="आपने {y} में से {x} सही किए!",
@@ -2090,6 +2108,7 @@ T = {
     f7d="இன்றைய சொல் முகப்புத் திரை, பூட்டுத் திரை மற்றும் Apple Watch-இல் — பூட்டைத் திறப்பதற்கு முன்பே கற்றுக்கொள்ளுங்கள்.",
     quiz_title="முயற்சிக்கவும்: பாடம் 1 வினாடி வினா",
     quiz_badge="இயங்குநிலை — ஆப் பதிவிறக்கம் தேவையில்லை",
+    gp_small="பதிவிறக்கம்",
     quiz_sub="பாடம் 1-ன் உண்மையான சொற்கள் — உங்கள் உலாவியிலேயே.",
     q_prompt="இந்த சொல்லின் பொருள் என்ன?",
     q_score="{y}-இல் {x} சரியாக பதிலளித்தீர்கள்!",
@@ -2148,6 +2167,7 @@ T = {
     f7d="ఈరోజు పదం హోమ్ స్క్రీన్, లాక్ స్క్రీన్ మరియు Apple Watch‌పై — అన్‌లాక్ చేయడానికి ముందే నేర్చుకోండి.",
     quiz_title="ప్రయత్నించండి: పాఠం 1 క్విజ్",
     quiz_badge="ఇంటరాక్టివ్ — యాప్ డౌన్‌లోడ్ అవసరం లేదు",
+    gp_small="డౌన్‌లోడ్ చేయండి",
     quiz_sub="పాఠం 1 నుండి నిజమైన పదజాలం — నేరుగా మీ బ్రౌజర్‌లో.",
     q_prompt="ఈ పదానికి అర్థం ఏమిటి?",
     q_score="మీరు {y}‌లో {x} సరిగ్గా చెప్పారు!",
@@ -2206,6 +2226,7 @@ T = {
     f7d="आजको शब्द तपाईंको Home Screen, Lock Screen र Apple Watch मा — फोन अनलक गर्नुअघि नै सिक्नुहोस्।",
     quiz_title="प्रयास गर्नुहोस्: पाठ 1 को क्विज",
     quiz_badge="अन्तरक्रियात्मक — डाउनलोड गर्नै पर्दैन",
+    gp_small="डाउनलोड गर्नुहोस्",
     quiz_sub="पाठ 1 का वास्तविक शब्दहरू — यहीँ तपाईंको ब्राउजरमा।",
     q_prompt="यो शब्दको अर्थ के हो?",
     q_score="तपाईंले {y} मध्ये {x} सही गर्नुभयो!",
@@ -2264,6 +2285,7 @@ T = {
     f7d="Ang salita ngayong araw sa Home Screen, Lock Screen at Apple Watch — matuto bago mo pa ma-unlock ang telepono.",
     quiz_title="Subukan: pagsusulit sa Aralin 1",
     quiz_badge="Interactive — walang kailangang i-download",
+    gp_small="I-download sa",
     quiz_sub="Totoong bokabularyo mula sa Aralin 1 — dito mismo sa iyong browser.",
     q_prompt="Ano ang kahulugan ng salitang ito?",
     q_score="Nakuha mo ang {x} sa {y}!",
@@ -2322,6 +2344,7 @@ T = {
     f7d="Kata hari ini di Layar Utama, Layar Kunci, dan Apple Watch — belajar bahkan sebelum Anda membuka kunci.",
     quiz_title="Coba sekarang: kuis Pelajaran 1",
     quiz_badge="Interaktif — tanpa perlu unduh aplikasi",
+    gp_small="Dapatkan di",
     quiz_sub="Kosakata asli dari Pelajaran 1 — langsung di browser Anda.",
     q_prompt="Apa arti kata ini?",
     q_score="Anda benar {x} dari {y}!",
@@ -2380,6 +2403,7 @@ T = {
     f7d="오늘의 단어를 홈 화면, 잠금 화면, Apple Watch에서 만나보세요 — 잠금을 풀기도 전에 배울 수 있습니다.",
     quiz_title="체험하기: 레슨 1 퀴즈",
     quiz_badge="인터랙티브 — 앱 다운로드 없이 바로",
+    gp_small="다운로드:",
     quiz_sub="레슨 1의 실제 어휘를 바로 브라우저에서 만나보세요.",
     q_prompt="이 단어의 뜻은 무엇일까요?",
     q_score="{y}개 중 {x}개를 맞혔어요!",
@@ -2417,6 +2441,7 @@ T = {
 import html as _html
 import json as _json
 import sys as _sys
+import os as _os
 
 QUIZ_ROMAJI = ["watashi", "anata", "gakusei", "isha",
                "daigaku", "byouin", "hai", "dare"]
@@ -2439,7 +2464,24 @@ def load_app_strings():
     """Borrow UI strings straight from the app so web + app stay in sync."""
     return _json.load(open(ROOT / "nihongo" / "UIStrings.json"))
 
+PLAY_ICON = (
+    '<svg viewBox="0 0 24 28" fill="currentColor" aria-hidden="true">'
+    '<path d="M1.6 1.1v25.8c0 .7.8 1.1 1.4.7L23.4 15c.5-.3.5-1 0-1.3L3 .4C2.4 0 1.6.4 1.6 1.1z"/></svg>'
+)
+
+
+def google_play_badge(small, extra_class=""):
+    """The Google Play badge, in the App Store badge's style. `small` is the T["gp_small"] text."""
+    return (
+        '<a class="appstore-badge play-badge%s" href="%s" rel="noopener" '
+        'aria-label="Get Japanese Daily on Google Play">%s'
+        '<span class="badge-text"><small>%s</small><strong>Google Play</strong></span></a>'
+        % (extra_class, GOOGLE_PLAY, PLAY_ICON, small)
+    )
+
+
 def build(langs_to_build):
+    show_play = "--google-play" in _sys.argv or _os.environ.get("SHOW_GOOGLE_PLAY") == "1"
     quiz_words = load_quiz_words()
     ui = load_app_strings()
     built = [m for m in LANG_META if m[0] in langs_to_build and m[0] in T]
@@ -2537,6 +2579,11 @@ def build(langs_to_build):
             og_image_alt=e["og_image_alt"],
             canonical=canonical,
             app_store=APP_STORE,
+            gp_css=("\n  .bottom-cta .appstore-badge { margin: 0.25rem; }"
+                    "\n  .appstore-badge.play-badge svg { width: 26px; height: 30px; }") if show_play else "",
+            gp_hero=("\n        " + google_play_badge(e["gp_small"])) if show_play else "",
+            gp_bottom=("\n    " + google_play_badge(e["gp_small"])) if show_play else "",
+            gp_footer=('\n    <a href="%s" rel="noopener">Google Play</a>' % GOOGLE_PLAY) if show_play else "",
             title=e["title"],
             desc=e["desc"],
             kicker=e["kicker"],

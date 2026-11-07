@@ -23,6 +23,8 @@ on:
       - "nihongo/UIStrings.json"
       - "scripts/build-android-strings.py"
       - "scripts/extract-track-events.py"
+      - "scripts/check-play-listing.py"
+      - "fastlane/minna-android/**"
       - ".github/workflows/android.yml"
   workflow_dispatch:
 
@@ -55,7 +57,7 @@ jobs:
           PUSH_AFTER: ${{ github.sha }}
         run: |
           set -euo pipefail
-          paths=(android/ nihongo/Resources/ nihongo/UIStrings.json scripts/build-android-strings.py scripts/extract-track-events.py .github/workflows/android.yml)
+          paths=(android/ nihongo/Resources/ nihongo/UIStrings.json scripts/build-android-strings.py scripts/extract-track-events.py scripts/check-play-listing.py fastlane/minna-android/ .github/workflows/android.yml)
           build=true
           case "$EVENT" in
             pull_request)
@@ -107,6 +109,12 @@ jobs:
       - name: Check the iOS analytics catalog is current
         if: steps.changes.outputs.build == 'true'
         run: python3 scripts/extract-track-events.py --check
+
+      # The Play store listing text: lengths, Play locales, and the product-fact rules (no trademark,
+      # no "native audio", no lesson counts).
+      - name: Check the Play listing text
+        if: steps.changes.outputs.build == 'true'
+        run: python3 scripts/check-play-listing.py
 
       - name: Set up JDK 17
         if: steps.changes.outputs.build == 'true'
