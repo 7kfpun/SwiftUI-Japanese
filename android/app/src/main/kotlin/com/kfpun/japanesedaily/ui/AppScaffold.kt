@@ -31,6 +31,7 @@ import com.kfpun.japanesedaily.analytics.AnalyticsExclusionFooter
 import com.kfpun.japanesedaily.kana.KanaTab
 import com.kfpun.japanesedaily.lessons.LessonsTab
 import com.kfpun.japanesedaily.lessons.rememberLessonsNav
+import com.kfpun.japanesedaily.progress.ProgressTab
 
 /** The five tabs, in the iOS app's order. Icons are Material Symbols (outlined). */
 enum class Tab(@StringRes val label: Int, @DrawableRes val icon: Int) {
@@ -45,6 +46,7 @@ enum class Tab(@StringRes val label: Int, @DrawableRes val icon: Int) {
 fun AppScaffold(startTab: Tab = Tab.Today, banner: @Composable (Tab) -> Unit = {}) {
     var selected by rememberSaveable { mutableStateOf(startTab) }
     val lessonsNav = rememberLessonsNav()
+    val progressNav = rememberLessonsNav()
     val bannerSlot = remember { BannerSlotState() }
     CompositionLocalProvider(LocalBannerSlot provides bannerSlot) {
         Scaffold(
@@ -60,6 +62,7 @@ fun AppScaffold(startTab: Tab = Tab.Today, banner: @Composable (Tab) -> Unit = {
             when (selected) {
                 Tab.Kana -> KanaTab(Modifier.padding(padding))
                 Tab.Lessons -> LessonsTab(lessonsNav, Modifier.padding(padding))
+                Tab.Progress -> ProgressTab(progressNav, Modifier.padding(padding))
                 else -> PlaceholderScreen(selected, Modifier.padding(padding))
             }
         }

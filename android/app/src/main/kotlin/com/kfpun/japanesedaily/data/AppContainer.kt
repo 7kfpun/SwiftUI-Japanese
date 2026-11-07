@@ -6,6 +6,8 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import com.kfpun.japanesedaily.ads.AdConsent
 import com.kfpun.japanesedaily.ads.AdMobInterstitials
+import com.kfpun.japanesedaily.analytics.Track
+import com.kfpun.japanesedaily.analytics.TrackEvents
 import com.kfpun.japanesedaily.audio.PremiumStatus
 import com.kfpun.japanesedaily.billing.BillingGateway
 import com.kfpun.japanesedaily.billing.DataStoreEntitlementStore
@@ -43,7 +45,7 @@ class AppContainer(
     preferences: DataStore<Preferences>,
     val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
     val course: Course = Course.current,
-    onFirstAnswerToday: (Streak) -> Unit = {},
+    onFirstAnswerToday: (Streak) -> Unit = ::trackStudyDay,
     billing: BillingGateway = UnavailableBillingGateway,
     entitlements: com.kfpun.japanesedaily.billing.EntitlementStore = InMemoryEntitlementStore()
 ) {
@@ -110,3 +112,10 @@ class AppContainer(
         )
     }
 }
+
+/**
+ * iOS logs `study_day` when the first answer of a day creates a `StudyDay`: one event per studied day,
+ * carrying how long the run is (`streak`) and the record (`best`). Behavioural counts, never an identifier.
+ */
+internal fun trackStudyDay(streak: Streak, track: (String, Map<String, Any?>) -> Unit = Track::event) =
+    track(TrackEvents.STUDY_DAY, mapOf("streak" to streak.current, "best" to streak.best))
