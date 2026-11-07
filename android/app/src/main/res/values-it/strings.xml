@@ -335,4 +335,8 @@
     <string name="details">Dettagli</string>
     <string name="two_choices_per_card_the_app_keeps_score">Due scelte per carta: il punteggio lo tiene l’app</string>
     <string name="s_continue">Continua</string>
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">Gli abbonamenti si rinnovano automaticamente se non vengono annullati almeno 24 ore prima della fine del periodo. Il pagamento viene addebitato sul tuo account Google Play; gestiscilo in Google Play.</string>
+    <string name="no_purchases_found_for_this_google_account">Nessun acquisto trovato per questo account Google.</string>
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">Il pagamento è in sospeso. Premium si attiverà al termine.</string>
+    <string name="the_purchase_didn_t_go_through_please_try_again">L’acquisto non è andato a buon fine. Riprova.</string>
 </resources>

@@ -335,4 +335,8 @@
     <string name="details">Detail</string>
     <string name="two_choices_per_card_the_app_keeps_score">Dua pilihan per kartu — aplikasi yang mencatat skor</string>
     <string name="s_continue">Lanjutkan</string>
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">Langganan diperpanjang otomatis kecuali dibatalkan minimal 24 jam sebelum periode berakhir. Pembayaran ditagihkan ke akun Google Play Anda; kelola di Google Play.</string>
+    <string name="no_purchases_found_for_this_google_account">Tidak ada pembelian yang ditemukan untuk akun Google ini.</string>
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">Pembayaran Anda masih tertunda. Premium aktif setelah selesai.</string>
+    <string name="the_purchase_didn_t_go_through_please_try_again">Pembelian tidak berhasil. Silakan coba lagi.</string>
 </resources>

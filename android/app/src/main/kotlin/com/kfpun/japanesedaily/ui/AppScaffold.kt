@@ -35,14 +35,14 @@ enum class Tab(@StringRes val label: Int, @DrawableRes val icon: Int) {
 }
 
 @Composable
-fun AppScaffold(banner: @Composable () -> Unit = {}) {
+fun AppScaffold(banner: @Composable (Tab) -> Unit = {}) {
     var selected by rememberSaveable { mutableStateOf(Tab.Today) }
     Scaffold(
         bottomBar = {
             Column {
                 // The per-tab ad banner slot (FOX-158 fills it): above the tab bar, in a column rather
                 // than a safe-area inset, so a pushed screen's bottom button never renders under it.
-                banner()
+                banner(selected)
                 TabBar(selected) { selected = it }
             }
         }

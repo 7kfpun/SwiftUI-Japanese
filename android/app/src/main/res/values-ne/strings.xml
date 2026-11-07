@@ -335,4 +335,8 @@
     <string name="details">विवरण</string>
     <string name="two_choices_per_card_the_app_keeps_score">प्रत्येक कार्डमा दुई विकल्प — अंक एपले राख्छ</string>
     <string name="s_continue">जारी राख्नुहोस्</string>
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">अवधि सकिनु कम्तीमा २४ घण्टा अघि रद्द नगरेसम्म सदस्यताहरू आफैं नवीकरण हुन्छन्। भुक्तानी तपाईंको Google Play खाताबाट लिइन्छ; Google Play मा व्यवस्थापन गर्नुहोस्।</string>
+    <string name="no_purchases_found_for_this_google_account">यो Google खाताका लागि कुनै खरिद फेला परेन।</string>
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">तपाईंको भुक्तानी बाँकी छ। पूरा भएपछि प्रिमियम सक्रिय हुनेछ।</string>
+    <string name="the_purchase_didn_t_go_through_please_try_again">खरिद पूरा भएन। कृपया फेरि प्रयास गर्नुहोस्।</string>
 </resources>

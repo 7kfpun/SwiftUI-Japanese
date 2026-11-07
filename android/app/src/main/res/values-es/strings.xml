@@ -335,4 +335,8 @@
     <string name="details">Detalles</string>
     <string name="two_choices_per_card_the_app_keeps_score">Dos opciones por tarjeta: la app lleva la cuenta</string>
     <string name="s_continue">Continuar</string>
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">Las suscripciones se renuevan automáticamente salvo que se cancelen al menos 24 horas antes de que termine el periodo. El pago se carga a tu cuenta de Google Play; gestiónalo en Google Play.</string>
+    <string name="no_purchases_found_for_this_google_account">No se encontraron compras para esta cuenta de Google.</string>
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">Tu pago está pendiente. Premium se activará cuando se complete.</string>
+    <string name="the_purchase_didn_t_go_through_please_try_again">La compra no se completó. Inténtalo de nuevo.</string>
 </resources>

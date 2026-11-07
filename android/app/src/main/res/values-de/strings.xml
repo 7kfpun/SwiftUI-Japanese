@@ -335,4 +335,8 @@
     <string name="details">Details</string>
     <string name="two_choices_per_card_the_app_keeps_score">Zwei Antworten pro Karte – die App zählt mit</string>
     <string name="s_continue">Weiter</string>
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">Abos verlängern sich automatisch, sofern sie nicht mindestens 24 Stunden vor Ablauf des Zeitraums gekündigt werden. Die Zahlung erfolgt über dein Google-Play-Konto; verwalte das Abo in Google Play.</string>
+    <string name="no_purchases_found_for_this_google_account">Für dieses Google-Konto wurden keine Käufe gefunden.</string>
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">Deine Zahlung steht noch aus. Premium wird aktiviert, sobald sie abgeschlossen ist.</string>
+    <string name="the_purchase_didn_t_go_through_please_try_again">Der Kauf ist nicht zustande gekommen. Bitte versuche es erneut.</string>
 </resources>
