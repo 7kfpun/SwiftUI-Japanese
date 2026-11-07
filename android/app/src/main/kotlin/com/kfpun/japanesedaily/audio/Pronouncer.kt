@@ -27,7 +27,10 @@ interface Pronouncer {
     fun speakCheer(key: String, fallbackText: String)
 
     /** A word's example sentence: its clip when it has one, else live TTS of the sentence. */
-    fun speakExample(vocab: Vocab)
+    fun speakExample(vocab: Vocab, rate: Float = 1f, onDone: () -> Unit = {})
+
+    /** A meaning in the learner's language ([languageTag] a BCP-47 tag): live TTS only, no clip exists. */
+    fun speakMeaning(text: String, languageTag: String, rate: Float = 1f, onDone: () -> Unit = {})
 
     fun stop()
 }
@@ -41,7 +44,9 @@ object SilentPronouncer : Pronouncer {
 
     override fun speakCheer(key: String, fallbackText: String) = Unit
 
-    override fun speakExample(vocab: Vocab) = Unit
+    override fun speakExample(vocab: Vocab, rate: Float, onDone: () -> Unit) = Unit
+
+    override fun speakMeaning(text: String, languageTag: String, rate: Float, onDone: () -> Unit) = Unit
 
     override fun stop() = Unit
 }

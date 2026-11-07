@@ -24,6 +24,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
 import com.kfpun.japanesedaily.analytics.AnalyticsExclusionFooter
+import com.kfpun.japanesedaily.lessons.LessonsTab
+import com.kfpun.japanesedaily.lessons.PaywallHost
+import com.kfpun.japanesedaily.lessons.rememberLessonsNav
 
 /** The five tabs, in the iOS app's order. Icons are Material Symbols (outlined). */
 enum class Tab(@StringRes val label: Int, @DrawableRes val icon: Int) {
@@ -37,17 +40,24 @@ enum class Tab(@StringRes val label: Int, @DrawableRes val icon: Int) {
 @Composable
 fun AppScaffold(banner: @Composable () -> Unit = {}) {
     var selected by rememberSaveable { mutableStateOf(Tab.Today) }
-    Scaffold(
-        bottomBar = {
-            Column {
-                // The per-tab ad banner slot (FOX-158 fills it): above the tab bar, in a column rather
-                // than a safe-area inset, so a pushed screen's bottom button never renders under it.
-                banner()
-                TabBar(selected) { selected = it }
+    val lessonsNav = rememberLessonsNav()
+    PaywallHost {
+        Scaffold(
+            bottomBar = {
+                Column {
+                    // The per-tab ad banner slot (FOX-158 fills it): above the tab bar, in a column rather
+                    // than a safe-area inset, so a pushed screen's bottom button never renders under it.
+                    banner()
+                    TabBar(selected) { selected = it }
+                }
+            }
+        ) { padding ->
+            if (selected == Tab.Lessons) {
+                LessonsTab(lessonsNav, Modifier.padding(padding))
+            } else {
+                PlaceholderScreen(selected, Modifier.padding(padding))
             }
         }
-    ) { padding ->
-        PlaceholderScreen(selected, Modifier.padding(padding))
     }
 }
 
