@@ -78,7 +78,7 @@ class CatalogActivity : ComponentActivity() {
     companion object {
         /** Optional: scroll the catalog to one of [SECTIONS] first (adb ... --es section cards). */
         const val EXTRA_SECTION = "section"
-        val SECTIONS = listOf("tokens", "type", "cards", "options", "empty")
+        val SECTIONS = listOf("tokens", "type", "cards", "options", "empty", "rating")
     }
 }
 
@@ -111,6 +111,7 @@ private fun Catalog(section: String?) {
             EmptyState()
             TabBar()
         }
+        if (show("rating")) RatingStarRow()
     }
 }
 
@@ -314,5 +315,13 @@ private fun TabBar() = Section("Tab bar with a banner slot") {
                 )
             }
         }
+    }
+}
+
+/** The rating prompt's own star row (FOX-159), as the bottom sheet shows it; nothing is recorded here. */
+@Composable
+private fun RatingStarRow() = Section("Rating star row") {
+    Column(Modifier.fillMaxWidth().cardChrome(Theme.Radius.deck)) {
+        com.kfpun.japanesedaily.rating.RatingRow(picked = 4, onStar = {}, onNotNow = {})
     }
 }

@@ -63,8 +63,8 @@ class StreakReminderTest {
 
     @Test
     fun theSameInstantIsAnotherLocalHourInAnotherZone() {
-        // 09:00 in Taipei is 20:00 the previous evening in New York: there the day is nearly over.
-        val now = at(taipei, 2026, 11, 7, 9)
+        // 08:00 in Taipei is 19:00 the previous evening in New York: there the day is nearly over.
+        val now = at(taipei, 2026, 11, 7, 8)
         val taipeiFire = StreakReminder.nextFire(now, taipei, 20, false)
         val newYorkFire = StreakReminder.nextFire(now, newYork, 20, false)
         assertEquals(20, local(taipeiFire, taipei).hour)
@@ -267,6 +267,7 @@ class StreakReminderTest {
         r.engine.reschedule()
         repeat(StreakReminder.HORIZON) { day ->
             r.now = at(taipei, 2026, 11, 7 + day, 20, 5)
+            r.alarms.scheduled = null // an alarm that has fired is gone
             assertEquals(ReminderOutcome.Posted, r.engine.onAlarm())
         }
         assertEquals(StreakReminder.HORIZON, r.posted)

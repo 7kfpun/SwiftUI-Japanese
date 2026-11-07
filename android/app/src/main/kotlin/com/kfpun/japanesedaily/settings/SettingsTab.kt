@@ -57,6 +57,8 @@ import com.kfpun.japanesedaily.feedback.Feedback
 import com.kfpun.japanesedaily.feedback.FeedbackDialog
 import com.kfpun.japanesedaily.intro.IntroChip
 import com.kfpun.japanesedaily.intro.IntroLauncher
+import com.kfpun.japanesedaily.lessons.LocalOpenPaywall
+import com.kfpun.japanesedaily.lessons.LocalPremium
 import com.kfpun.japanesedaily.locale.AppLanguage
 import com.kfpun.japanesedaily.locale.AppLocale
 import com.kfpun.japanesedaily.rating.PlayReview
@@ -142,10 +144,14 @@ private fun SettingsList(modifier: Modifier, onLicenses: () -> Unit, onFeedback:
 @Composable
 private fun PremiumSection(container: AppContainer, pro: ProState) {
     val context = LocalContext.current
+    // The seams the Lessons ticket owns: entitlement and the paywall come from composition locals that
+    // FOX-158 provides for real; only tier, restore and manage live in ProActions.
+    val isPremium = LocalPremium.current.isPremium
+    val openPaywall = LocalOpenPaywall.current
     SettingsGroup(header = stringResource(R.string.premium)) {
-        if (pro.isPremium) {
+        if (isPremium) {
             SettingsRow(stringResource(R.string.premium_active), value = null)
-            if (pro.canManageSubscription) {
+            if (pro.tier != "lifetime") {
                 RowDivider()
                 SettingsRow(stringResource(R.string.manage_subscription), onClick = {
                     Track.event(TrackEvents.MANAGE_SUBSCRIPTION)
@@ -158,7 +164,7 @@ private fun PremiumSection(container: AppContainer, pro: ProState) {
                 Modifier
                     .fillMaxWidth()
                     .background(Theme.colors.ink, Theme.rounded(Theme.Radius.card))
-                    .clickable(role = Role.Button) { container.pro.openPaywall(PaywallSource.SETTINGS) }
+                    .clickable(role = Role.Button) { openPaywall.open(PaywallSource.SETTINGS, null) }
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
@@ -175,7 +181,7 @@ private fun PremiumSection(container: AppContainer, pro: ProState) {
             }
         }
     }
-    if (!pro.isPremium) {
+    if (!isPremium) {
         SettingsGroup {
             SettingsRow(stringResource(R.string.restore_purchases), onClick = { container.pro.restore("settings") })
         }

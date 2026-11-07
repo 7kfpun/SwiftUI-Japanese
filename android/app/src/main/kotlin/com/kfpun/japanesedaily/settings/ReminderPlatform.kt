@@ -120,12 +120,12 @@ object Reminders {
 class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != SystemReminderAlarms.ACTION_FIRE) return
-        val pending = goAsync()
+        val pending: PendingResult? = goAsync()
         CoroutineScope(Dispatchers.Default).launch {
             try {
                 Reminders.engine(context).onAlarm()
             } finally {
-                pending.finish()
+                pending?.finish()
             }
         }
     }
@@ -139,12 +139,12 @@ class ReminderReceiver : BroadcastReceiver() {
 class RescheduleReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action !in ACTIONS) return
-        val pending = goAsync()
+        val pending: PendingResult? = goAsync()
         CoroutineScope(Dispatchers.Default).launch {
             try {
                 Reminders.engine(context).reschedule(resetHorizon = false)
             } finally {
-                pending.finish()
+                pending?.finish()
             }
         }
     }

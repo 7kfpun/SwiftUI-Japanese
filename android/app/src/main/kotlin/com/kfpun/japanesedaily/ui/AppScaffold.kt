@@ -24,10 +24,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
 import com.kfpun.japanesedaily.kana.KanaTab
-import com.kfpun.japanesedaily.settings.SettingsTab
 import com.kfpun.japanesedaily.lessons.LessonsTab
 import com.kfpun.japanesedaily.lessons.PaywallHost
 import com.kfpun.japanesedaily.lessons.rememberLessonsNav
+import com.kfpun.japanesedaily.settings.SettingsTab
 
 /** The five tabs, in the iOS app's order. Icons are Material Symbols (outlined). */
 enum class Tab(@StringRes val label: Int, @DrawableRes val icon: Int) {

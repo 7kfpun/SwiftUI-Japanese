@@ -91,7 +91,7 @@ font-follows-script rule: `KanaForm`/`VocabForm.isJapanese`), `ui/components/` (
 ad banner slot above the tab bar. Noto Serif JP is in `assets/fonts` (OFL text in `assets/licenses`);
 KanjiStrokeOrders is packaged in place from `nihongo/Fonts`. The debug-only catalog
 (`src/debug/.../CatalogActivity`) renders every token and component:
-`adb shell am start -n com.kfpun.japanesedaily/.catalog.CatalogActivity [--es section tokens|type|cards|options|empty]`.
+`adb shell am start -n com.kfpun.japanesedaily/.catalog.CatalogActivity [--es section tokens|type|cards|options|empty|rating]`.
 
 ## Data layer (`data/`, FOX-148)
 
