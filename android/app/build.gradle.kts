@@ -129,11 +129,16 @@ android {
     buildTypes {
         // Debug builds never report to Analytics or Crashlytics (FOX-160); release builds report
         // unless the install opted out.
+        // Like iOS DEBUG, a debug build is excluded. FIREBASE_DEBUG_COLLECTION=true in secrets.properties
+        // turns collection on for checking events in DebugView (android/README.md, Analytics).
         debug {
-            manifestPlaceholders["FIREBASE_COLLECTION_ENABLED"] = "false"
+            val collect = secret("FIREBASE_DEBUG_COLLECTION") == "true"
+            manifestPlaceholders["FIREBASE_COLLECTION_ENABLED"] = collect.toString()
+            buildConfigField("boolean", "FIREBASE_COLLECTION", collect.toString())
         }
         release {
             manifestPlaceholders["FIREBASE_COLLECTION_ENABLED"] = "true"
+            buildConfigField("boolean", "FIREBASE_COLLECTION", "true")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
