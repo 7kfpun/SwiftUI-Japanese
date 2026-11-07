@@ -72,6 +72,8 @@
     <string name="write">ရေးရန်</string>
     <string name="hear_it_draw_it">နားထောင်ပြီး ရေးပါ</string>
     <string name="licenses">လိုင်စင်များ</string>
+    <string name="no_japanese_voice_is_installed_on_this_device_add_on_3cd64e5">ဤစက်တွင် ဂျပန်အသံ မထည့်သွင်းရသေးပါ။ အသံအားလုံးကို ကြားနိုင်ရန် ဖုန်း၏ စာသားမှ စကားပြောပြောင်းခြင်း ဆက်တင်များတွင် ထည့်ပါ။</string>
+    <string name="the_spoken_audio_in_this_app_is_synthesised_with_voicevox">ဤအက်ပ်ရှိ အသံများကို VOICEVOX ဖြင့် ဖန်တီးထားခြင်းဖြစ်သည်။</string>
     <string name="hiragana">ဟီရာဂနာ</string>
     <string name="katakana">ခတခနာ</string>
     <string name="romaji">ရိုမာဂျီ</string>

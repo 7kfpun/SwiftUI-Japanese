@@ -142,6 +142,10 @@
     <string name="hear_it_draw_it">Hear it, draw it</string>
     <!-- Licenses -->
     <string name="licenses">Licenses</string>
+    <!-- No Japanese voice is installed on this device. Add one in your phone's text-to-speech settings to hear every sound. -->
+    <string name="no_japanese_voice_is_installed_on_this_device_add_on_3cd64e5">No Japanese voice is installed on this device. Add one in your phone\'s text-to-speech settings to hear every sound.</string>
+    <!-- The spoken audio in this app is synthesised with VOICEVOX. -->
+    <string name="the_spoken_audio_in_this_app_is_synthesised_with_voicevox">The spoken audio in this app is synthesised with VOICEVOX.</string>
     <!-- Hiragana -->
     <string name="hiragana">Hiragana</string>
     <!-- Katakana -->

@@ -100,6 +100,22 @@ course constants; only `Course.Minna` exists.
 - Tests read `nihongo/Resources` in place through `FileAssetSource`; the Room tests run under
   Robolectric. The Room schema is exported to `app/schemas/` for future migration tests.
 
+## Audio (`audio/`, FOX-151)
+
+Port of `Pronouncer`/`Speech`. `Pronouncer` is the seam (`LocalPronouncer`, silent by default;
+`ProvidePronouncer` in `MainActivity` supplies `AudioPronouncer`). Every sound is the bundled
+VOICEVOX clip first (`VocabStore.audioPath`, the alternate voice falls back to the default), then
+live `TextToSpeech` ja-JP. `MediaClipPlayer` plays from `AssetFileDescriptor` (clips are stored
+uncompressed), one clip at a time, under transient-may-duck audio focus. `AndroidTtsEngine` shuts
+itself down after 30 s idle; with no Japanese voice nothing plays and one toast is shown per process.
+Screens call `StopSoundOnExit()`; the host also stops on `ON_STOP`.
+
+- `AudioVoice.Alternate.suffix` (`-kenzaki`) must equal `ALT_SUFFIX` in `build-minna-data.py`;
+  `AudioTest` reads the script. `speakText` is TTS only (bare text tiles); `speak(K)` uses the kana clip.
+- Rates: `PlaybackRates.effective(stored, premium)`; only 1x is free. `PremiumStatus` defaults to
+  `NotPremium` until FOX-158 supplies Pro.
+- `Licenses.voicevox` holds the required credit lines; `LicensesScreen` is what Settings (FOX-159) links to.
+
 ## Strings (FOX-150)
 
 `scripts/build-android-strings.py` (stdlib only) writes `res/values/strings.xml` (English, the
