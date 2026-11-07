@@ -91,7 +91,7 @@ font-follows-script rule: `KanaForm`/`VocabForm.isJapanese`), `ui/components/` (
 ad banner slot above the tab bar. Noto Serif JP is in `assets/fonts` (OFL text in `assets/licenses`);
 KanjiStrokeOrders is packaged in place from `nihongo/Fonts`. The debug-only catalog
 (`src/debug/.../CatalogActivity`) renders every token and component:
-`adb shell am start -n com.kfpun.japanesedaily/.catalog.CatalogActivity [--es section tokens|type|cards|options|empty]`.
+`adb shell am start -n com.kfpun.japanesedaily/.catalog.CatalogActivity [--es section tokens|type|cards|options|empty|rating]`.
 
 ## Data layer (`data/`, FOX-148)
 
@@ -269,3 +269,31 @@ from the app's own strings, never from Play titles; Play only supplies the price
 `adb shell am start -n com.kfpun.japanesedaily/.MainActivity --ez demo_billing true --es open_paywall settings`
 sells five made-up plans from `DemoBillingGateway` (in memory, every purchase succeeds, gone on
 the next launch) and opens the paywall. Both extras are ignored by release builds.
+
+## Settings, reminder, feedback and rating (`settings/`, `feedback/`, `rating/`, FOX-159)
+
+Port of `SettingsView`, `StreakReminder`, `NotificationOptIn`, `Feedback/` and `RatingPrompt`. `SettingsTab` is the Settings
+tab (Licenses is pushed over it with Back, Feedback is a full-screen dialog). Rows: Premium (the `LocalPremium` and
+`LocalOpenPaywall` seams, `container.pro.restore()`, Play's subscription centre, hidden for lifetime), app language
+(`AppLocale.set`), vocabulary language (`Prefs.setTranslationLanguage`), appearance and text size, reminder, feedback, Rate the
+app (Play page, always reachable), Privacy options (only when `AdConsent.privacyOptionsRequired`), Privacy policy / Terms
+(`kf-nihongo.web.app`), Licenses (VOICEVOX credits and both font licences from assets) and the version footer: seven taps
+toggle the analytics opt-out, a long press calls `IntroLauncher.replay()`.
+
+- **Appearance and text size are SharedPreferences, not DataStore** (`settings` file, like `AppLocale`): they must be applied
+  in `Application.onCreate` before any activity. Appearance is `AppCompatDelegate.setDefaultNightMode`; text size is a
+  multiplier (85/100/115/130%) on the phone's font scale through `ProvideTextScale`, and is folded into the survey's `text_size`.
+- **Reminder = one pending inexact alarm** (`setAndAllowWhileIdle`, no exact-alarm permission). `StreakReminder.nextFire` is
+  pure (today if still ahead and not studied, else tomorrow, at the hour in the user's zone); `StreakReminderEngine` plans on
+  every launch, first answer of a day, boot, update, clock and time-zone change (`RescheduleReceiver`) and re-checks at fire
+  time (`ReminderReceiver`: toggle, permission, studied today). A seven-day horizon (`Pref.reminderRemaining`) is refilled by a
+  launch or an answer, not by a reboot. Text goes through `AppLocale.localizedContext`; no streak number is baked in.
+- **The permission is only ever asked from an explicit opt-in** (`rememberReminderOptIn`: the Settings toggle and the intro's
+  "Remind me"); a refusal leaves the toggle off and the footer links to the system notification page. `NotificationOptIn`
+  holds the 60-day soft-ask policy and the streak-7 milestone rule for the Today ticket to call.
+- **Rating:** `container.rating.onRungPassed(totalPassed)` is the hook the ladder calls after a *passed* rung. After 21 passed
+  rungs and at most every 60 days (stamped when shown) `RatingHost` shows the star row; every tap writes a
+  `japanese_survey_rating` row, then 4-5 stars go to Play In-App Review and 1-3 to the feedback screen with the stars
+  attached. "Not now" leads nowhere. Not a rating gate: Settings -> Rate the app is always there.
+- **Feedback** drops iOS's `watch` area (no Wear OS). `FeedbackDraft` is the testable model; `AppContainer.surveyContext` builds
+  the shared row context (premium, tier, counts, text size, appearance).

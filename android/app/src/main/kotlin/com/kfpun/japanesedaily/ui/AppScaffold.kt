@@ -27,11 +27,11 @@ import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
 import com.kfpun.japanesedaily.ads.BannerSlotState
 import com.kfpun.japanesedaily.ads.LocalBannerSlot
-import com.kfpun.japanesedaily.analytics.AnalyticsExclusionFooter
 import com.kfpun.japanesedaily.kana.KanaTab
 import com.kfpun.japanesedaily.lessons.LessonsTab
 import com.kfpun.japanesedaily.lessons.rememberLessonsNav
 import com.kfpun.japanesedaily.progress.ProgressTab
+import com.kfpun.japanesedaily.settings.SettingsTab
 
 /** The five tabs, in the iOS app's order. Icons are Material Symbols (outlined). */
 enum class Tab(@StringRes val label: Int, @DrawableRes val icon: Int) {
@@ -63,6 +63,7 @@ fun AppScaffold(startTab: Tab = Tab.Today, banner: @Composable (Tab) -> Unit = {
                 Tab.Kana -> KanaTab(Modifier.padding(padding))
                 Tab.Lessons -> LessonsTab(lessonsNav, Modifier.padding(padding))
                 Tab.Progress -> ProgressTab(progressNav, Modifier.padding(padding))
+                Tab.Settings -> SettingsTab(Modifier.padding(padding))
                 else -> PlaceholderScreen(selected, Modifier.padding(padding))
             }
         }
@@ -74,10 +75,6 @@ fun AppScaffold(startTab: Tab = Tab.Today, banner: @Composable (Tab) -> Unit = {
 private fun PlaceholderScreen(tab: Tab, modifier: Modifier = Modifier) {
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(stringResource(tab.label), style = MaterialTheme.typography.headlineMedium)
-        // The hidden analytics opt-out (FOX-160); the real Settings screen keeps this footer.
-        if (tab == Tab.Settings) {
-            AnalyticsExclusionFooter(Modifier.align(Alignment.BottomCenter).padding(16.dp))
-        }
     }
 }
 

@@ -8,7 +8,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
@@ -24,6 +26,15 @@ data class Credit(val line: String, val voice: String)
  * checkable. Settings (FOX-159) links to [LicensesScreen].
  */
 object Licenses {
+    /** A bundled font and where its licence text lives in the assets. */
+    data class FontLicense(val name: String, val asset: String)
+
+    /** Noto Serif JP (OFL, `assets/licenses`) and KanjiStrokeOrders (BSD, packaged from `nihongo/Fonts`). */
+    val fonts = listOf(
+        FontLicense("Noto Serif JP", "licenses/NotoSerifJP-OFL.txt"),
+        FontLicense("KanjiStrokeOrders", "KanjiStrokeOrders-LICENSE.txt")
+    )
+
     val voicevox = listOf(
         Credit(line = "VOICEVOX:WhiteCUL", voice = "whitecul"),
         Credit(line = "VOICEVOX:剣崎雌雄", voice = "kenzaki")
@@ -49,6 +60,15 @@ fun LicensesScreen(modifier: Modifier = Modifier) {
         )
         Licenses.voicevox.forEach {
             Text(it.line, style = Theme.jp(Theme.text.headline), color = Theme.colors.ink)
+        }
+        // The bundled faces. Their licences ship in the APK (the BSD one requires it).
+        val assets = LocalContext.current.assets
+        Licenses.fonts.forEach { font ->
+            val text = remember(font.asset) {
+                runCatching { assets.open(font.asset).bufferedReader().use { it.readText() } }.getOrDefault("")
+            }
+            Text(font.name, style = Theme.title(Theme.text.headline), color = Theme.colors.ink)
+            Text(text, style = Theme.text.footnote, color = Theme.colors.inkSecondary)
         }
     }
 }
