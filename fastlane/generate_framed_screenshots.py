@@ -426,6 +426,68 @@ JLPT_LOCALES = {
 
 APP_LOCALES = {"minna": LOCALES, "jlpt": JLPT_LOCALES}
 
+# --- Product page creative assets (App Store Connect → Header and Search Results) ---
+#
+# Apple's spec (developer.apple.com/help/app-store-connect/reference/app-information/
+# creative-assets-specifications): images only here, no alpha, .png.
+#   header   21:9  3840x1646
+#   search    3:2  3840x2560  (accepted range 1920x1280 .. 3840x2560; we render the max)
+#   duo      iPhone Duo screenshots, unfolded inner display, landscape 2853x2007
+#            (portrait 2007x2853, outer display 1398x2034 — not rendered; see DUO below)
+# Written to fastlane/<app>/creative_assets/<locale>/ — NOT under screenshots/, because
+# `deliver` reads every file in a locale folder as a screenshot and would try to place
+# these by pixel size. They are uploaded by hand (Asset Library), after approval.
+#
+# Copy rules (CLAUDE.md "Product facts"): no textbook name, never "native audio", no
+# free-lesson count, no prices/URLs (Apple), mode names as the app shows them. Apple wants
+# "a short phrase that enhances your visual", localized for every supported language.
+# `hi` is absent for the same shaping reason as in LOCALES above; `ta` has no storefront.
+ASSET_COPY = {
+    "en-US": {"header": ("Japanese, a little every day", "Vocabulary, kana and listening practice"),
+              "search": ("Learn Japanese words", "Practice, flashcards, match and more")},
+    "de-DE": {"header": ("Japanisch, jeden Tag ein bisschen", "Vokabeln, Kana und Hörübungen"),
+              "search": ("Japanische Wörter lernen", "Üben, Karteikarten, Match und mehr")},
+    "zh-Hant": {"header": ("每天學一點日語", "單字、五十音與聽力練習"),
+                "search": ("學日語單字", "練習、字卡、配對與更多")},
+    "ru": {"header": ("Японский понемногу каждый день", "Слова, кана и тренировка слуха"),
+           "search": ("Учи японские слова", "Практика, карточки, подбор и другое")},
+    "vi": {"header": ("Mỗi ngày học một chút tiếng Nhật", "Từ vựng, kana và luyện nghe"),
+           "search": ("Học từ vựng tiếng Nhật", "Luyện tập, thẻ ghi nhớ, ghép cặp và hơn thế")},
+    "th": {"header": ("เรียนญี่ปุ่นทุกวัน", "คำศัพท์ คานะ และฝึกฟัง"),
+           "search": ("เรียนคำศัพท์ญี่ปุ่น", "ฝึก บัตรคำ จับคู่ และอื่น ๆ")},
+    "es-ES": {"header": ("Japonés, un poco cada día", "Vocabulario, kana y práctica de escucha"),
+              "search": ("Aprende palabras en japonés", "Practica, tarjetas, parejas y más")},
+    "fr-FR": {"header": ("Le japonais, un peu chaque jour", "Vocabulaire, kana et écoute"),
+              "search": ("Apprends le vocabulaire japonais", "Pratique, cartes mémo, association et plus")},
+    "id": {"header": ("Bahasa Jepang, sedikit tiap hari", "Kosakata, kana, dan latihan menyimak"),
+           "search": ("Belajar kosakata Jepang", "Latihan, kartu kilas, pasangkan, dan lainnya")},
+    "ja": {"header": ("毎日少しずつ日本語", "単語・かな・リスニング練習"),
+           "search": ("日本語の単語を学ぶ", "練習・フラッシュカード・マッチほか")},
+    "it": {"header": ("Giapponese, un po' ogni giorno", "Vocabolario, kana e ascolto"),
+           "search": ("Impara le parole giapponesi", "Pratica, flashcard, abbina e altro")},
+    "ko": {"header": ("매일 조금씩 일본어", "단어, 가나, 듣기 연습"),
+           "search": ("일본어 단어 배우기", "연습, 플래시카드, 매치 등")},
+}
+
+# Layout per asset. Apple publishes no numeric safe area (only per-template guides and the
+# App Store Connect Preview tool), and the crop differs by device and orientation, so
+# everything meaningful stays inside the central 76% of the width (12%..88%) and the
+# phones are the only thing allowed to bleed off the bottom. Check in Preview before use.
+CREATIVE_ASSETS = {
+    "header": dict(canvas=(3840, 1646), title_h=0.105, text_w=0.36,
+                   phones=[("01-today", 0.525, 0.12, 0.95), ("11-lesson-learn", 0.68, 0.30, 0.95)]),
+    "search": dict(canvas=(3840, 2560), title_h=0.075, text_w=0.42,
+                   phones=[("01-today", 0.57, 0.15, 0.95)]),
+}
+ASSET_CANVASES = {k: v["canvas"] for k, v in CREATIVE_ASSETS.items()}
+
+# iPhone Duo screenshot: unfolded inner display, landscape, 2853x2007 (Apple's
+# screenshot-specifications page). No device frame art exists for it, so the capture is
+# placed unframed on the right with the headline beside it. Raw captures are MANUAL
+# (the simulator cannot unfold) and live in screenshot_raw/duo/<key>.png, the same keys
+# as LOCALES. Without one the key is skipped, like iPad.
+DUO = dict(canvas=(2853, 2007), raw_dir="duo")
+
 LOCALE_ALIASES = {"zh-Hans": "zh-Hant"}
 
 # Per-locale typography. This used to be a single boolean — "CJK or not" — which
@@ -665,6 +727,104 @@ def process(locale, key, dev_key, dev):
     return out_path
 
 
+def asset_out_dir(locale):
+    return os.path.join(os.path.dirname(OUT_DIR), "creative_assets", locale)
+
+
+def draw_left_text(draw, x, top_y, text, font, fill, max_width, line_gap, wrap):
+    lines = wrap_lines(draw, text, font, max_width, wrap)
+    ascent, descent = font.getmetrics()
+    line_h = int((ascent + descent) * line_gap)
+    for i, ln in enumerate(lines):
+        draw.text((x, top_y + i * line_h), ln, font=font, fill=fill)
+    return top_y + len(lines) * line_h
+
+
+def text_block_height(draw, title, sub, tfont, sfont, max_w, wrap, gap):
+    th = sum(int(sum(tfont.getmetrics()) * 1.05) for _ in wrap_lines(draw, title, tfont, max_w, wrap))
+    sh = sum(int(sum(sfont.getmetrics()) * 1.1) for _ in wrap_lines(draw, sub, sfont, max_w, wrap))
+    return th + gap + sh
+
+
+def render_creative(locale, kind):
+    """Header (21:9) or search-results (3:2) image: headline left, framed phones right."""
+    spec = CREATIVE_ASSETS[kind]
+    W, H = spec["canvas"]
+    copy = ASSET_COPY[LOCALE_ALIASES.get(locale, locale)][kind]
+    dev = DEVICES["6.3"]
+    bg = make_gradient(W, H, *GRADIENTS[APP]).convert("RGBA")
+    draw = ImageDraw.Draw(bg)
+
+    typo = typography(locale)
+    tfont = load_font(typo, round(H * spec["title_h"]))
+    sfont = load_font(typo, round(H * spec["title_h"] * 0.46))
+    max_w = W * spec["text_w"]
+    gap = round(H * 0.03)
+    block = text_block_height(draw, copy[0], copy[1], tfont, sfont, max_w, typo["wrap"], gap)
+    top = round((H - block) / 2)
+    x = round(W * 0.12)
+    bottom = draw_left_text(draw, x, top, copy[0], tfont, (255, 255, 255, 255),
+                            max_w, 1.05, typo["wrap"])
+    draw_left_text(draw, x, bottom + gap, copy[1], sfont, (255, 255, 255, 220),
+                   max_w, 1.1, typo["wrap"])
+
+    for key, x_frac, top_frac, h_frac in spec["phones"]:
+        raw_path = os.path.join(RAW_DIR, f"{key}.png")
+        if not os.path.exists(raw_path):
+            return None
+        phone = compose_device(Image.open(raw_path), ensure_frame(dev["frame"]),
+                               *dev["off"], dev["off_w"])
+        ph = round(H * h_frac)
+        pw = round(phone.width * ph / phone.height)
+        bg.alpha_composite(phone.resize((pw, ph), Image.LANCZOS),
+                           (round(W * x_frac), round(H * top_frac)))
+
+    out_dir = asset_out_dir(locale)
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, f"{kind}.png")
+    bg.convert("RGB").save(out_path, "PNG")     # RGB: Apple rejects alpha
+    return out_path
+
+
+def render_duo(locale, key):
+    """iPhone Duo screenshot: unfolded landscape capture, headline on the left."""
+    raw_path = os.path.join(os.path.dirname(RAW_DIR), DUO["raw_dir"], f"{key}.png")
+    if not os.path.exists(raw_path):
+        return None
+    W, H = DUO["canvas"]
+    title, subtitle = LOCALES[LOCALE_ALIASES.get(locale, locale)][key]
+    typo = typography(locale)
+    bg = make_gradient(W, H, *GRADIENTS[APP]).convert("RGBA")
+    draw = ImageDraw.Draw(bg)
+
+    tfont = load_font(typo, round(W * 0.030))
+    sfont = load_font(typo, round(W * 0.019))
+    max_w = W * 0.28
+    gap = round(H * 0.02)
+    x = round(W * 0.05)
+    block = text_block_height(draw, title, subtitle, tfont, sfont, max_w, typo["wrap"], gap)
+    top = round((H - block) / 2)
+    bottom = draw_left_text(draw, x, top, title, tfont, (255, 255, 255, 255),
+                            max_w, 1.05, typo["wrap"])
+    draw_left_text(draw, x, bottom + gap, subtitle, sfont, (255, 255, 255, 220),
+                   max_w, 1.1, typo["wrap"])
+
+    raw = Image.open(raw_path).convert("RGBA")
+    sw = round(W * 0.60)
+    sh = round(raw.height * sw / raw.width)
+    shot = raw.resize((sw, sh), Image.LANCZOS)
+    mask = Image.new("L", (sw, sh), 0)
+    ImageDraw.Draw(mask).rounded_rectangle([0, 0, sw - 1, sh - 1], radius=round(sw * 0.03), fill=255)
+    shot.putalpha(mask)
+    bg.alpha_composite(shot, (W - round(W * 0.05) - sw, round((H - sh) / 2)))
+
+    out_dir = asset_out_dir(locale)
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, f"duo-{key}.png")
+    bg.convert("RGB").save(out_path, "PNG")
+    return out_path
+
+
 def missing_glyphs(font, text):
     """The characters of `text` the font has no glyph for.
 
@@ -738,6 +898,54 @@ def check(locale_filter=None):
             verdict = "ok" if dev_ok else "PROBLEMS ABOVE"
             print(f"  {dev_key}: {W}px canvas, 20 strings / {lines_total} rendered lines, "
                   f"widest {worst:.0%} of the {max_text_w:.0f}px text column - {verdict}")
+    # Creative assets and the Duo frame, same two failure modes.
+    if APP == "minna":
+        for locale, kinds in sorted(ASSET_COPY.items()):
+            if locale_filter and locale != locale_filter:
+                continue
+            typo = typography(locale)
+            for kind, (title, sub) in [(k, v) for k, v in kinds.items()]:
+                W, H = CREATIVE_ASSETS[kind]["canvas"]
+                spec = CREATIVE_ASSETS[kind]
+                col = W * spec["text_w"]
+                for role, text, size in (("title", title, round(H * spec["title_h"])),
+                                         ("sub", sub, round(H * spec["title_h"] * 0.46))):
+                    font = load_font(typo, size)
+                    gaps = missing_glyphs(font, text)
+                    if gaps:
+                        ok = False
+                        print(f"  FAIL {locale} {kind} {role}: no glyph for {gaps}")
+                    for line in wrap_lines(probe, text, font, col, typo["wrap"]):
+                        w = probe.textlength(line, font=font)
+                        if w > col:
+                            ok = False
+                            print(f"  FAIL {locale} {kind} {role}: line {w:.0f}px > {col:.0f}px: {line!r}")
+                    n = len(wrap_lines(probe, text, font, col, typo["wrap"]))
+                    if role == "title" and n > 3:
+                        ok = False
+                        print(f"  FAIL {locale} {kind} title wraps to {n} lines")
+            print(f"{locale}: creative assets checked")
+        # Duo
+        W, H = DUO["canvas"]
+        col = W * 0.28
+        for locale, copy in sorted(locales.items()):
+            if locale_filter and locale != locale_filter:
+                continue
+            typo = typography(locale)
+            for role, size, idx in (("title", round(W * 0.030), 0), ("sub", round(W * 0.019), 1)):
+                font = load_font(typo, size)
+                for key, strings in copy.items():
+                    if key == "01-watch-today":
+                        continue
+                    text = strings[idx]
+                    if missing_glyphs(font, text):
+                        ok = False
+                        print(f"  FAIL duo {locale} {key} {role}: missing glyph")
+                    for line in wrap_lines(probe, text, font, col, typo["wrap"]):
+                        if probe.textlength(line, font=font) > col:
+                            ok = False
+                            print(f"  FAIL duo {locale} {key} {role}: overflow {line!r}")
+        print("duo: checked")
     print("\ncheck: PASS" if ok else "\ncheck: FAIL")
     return ok
 
@@ -775,6 +983,29 @@ if __name__ == "__main__":
 
     # Aliased locales render the same copy as the locale they point at.
     targets = {**LOCALES, **{alias: LOCALES[src] for alias, src in LOCALE_ALIASES.items()}}
+
+    # `header`, `search` and `duo` render the product-page assets instead of the
+    # screenshot set (and a bare locale filter renders both).
+    asset_kinds = ("header", "search", "duo")
+    if APP == "minna":
+        for locale in targets:
+            if locale_filter and locale != locale_filter:
+                continue
+            for kind in ("header", "search"):
+                if key_filter and key_filter != kind:
+                    continue
+                out = render_creative(locale, kind)
+                print("wrote", out) if out else print(f"skip  {locale}/{kind} (missing raw capture)")
+            if key_filter and key_filter != "duo":
+                continue
+            for key in targets[locale]:
+                if key == "01-watch-today":
+                    continue
+                out = render_duo(locale, key)
+                if out:
+                    print("wrote", out)
+        if key_filter in asset_kinds:
+            sys.exit(0)
 
     for locale, copy in targets.items():
         if locale_filter and locale != locale_filter:

@@ -42,6 +42,7 @@ first and follow its index; it is kept current and is the fastest way in.
 | `nihongo/Resources/audio/cheer/` | `scripts/build-minna-data.py` ← the submodule's `voices/cheer-<voice>-<key>.m4a` |
 | `web/**` (except `privacy.html`, `terms.html`) | `scripts/build-web.py` — all copy lives in its `T` dict |
 | `fastlane/minna/screenshots/**` | `fastlane/generate_framed_screenshots.py` ← `fastlane/minna/screenshot_raw/` |
+| `fastlane/minna/creative_assets/**` (header, search results, Duo) | same script, `header` / `search` / `duo` filters |
 
 ## Seams — go through them, don't bypass
 
