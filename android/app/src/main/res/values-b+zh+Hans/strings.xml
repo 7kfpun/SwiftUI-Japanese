@@ -72,6 +72,8 @@
     <string name="write">书写</string>
     <string name="hear_it_draw_it">听音写字</string>
     <string name="licenses">许可证</string>
+    <string name="no_japanese_voice_is_installed_on_this_device_add_on_3cd64e5">此设备未安装日语语音。请在手机的文字转语音设置中添加，以便听到所有发音。</string>
+    <string name="the_spoken_audio_in_this_app_is_synthesised_with_voicevox">本应用中的语音由 VOICEVOX 合成。</string>
     <string name="hiragana">平假名</string>
     <string name="katakana">片假名</string>
     <string name="romaji">罗马音</string>

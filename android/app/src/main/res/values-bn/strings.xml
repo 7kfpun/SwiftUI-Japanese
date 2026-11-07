@@ -72,6 +72,8 @@
     <string name="write">লেখা</string>
     <string name="hear_it_draw_it">শুনে লিখুন</string>
     <string name="licenses">লাইসেন্স</string>
+    <string name="no_japanese_voice_is_installed_on_this_device_add_on_3cd64e5">এই ডিভাইসে কোনো জাপানি ভয়েস ইনস্টল করা নেই। সব শব্দ শুনতে ফোনের টেক্সট-টু-স্পিচ সেটিংসে একটি যোগ করুন।</string>
+    <string name="the_spoken_audio_in_this_app_is_synthesised_with_voicevox">এই অ্যাপের কণ্ঠস্বর VOICEVOX দিয়ে তৈরি করা কৃত্রিম অডিও।</string>
     <string name="hiragana">হিরাগানা</string>
     <string name="katakana">কাতাকানা</string>
     <string name="romaji">রোমাজি</string>

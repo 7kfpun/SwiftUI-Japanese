@@ -72,6 +72,8 @@
     <string name="write">เขียน</string>
     <string name="hear_it_draw_it">ฟังแล้วเขียน</string>
     <string name="licenses">สัญญาอนุญาต</string>
+    <string name="no_japanese_voice_is_installed_on_this_device_add_on_3cd64e5">อุปกรณ์นี้ไม่ได้ติดตั้งเสียงภาษาญี่ปุ่น เพิ่มได้ในการตั้งค่าการแปลงข้อความเป็นเสียงพูดของโทรศัพท์ เพื่อฟังได้ครบทุกเสียง</string>
+    <string name="the_spoken_audio_in_this_app_is_synthesised_with_voicevox">เสียงพูดในแอปนี้สังเคราะห์ด้วย VOICEVOX</string>
     <string name="hiragana">ฮิรางานะ</string>
     <string name="katakana">คาตาคานะ</string>
     <string name="romaji">โรมาจิ</string>

@@ -72,6 +72,8 @@
     <string name="write">Viết</string>
     <string name="hear_it_draw_it">Nghe rồi viết</string>
     <string name="licenses">Giấy phép</string>
+    <string name="no_japanese_voice_is_installed_on_this_device_add_on_3cd64e5">Thiết bị này chưa cài giọng đọc tiếng Nhật. Hãy thêm một giọng trong cài đặt chuyển văn bản thành giọng nói của điện thoại để nghe được mọi âm.</string>
+    <string name="the_spoken_audio_in_this_app_is_synthesised_with_voicevox">Âm thanh đọc trong ứng dụng này được tổng hợp bằng VOICEVOX.</string>
     <string name="hiragana">Hiragana</string>
     <string name="katakana">Katakana</string>
     <string name="romaji">Romaji</string>

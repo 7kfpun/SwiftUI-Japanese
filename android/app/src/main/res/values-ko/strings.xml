@@ -72,6 +72,8 @@
     <string name="write">쓰기</string>
     <string name="hear_it_draw_it">듣고 쓰기</string>
     <string name="licenses">라이선스</string>
+    <string name="no_japanese_voice_is_installed_on_this_device_add_on_3cd64e5">이 기기에는 일본어 음성이 설치되어 있지 않습니다. 모든 소리를 들으려면 휴대폰의 텍스트 음성 변환 설정에서 추가하세요.</string>
+    <string name="the_spoken_audio_in_this_app_is_synthesised_with_voicevox">이 앱의 음성은 VOICEVOX로 합성되었습니다.</string>
     <string name="hiragana">히라가나</string>
     <string name="katakana">가타카나</string>
     <string name="romaji">로마자</string>

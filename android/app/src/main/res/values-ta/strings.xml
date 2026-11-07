@@ -72,6 +72,8 @@
     <string name="write">எழுது</string>
     <string name="hear_it_draw_it">கேட்டு எழுதுங்கள்</string>
     <string name="licenses">உரிமங்கள்</string>
+    <string name="no_japanese_voice_is_installed_on_this_device_add_on_3cd64e5">இந்தச் சாதனத்தில் ஜப்பானிய குரல் நிறுவப்படவில்லை. எல்லா ஒலிகளையும் கேட்க, தொலைபேசியின் உரையிலிருந்து பேச்சு அமைப்புகளில் ஒன்றைச் சேர்க்கவும்.</string>
+    <string name="the_spoken_audio_in_this_app_is_synthesised_with_voicevox">இந்த ஆப்ஸில் உள்ள பேச்சு ஒலி VOICEVOX மூலம் உருவாக்கப்பட்டது.</string>
     <string name="hiragana">ஹிரகானா</string>
     <string name="katakana">கடகானா</string>
     <string name="romaji">ரோமாஜி</string>
