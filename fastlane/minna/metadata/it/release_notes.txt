@@ -1,8 +1,7 @@
-Versione 3.0.2
+Versione 3.0.6
 
-Sblocca di più senza pagare: tre stelle in ogni sfida delle prime lezioni aprono l'intero primo gruppo di lezioni
-Promemoria giornalieri: facoltativi, solo nei giorni in cui non hai ancora studiato, e silenzio negli altri
-Un piano da 12 mesi si aggiunge a quelli da 1, 3 e 6
-Preferiti e lista dei vocaboli si leggono meglio
+Commenti, valutazioni a stelle e le tue risposte al primo avvio vengono di nuovo inviati: nella 3.0.5 non ci arrivavano
+La schermata Premium ora nomina le modalità giuste: Pratica, Flashcard, Abbina, Impara e tutta la scala
+Piccole correzioni
 
 Dicci cosa vuoi vedere in Impostazioni → Commenti!

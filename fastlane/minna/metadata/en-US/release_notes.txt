@@ -1,8 +1,7 @@
-Version 3.0.2
+Version 3.0.6
 
-Unlock more without paying — three stars on every challenge in the opening lessons opens the whole Beginning 1 group, free
-Daily reminders — an optional nudge on days you haven't studied yet, and silence on the days you have
-A 12-month plan joins the 1, 3 and 6-month options
-Bookmarks and the vocabulary list are easier to read
+Feedback, star ratings and your first-launch answers are sent again — they weren't reaching us in 3.0.5
+The Premium screen now names the modes correctly: Practice, Flashcards, Match, Learn and the full ladder
+Small fixes
 
 Tell us what's next in Settings → Feedback!
