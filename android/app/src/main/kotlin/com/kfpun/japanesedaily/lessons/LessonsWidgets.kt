@@ -62,6 +62,7 @@ import com.kfpun.japanesedaily.data.progress.WordStage
 import com.kfpun.japanesedaily.data.vocab.ExampleSentence
 import com.kfpun.japanesedaily.data.vocab.Vocab
 import com.kfpun.japanesedaily.ui.Theme
+import com.kfpun.japanesedaily.ui.components.SoundToggle
 import com.kfpun.japanesedaily.ui.components.SymbolIcon
 import com.kfpun.japanesedaily.ui.components.scaledSize
 import kotlinx.coroutines.launch
@@ -584,18 +585,14 @@ fun VocabRow(
 
 // endregion
 
-/** The sound toggle every practice surface carries in its toolbar. */
+/** The shared sound toggle (`ui/components`) bound to the one global `soundOn` preference. */
 @Composable
-fun SoundToggle(container: AppContainer) {
+fun LessonSoundToggle(container: AppContainer) {
     val sound = rememberPref(Pref.soundOn, container)
-    ToolbarButton(
-        if (sound.value) R.drawable.ic_volume_up else R.drawable.ic_volume_off,
-        stringResource(R.string.read_automatically),
-        {
-            sound.set(!sound.value)
-            Track.event(TrackEvents.TOGGLE_SOUND, mapOf("on" to !sound.value))
-        }
-    )
+    SoundToggle(sound.value, {
+        sound.set(!sound.value)
+        Track.event(TrackEvents.TOGGLE_SOUND, mapOf("on" to !sound.value))
+    })
 }
 
 /**

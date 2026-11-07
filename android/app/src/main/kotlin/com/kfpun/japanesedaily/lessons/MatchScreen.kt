@@ -54,7 +54,7 @@ import com.kfpun.japanesedaily.analytics.TrackScreens
 import com.kfpun.japanesedaily.audio.LocalPronouncer
 import com.kfpun.japanesedaily.data.prefs.Pref
 import com.kfpun.japanesedaily.ui.Theme
-import com.kfpun.japanesedaily.ui.components.SymbolIcon
+import com.kfpun.japanesedaily.ui.components.ScoreBadge
 import kotlinx.coroutines.delay
 
 /** A tile's slot on the board: the key its frame is filed under. */
@@ -136,9 +136,18 @@ fun MatchScreen(lessonNumber: Int, env: LessonsEnv, nav: LessonsNav, modifier: M
         stringResource(R.string.match),
         onBack = { nav.pop() },
         modifier = modifier,
-        subtitle = stringResource(R.string.round_arg_arg_pairs, model.rounds.toString(), model.left.size.toString()),
-        center = { ScoreBadge(model.matched, model.attempts) },
-        actions = { SoundToggle(container) }
+        center = {
+            ScoreBadge(
+                model.matched,
+                model.attempts,
+                caption = stringResource(
+                    R.string.round_arg_arg_pairs,
+                    model.rounds.toString(),
+                    model.left.size.toString()
+                )
+            )
+        },
+        actions = { LessonSoundToggle(container) }
     ) {
         Column(
             Modifier.fillMaxSize().padding(16.dp).navigationBarsPadding(),
@@ -367,33 +376,5 @@ private fun MatchTile(
             color = Theme.colors.ink.let { if (hidden) it.copy(alpha = 0f) else it },
             textAlign = TextAlign.Center
         )
-    }
-}
-
-/** Right / wrong / total: the one score indicator every scored screen wears. */
-@Composable
-fun ScoreBadge(correct: Int, total: Int, modifier: Modifier = Modifier) {
-    val wrong = total - correct
-    val description = "$correct ✓, $wrong ✗, $total"
-    Row(
-        modifier.semantics(mergeDescendants = true) { contentDescription = description },
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconCount(R.drawable.ic_check, correct, Theme.colors.correct)
-        IconCount(R.drawable.ic_close, wrong, Theme.colors.wrong)
-        Text(
-            "/ $total",
-            style = Theme.text.footnote.copy(fontWeight = FontWeight.Medium),
-            color = Theme.colors.inkSecondary
-        )
-    }
-}
-
-@Composable
-private fun IconCount(icon: Int, count: Int, color: androidx.compose.ui.graphics.Color) {
-    Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
-        SymbolIcon(icon, color, Theme.text.footnote.fontSize.value.toInt())
-        Text(count.toString(), style = Theme.text.footnote.copy(fontWeight = FontWeight.SemiBold), color = color)
     }
 }
