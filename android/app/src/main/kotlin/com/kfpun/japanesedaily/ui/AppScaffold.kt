@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
 import com.kfpun.japanesedaily.analytics.AnalyticsExclusionFooter
+import com.kfpun.japanesedaily.kana.KanaTab
 import com.kfpun.japanesedaily.lessons.LessonsTab
 import com.kfpun.japanesedaily.lessons.PaywallHost
 import com.kfpun.japanesedaily.lessons.rememberLessonsNav
@@ -52,10 +53,10 @@ fun AppScaffold(startTab: Tab = Tab.Today, banner: @Composable () -> Unit = {}) 
                 }
             }
         ) { padding ->
-            if (selected == Tab.Lessons) {
-                LessonsTab(lessonsNav, Modifier.padding(padding))
-            } else {
-                PlaceholderScreen(selected, Modifier.padding(padding))
+            when (selected) {
+                Tab.Kana -> KanaTab(Modifier.padding(padding))
+                Tab.Lessons -> LessonsTab(lessonsNav, Modifier.padding(padding))
+                else -> PlaceholderScreen(selected, Modifier.padding(padding))
             }
         }
     }
