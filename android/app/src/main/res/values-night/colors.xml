@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark counterparts of the widget layout colours (Theme's dark surface, ink and accent). -->
+    <color name="widget_surface">#1C1C1E</color>
+    <color name="widget_ink">#FFFFFF</color>
+    <color name="widget_ink_secondary">#B8B8C2</color>
+    <color name="widget_accent">#40C7D6</color>
+</resources>

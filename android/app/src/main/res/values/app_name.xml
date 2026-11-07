@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The launcher label. Hand-written: not part of UIStrings.json, so strings.xml generation
+     (scripts/build-android-strings.py) leaves it alone. -->
+<resources>
+    <string name="app_name" translatable="false">Japanese Daily</string>
+</resources>
