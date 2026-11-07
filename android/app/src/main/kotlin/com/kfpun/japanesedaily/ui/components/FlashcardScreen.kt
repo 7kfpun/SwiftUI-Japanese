@@ -134,7 +134,11 @@ fun <T> FlashcardScreen(
                 Graders(onAgain = { grade(false, "tap") }, onGotIt = { grade(true, "tap") })
             } else {
                 DeckDone(summary(deck.total)) {
-                    if (trackName != null) Track.event("${trackName}_restart", trackParams + mapOf("total" to deck.total))
+                    if (trackName !=
+                        null
+                    ) {
+                        Track.event("${trackName}_restart", trackParams + mapOf("total" to deck.total))
+                    }
                     deck.restart()
                     revealed = false
                     swipe.reset()
@@ -165,7 +169,13 @@ private fun RevealButton(onClick: () -> Unit) {
 private fun Graders(onAgain: () -> Unit, onGotIt: () -> Unit) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Grader(R.drawable.ic_arrow_back, stringResource(R.string.again), Theme.colors.wrong, leading = true, onAgain)
-        Grader(R.drawable.ic_arrow_forward, stringResource(R.string.got_it), Theme.colors.correct, leading = false, onGotIt)
+        Grader(
+            R.drawable.ic_arrow_forward,
+            stringResource(R.string.got_it),
+            Theme.colors.correct,
+            leading = false,
+            onGotIt
+        )
     }
 }
 
@@ -211,7 +221,11 @@ private fun DeckDone(summary: String, onRestart: () -> Unit) {
                 .padding(horizontal = 28.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(stringResource(R.string.restart), style = Theme.title(Theme.text.headline), color = Theme.colors.accent)
+            Text(
+                stringResource(R.string.restart),
+                style = Theme.title(Theme.text.headline),
+                color = Theme.colors.accent
+            )
         }
     }
 }

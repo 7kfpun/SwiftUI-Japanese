@@ -43,7 +43,7 @@ val KanaForm.label: String get() = name.lowercase()
  * What the browser's toolbar button rotates through. **The index is the persisted `kanaTileScript` pref**:
  * appending is safe, reordering would rewrite everyone's setting. [form] is what the tile shows big.
  */
-enum class TileScript(val glyph: String, val form: KanaForm, @StringRes val name: Int) {
+enum class TileScript(val glyph: String, val form: KanaForm, @StringRes val label: Int) {
     Hiragana("あ", KanaForm.Hiragana, R.string.hiragana),
     Katakana("ア", KanaForm.Katakana, R.string.katakana),
     Romaji("A", KanaForm.Romaji, R.string.romaji);

@@ -32,7 +32,7 @@ OUT = ROOT / "android" / "app" / "src" / "test" / "resources" / "kana" / "sketch
 
 # Glyphs whose KanjiStrokeOrders raster, digit-stripped grid and erased-digit count are dumped.
 # The last two are combos, which render at the smaller size.
-GLYPHS = ["あ", "い", "ア", "に", "ロ", "し", "マ", "ぱ", "ちゅ", "びゃ"]
+GLYPHS = ["一", "あ", "い", "ア", "に", "ロ", "し", "マ", "ぱ", "ちゅ", "びゃ"]
 
 
 def wobble(points, amp, seed):

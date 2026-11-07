@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
 import com.kfpun.japanesedaily.analytics.AnalyticsExclusionFooter
+import com.kfpun.japanesedaily.kana.KanaTab
 
 /** The five tabs, in the iOS app's order. Icons are Material Symbols (outlined). */
 enum class Tab(@StringRes val label: Int, @DrawableRes val icon: Int) {
@@ -47,7 +48,10 @@ fun AppScaffold(banner: @Composable () -> Unit = {}) {
             }
         }
     ) { padding ->
-        PlaceholderScreen(selected, Modifier.padding(padding))
+        when (selected) {
+            Tab.Kana -> KanaTab(Modifier.padding(padding))
+            else -> PlaceholderScreen(selected, Modifier.padding(padding))
+        }
     }
 }
 

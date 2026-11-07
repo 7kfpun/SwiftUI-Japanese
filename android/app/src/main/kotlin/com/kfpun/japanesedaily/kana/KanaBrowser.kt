@@ -1,8 +1,8 @@
 package com.kfpun.japanesedaily.kana
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.border
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,8 +44,8 @@ import com.kfpun.japanesedaily.analytics.TrackScreens
 import com.kfpun.japanesedaily.data.prefs.Pref
 import com.kfpun.japanesedaily.data.progress.KanaResult
 import com.kfpun.japanesedaily.data.vocab.K
-import com.kfpun.japanesedaily.ui.KanaForm
 import com.kfpun.japanesedaily.ui.JapaneseFace
+import com.kfpun.japanesedaily.ui.KanaForm
 import com.kfpun.japanesedaily.ui.Theme
 import com.kfpun.japanesedaily.ui.components.BarIconButton
 import com.kfpun.japanesedaily.ui.components.CanvasScreen
@@ -95,7 +95,7 @@ fun KanaBrowser(env: KanaEnv, onQuiz: (KanaTable) -> Unit, modifier: Modifier = 
                 actions = {
                     // What the tiles show big. One tap rotates hiragana, katakana, romaji; the glyph says which.
                     val current = TileScript.of(tileScript)
-                    val label = stringResource(current.name)
+                    val label = stringResource(current.label)
                     Box(
                         Modifier
                             .heightIn(min = 48.dp)

@@ -7,28 +7,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import com.kfpun.japanesedaily.analytics.Track
 import com.kfpun.japanesedaily.analytics.TrackEvents
+import com.kfpun.japanesedaily.audio.Pronouncer
 import com.kfpun.japanesedaily.data.AppContainer
 import com.kfpun.japanesedaily.data.prefs.Pref
 import com.kfpun.japanesedaily.data.prefs.PrefKey
-import com.kfpun.japanesedaily.data.vocab.K
 import kotlinx.coroutines.launch
 
-/**
- * What the Kana tab speaks through: a kana cell, nothing more. A seam so this feature does not wait for the
- * audio player (FOX-151); [AppContainer.kanaSpeaker] holds the real one once the app wires it, and until then
- * it is [Silent].
- */
-fun interface KanaSpeaker {
-    fun speak(kana: K)
-
-    companion object {
-        val Silent = KanaSpeaker { }
-    }
-}
-
-/** Everything the Kana screens read: the container, the voice and the template rasteriser. */
-class KanaEnv(val container: AppContainer, val glyphs: GlyphRasterizer) {
-    val speaker: KanaSpeaker get() = container.kanaSpeaker
+/** Everything the Kana screens read: the container, the voice ([Pronouncer], FOX-151) and the template rasteriser. */
+class KanaEnv(val container: AppContainer, val speaker: Pronouncer, val glyphs: GlyphRasterizer) {
     val data get() = container.kana
 }
 

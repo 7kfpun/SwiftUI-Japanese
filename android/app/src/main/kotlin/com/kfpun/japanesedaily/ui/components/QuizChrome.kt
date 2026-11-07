@@ -34,11 +34,10 @@ import com.kfpun.japanesedaily.R
 import com.kfpun.japanesedaily.ui.Theme
 
 /**
- * The shared quiz chrome (iOS `Components.swift`): the status capsule, sound toggle, tap-to-hear panel, mode
- * rows and the segmented picker. Kana uses it first; Lessons' quiz screens reuse it.
- */
-
-/** A navigation-bar stand-in: back arrow, a centred [center] slot and trailing [actions]. */
+ * The shared quiz chrome (iOS `Components.swift`): status capsule, sound toggle, tap-to-hear panel, mode rows and
+ * the segmented picker. Kana uses it first; the Lessons quiz screens reuse it.
+ *
+ * A navigation-bar stand-in: back arrow, a centred [center] slot and trailing [actions]. */
 @Composable
 fun ScreenBar(
     modifier: Modifier = Modifier,
@@ -134,7 +133,11 @@ fun ScoreBadge(correct: Int, total: Int, caption: String? = null) {
     ToolbarStatus(caption) {
         IconCount(R.drawable.ic_check, correct, Theme.colors.correct, Theme.text.footnote)
         IconCount(R.drawable.ic_close, total - correct, Theme.colors.wrong, Theme.text.footnote)
-        Text("/ $total", style = Theme.text.footnote.copy(fontWeight = FontWeight.Medium), color = Theme.colors.inkSecondary)
+        Text(
+            "/ $total",
+            style = Theme.text.footnote.copy(fontWeight = FontWeight.Medium),
+            color = Theme.colors.inkSecondary
+        )
     }
 }
 
@@ -186,7 +189,13 @@ private const val BADGE_ICON_SP = 72
 
 /** A mode row: accent icon well, name in the title face, one-line description under it. */
 @Composable
-fun ModeRow(@DrawableRes icon: Int, title: String, subtitle: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun ModeRow(
+    @DrawableRes icon: Int,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
         modifier
             .fillMaxWidth()

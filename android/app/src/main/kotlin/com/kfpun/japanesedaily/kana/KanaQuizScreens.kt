@@ -238,7 +238,12 @@ fun KanaQuizScreen(
                     } else {
                         FitText(
                             model.answer.value(model.from),
-                            glyphStyle(model.from.isJapanese, CLASSIC_PROMPT, JapaneseFace.Strokes, FontWeight.SemiBold),
+                            glyphStyle(
+                                model.from.isJapanese,
+                                CLASSIC_PROMPT,
+                                JapaneseFace.Strokes,
+                                FontWeight.SemiBold
+                            ),
                             Modifier.padding(horizontal = 16.dp)
                         )
                     }
@@ -253,13 +258,20 @@ fun KanaQuizScreen(
                             val right = model.choose(i)
                             // One event name per quiz: reading it and hearing it are different exercises.
                             if (right != null) {
-                                Track.event(
-                                    if (listening) TrackEvents.KANA_LISTENING_ANSWER else TrackEvents.KANA_CLASSIC_ANSWER,
-                                    mapOf("correct" to right)
-                                )
+                                val name = if (listening) {
+                                    TrackEvents.KANA_LISTENING_ANSWER
+                                } else {
+                                    TrackEvents.KANA_CLASSIC_ANSWER
+                                }
+                                Track.event(name, mapOf("correct" to right))
                             }
                         },
-                        textStyle = glyphStyle(model.to.isJapanese, OPTION_GLYPH, JapaneseFace.Bold, FontWeight.SemiBold)
+                        textStyle = glyphStyle(
+                            model.to.isJapanese,
+                            OPTION_GLYPH,
+                            JapaneseFace.Bold,
+                            FontWeight.SemiBold
+                        )
                     )
                 }
                 NextButton(enabled = model.picked != null) {
@@ -346,7 +358,12 @@ fun KanaSwipeQuizScreen(env: KanaEnv, table: KanaTable, onBack: () -> Unit, modi
                                 picked = model.picked,
                                 isAnswer = opt?.romaji == model.answer.romaji,
                                 onClick = { decide(side) },
-                                textStyle = glyphStyle(model.to.isJapanese, CHIP_GLYPH, JapaneseFace.Bold, FontWeight.SemiBold)
+                                textStyle = glyphStyle(
+                                    model.to.isJapanese,
+                                    CHIP_GLYPH,
+                                    JapaneseFace.Bold,
+                                    FontWeight.SemiBold
+                                )
                             )
                         }
                     }
@@ -370,7 +387,7 @@ fun KanaFlashcardScreen(env: KanaEnv, table: KanaTable, onBack: () -> Unit, modi
         FlashcardScreen(
             deck = deck,
             id = K::id,
-            speak = env.speaker::speak,
+            speak = { env.speaker.speak(it) },
             soundOn = sound.on,
             onToggleSound = sound.toggle,
             onBack = onBack,

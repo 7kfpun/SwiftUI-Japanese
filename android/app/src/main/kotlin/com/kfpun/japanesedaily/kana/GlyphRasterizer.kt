@@ -108,8 +108,11 @@ class AndroidGlyphRasterizer(context: Context) : GlyphRasterizer() {
         val y = (pixelSize - bounds.height()) / 2f - bounds.top
         Canvas(bitmap).drawText(glyph, x, y, p)
         val mask = lit(bitmap)
-        // The digit threshold is calibrated at BIG; scale it to this raster.
-        val maxDim = maxOf(2, (KanaSketch.DIGIT_MAX_DIM.toDouble() / KanaSketch.BIG * pixelSize).toInt())
+        // The digit threshold is calibrated on the scoring raster, where a glyph is drawn at 110 px (64 for a
+        // combo). Digits scale with the font size, so scale the threshold by this render's size relative to that,
+        // not by the bitmap size: the aspect-fit glyph is several times larger than the scoring one.
+        val reference = if (glyph.codePointCount(0, glyph.length) > 1) COMBO_SIZE else SINGLE_SIZE
+        val maxDim = maxOf(2, kotlin.math.ceil(KanaSketch.DIGIT_MAX_DIM * (PROBE_SIZE * fit) / reference).toInt())
         KanaSketch.stripTinyComponents(mask, pixelSize, maxDim)
         val out = IntArray(mask.size) { if (mask[it]) Color.WHITE else Color.TRANSPARENT }
         bitmap.setPixels(out, 0, pixelSize, 0, 0, pixelSize, pixelSize)
@@ -120,7 +123,7 @@ class AndroidGlyphRasterizer(context: Context) : GlyphRasterizer() {
         const val SINGLE_SIZE = 110f
         const val COMBO_SIZE = 64f
         const val ORIGIN_X = 8f
-        const val ORIGIN_Y = 35
+        const val ORIGIN_Y = 35f
         const val PROBE_SIZE = 200f
         const val TEMPLATE_MARGIN = 0.06f
         const val BOLD_WEIGHT = 700

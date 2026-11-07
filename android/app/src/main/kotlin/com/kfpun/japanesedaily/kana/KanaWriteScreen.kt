@@ -156,12 +156,20 @@ fun KanaWriteScreen(env: KanaEnv, table: KanaTable, onBack: () -> Unit, modifier
                     selected = if (katakana) 1 else 0,
                     onSelect = {
                         katakana = it == 1
-                        Track.event(TrackEvents.KANA_WRITE_SCRIPT, mapOf("script" to if (katakana) "katakana" else "hiragana"))
+                        Track.event(
+                            TrackEvents.KANA_WRITE_SCRIPT,
+                            mapOf("script" to if (katakana) "katakana" else "hiragana")
+                        )
                         clear()
                     }
                 )
                 // The prompt is just the romaji: the picker above already says which script. Tap to replay.
-                Box(Modifier.fillMaxWidth().clickable(role = Role.Button) { env.speaker.speak(answer) }, Alignment.Center) {
+                Box(
+                    Modifier.fillMaxWidth().clickable(role = Role.Button) {
+                        env.speaker.speak(answer)
+                    },
+                    Alignment.Center
+                ) {
                     Text(
                         answer.romaji,
                         style = Theme.display(PROMPT_SIZE, FontWeight.SemiBold),
@@ -215,7 +223,11 @@ fun KanaWriteScreen(env: KanaEnv, table: KanaTable, onBack: () -> Unit, modifier
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(stringResource(R.string.next), style = Theme.title(Theme.text.headline), color = Theme.colors.onAccent)
+                        Text(
+                            stringResource(R.string.next),
+                            style = Theme.title(Theme.text.headline),
+                            color = Theme.colors.onAccent
+                        )
                     }
                 }
             }
