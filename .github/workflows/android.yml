@@ -21,6 +21,7 @@ on:
       - "android/**"
       - "nihongo/Resources/**"
       - "nihongo/UIStrings.json"
+      - "scripts/build-android-strings.py"
       - ".github/workflows/android.yml"
   workflow_dispatch:
 
@@ -53,7 +54,7 @@ jobs:
           PUSH_AFTER: ${{ github.sha }}
         run: |
           set -euo pipefail
-          paths=(android/ nihongo/Resources/ nihongo/UIStrings.json .github/workflows/android.yml)
+          paths=(android/ nihongo/Resources/ nihongo/UIStrings.json scripts/build-android-strings.py .github/workflows/android.yml)
           build=true
           case "$EVENT" in
             pull_request)
@@ -95,6 +96,11 @@ jobs:
           ssh-keyscan -t ed25519 github.com >> "${HOME}/.ssh/known_hosts"
           export GIT_SSH_COMMAND="ssh -i ${key_file} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
           sh ci_scripts/ci_post_clone.sh
+
+      # The generated string resources are committed; fail when UIStrings.json moved on without them.
+      - name: Check the generated Android strings are current
+        if: steps.changes.outputs.build == 'true'
+        run: python3 scripts/build-android-strings.py --check
 
       - name: Set up JDK 17
         if: steps.changes.outputs.build == 'true'
