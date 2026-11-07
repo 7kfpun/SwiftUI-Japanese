@@ -206,10 +206,10 @@ struct SelectModeView: View {
             // A 2×2 grid rather than four rows: the modes are peers, and a list ranked
             // them by position. Each tile takes its row's height, so a long German or
             // Burmese description grows both tiles together instead of staggering them.
-            // Adaptive, not two fixed columns: 160 is what two columns need on the
-            // narrowest phone, and a wider window (iPad, Split View, landscape) fits
-            // another rather than stretching the tiles.
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 160, maximum: 320), spacing: 10)],
+            // Two flexible columns at every width: four peers are a 2x2, and an adaptive
+            // count would leave a lone tile in a third column on a 640 column.
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10),
+                                GridItem(.flexible(), spacing: 10)],
                       spacing: 10) {
                 // Vocab List is free on every lesson — browsing and search stay open.
                 NavigationLink { Deferred { VocabListView(lesson: current) } } label: {
