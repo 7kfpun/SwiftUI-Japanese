@@ -43,6 +43,7 @@ first and follow its index; it is kept current and is the fastest way in.
 | `web/**` (except `privacy.html`, `terms.html`) | `scripts/build-web.py` — all copy lives in its `T` dict |
 | `android/app/src/main/res/values*/strings.xml`, `res/xml/locales_config.xml` | `scripts/build-android-strings.py` ← `nihongo/UIStrings.json` |
 | `fastlane/minna/screenshots/**` | `fastlane/generate_framed_screenshots.py` ← `fastlane/minna/screenshot_raw/` |
+| `fastlane/minna/creative_assets/**` (header, search results, Duo) | same script, `header` / `search` / `duo` filters |
 
 ## Seams — go through them, don't bypass
 
