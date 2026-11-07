@@ -4,14 +4,19 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -20,15 +25,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
 import com.kfpun.japanesedaily.ads.BannerSlotState
 import com.kfpun.japanesedaily.ads.LocalBannerSlot
 import com.kfpun.japanesedaily.kana.KanaTab
+import com.kfpun.japanesedaily.lessons.LessonsNav
 import com.kfpun.japanesedaily.lessons.LessonsTab
 import com.kfpun.japanesedaily.lessons.rememberLessonsNav
 import com.kfpun.japanesedaily.progress.ProgressTab
@@ -63,65 +67,80 @@ fun AppScaffold(
     }
     val progressNav = rememberLessonsNav()
     val bannerSlot = remember { BannerSlotState() }
-    CompositionLocalProvider(LocalBannerSlot provides bannerSlot) {
-        Scaffold(
-            bottomBar = {
-                Column {
-                    // The ad banner slot (FOX-158): above the tab bar, in a column rather than a safe-area
-                    // inset, so a pushed screen's bottom button never renders under it.
+    ProvideWindowLayout {
+        val regular = isRegularWidth()
+        CompositionLocalProvider(LocalBannerSlot provides bannerSlot) {
+            // The window size class picks the bar (compact) or the rail (regular, 600 dp and up). The suite lays the
+            // rail beside the content, so the ad banner below sits above the content's bottom edge, never under it.
+            NavigationSuiteScaffold(
+                navigationSuiteItems = {
+                    Tab.entries.forEach { tab ->
+                        item(
+                            selected = tab == selected,
+                            onClick = { selected = tab },
+                            icon = { Icon(painterResource(tab.icon), contentDescription = null) },
+                            label = { Text(stringResource(tab.label)) }
+                        )
+                    }
+                },
+                layoutType = if (regular) NavigationSuiteType.NavigationRail else NavigationSuiteType.NavigationBar,
+                navigationSuiteColors = NavigationSuiteDefaults.colors(
+                    navigationBarContainerColor = Theme.colors.surface,
+                    navigationRailContainerColor = Theme.colors.surface
+                ),
+                containerColor = Theme.colors.canvas
+            ) {
+                // Tabs draw their own status-bar inset (`statusBarsPadding` on each screen and `LessonScreenFrame`),
+                // and this host adds none, so the gap above a title is counted once. Kana, which has none of its
+                // own, gets it below. Beside a rail the bar and the far edge are this column's to pad.
+                val edges = if (regular) {
+                    Modifier.windowInsetsPadding(
+                        WindowInsets.systemBars.only(WindowInsetsSides.End + WindowInsetsSides.Bottom)
+                    )
+                } else {
+                    Modifier
+                }
+                Column(Modifier.fillMaxSize().then(edges)) {
+                    Box(Modifier.weight(1f).fillMaxWidth()) {
+                        TabContent(selected, lessonsNav, progressNav) { selected = it }
+                    }
                     banner(selected)
-                    TabBar(selected) { selected = it }
                 }
             }
-        ) { padding ->
-            when (selected) {
-                Tab.Today -> TodayTab(
+        }
+    }
+}
+
+@Composable
+private fun TabContent(selected: Tab, lessonsNav: LessonsNav, progressNav: LessonsNav, select: (Tab) -> Unit) {
+    val modifier = Modifier
+    when (selected) {
+        Tab.Today -> ReadableWidth {
+            ScrollIfShort {
+                TodayTab(
                     TodayNav(
                         openLesson = { lesson ->
                             lessonsNav.openLesson(lesson)
-                            selected = Tab.Lessons
+                            select(Tab.Lessons)
                         },
                         openLessonList = {
                             lessonsNav.openList()
-                            selected = Tab.Lessons
+                            select(Tab.Lessons)
                         },
-                        openProgress = { selected = Tab.Progress }
+                        openProgress = { select(Tab.Progress) }
                     ),
-                    Modifier.padding(padding)
+                    modifier
                 )
-
-                Tab.Kana -> KanaTab(Modifier.padding(padding))
-
-                Tab.Lessons -> LessonsTab(lessonsNav, Modifier.padding(padding))
-
-                Tab.Progress -> ProgressTab(progressNav, Modifier.padding(padding))
-
-                Tab.Settings -> SettingsTab(Modifier.padding(padding))
-
-                else -> PlaceholderScreen(selected, Modifier.padding(padding))
             }
         }
-    }
-}
 
-/** Every tab is empty until its ticket lands (Kana FOX-151, Lessons FOX-152, Today FOX-155, ...). */
-@Composable
-private fun PlaceholderScreen(tab: Tab, modifier: Modifier = Modifier) {
-    Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(stringResource(tab.label), style = MaterialTheme.typography.headlineMedium)
-    }
-}
+        Tab.Kana -> ReadableWidth { KanaTab(Modifier.statusBarsPadding()) }
 
-@Composable
-private fun TabBar(selected: Tab, onSelect: (Tab) -> Unit) {
-    NavigationBar(containerColor = Theme.colors.surface) {
-        Tab.entries.forEach { tab ->
-            NavigationBarItem(
-                selected = tab == selected,
-                onClick = { onSelect(tab) },
-                icon = { Icon(painterResource(tab.icon), contentDescription = null) },
-                label = { Text(stringResource(tab.label)) }
-            )
-        }
+        // Two panes at regular width draw their own widths; the list and the right pane cap themselves.
+        Tab.Lessons -> LessonsTab(lessonsNav, modifier)
+
+        Tab.Progress -> ReadableWidth { ProgressTab(progressNav, modifier) }
+
+        Tab.Settings -> ReadableWidth { SettingsTab(modifier) }
     }
 }

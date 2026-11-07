@@ -3,6 +3,7 @@ package com.kfpun.japanesedaily.lessons
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
@@ -59,6 +61,7 @@ import com.kfpun.japanesedaily.ui.Theme
 import com.kfpun.japanesedaily.ui.components.SymbolIcon
 import com.kfpun.japanesedaily.ui.components.cardChrome
 import com.kfpun.japanesedaily.ui.components.scaledSize
+import com.kfpun.japanesedaily.ui.components.selectionBorder
 import kotlinx.coroutines.delay
 
 /** The group name keys are `UIStrings.json` keys ("Beginning 1"); resolve them to string resources. */
@@ -75,7 +78,13 @@ internal fun groupLabel(name: String): Int = when (name) {
  * paywall opens one level in, in the mode picker, where gating is enforced.
  */
 @Composable
-fun LessonListScreen(env: LessonsEnv, nav: LessonsNav, modifier: Modifier = Modifier) {
+fun LessonListScreen(
+    env: LessonsEnv,
+    nav: LessonsNav,
+    modifier: Modifier = Modifier,
+    selected: Int? = null,
+    onOpen: (Int) -> Unit = { nav.push(LessonRoute.Select(it)) }
+) {
     val isPremium = LocalPremium.current.isPremium
     val groups = Course.current.groups
     var query by rememberSaveable { mutableStateOf("") }
@@ -109,8 +118,12 @@ fun LessonListScreen(env: LessonsEnv, nav: LessonsNav, modifier: Modifier = Modi
         )
         SearchField(query, { query = it }, Modifier.padding(horizontal = 16.dp))
         if (query.isEmpty()) {
+            // In the narrow list pane four equal chips would break "Beginning" mid-word: let the row scroll instead.
+            val narrow = LocalTwoPane.current
             Row(
-                Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                Modifier
+                    .then(if (narrow) Modifier.horizontalScroll(rememberScrollState()) else Modifier)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 groups.forEachIndexed { i, g ->
@@ -123,7 +136,7 @@ fun LessonListScreen(env: LessonsEnv, nav: LessonsNav, modifier: Modifier = Modi
                                 Track.event(TrackEvents.LESSON_GROUP, mapOf("group" to i))
                             }
                         },
-                        Modifier.weight(1f)
+                        if (narrow) Modifier else Modifier.weight(1f)
                     )
                 }
             }
@@ -150,7 +163,7 @@ fun LessonListScreen(env: LessonsEnv, nav: LessonsNav, modifier: Modifier = Modi
                 if (next != null) {
                     item(key = "continue") {
                         ContinueCard(next, passed[next] ?: 0, LadderRules.count(env.wordCount(next))) {
-                            nav.push(LessonRoute.Select(next))
+                            onOpen(next)
                         }
                     }
                 }
@@ -161,8 +174,9 @@ fun LessonListScreen(env: LessonsEnv, nav: LessonsNav, modifier: Modifier = Modi
                         preview = lesson.entries.take(PREVIEW_WORDS).map { it.kanji },
                         done = passed[n] ?: 0,
                         total = LadderRules.count(lesson.entries.size),
-                        locked = Gating.isLocked(n, isPremium, earned)
-                    ) { nav.push(LessonRoute.Select(n)) }
+                        locked = Gating.isLocked(n, isPremium, earned),
+                        selected = n == selected
+                    ) { onOpen(n) }
                 }
             } else {
                 item(key = "header") {
@@ -313,7 +327,15 @@ private const val NUMBER_BOX_SP = 48
  * amber lock past the free limit (a lock is an offer, not an error).
  */
 @Composable
-private fun LessonRow(number: Int, preview: List<String>, done: Int, total: Int, locked: Boolean, onClick: () -> Unit) {
+private fun LessonRow(
+    number: Int,
+    preview: List<String>,
+    done: Int,
+    total: Int,
+    locked: Boolean,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
     val tint = if (locked) Theme.colors.inkSecondary else Theme.colors.accent
     val title = stringResource(R.string.lesson_arg, number.toString())
     val description = if (done > 0) "$title, $done / $total" else title
@@ -321,6 +343,7 @@ private fun LessonRow(number: Int, preview: List<String>, done: Int, total: Int,
         Modifier
             .fillMaxWidth()
             .cardChrome(Theme.Radius.row)
+            .selectionBorder(selected, Theme.Radius.row)
             .clip(Theme.rounded(Theme.Radius.row))
             .clickable(role = Role.Button, onClick = onClick)
             .semantics(mergeDescendants = true) { contentDescription = description }

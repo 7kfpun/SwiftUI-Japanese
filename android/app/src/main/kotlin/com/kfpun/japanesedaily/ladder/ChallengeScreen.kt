@@ -57,6 +57,7 @@ import com.kfpun.japanesedaily.lessons.SectionLabel
 import com.kfpun.japanesedaily.lessons.StarRow
 import com.kfpun.japanesedaily.lessons.VForm
 import com.kfpun.japanesedaily.lessons.rememberPref
+import com.kfpun.japanesedaily.ui.ScrollIfShort
 import com.kfpun.japanesedaily.ui.Theme
 import com.kfpun.japanesedaily.ui.components.AudioPromptGlyph
 import com.kfpun.japanesedaily.ui.components.PrimaryPillButton
@@ -215,24 +216,26 @@ fun ChallengeScreen(
                 )
             }
 
-            else -> Play(model, startedAt, onPick = { i, q ->
-                model.choose(i)
-                Track.event(
-                    TrackEvents.CHALLENGE_ANSWER,
-                    mapOf(
-                        "lesson" to lessonNumber,
-                        "index" to model.index,
-                        "from" to q.from.label,
-                        "to" to q.to.label,
-                        "correct" to q.isCorrect(i)
+            else -> ScrollIfShort {
+                Play(model, startedAt, onPick = { i, q ->
+                    model.choose(i)
+                    Track.event(
+                        TrackEvents.CHALLENGE_ANSWER,
+                        mapOf(
+                            "lesson" to lessonNumber,
+                            "index" to model.index,
+                            "from" to q.from.label,
+                            "to" to q.to.label,
+                            "correct" to q.isCorrect(i)
+                        )
                     )
-                )
-                // A ladder miss demotes the word's Practice stage, so "missed words come back in Practice" is true.
-                if (!q.isCorrect(i) && container.practice.stage(q.answer.id).raw >= WordStage.Recognized.raw) {
-                    container.practice.set(WordStage.Seen, q.answer.id)
-                }
-                if (soundOn || q.from.isAudio) pronouncer.speak(q.answer, q.voice)
-            }, onReplay = { pronouncer.speak(it.answer, it.voice) })
+                    // A ladder miss demotes the word's Practice stage, so "missed words come back in Practice" is true.
+                    if (!q.isCorrect(i) && container.practice.stage(q.answer.id).raw >= WordStage.Recognized.raw) {
+                        container.practice.set(WordStage.Seen, q.answer.id)
+                    }
+                    if (soundOn || q.from.isAudio) pronouncer.speak(q.answer, q.voice)
+                }, onReplay = { pronouncer.speak(it.answer, it.voice) })
+            }
         }
     }
 

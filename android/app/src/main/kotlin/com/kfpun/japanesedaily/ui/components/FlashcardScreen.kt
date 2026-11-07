@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
 import com.kfpun.japanesedaily.analytics.Track
 import com.kfpun.japanesedaily.kana.FlashDeck
+import com.kfpun.japanesedaily.ui.Adaptive
 import com.kfpun.japanesedaily.ui.Theme
 
 /**
@@ -102,7 +104,9 @@ fun <T> FlashcardScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             if (current != null) {
-                Box(Modifier.weight(1f).fillMaxWidth()) {
+                Box(
+                    Modifier.weight(1f, fill = false).fillMaxWidth().heightIn(max = Adaptive.CARD_MAX_HEIGHT_DP.dp)
+                ) {
                     // The peek stack is a static backdrop: only the top card moves.
                     CardStackPeek(count = deck.peek(2).size, modifier = Modifier.fillMaxSize())
                     SwipeCard(

@@ -49,8 +49,13 @@
 
         <activity
             android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|density|keyboard|keyboardHidden|navigation"
             android:exported="true"
+            android:resizeableActivity="true"
             android:theme="@style/Theme.JapaneseDaily">
+            <!-- FOX-166: rotating, folding, unfolding and resizing the window are handled in place (Compose reads
+                 the new size), so the tab, the pushed screen and a round in progress (Practice queue, Match board,
+                 Challenge rung) survive. Locale and night mode still recreate, as AppCompat expects. -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -62,6 +63,7 @@ import com.kfpun.japanesedaily.lessons.rememberBookmarkTiers
 import com.kfpun.japanesedaily.lessons.rememberFlip
 import com.kfpun.japanesedaily.lessons.rememberLessonsEnv
 import com.kfpun.japanesedaily.lessons.rememberPref
+import com.kfpun.japanesedaily.ui.Adaptive
 import com.kfpun.japanesedaily.ui.Theme
 import com.kfpun.japanesedaily.ui.components.CardStackPeek
 import com.kfpun.japanesedaily.ui.components.SwipeCard
@@ -202,7 +204,11 @@ private fun TodayScreen(env: LessonsEnv, nav: TodayNav, modifier: Modifier) {
                 if (words.size > 1) DeckSegments(index, words.size)
             }
             if (deal != null && word != null) {
-                Box(Modifier.weight(1f).fillMaxWidth()) {
+                Box(
+                    Modifier.weight(
+                        1f
+                    ).fillMaxWidth().wrapContentHeight(Alignment.Top).heightIn(max = Adaptive.CARD_MAX_HEIGHT_DP.dp)
+                ) {
                     CardStackPeek(minOf(2, maxOf(0, words.size - 1)), Modifier.fillMaxSize().padding(vertical = 12.dp))
                     // `cardPager` on the card, never on this Box: outside it the peek layers fling with the card.
                     SwipeCard(
