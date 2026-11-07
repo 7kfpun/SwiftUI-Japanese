@@ -92,7 +92,7 @@ fun SelectModeScreen(lessonNumber: Int, env: LessonsEnv, nav: LessonsNav, modifi
 
     LessonScreenFrame(stringResource(R.string.lesson_arg, lessonNumber.toString()), onBack = {
         nav.pop()
-    }, modifier = modifier) {
+    }, modifier = modifier, showBack = !LocalTwoPane.current) {
         Column(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(22.dp)

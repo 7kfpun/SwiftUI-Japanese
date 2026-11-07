@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -49,6 +50,7 @@ import com.kfpun.japanesedaily.audio.LocalPronouncer
 import com.kfpun.japanesedaily.data.prefs.Pref
 import com.kfpun.japanesedaily.data.progress.WordStage
 import com.kfpun.japanesedaily.data.vocab.Vocab
+import com.kfpun.japanesedaily.ui.Adaptive
 import com.kfpun.japanesedaily.ui.Theme
 import com.kfpun.japanesedaily.ui.components.PrimaryPillButton
 import com.kfpun.japanesedaily.ui.components.StampSpec
@@ -104,7 +106,9 @@ fun PracticeScreen(lessonNumber: Int, env: LessonsEnv, nav: LessonsNav, modifier
         value = Triple(from, to, container.prefs.get(Pref.practiceMixed))
     }
     val stored = pair
-    LessonScreenFrame(stringResource(R.string.practice), onBack = { nav.pop() }, modifier = modifier) {
+    LessonScreenFrame(stringResource(R.string.practice), onBack = {
+        nav.pop()
+    }, modifier = modifier, scrollIfShort = true) {
         if (stored != null) PracticeContent(lessonNumber, env, stored)
     }
 }
@@ -240,7 +244,9 @@ private fun PracticeContent(lessonNumber: Int, env: LessonsEnv, stored: Triple<V
                 }
                 // A swipe picks a side: the arrows point at the two option chips. No peek layers and no hint:
                 // the direction is spelled out under each answer, and a stack would imply a deck, not a question.
-                Box(Modifier.weight(1f).fillMaxWidth()) {
+                Box(
+                    Modifier.weight(1f, fill = false).fillMaxWidth().heightIn(max = Adaptive.CARD_MAX_HEIGHT_DP.dp)
+                ) {
                     PracticeCard(
                         model, item.vocab, angle, swipe, revealed, showKana, flipped,
                         onShowKana = {

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -61,6 +62,8 @@ import com.kfpun.japanesedaily.data.progress.Bookmark
 import com.kfpun.japanesedaily.data.progress.WordStage
 import com.kfpun.japanesedaily.data.vocab.ExampleSentence
 import com.kfpun.japanesedaily.data.vocab.Vocab
+import com.kfpun.japanesedaily.ui.ReadableWidth
+import com.kfpun.japanesedaily.ui.ScrollIfShort
 import com.kfpun.japanesedaily.ui.Theme
 import com.kfpun.japanesedaily.ui.components.SoundToggle
 import com.kfpun.japanesedaily.ui.components.SymbolIcon
@@ -81,14 +84,37 @@ fun LessonScreenFrame(
     subtitle: String? = null,
     center: (@Composable () -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
+    showBack: Boolean = true,
+    scrollIfShort: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    // The canvas is full-bleed; the bar and the content are capped at the readable width and centred (FOX-166).
     Column(modifier.fillMaxSize().background(Theme.colors.canvas).statusBarsPadding()) {
+        ReadableWidth { FrameBody(title, onBack, subtitle, center, actions, showBack, scrollIfShort, content) }
+    }
+}
+
+@Composable
+private fun FrameBody(
+    title: String,
+    onBack: () -> Unit,
+    subtitle: String?,
+    center: (@Composable () -> Unit)?,
+    actions: @Composable RowScope.() -> Unit,
+    showBack: Boolean,
+    scrollIfShort: Boolean,
+    content: @Composable () -> Unit
+) {
+    Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ToolbarButton(R.drawable.ic_arrow_back, stringResource(R.string.back), onBack)
+            if (showBack) {
+                ToolbarButton(R.drawable.ic_arrow_back, stringResource(R.string.back), onBack)
+            } else {
+                Spacer(Modifier.size(48.dp))
+            }
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                 if (center != null) {
                     center()
@@ -107,7 +133,9 @@ fun LessonScreenFrame(
             }
             Row(Modifier.widthIn(min = 48.dp), horizontalArrangement = Arrangement.End, content = actions)
         }
-        Box(Modifier.weight(1f).fillMaxWidth()) { content() }
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            if (scrollIfShort) ScrollIfShort(content = content) else content()
+        }
     }
 }
 

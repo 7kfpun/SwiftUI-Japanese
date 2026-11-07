@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.kfpun.japanesedaily.audio.LocalPronouncer
 import com.kfpun.japanesedaily.audio.StopSoundOnExit
 import com.kfpun.japanesedaily.data.AppContainer
+import com.kfpun.japanesedaily.ui.ScrollIfShort
 
 /** Where the Kana tab is: the browser, the mode list for a chart, or one of the five modes. */
 private enum class Route { Browser, Modes, Flashcards, Classic, Swipe, Listening, Write }
@@ -54,14 +55,18 @@ fun KanaTab(modifier: Modifier = Modifier) {
 
         Route.Modes -> KanaModeList(onPick = { route = it.route() }, onBack = { route = Route.Browser }, modifier)
 
-        Route.Flashcards -> KanaFlashcardScreen(env, table, back, modifier)
+        Route.Flashcards -> ScrollIfShort { KanaFlashcardScreen(env, table, back, modifier) }
 
-        Route.Classic -> KanaQuizScreen(env, table, listening = false, onBack = back, modifier = modifier)
+        Route.Classic -> ScrollIfShort {
+            KanaQuizScreen(env, table, listening = false, onBack = back, modifier = modifier)
+        }
 
-        Route.Listening -> KanaQuizScreen(env, table, listening = true, onBack = back, modifier = modifier)
+        Route.Listening -> ScrollIfShort {
+            KanaQuizScreen(env, table, listening = true, onBack = back, modifier = modifier)
+        }
 
-        Route.Swipe -> KanaSwipeQuizScreen(env, table, back, modifier)
+        Route.Swipe -> ScrollIfShort { KanaSwipeQuizScreen(env, table, back, modifier) }
 
-        Route.Write -> KanaWriteScreen(env, table, back, modifier)
+        Route.Write -> ScrollIfShort { KanaWriteScreen(env, table, back, modifier) }
     }
 }

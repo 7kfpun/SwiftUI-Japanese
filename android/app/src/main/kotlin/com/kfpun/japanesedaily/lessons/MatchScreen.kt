@@ -136,6 +136,7 @@ fun MatchScreen(lessonNumber: Int, env: LessonsEnv, nav: LessonsNav, modifier: M
         stringResource(R.string.match),
         onBack = { nav.pop() },
         modifier = modifier,
+        scrollIfShort = true,
         center = {
             ScoreBadge(
                 model.matched,

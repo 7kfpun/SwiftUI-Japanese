@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -29,6 +31,7 @@ import com.kfpun.japanesedaily.analytics.TrackScreens
 import com.kfpun.japanesedaily.audio.LocalPronouncer
 import com.kfpun.japanesedaily.data.prefs.Pref
 import com.kfpun.japanesedaily.data.vocab.Vocab
+import com.kfpun.japanesedaily.ui.Adaptive
 import com.kfpun.japanesedaily.ui.Theme
 import com.kfpun.japanesedaily.ui.components.CardStackPeek
 import com.kfpun.japanesedaily.ui.components.SwipeCard
@@ -134,6 +137,7 @@ fun FlashcardScreen(lessonNumber: Int, env: LessonsEnv, nav: LessonsNav, modifie
         "${index + 1} / ${entries.size}",
         onBack = { nav.pop() },
         modifier = modifier,
+        scrollIfShort = true,
         actions = { CardShowMenu(container, sound = true) }
     ) {
         Column(
@@ -143,7 +147,10 @@ fun FlashcardScreen(lessonNumber: Int, env: LessonsEnv, nav: LessonsNav, modifie
         ) {
             OrderPicker(ordered.value, ordered.set, TrackEvents.FLASHCARD_ORDER_MODE)
             if (word != null) {
-                Box(Modifier.weight(1f).fillMaxWidth().padding(vertical = 12.dp)) {
+                Box(
+                    Modifier.weight(1f, fill = false).fillMaxWidth()
+                        .heightIn(max = Adaptive.CARD_MAX_HEIGHT_DP.dp).padding(vertical = 12.dp)
+                ) {
                     CardStackPeek(minOf(2, maxOf(0, entries.size - 1)), Modifier.fillMaxSize())
                     // On the card, **not** on this Box: `cardPager` offsets and rotates whatever it modifies, so
                     // outside the card it flings the peek layers too and the deck leaves as one slab.
