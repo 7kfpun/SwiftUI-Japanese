@@ -16,6 +16,8 @@ import com.kfpun.japanesedaily.billing.Entitlement
 import com.kfpun.japanesedaily.billing.LocalPro
 import com.kfpun.japanesedaily.billing.PaywallHost
 import com.kfpun.japanesedaily.data.AppContainer
+import com.kfpun.japanesedaily.intro.Intro
+import com.kfpun.japanesedaily.intro.IntroHost
 import com.kfpun.japanesedaily.ui.AppScaffold
 import com.kfpun.japanesedaily.ui.JapaneseDailyTheme
 import com.kfpun.japanesedaily.ui.Tab
@@ -45,7 +47,12 @@ class MainActivity : AppCompatActivity() {
                 }
                 CompositionLocalProvider(LocalPro provides container.pro) {
                     ProvidePronouncer(container.vocab) {
-                        AppScaffold(banner = { tab -> AdBanner(tab.adSlot) })
+                        IntroHost { landing ->
+                            AppScaffold(
+                                startTab = if (landing == Intro.Tab.KANA) Tab.Kana else Tab.Today,
+                                banner = { tab -> AdBanner(tab.adSlot) }
+                            )
+                        }
                         PaywallHost(container.paywall, container.pro)
                     }
                 }
