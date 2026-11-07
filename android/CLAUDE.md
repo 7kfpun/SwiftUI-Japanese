@@ -173,8 +173,22 @@ enforced), Practice, Vocab List, Read along, Flashcards, Match, Learn, Bookmarks
 - **Models are pure Kotlin** (`PracticeModel`, `MatchModel`, `LearnModel`, `LessonPlayer`) with Compose state for the
   screen and an injectable `Random`; the mirrored iOS tests are in `app/src/test/.../lessons/`. Practice writes only
   `PracticeProgress` stages (through `StageStore`); Flashcards writes nothing at all.
-- Not ported yet: the report flag and swipe-to-report (the Feedback sheet is FOX-157's), and no screen reaches
-  `BookmarksScreen` until Progress/Settings push `LessonRoute.Bookmarks`.
+- Not ported yet: the report flag and swipe-to-report (the Feedback sheet is FOX-157's), and Bookmarks is reached
+  from the Progress tab (FOX-156); Settings has no route to it.
+
+## Progress tab (`progress/`, FOX-156)
+
+Port of `nihongo/Today/StatsView.swift`. `ProgressTab` shows `ProgressContent` (streak hero, 12-week calendar, four tiles,
+Bookmarks row); Bookmarks opens FOX-153's `BookmarksScreen` on a nav of its own (`progressNav` in `AppScaffold`).
+`ProgressStats.from` derives every number from stored rows, collapsing duplicates (days by set, challenges through
+`ChallengeResult.better`, kana to the latest row, bookmarks per word); nothing is a running total. "Today" is re-stamped
+every minute, so midnight and a time-zone change are picked up live; stored stamps are never rewritten. With no study day the
+koboyo `ill_skill_tree` empty state replaces the streak and tiles, never the Bookmarks row.
+
+- `AppContainer`'s default `onFirstAnswerToday` is `trackStudyDay`: `study_day` with `streak` and `best`, once per studied day.
+- Debug only: `adb shell am start -n com.kfpun.japanesedaily/.catalog.ProgressDemoActivity [--ez empty true]` renders the real
+  screen over made-up numbers (writes nothing) for screenshots.
+- Not ported: the iOS `StreakBadge` toolbar chip and the streak reminder (Today, FOX-155 / Settings, FOX-159).
 
 ## Strings (FOX-150)
 

@@ -40,6 +40,9 @@ class ProgressRepository(
 
     suspend fun streak(): Streak = Streak(db.studyDays().all().map { it.day }.toSet(), StudyDay.stamp(clock()))
 
+    /** Every studied day as a set (duplicate rows from a later merge collapse), live. */
+    fun observeStudyDays(): Flow<Set<Int>> = db.studyDays().observeAll().map { rows -> rows.map { it.day }.toSet() }
+
     fun observeStreak(): Flow<Streak> = db.studyDays().observeAll().map { rows ->
         Streak(rows.map { it.day }.toSet(), StudyDay.stamp(clock()))
     }
