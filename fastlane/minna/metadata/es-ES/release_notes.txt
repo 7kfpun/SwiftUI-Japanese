@@ -1,8 +1,7 @@
-Versión 3.0.2
+Versión 3.0.6
 
-Desbloquea más sin pagar: tres estrellas en cada desafío de las primeras lecciones abren todo el grupo Principiante 1
-Recordatorios diarios: opcionales, solo los días que aún no has estudiado, y silencio el resto
-Un plan de 12 meses se suma a los de 1, 3 y 6
-Guardados y la lista de vocabulario se leen mejor
+Los comentarios, las valoraciones con estrellas y tus respuestas del primer inicio vuelven a enviarse; en la 3.0.5 no nos llegaban
+La pantalla Premium ahora nombra bien los modos: Practicar, Tarjetas, Emparejar, Aprender y toda la escalera
+Pequeñas correcciones
 
 Dinos qué sigue en Ajustes → Comentarios.

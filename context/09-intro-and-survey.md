@@ -146,9 +146,9 @@ to Firestore at all.
 
 | Collection | Row |
 |---|---|
-| `japanese_survey_intro` | one per **completed** intro run — the shared context, with this run's three answers winning |
-| `japanese_survey_rating` | one per star tap — context + `stars` (1…5) |
-| `japanese_survey_feedback` | one per feedback sheet — context + `kind`, `area`, `message`, `email`, `source`, `stars`, `lesson`, `item` |
+| `nihongo_survey_intro` | one per **completed** intro run — the shared context, with this run's three answers winning |
+| `nihongo_survey_rating` | one per star tap — context + `stars` (1…5) |
+| `nihongo_survey_feedback` | one per feedback sheet — context + `kind`, `area`, `message`, `email`, `source`, `stars`, `lesson`, `item` |
 
 Every row carries the identical `Survey.Context` map (`Survey.Context.keys`), snake_case
 to match the Analytics param convention rather than the camelCase `Pref` keys — the two

@@ -57,7 +57,7 @@ first and follow its index; it is kept current and is the fastest way in.
 ## Invariants that bite
 
 - **Survey columns must exist before the app sends them.** Rows go to Directus
-  (`https://cms.wahthefox.com`, `japanese_survey_{intro,rating,feedback}`) through a
+  (`https://cms.wahthefox.com`, `nihongo_survey_{intro,rating,feedback}`) through a
   create-only static token in the git-ignored `Secrets.plist` (`directusToken`). Adding a
   field to `Survey.Context` or a payload without adding the column fails **every** write,
   visible only as a console line and a `survey_failed` event. No token bundled means every
@@ -183,9 +183,11 @@ Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
   or merging a mode means all four — the merge to four and the return to five both had to
   walk this list.
 
-  **The store descriptions and websites are right about the count and wrong about the
-  names**: they say five, which is true again, but they name *Flashcards and Train*, and
-  Train no longer exists. Fix the names with the release that ships Practice.
+  **The Minna store descriptions now name the modes correctly** (Practice, Vocab List,
+  Flashcards, Match, Learn). **The websites (`scripts/build-web.py`'s `T` dict) and the
+  JLPT store descriptions are right about the count and still wrong about the names**:
+  they say five, which is true again, but they name *Flashcards and Train*, and Train no
+  longer exists. Fix those with the release that ships them.
 - **All the audio is synthesised, never native-speaker recordings — so never claim
   "native audio"**, whatever the voice. The two courses use different engines:
   - **Minna: VOICEVOX** (neural). `whitecul` is the default for vocab and kana;

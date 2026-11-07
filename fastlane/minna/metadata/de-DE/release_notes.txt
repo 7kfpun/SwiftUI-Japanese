@@ -1,8 +1,7 @@
-Version 3.0.2
+Version 3.0.6
 
-Mehr freischalten, ohne zu zahlen — drei Sterne in jeder Challenge der ersten Lektionen öffnen die ganze Gruppe „Anfang 1"
-Tägliche Erinnerungen — optional, nur an Tagen ohne Lerneinheit, und still an allen anderen
-Ein 12-Monats-Abo ergänzt 1, 3 und 6 Monate
-Lesezeichen und die Vokabelliste lesen sich klarer
+Feedback, Sternebewertungen und deine Antworten beim ersten Start kommen wieder an — in 3.0.5 haben sie uns nicht erreicht
+Der Premium-Bildschirm nennt jetzt die richtigen Modi: Üben, Karteikarten, Zuordnen, Lernen und die ganze Leiter
+Kleine Korrekturen
 
 Sag uns unter Einstellungen → Feedback, was als Nächstes kommt!
