@@ -78,7 +78,9 @@ object AppInfo {
         isPremium: Boolean = false,
         tier: String = "none",
         challengesPassed: Int = 0,
-        kanaAnswered: Int = 0
+        kanaAnswered: Int = 0,
+        // The app's own text-size step (Settings), multiplied onto the phone's font scale.
+        fontScaleMultiplier: Float = 1f
     ): Survey.Context {
         val configuration = context.resources.configuration
         val knows = prefs.get(Pref.knowsKana)
@@ -104,7 +106,7 @@ object AppInfo {
             soundOn = prefs.get(Pref.soundOn),
             analyticsExcluded = Track.isExcluded,
             shownFields = shown,
-            textSize = textSize(configuration.fontScale),
+            textSize = textSize(configuration.fontScale * fontScaleMultiplier),
             appearance = appearance(configuration),
             lastScreen = Track.lastScreen,
             knowsKana = knows.ifEmpty { IntroAnswers.UNANSWERED },

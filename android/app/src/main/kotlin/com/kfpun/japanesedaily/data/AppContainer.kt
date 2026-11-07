@@ -24,6 +24,8 @@ import com.kfpun.japanesedaily.data.vocab.AndroidAssetSource
 import com.kfpun.japanesedaily.data.vocab.AssetSource
 import com.kfpun.japanesedaily.data.vocab.KanaData
 import com.kfpun.japanesedaily.data.vocab.VocabStore
+import com.kfpun.japanesedaily.rating.RatingCoordinator
+import com.kfpun.japanesedaily.settings.Reminders
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -73,6 +75,9 @@ class AppContainer(
     /** A Challenge run finished. Never call it mid-run. */
     fun onChallengeFinished() = interstitials.onChallengeFinished()
 
+    /** The rating prompt. The ladder calls `rating.onRungPassed(totalPassed)` after every passed rung. */
+    val rating = RatingCoordinator(prefs, scope)
+
     /** Decodes the course data and loads Practice stages off the main thread, at launch. */
     fun preload() {
         scope.launch {
@@ -106,7 +111,9 @@ class AppContainer(
                 context.filesDir.resolve("datastore/prefs.preferences_pb")
             },
             billing = if (demoBilling) DemoBillingGateway() else PlayBillingGateway(context),
-            entitlements = DataStoreEntitlementStore(context)
+            entitlements = DataStoreEntitlementStore(context),
+            // Studying today cancels today's reminder: the plan is re-derived from the new streak.
+            onFirstAnswerToday = { Reminders.reschedule(context) }
         )
     }
 }

@@ -341,4 +341,12 @@
     <string name="no_purchases_found_for_this_google_account">Для этого аккаунта Google покупки не найдены.</string>
     <string name="your_payment_is_pending_premium_turns_on_once_it_completes">Ваш платёж обрабатывается. Premium включится после его завершения.</string>
     <string name="the_purchase_didn_t_go_through_please_try_again">Покупка не состоялась. Попробуйте ещё раз.</string>
+    <string name="text_size">Размер текста</string>
+    <string name="appearance">Оформление</string>
+    <string name="system">Системная</string>
+    <string name="light">Светлая</string>
+    <string name="dark">Тёмная</string>
+    <string name="rate_the_app">Оценить приложение</string>
+    <string name="privacy_options">Параметры конфиденциальности</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">Уведомления для этого приложения отключены в настройках системы.</string>
 </resources>

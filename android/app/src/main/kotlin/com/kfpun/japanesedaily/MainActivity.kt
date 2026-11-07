@@ -13,6 +13,8 @@ import com.kfpun.japanesedaily.ads.AdBanner
 import com.kfpun.japanesedaily.ads.AdConsent
 import com.kfpun.japanesedaily.ads.AdSlot
 import com.kfpun.japanesedaily.ads.LocalBannerSlot
+import com.kfpun.japanesedaily.analytics.Track
+import com.kfpun.japanesedaily.analytics.TrackEvents
 import com.kfpun.japanesedaily.audio.PremiumStatus
 import com.kfpun.japanesedaily.audio.ProvidePronouncer
 import com.kfpun.japanesedaily.billing.Entitlement
@@ -26,6 +28,10 @@ import com.kfpun.japanesedaily.lessons.LocalLessonExits
 import com.kfpun.japanesedaily.lessons.LocalOpenPaywall
 import com.kfpun.japanesedaily.lessons.LocalPremium
 import com.kfpun.japanesedaily.lessons.OpenPaywall
+import com.kfpun.japanesedaily.rating.RatingHost
+import com.kfpun.japanesedaily.settings.ProvideTextScale
+import com.kfpun.japanesedaily.settings.Reminders
+import com.kfpun.japanesedaily.settings.SystemReminderNotifier
 import com.kfpun.japanesedaily.ui.AppScaffold
 import com.kfpun.japanesedaily.ui.JapaneseDailyTheme
 import com.kfpun.japanesedaily.ui.Tab
@@ -42,46 +48,56 @@ class MainActivity : AppCompatActivity() {
         container.interstitials.attach(this)
         // Debug builds only: `--es open_paywall settings` opens the paywall at launch (screenshots, UI checks).
         if (BuildConfig.DEBUG) intent.getStringExtra(EXTRA_OPEN_PAYWALL)?.let { container.openPaywall(it) }
+        // A launch re-plans the streak reminder (and restarts its week): the learner is evidently still here.
+        Reminders.reschedule(this)
+        if (intent?.getBooleanExtra(SystemReminderNotifier.EXTRA_FROM_REMINDER, false) == true) {
+            Track.event(TrackEvents.NOTIFICATION_OPENED, mapOf("source" to "streak_reminder"))
+        }
         setContent {
-            JapaneseDailyTheme {
-                val entitlement by container.pro.entitlement.collectAsStateWithLifecycle()
-                // Consent first, then ads: for free users only, once Pro has been read (a Pro user never
-                // sees the consent form). Banners and interstitials wait on AdConsent.canRequestAds.
-                LaunchedEffect(entitlement) {
-                    if (entitlement == Entitlement.FREE || entitlement == Entitlement.PENDING) {
-                        AdConsent.gather(this@MainActivity)
-                        container.interstitials.preload()
-                    }
-                }
-                // The Lessons seams (lessons/Ports.kt), wired to the real pieces. LocalPremium is a view of
-                // ProRepository (one source) that changes identity with the entitlement, so readers recompose.
-                val premium = remember(entitlement) {
-                    object : PremiumStatus {
-                        override val isPremium get() = container.pro.isPremium
-                    }
-                }
-                val openPaywall = remember { OpenPaywall { source, lesson -> container.openPaywall(source, lesson) } }
-                val exits = remember {
-                    object : LessonExits {
-                        override fun onLeavePractice(answered: Boolean) = container.onLeavePractice(answered)
-
-                        override fun onLeaveMatch(answered: Boolean) = container.onLeavePractice(answered)
-                    }
-                }
-                CompositionLocalProvider(
-                    LocalPro provides container.pro,
-                    LocalPremium provides premium,
-                    LocalOpenPaywall provides openPaywall,
-                    LocalLessonExits provides exits
-                ) {
-                    ProvidePronouncer(container.vocab) {
-                        IntroHost { landing ->
-                            AppScaffold(
-                                startTab = if (landing == Intro.Tab.KANA) Tab.Kana else Tab.Today,
-                                banner = { tab -> AdBanner(LocalBannerSlot.current?.override ?: tab.adSlot) }
-                            )
+            ProvideTextScale {
+                JapaneseDailyTheme {
+                    val entitlement by container.pro.entitlement.collectAsStateWithLifecycle()
+                    // Consent first, then ads: for free users only, once Pro has been read (a Pro user never
+                    // sees the consent form). Banners and interstitials wait on AdConsent.canRequestAds.
+                    LaunchedEffect(entitlement) {
+                        if (entitlement == Entitlement.FREE || entitlement == Entitlement.PENDING) {
+                            AdConsent.gather(this@MainActivity)
+                            container.interstitials.preload()
                         }
-                        PaywallHost(container.paywall, container.pro)
+                    }
+                    // The Lessons seams (lessons/Ports.kt), wired to the real pieces. LocalPremium is a view of
+                    // ProRepository (one source) that changes identity with the entitlement, so readers recompose.
+                    val premium = remember(entitlement) {
+                        object : PremiumStatus {
+                            override val isPremium get() = container.pro.isPremium
+                        }
+                    }
+                    val openPaywall =
+                        remember { OpenPaywall { source, lesson -> container.openPaywall(source, lesson) } }
+                    val exits = remember {
+                        object : LessonExits {
+                            override fun onLeavePractice(answered: Boolean) = container.onLeavePractice(answered)
+
+                            override fun onLeaveMatch(answered: Boolean) = container.onLeavePractice(answered)
+                        }
+                    }
+                    CompositionLocalProvider(
+                        LocalPro provides container.pro,
+                        LocalPremium provides premium,
+                        LocalOpenPaywall provides openPaywall,
+                        LocalLessonExits provides exits
+                    ) {
+                        ProvidePronouncer(container.vocab) {
+                            IntroHost { landing ->
+                                AppScaffold(
+                                    startTab = if (landing == Intro.Tab.KANA) Tab.Kana else Tab.Today,
+                                    banner = { tab -> AdBanner(LocalBannerSlot.current?.override ?: tab.adSlot) }
+                                )
+                            }
+                            PaywallHost(container.paywall, container.pro)
+                            // The star row, over the whole app: the ladder raises it after a passed rung.
+                            RatingHost()
+                        }
                     }
                 }
             }
