@@ -4,6 +4,8 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.play.publisher)
     alias(libs.plugins.ktlint)
 }
@@ -168,6 +170,8 @@ android {
     }
 
     testOptions {
+        // Robolectric (the Room tests) reads the merged manifest and resources.
+        unitTests.isIncludeAndroidResources = true
         // android.util.Log and friends return defaults in JVM tests instead of throwing.
         unitTests.isReturnDefaultValues = true
     }
@@ -224,6 +228,11 @@ ktlint {
     version.set("1.8.0")
 }
 
+// Room exports its schema so a later migration can be tested against the shipped version.
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -242,5 +251,16 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
 
+    // Data layer (FOX-148): course JSON, Room progress tables, DataStore preferences.
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }
