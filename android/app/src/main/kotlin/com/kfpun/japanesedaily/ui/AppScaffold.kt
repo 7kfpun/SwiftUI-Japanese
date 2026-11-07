@@ -38,8 +38,8 @@ enum class Tab(@StringRes val label: Int, @DrawableRes val icon: Int) {
 }
 
 @Composable
-fun AppScaffold(banner: @Composable () -> Unit = {}) {
-    var selected by rememberSaveable { mutableStateOf(Tab.Today) }
+fun AppScaffold(startTab: Tab = Tab.Today, banner: @Composable () -> Unit = {}) {
+    var selected by rememberSaveable { mutableStateOf(startTab) }
     val lessonsNav = rememberLessonsNav()
     PaywallHost {
         Scaffold(
