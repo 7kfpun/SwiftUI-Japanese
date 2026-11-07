@@ -1594,7 +1594,7 @@ struct TodayTests {
 /// sending five new fields while the deployed (then Firestore) schema still closed on the old
 /// set, which would have silently rejected every intro submission.
 struct SurveyTests {
-    /// Transcribed from the Directus columns every `japanese_survey_*` collection shares,
+    /// Transcribed from the Directus columns every `nihongo_survey_*` collection shares,
     /// minus the server's own `id`, `date_created` and `archived`. Update both together,
     /// never one.
     private static let columnContextKeys: Set<String> = [
@@ -1638,7 +1638,7 @@ struct SurveyTests {
         #expect(context.fields["platform"] as? String == "iOS")
     }
 
-    /// One row per star tap, in its own collection — `japanese_survey_feedback` requires a
+    /// One row per star tap, in its own collection — `nihongo_survey_feedback` requires a
     /// non-empty `message`, which a rating has no way to supply.
     @Test func ratingSubmissionCarriesContextPlusItsStars() {
         let own: Set<String> = ["stars"]
@@ -1650,7 +1650,7 @@ struct SurveyTests {
         #expect(Survey.Rating(stars: 5).stars <= 5)
     }
 
-    /// Transcribed from `japanese_survey_feedback`'s own columns. The three second-level
+    /// Transcribed from `nihongo_survey_feedback`'s own columns. The three second-level
     /// fields (`area`, `lesson`, `item`) are the reason this is spelled out separately: they
     /// were added to the payload and the schema in one change, and the moment those two lists
     /// disagree every feedback write fails with nothing to show for it but a console line.
@@ -1673,15 +1673,15 @@ struct SurveyTests {
     /// The create call itself: `POST /items/<collection>` with the bearer token and the row
     /// as a flat JSON object — nothing added on the way out, in particular no identifier.
     @Test func directusCreateRequestCarriesExactlyTheRow() throws {
-        #expect(Survey.Directus.introCollection == "japanese_survey_intro")
-        #expect(Survey.Directus.ratingCollection == "japanese_survey_rating")
-        #expect(Survey.Directus.feedbackCollection == "japanese_survey_feedback")
+        #expect(Survey.Directus.introCollection == "nihongo_survey_intro")
+        #expect(Survey.Directus.ratingCollection == "nihongo_survey_rating")
+        #expect(Survey.Directus.feedbackCollection == "nihongo_survey_feedback")
 
         let row = Survey.fields(Survey.Rating(stars: 2), context: context)
         let request = try #require(Survey.Directus.createRequest(
             collection: Survey.Directus.ratingCollection, fields: row, token: "test-token"))
         #expect(request.httpMethod == "POST")
-        #expect(request.url?.absoluteString == "https://cms.wahthefox.com/items/japanese_survey_rating")
+        #expect(request.url?.absoluteString == "https://cms.wahthefox.com/items/nihongo_survey_rating")
         #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer test-token")
         #expect(request.value(forHTTPHeaderField: "Content-Type") == "application/json")
 
