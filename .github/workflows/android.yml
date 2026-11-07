@@ -124,11 +124,11 @@ jobs:
         run: |
           set -euo pipefail
           apk=android/app/build/outputs/apk/minna/debug/app-minna-debug.apk
-          listing=$(unzip -l "$apk")
+          unzip -l "$apk" > "$RUNNER_TEMP/apk.txt"
           for f in assets/MinnaData.json assets/KanaChart.json; do
-            echo "$listing" | grep -q " $f$" || { echo "::error::$f is missing from the debug APK"; exit 1; }
+            grep -q " $f$" "$RUNNER_TEMP/apk.txt" || { echo "::error::$f is missing from the debug APK"; exit 1; }
           done
-          echo "$listing" | grep -q " assets/audio/vocab/" || { echo "::error::assets/audio/vocab is missing from the debug APK"; exit 1; }
+          grep -q " assets/audio/vocab/" "$RUNNER_TEMP/apk.txt" || { echo "::error::assets/audio/vocab is missing from the debug APK"; exit 1; }
 
       - name: Upload lint and test reports
         if: failure() && steps.changes.outputs.build == 'true'
