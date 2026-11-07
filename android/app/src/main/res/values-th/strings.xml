@@ -102,6 +102,8 @@
     <string name="arg_stars">%1$s ดาว</string>
     <string name="not_now">ไว้ก่อน</string>
     <string name="seion">เซอง</string>
+    <string name="turn_sound_off">ปิดเสียง</string>
+    <string name="turn_sound_on">เปิดเสียง</string>
     <string name="dakuon">ดากุอง</string>
     <string name="youon">โยอง</string>
     <string name="skip">ข้าม</string>

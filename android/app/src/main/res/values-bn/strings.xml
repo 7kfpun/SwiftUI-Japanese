@@ -102,6 +102,8 @@
     <string name="arg_stars">%1$s তারা</string>
     <string name="not_now">এখন নয়</string>
     <string name="seion">সেইওন</string>
+    <string name="turn_sound_off">শব্দ বন্ধ করুন</string>
+    <string name="turn_sound_on">শব্দ চালু করুন</string>
     <string name="dakuon">দাকুওন</string>
     <string name="youon">ইয়োওন</string>
     <string name="skip">এড়িয়ে যান</string>

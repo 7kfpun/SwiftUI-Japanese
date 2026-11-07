@@ -102,6 +102,8 @@
     <string name="arg_stars">%1$s నక్షత్రాలు</string>
     <string name="not_now">ఇప్పుడు వద్దు</string>
     <string name="seion">సెయోన్</string>
+    <string name="turn_sound_off">ధ్వనిని ఆపండి</string>
+    <string name="turn_sound_on">ధ్వనిని ఆన్ చేయండి</string>
     <string name="dakuon">దాకుఒన్</string>
     <string name="youon">యోఒన్</string>
     <string name="skip">దాటవేయి</string>

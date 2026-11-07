@@ -202,6 +202,10 @@
     <string name="not_now">Not now</string>
     <!-- Seion -->
     <string name="seion">Seion</string>
+    <!-- Turn sound off -->
+    <string name="turn_sound_off">Turn sound off</string>
+    <!-- Turn sound on -->
+    <string name="turn_sound_on">Turn sound on</string>
     <!-- Dakuon -->
     <string name="dakuon">Dakuon</string>
     <!-- Youon -->

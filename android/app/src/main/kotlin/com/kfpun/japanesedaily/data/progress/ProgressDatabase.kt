@@ -100,6 +100,9 @@ interface KanaDao {
 
     @Update
     suspend fun update(row: KanaResultRow)
+
+    @Query("DELETE FROM kana_result")
+    suspend fun deleteAll()
 }
 
 @Dao

@@ -102,6 +102,8 @@
     <string name="arg_stars">%1$s 星</string>
     <string name="not_now">暂时不用</string>
     <string name="seion">清音</string>
+    <string name="turn_sound_off">关闭声音</string>
+    <string name="turn_sound_on">开启声音</string>
     <string name="dakuon">濁音</string>
     <string name="youon">拗音</string>
     <string name="skip">跳过</string>

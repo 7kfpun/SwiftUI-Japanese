@@ -102,6 +102,8 @@
     <string name="arg_stars">%1$s stelle</string>
     <string name="not_now">Non ora</string>
     <string name="seion">Seion</string>
+    <string name="turn_sound_off">Disattiva l\'audio</string>
+    <string name="turn_sound_on">Attiva l\'audio</string>
     <string name="dakuon">Dakuon</string>
     <string name="youon">Youon</string>
     <string name="skip">Salta</string>

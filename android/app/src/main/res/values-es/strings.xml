@@ -102,6 +102,8 @@
     <string name="arg_stars">%1$s estrellas</string>
     <string name="not_now">Ahora no</string>
     <string name="seion">Seion</string>
+    <string name="turn_sound_off">Silenciar el sonido</string>
+    <string name="turn_sound_on">Activar el sonido</string>
     <string name="dakuon">Dakuon</string>
     <string name="youon">Youon</string>
     <string name="skip">Omitir</string>

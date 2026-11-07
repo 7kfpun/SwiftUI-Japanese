@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import com.kfpun.japanesedaily.kana.KanaSpeaker
 import com.kfpun.japanesedaily.data.prefs.Prefs
 import com.kfpun.japanesedaily.data.progress.PracticeProgress
 import com.kfpun.japanesedaily.data.progress.ProgressDatabase
@@ -39,6 +40,10 @@ class AppContainer(
     val progress = ProgressRepository(database, vocab, course, onFirstAnswerToday = onFirstAnswerToday)
     val practice = PracticeProgress(database.practice(), scope)
     val prefs = Prefs(preferences)
+
+    /** The voice the Kana tab speaks through. Silent until the audio player (FOX-151) is wired in. */
+    @Volatile
+    var kanaSpeaker: KanaSpeaker = KanaSpeaker.Silent
 
     /** Decodes the course data and loads Practice stages off the main thread, at launch. */
     fun preload() {

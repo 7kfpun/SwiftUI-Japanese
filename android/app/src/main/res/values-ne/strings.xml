@@ -102,6 +102,8 @@
     <string name="arg_stars">%1$s तारा</string>
     <string name="not_now">अहिले होइन</string>
     <string name="seion">सेइओन</string>
+    <string name="turn_sound_off">आवाज बन्द गर्नुहोस्</string>
+    <string name="turn_sound_on">आवाज खोल्नुहोस्</string>
     <string name="dakuon">दाकुओन</string>
     <string name="youon">योओन</string>
     <string name="skip">छाड्नुहोस्</string>

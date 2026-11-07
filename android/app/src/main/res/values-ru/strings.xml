@@ -102,6 +102,8 @@
     <string name="arg_stars">%1$s звёзд</string>
     <string name="not_now">Не сейчас</string>
     <string name="seion">Сэйон</string>
+    <string name="turn_sound_off">Выключить звук</string>
+    <string name="turn_sound_on">Включить звук</string>
     <string name="dakuon">Дакуон</string>
     <string name="youon">Ёон</string>
     <string name="skip">Пропустить</string>
