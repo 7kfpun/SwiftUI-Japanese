@@ -7,10 +7,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kfpun.japanesedaily.ads.AdBanner
 import com.kfpun.japanesedaily.ads.AdConsent
 import com.kfpun.japanesedaily.ads.AdSlot
+import com.kfpun.japanesedaily.ads.LocalBannerSlot
+import com.kfpun.japanesedaily.audio.PremiumStatus
 import com.kfpun.japanesedaily.audio.ProvidePronouncer
 import com.kfpun.japanesedaily.billing.Entitlement
 import com.kfpun.japanesedaily.billing.LocalPro
@@ -18,6 +21,11 @@ import com.kfpun.japanesedaily.billing.PaywallHost
 import com.kfpun.japanesedaily.data.AppContainer
 import com.kfpun.japanesedaily.intro.Intro
 import com.kfpun.japanesedaily.intro.IntroHost
+import com.kfpun.japanesedaily.lessons.LessonExits
+import com.kfpun.japanesedaily.lessons.LocalLessonExits
+import com.kfpun.japanesedaily.lessons.LocalOpenPaywall
+import com.kfpun.japanesedaily.lessons.LocalPremium
+import com.kfpun.japanesedaily.lessons.OpenPaywall
 import com.kfpun.japanesedaily.ui.AppScaffold
 import com.kfpun.japanesedaily.ui.JapaneseDailyTheme
 import com.kfpun.japanesedaily.ui.Tab
@@ -45,12 +53,32 @@ class MainActivity : AppCompatActivity() {
                         container.interstitials.preload()
                     }
                 }
-                CompositionLocalProvider(LocalPro provides container.pro) {
+                // The Lessons seams (lessons/Ports.kt), wired to the real pieces. LocalPremium is a view of
+                // ProRepository (one source) that changes identity with the entitlement, so readers recompose.
+                val premium = remember(entitlement) {
+                    object : PremiumStatus {
+                        override val isPremium get() = container.pro.isPremium
+                    }
+                }
+                val openPaywall = remember { OpenPaywall { source, lesson -> container.openPaywall(source, lesson) } }
+                val exits = remember {
+                    object : LessonExits {
+                        override fun onLeavePractice(answered: Boolean) = container.onLeavePractice(answered)
+
+                        override fun onLeaveMatch(answered: Boolean) = container.onLeavePractice(answered)
+                    }
+                }
+                CompositionLocalProvider(
+                    LocalPro provides container.pro,
+                    LocalPremium provides premium,
+                    LocalOpenPaywall provides openPaywall,
+                    LocalLessonExits provides exits
+                ) {
                     ProvidePronouncer(container.vocab) {
                         IntroHost { landing ->
                             AppScaffold(
                                 startTab = if (landing == Intro.Tab.KANA) Tab.Kana else Tab.Today,
-                                banner = { tab -> AdBanner(tab.adSlot) }
+                                banner = { tab -> AdBanner(LocalBannerSlot.current?.override ?: tab.adSlot) }
                             )
                         }
                         PaywallHost(container.paywall, container.pro)

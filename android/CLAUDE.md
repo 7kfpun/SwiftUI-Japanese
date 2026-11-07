@@ -154,6 +154,28 @@ red from the latest `KanaResult` for the romaji, with a check or cross beside th
 - The on-screen template scales its digit-strip threshold by the rendered font size (iOS scales by bitmap size,
   which leaves digits on the aspect-fit glyph).
 
+## Lessons tab (`lessons/`, FOX-153)
+
+Port of `nihongo/Lessons/` and `context/04-lessons.md`. `LessonsTab` is a state-based stack (`LessonsNav`, hoisted
+in `AppScaffold`, string-encoded routes) over a `LessonsEnv` (container + current meaning language; null while
+the course data decodes off the main thread). Screens: list + search, `SelectModeScreen` (the one place gating is
+enforced), Practice, Vocab List, Read along, Flashcards, Match, Learn, Bookmarks.
+
+- **Gating is pure** (`Gating`, port of iOS `Gating`): lessons 1-5 free, the earned first band
+  (`hasEarnedFirstGroup`, three stars on every rung of the free lessons), `isLocked(earnedFirstGroup = false)` fails
+  closed, Read along's meanings preview 7 words then the paywall, the speed dial is Pro, only subscribers loop.
+  `LessonStanding` tallies results for the list rows, the lock and the earn hint.
+- **Seams other tickets fill** (`Ports.kt`, `ChallengeEntry.kt`, `LessonsTab.kt`): `LocalPremium` (FOX-158, defaults
+  `NotPremium`), `LocalOpenPaywall` (hosted by `PaywallHost`, a *placeholder dialog* until FOX-158 swaps in the real
+  paywall), `LocalLessonExits.onLeavePractice/onLeaveMatch(answered)` (the interstitial hook), and
+  `LocalOpenChallenge` (**FOX-154's entry point**: the rung strip, next-up and retry cards are drawn read-only and
+  call it; replace `nextQuestions` with the pool size).
+- **Models are pure Kotlin** (`PracticeModel`, `MatchModel`, `LearnModel`, `LessonPlayer`) with Compose state for the
+  screen and an injectable `Random`; the mirrored iOS tests are in `app/src/test/.../lessons/`. Practice writes only
+  `PracticeProgress` stages (through `StageStore`); Flashcards writes nothing at all.
+- Not ported yet: the report flag and swipe-to-report (the Feedback sheet is FOX-157's), and no screen reaches
+  `BookmarksScreen` until Progress/Settings push `LessonRoute.Bookmarks`.
+
 ## Strings (FOX-150)
 
 `scripts/build-android-strings.py` (stdlib only) writes `res/values/strings.xml` (English, the
@@ -207,17 +229,22 @@ subscriptions, so Pro turns off by itself; a lifetime purchase stays. Pending pa
 The ids live on `Course.Products`; `ProProductsTest` pins them. Plan names and `Best value` are built
 from the app's own strings, never from Play titles; Play only supplies the prices.
 
-### What screens call
+### What is wired, and what screens call
+
+`MainActivity` provides the Lessons seams (`lessons/Ports.kt`): `LocalPremium` is a view of `ProRepository`
+(one source), `LocalOpenPaywall` is `AppContainer.openPaywall(source, lesson)`, and `LocalLessonExits`
+(`onLeavePractice` / `onLeaveMatch`) is the throttled interstitial, shown only when something was answered.
+`Gating` stays pure and takes `isPremium`; screens pass `LocalPremium.current.isPremium`.
 
 - `container.openPaywall(PaywallSource.X, lesson)` shows the paywall (`PaywallHost`, composed in
   `MainActivity`); a no-op for Pro. It closes itself when Pro turns on. Terms of Use and Privacy
   Policy are shown in-app from `nihongo/Legal/*.txt`, packaged in place (`LegalDialog`).
-- `container.onLeavePractice(answered)` and `container.onChallengeFinished()` are the interstitial
-  hooks: at most one per 3 minutes (`InterstitialThrottle`), free users only, after consent. Never call
-  `onChallengeFinished` mid-run. `container.interstitials.preload()` warms one up.
-- `AdBanner(AdSlot.X)` is one banner for the eight iOS slots; `MainActivity` puts the tab slots in
-  `AppScaffold(banner = ...)` (Today, Kana, Lessons, Progress, Settings=`about`). Place `SelectMode`,
-  `VocabList` and `Search` on those screens. It takes no space for Pro, before consent, or until an ad loads.
+- `container.onChallengeFinished()` is the ladder's interstitial hook (**not yet wired**, FOX-154): call it
+  when a run reaches its end, never mid-run. `container.onLeavePractice(answered)` is the same throttle.
+- One banner sits above the tab bar (`AppScaffold(banner = ...)`): Today, Kana, Lessons, Progress and
+  Settings(`about`) by tab. A pushed screen with its own slot calls `UseBannerSlot(AdSlot.X)`: Select mode,
+  Vocab List and the Lessons search results do. `AdBanner(AdSlot.X)` takes no space for Pro, before consent,
+  or until an ad loads.
 - `AdConsent.privacyOptionsRequired` / `AdConsent.showPrivacyOptions(activity)` are the Settings
   (FOX-159) entry point for UMP's privacy options form.
 - Ads are always non-personalized (`npa=1` on every request). Unit ids come from
