@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Debug only: the design-system components catalog (FOX-149). Not a launcher entry; start it with
+         adb shell am start -n com.kfpun.japanesedaily/.catalog.CatalogActivity -->
+    <application>
+        <activity
+            android:name=".catalog.CatalogActivity"
+            android:exported="true"
+            android:theme="@style/Theme.JapaneseDaily" />
+    </application>
+</manifest>

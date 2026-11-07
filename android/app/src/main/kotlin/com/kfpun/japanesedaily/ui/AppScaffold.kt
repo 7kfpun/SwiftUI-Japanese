@@ -3,6 +3,7 @@ package com.kfpun.japanesedaily.ui
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -34,19 +35,15 @@ enum class Tab(@StringRes val label: Int, @DrawableRes val icon: Int) {
 }
 
 @Composable
-fun AppScaffold() {
+fun AppScaffold(banner: @Composable () -> Unit = {}) {
     var selected by rememberSaveable { mutableStateOf(Tab.Today) }
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                Tab.entries.forEach { tab ->
-                    NavigationBarItem(
-                        selected = tab == selected,
-                        onClick = { selected = tab },
-                        icon = { Icon(painterResource(tab.icon), contentDescription = null) },
-                        label = { Text(stringResource(tab.label)) }
-                    )
-                }
+            Column {
+                // The per-tab ad banner slot (FOX-158 fills it): above the tab bar, in a column rather
+                // than a safe-area inset, so a pushed screen's bottom button never renders under it.
+                banner()
+                TabBar(selected) { selected = it }
             }
         }
     ) { padding ->
@@ -62,6 +59,20 @@ private fun PlaceholderScreen(tab: Tab, modifier: Modifier = Modifier) {
         // The hidden analytics opt-out (FOX-160); the real Settings screen keeps this footer.
         if (tab == Tab.Settings) {
             AnalyticsExclusionFooter(Modifier.align(Alignment.BottomCenter).padding(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun TabBar(selected: Tab, onSelect: (Tab) -> Unit) {
+    NavigationBar(containerColor = Theme.colors.surface) {
+        Tab.entries.forEach { tab ->
+            NavigationBarItem(
+                selected = tab == selected,
+                onClick = { onSelect(tab) },
+                icon = { Icon(painterResource(tab.icon), contentDescription = null) },
+                label = { Text(stringResource(tab.label)) }
+            )
         }
     }
 }
