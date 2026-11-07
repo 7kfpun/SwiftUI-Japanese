@@ -196,6 +196,23 @@ when a run finishes, never on abandon) are `ProgressRepository.recordChallenge`.
   both sides, so `ChallengeModelTest` mirrors the iOS invariants (answerable, distinct options, new words asked, mixed forms).
 - Not ported: the report flag, the share nudge, and the rating sheet itself (FOX-157/FOX-159).
 
+## Today tab and widget (`today/`, FOX-155)
+
+Port of `nihongo/Today/TodayView.swift`, `Shared/TodayShared.swift` and `TodayWidget/`. `TodayDeck` (pure) derives the deck from the
+results: the first lesson with an unpassed rung, that rung's pool from `Challenge.pool` (never re-implemented), or lesson 50's last
+rung as review once everything is cleared. **Never paywalled, and it writes nothing** (no stage, result or study day; only the widget
+snapshot, which is not progress): the banner is the one place the lock applies, and a locked lesson stops at the Lessons list.
+`TodayTab` takes a `TodayNav` from `AppScaffold`. Reuses the Flashcards pieces (`holdGestures`, `FlipFaces`, `VocabFront/Face`, `CardShowMenu`).
+
+- `TodayShared.rotationIndex(count, cursor, at)` is the hourly rotation off the wall clock; `rotation-fixtures.json` is dumped from the real
+  Swift by `python3 scripts/dump-today-fixtures.py` and `TodayTest` asserts it identical.
+- The widget (`TodayWidget`, Glance, 2x2 to 4x2) reads the snapshot the app publishes (`TodayWidgetUpdater`, private prefs), falls back to the
+  sample deck, and picks the word with the same `rotationIndex`. Text goes through `AppLocale.localizedContext`. A tap starts
+  `MainActivity` with `ACTION_OPEN_TODAY` (counts `widget_open`, selects Today). Not ported: the widget's paging buttons and the lock-screen families.
+- Refresh is `TodayWidgetWorker` (WorkManager): a one-shot aimed at just past the next clock hour that re-arms itself, plus a 1-hour periodic
+  safety net, both only while a widget is placed and the battery is not low. No network, nothing fetched.
+- The picker preview is `providePreview` (Android 15+) with `previewLayout`/`previewImage` before that.
+
 ## Strings (FOX-150)
 
 `scripts/build-android-strings.py` (stdlib only) writes `res/values/strings.xml` (English, the

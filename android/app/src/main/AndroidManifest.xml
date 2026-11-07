@@ -54,6 +54,19 @@
             </intent-filter>
         </activity>
 
+        <!-- Home screen widget (FOX-155): today's word, rotating hourly. WorkManager redraws it. -->
+        <receiver
+            android:name=".today.TodayWidgetReceiver"
+            android:exported="true"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_today_info" />
+        </receiver>
+
         <!-- Keeps the in-app language choice on Android 12 and below (AppCompat's per-app locale
              store), and moves it to the system's after an upgrade to 13+. -->
         <service

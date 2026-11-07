@@ -260,6 +260,10 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    // Home screen widget (FOX-155).
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.work.runtime.ktx)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)

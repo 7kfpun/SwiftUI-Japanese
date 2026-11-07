@@ -23,6 +23,9 @@ room = "2.8.5"
 ksp = "2.3.13"
 robolectric = "4.17"
 androidxTestCore = "1.7.0"
+# Home screen widget (FOX-155): Glance and the WorkManager refresh.
+glance = "1.2.0"
+work = "2.10.5"
 # Pro (Play Billing), AdMob and UMP consent arrive with FOX-158; the catalog carries them so
 # that ticket only adds a dependency line.
 playServicesAds = "25.5.0"
@@ -53,6 +56,8 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }

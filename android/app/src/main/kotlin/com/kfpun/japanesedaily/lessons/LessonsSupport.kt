@@ -162,6 +162,11 @@ class LessonsNav(initial: List<LessonRoute> = emptyList()) {
     /** Pops one screen; false when already at the list. */
     fun pop(): Boolean = stack.removeLastOrNull() != null
 
+    /** Back to the lesson list (Today's banner when the lesson is locked). */
+    fun openList() {
+        stack.clear()
+    }
+
     /** Back to the list, then straight into [lesson]'s mode picker (a deep link). */
     fun openLesson(lesson: Int) {
         stack.clear()

@@ -2,4 +2,9 @@
 <resources>
     <!-- Minna's teal accent (Shared/Course.swift accentLight). -->
     <color name="ic_launcher_background">#0FB0BF</color>
+    <!-- The widget picker's preview and loading layouts (FOX-155): Theme's surface, ink and accent, light. -->
+    <color name="widget_surface">#FFFFFF</color>
+    <color name="widget_ink">#000000</color>
+    <color name="widget_ink_secondary">#6B6B70</color>
+    <color name="widget_accent">#0FB0BF</color>
 </resources>
