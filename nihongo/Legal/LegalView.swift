@@ -35,6 +35,7 @@ struct LegalView: View {
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
+                    .readableWidth()
             }
             .navigationTitle(L.t(titleKey))
             .navigationBarTitleDisplayMode(.inline)

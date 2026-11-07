@@ -38,6 +38,7 @@ struct FeedbackView: View {
             Group {
                 if sent { confirmation } else { form }
             }
+            .readableWidth()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Theme.canvas)
             .navigationTitle(L.t("Send feedback"))

@@ -58,12 +58,13 @@ struct FlashcardView: View {
                     card(word)
                         .cardPager(page: turnPage)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .cardFrame()
 
                 footer
             }
         }
         .padding()
+        .cardScreen()
         .background(Theme.canvas)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

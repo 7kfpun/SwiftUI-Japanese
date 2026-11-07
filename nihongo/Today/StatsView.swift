@@ -103,6 +103,8 @@ struct StatsView: View {
                     }
                 }
             }
+            .readableWidth()
+            .background(Color(.systemGroupedBackground))
             .navigationTitle(L.t("Progress"))
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { reload(); Track.screen("progress") }

@@ -14,6 +14,9 @@ struct SelectModeView: View {
     @Environment(Unlock.self) private var unlock
     @Environment(PracticeProgress.self) private var practice
     @Environment(\.modelContext) private var context
+    /// Regular width lays the ladder out as a wrapping grid and the modes in as many
+    /// columns as fit; compact keeps the phone's horizontal strip.
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var showPaywall = false
     /// Which row opened the paywall — a locked mode or a locked challenge rung. Every
     /// presenting path overwrites this before the sheet appears, so the initial value
@@ -48,6 +51,7 @@ struct SelectModeView: View {
                 challengeSection
             }
             .padding(16)
+            .readableWidth()
         }
         // A results card is a fixed shape, not a document —
         // the bar sat over the content and reported a position nobody needed.
@@ -202,8 +206,10 @@ struct SelectModeView: View {
             // A 2×2 grid rather than four rows: the modes are peers, and a list ranked
             // them by position. Each tile takes its row's height, so a long German or
             // Burmese description grows both tiles together instead of staggering them.
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10),
-                                GridItem(.flexible(), spacing: 10)],
+            // Adaptive, not two fixed columns: 160 is what two columns need on the
+            // narrowest phone, and a wider window (iPad, Split View, landscape) fits
+            // another rather than stretching the tiles.
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 160, maximum: 320), spacing: 10)],
                       spacing: 10) {
                 // Vocab List is free on every lesson — browsing and search stay open.
                 NavigationLink { Deferred { VocabListView(lesson: current) } } label: {
@@ -341,14 +347,25 @@ struct SelectModeView: View {
     /// Every rung as a chip: passed ones show their stars, the next one is the filled
     /// call to action, later ones wait behind a lock. Passed and next chips push the
     /// run directly — the strip is the ladder, not a diagram of it.
+    @ViewBuilder
     private var rungStrip: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+        if horizontalSizeClass == .regular {
+            // Wide windows wrap the rungs into a grid: a strip would leave most of the
+            // screen empty and still scroll sideways for a long ladder. Cells grow no
+            // larger than a chip reasonably gets.
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 72, maximum: 96), spacing: 8)],
+                      spacing: 8) {
                 ForEach(1...challengeCount, id: \.self) { i in rungChip(i) }
             }
-            .padding(.vertical, 2)
+        } else {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(1...challengeCount, id: \.self) { i in rungChip(i) }
+                }
+                .padding(.vertical, 2)
+            }
+            .scrollClipDisabled()
         }
-        .scrollClipDisabled()
     }
 
     @ViewBuilder
@@ -413,7 +430,7 @@ struct SelectModeView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .frame(minWidth: 56)
+        .frame(minWidth: 56, maxWidth: horizontalSizeClass == .regular ? .infinity : nil)
         .padding(.horizontal, 8)
         .padding(.vertical, 10)
         .foregroundStyle(isNext ? Theme.onAccent : Color.primary)
