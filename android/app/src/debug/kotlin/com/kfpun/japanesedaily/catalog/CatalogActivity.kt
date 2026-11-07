@@ -35,6 +35,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
+import com.kfpun.japanesedaily.data.vocab.ExampleSentence
+import com.kfpun.japanesedaily.lessons.ExampleSentenceView
 import com.kfpun.japanesedaily.ui.JapaneseDailyTheme
 import com.kfpun.japanesedaily.ui.JapaneseFace
 import com.kfpun.japanesedaily.ui.KanaForm
@@ -78,7 +80,7 @@ class CatalogActivity : ComponentActivity() {
     companion object {
         /** Optional: scroll the catalog to one of [SECTIONS] first (adb ... --es section cards). */
         const val EXTRA_SECTION = "section"
-        val SECTIONS = listOf("tokens", "type", "cards", "options", "empty", "rating")
+        val SECTIONS = listOf("tokens", "type", "cards", "options", "empty", "rating", "example")
     }
 }
 
@@ -112,6 +114,36 @@ private fun Catalog(section: String?) {
             TabBar()
         }
         if (show("rating")) RatingStarRow()
+        if (section == "example") ExampleSentences()
+    }
+}
+
+/**
+ * Real lesson 1 sentences for the furigana baseline check (FOX-155): one phrase with a reading and one without, and phrases
+ * whose reading sits mid-phrase (prefix and suffix both non-empty). Open with `--es section example`.
+ */
+@Composable
+private fun ExampleSentences() {
+    val sentences = listOf(
+        ExampleSentence(listOf("わたしは", "学生です。"), listOf("わたしは", "がくせいです。"), listOf("watashiwa", "gakuseidesu")),
+        ExampleSentence(
+            listOf("わたしは", "ブラジル人です。"),
+            listOf("わたしは", "ブラジルじんです。"),
+            listOf("watashiwa", "burajirujindesu")
+        ),
+        ExampleSentence(listOf("初めまして。", "お名前は？"), listOf("はじめまして。", "おなまえは？"), listOf("hajimemashite", "onamaewa?")),
+        ExampleSentence(
+            listOf("あの", "人は", "アメリカ人です。"),
+            listOf("あの", "ひとは", "アメリカじんです。"),
+            listOf("ano", "hitowa", "amerikajindesu")
+        )
+    )
+    Section("Example sentences (reading row and baseline)") {
+        sentences.forEach { s ->
+            Box(Modifier.fillMaxWidth().cardChrome().padding(14.dp)) {
+                ExampleSentenceView(s, translation = "I am a student.", columnSizeSp = 24)
+            }
+        }
     }
 }
 
