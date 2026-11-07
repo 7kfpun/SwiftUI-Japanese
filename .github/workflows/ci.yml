@@ -1,12 +1,13 @@
 name: CI
 
 # Same gate as feature/claude-review-action's Claude review workflow:
-# non-draft PRs whose head is feature/* and whose base is main.
+# non-draft PRs whose head is feature/* and whose base is main or the Android
+# integration branch (feature/fox-145-android).
 # synchronize is included, so every push to an open PR re-runs.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    branches: [main]
+    branches: [main, feature/fox-145-android]
 
 concurrency:
   group: ci-${{ github.event.pull_request.number }}
@@ -21,7 +22,7 @@ jobs:
     if: >-
       github.event.pull_request.draft == false &&
       startsWith(github.head_ref, 'feature/') &&
-      github.base_ref == 'main'
+      (github.base_ref == 'main' || github.base_ref == 'feature/fox-145-android')
     runs-on: macos-latest
     timeout-minutes: 90
     steps:
@@ -88,7 +89,7 @@ jobs:
     if: >-
       github.event.pull_request.draft == false &&
       startsWith(github.head_ref, 'feature/') &&
-      github.base_ref == 'main'
+      (github.base_ref == 'main' || github.base_ref == 'feature/fox-145-android')
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -168,6 +168,7 @@ struct KanaQuizView: View {
             .disabled(model.picked == nil)
         }
         .padding()
+        .cardScreen()
         .background(Theme.canvas)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { autoPlay(); Track.screen(listening ? "kana_quiz_listening" : "kana_quiz_classic") }

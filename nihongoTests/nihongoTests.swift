@@ -3,6 +3,7 @@ import Foundation
 import SwiftData
 import AVFoundation
 import UIKit
+import SwiftUI
 @testable import nihongo
 
 // MARK: - Bundled data integrity (canaries for scripts/build-minna-data.py)
@@ -2829,5 +2830,148 @@ struct IntroTests {
         let ctx = ModelContext(container)
         #expect(try ctx.fetch(FetchDescriptor<ChallengeResult>()).isEmpty)
         #expect(ChallengeResult.totalPassed(context: ctx) == 0)
+    }
+}
+
+// MARK: - Adaptive layout (FOX-165)
+
+/// The width rule is shared with Android (FOX-166), so the numbers are
+/// pinned here: a drift on one platform should fail a test rather than a tablet.
+struct ScreenLayoutTests {
+    @Test func compactWindowsAreUntouched() {
+        // Every iPhone portrait width, and Slide Over, sit below 600.
+        for width in stride(from: CGFloat(0), through: 599, by: 1) {
+            #expect(!ScreenLayout.isRegular(width: width))
+            #expect(ScreenLayout.contentWidth(in: width) == width)
+        }
+    }
+
+    @Test func regularStartsAtSixHundred() {
+        #expect(!ScreenLayout.isRegular(width: 599.5))
+        #expect(ScreenLayout.isRegular(width: 600))
+    }
+
+    @Test func regularContentIsCappedAtReadableWidth() {
+        // iPad Split View halves, a full iPad in both orientations, a landscape iPhone.
+        for width: CGFloat in [600, 640, 700, 834, 1024, 1194, 1366, 852] {
+            #expect(ScreenLayout.contentWidth(in: width) == min(width, 640))
+        }
+        #expect(ScreenLayout.readableWidth == 640)
+        #expect(ScreenLayout.regularMinWidth == 600)
+    }
+
+    @Test func capNeverExceedsTheWindowOrJumps() {
+        var previous: CGFloat = 0
+        for width in stride(from: CGFloat(0), through: 2000, by: 1) {
+            let content = ScreenLayout.contentWidth(in: width)
+            #expect(content <= width)
+            #expect(content >= previous)   // widening a window never narrows the content
+            previous = content
+        }
+    }
+
+    /// About a third, clamped to 280...400 — and a regular window can never give the list
+    /// half of itself, which is the one ratio the layout must not reach.
+    @Test func listPaneIsAboutAThirdAndNeverHalf() {
+        #expect(ScreenLayout.listPaneWidth(in: 0) == 280)
+        #expect(ScreenLayout.listPaneWidth(in: 600) == 280)        // narrowest regular window
+        #expect(ScreenLayout.listPaneWidth(in: 1024) == CGFloat(1024) / 3)
+        #expect(ScreenLayout.listPaneWidth(in: 1366) == 400)
+        for width in stride(from: CGFloat(600), through: 2000, by: 1) {
+            let list = ScreenLayout.listPaneWidth(in: width)
+            #expect(list >= 280 && list <= 400)
+            #expect(list < width / 2)
+        }
+    }
+
+    @Test func twoPanesNeedRoomForALargerRightPane() {
+        // iPad mini portrait, iPad Pro 13" landscape.
+        #expect(ScreenLayout.usesTwoPane(windowWidth: 744, regularWidth: true, compactHeight: false))
+        #expect(ScreenLayout.usesTwoPane(windowWidth: 1366, regularWidth: true, compactHeight: false))
+        // iPad 2/3 Split View.
+        #expect(!ScreenLayout.usesTwoPane(windowWidth: 694, regularWidth: true, compactHeight: false))
+        // iPhone Pro Max landscape: regular width, compact height.
+        #expect(!ScreenLayout.usesTwoPane(windowWidth: 932, regularWidth: true, compactHeight: true))
+        // Compact width, whatever the number says.
+        #expect(!ScreenLayout.usesTwoPane(windowWidth: 800, regularWidth: false, compactHeight: false))
+        // Wherever it is on, the list is under half the window.
+        for width in stride(from: ScreenLayout.twoPaneMinWidth, through: 2000, by: 1) {
+            #expect(ScreenLayout.listPaneWidth(in: width) < width / 2)
+        }
+    }
+
+    @Test func cardBoundsAreSane() {
+        #expect(ScreenLayout.cardMinHeight < ScreenLayout.cardMaxHeight)
+    }
+
+    /// A five-vowel kana row at full-size tiles has to fit the readable column, or the
+    /// chart would be wider than the screen's own content.
+    @Test func kanaChartFitsTheReadableColumn() {
+        let row = 5 * ScreenLayout.tileMaxSize + 4 * 6
+        #expect(row <= ScreenLayout.readableWidth)
+    }
+
+    /// A flung card must clear the widest window it can sit in: the 13-inch iPad in
+    /// landscape (1376pt) with a card at the readable width, centred.
+    @Test func flungCardLeavesTheWidestWindow() {
+        let widest: CGFloat = 1376
+        #expect(ScreenLayout.exitDistance >= (widest + ScreenLayout.readableWidth) / 2)
+    }
+}
+
+@MainActor
+struct RouterSelectionTests {
+    @Test func openingALessonSelectsItAndStacksIt() {
+        let router = Router()
+        let lesson = VocabStore.lesson(3)
+        router.openLesson(lesson)
+        #expect(router.selectedLesson == lesson)
+        #expect(router.lessonPath.count == 1)
+        #expect(router.tab == .lessons)
+    }
+
+    /// open 3 -> pop -> two-pane -> one pane again: nothing is pushed back.
+    @Test func aPoppedLessonIsNotPushedAgainByAWidthFlip() {
+        let router = Router()
+        router.openLesson(VocabStore.lesson(3))
+        router.lessonPath = NavigationPath()      // the learner pops back to the list
+        router.compactListAppeared()
+        router.enterTwoPane()
+        router.leaveTwoPane()
+        #expect(router.lessonPath.isEmpty)
+        #expect(router.selectedLesson == nil)
+    }
+
+    /// open 3 -> two-pane -> one pane: lesson 3 is still open, pushed once.
+    @Test func anOpenLessonSurvivesAWidthRoundTrip() {
+        let router = Router()
+        let lesson = VocabStore.lesson(3)
+        router.openLesson(lesson)
+        router.compactListAppeared()              // a list appearance with a lesson pushed
+        router.enterTwoPane()
+        router.leaveTwoPane()
+        #expect(router.selectedLesson == lesson)
+        #expect(router.lessonPath.count == 1)
+    }
+
+    @Test func theDefaultSelectionNeverTravels() {
+        let router = Router()
+        router.enterTwoPane()
+        router.leaveTwoPane()
+        #expect(router.lessonPath.isEmpty)
+    }
+
+    @Test func anUnmeasuredWindowIsJudgedBySizeClassesAlone() {
+        #expect(ScreenLayout.usesTwoPane(windowWidth: nil, regularWidth: true, compactHeight: false))
+        #expect(!ScreenLayout.usesTwoPane(windowWidth: nil, regularWidth: true, compactHeight: true))
+        #expect(!ScreenLayout.usesTwoPane(windowWidth: nil, regularWidth: false, compactHeight: false))
+    }
+
+    @Test func openingTheListClearsTheSelection() {
+        let router = Router()
+        router.openLesson(VocabStore.lesson(3))
+        router.openLessonList()
+        #expect(router.selectedLesson == nil)
+        #expect(router.lessonPath.isEmpty)
     }
 }

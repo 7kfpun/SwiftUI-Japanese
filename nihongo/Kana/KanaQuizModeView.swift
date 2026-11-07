@@ -29,6 +29,8 @@ struct KanaQuizModeView: View {
                 }
             }
         }
+        .readableWidth()
+        .background(Color(.systemGroupedBackground))
         .navigationTitle(L.t("Choose mode"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { Track.screen("kana_quiz_mode") }

@@ -99,6 +99,7 @@ struct TodayView: View {
                 if let word = current { cardStack(word) } else { ProgressView().frame(maxHeight: .infinity) }
             }
             .padding()
+            .cardScreen()
             .background(Theme.canvas)
             .navigationTitle(L.t("Today"))
             .navigationBarTitleDisplayMode(.inline)
@@ -248,7 +249,7 @@ struct TodayView: View {
             CardStackPeek()
             card(word)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .cardFrame()
     }
 
     private func card(_ word: Vocab) -> some View {

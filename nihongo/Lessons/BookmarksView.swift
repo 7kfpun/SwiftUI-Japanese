@@ -35,6 +35,8 @@ struct BookmarksView: View {
                         }
                     }
                 }
+                .readableWidth()
+                .background(Color(.systemGroupedBackground))
             }
         }
         .navigationTitle(L.t("Bookmarks"))

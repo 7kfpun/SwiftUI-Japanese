@@ -15,6 +15,12 @@ struct LessonListView: View {
     @Environment(Router.self) private var router
     @Environment(Store.self) private var store
     @Environment(Unlock.self) private var unlock
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    /// The window's width, for the list pane's share of it.
+    /// Nil until the first layout has measured it; `usesTwoPane` then decides from the
+    /// size classes alone, so an iPad doesn't start single-pane and flip to split.
+    @State private var windowWidth: CGFloat?
     private static let groups = Course.current.groups
 
     /// Search hits for the current query.
@@ -28,108 +34,192 @@ struct LessonListView: View {
 
     var body: some View {
         @Bindable var router = router
-        NavigationStack(path: $router.lessonPath) {
-            VStack(spacing: 0) {
+        Group {
+            if twoPaneActive {
+                twoPane
+            } else {
+                NavigationStack(path: $router.lessonPath) {
+                    listPane
+                        .navigationDestination(for: Lesson.self) { lesson in
+                            SelectModeView(lesson: lesson)
+                                .onAppear { router.selectedLesson = lesson }
+                        }
+                }
+            }
+        }
+        .onChange(of: twoPaneActive) { _, new in
+            if new { router.enterTwoPane() } else { router.leaveTwoPane() }
+        }
+        // Measured here, on the stable outer view, because the decision itself depends on it.
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { windowWidth = $0 }
+    }
+
+    // MARK: - Wide windows: list | selected lesson
+
+    /// Regular width (iPad, wide Split View, a Max phone sideways): the lesson list on the
+    /// left at about a third of the window, the selected lesson — and whatever it opens —
+    /// on the right. The right pane is its own stack, so Practice, Match and the rest push
+    /// *inside* it and the list stays put beside them.
+    ///
+    /// Compact width never reaches this: it keeps the phone's push navigation untouched.
+    private var twoPane: some View {
+        NavigationSplitView(columnVisibility: .constant(.all)) {
+            listPane
+                .navigationSplitViewColumnWidth(ScreenLayout.listPaneWidth(in: windowWidth ?? 0))
+        } detail: {
+            NavigationStack {
+                SelectModeView(lesson: VocabStore.lesson(selectedNumber, language))
+            }
+            // A different lesson is a different screen: this drops whatever the previous
+            // one had pushed, instead of leaving Lesson 3's Match board open over Lesson 4.
+            .id(selectedNumber)
+        }
+        .navigationSplitViewStyle(.balanced)
+    }
+
+    /// The lesson showing on the right: the one the learner picked (or a link named), and
+    /// until then the one they'd study next, so the pane is never empty.
+    private var selectedNumber: Int {
+        router.selectedLesson?.number ?? continueLesson ?? 1
+    }
+
+    /// Two panes only where the right one is clearly the larger: a window at least 720pt
+    /// wide whose height isn't compact. A phone sideways (even a Pro Max), a 7-inch
+    /// portrait window and a narrow Split View stay on the phone's push navigation.
+    private var twoPaneActive: Bool {
+        ScreenLayout.usesTwoPane(windowWidth: windowWidth,
+                                 regularWidth: horizontalSizeClass == .regular,
+                                 compactHeight: verticalSizeClass == .compact)
+    }
+
+    private func isSelectedInTwoPane(_ number: Int) -> Bool {
+        twoPaneActive && number == selectedNumber
+    }
+
+    /// A row that opens a lesson. Compact pushes it onto the stack, as it always has;
+    /// two-pane has nowhere to push to, so the row *selects* it and the right pane shows it.
+    @ViewBuilder
+    private func lessonLink<Label: View>(_ lesson: Lesson, hidesIndicator: Bool = false,
+                                         @ViewBuilder label: () -> Label) -> some View {
+        if twoPaneActive {
+            Button { router.selectedLesson = lesson } label: {
+                label().contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        } else {
+            NavigationLink(value: lesson, label: label)
+                .navigationLinkIndicatorVisibility(hidesIndicator ? .hidden : .automatic)
+        }
+    }
+
+    private var listPane: some View {
+        VStack(spacing: 0) {
+            if query.isEmpty {
+                Picker("", selection: $group) {
+                    ForEach(Self.groups.indices, id: \.self) { i in
+                        Text(L.t(Self.groups[i].name)).tag(i)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .padding(.top, 8)
+
+                // What the band adds up to, under the band's own control. The rows
+                // each carry a lesson's standing; this is the only place that says
+                // how the *group* is going, which is the question the picker asks.
+                Text(groupSummary)
+                    .font(Theme.title(.footnote, weight: .regular))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+            }
+
+            List {
                 if query.isEmpty {
-                    Picker("", selection: $group) {
-                        ForEach(Self.groups.indices, id: \.self) { i in
-                            Text(L.t(Self.groups[i].name)).tag(i)
+                    // Where the learner is, whichever band is showing — the list's
+                    // one call to action, so finding your place in fifty rows is
+                    // never the first job.
+                    if let next = continueLesson {
+                        Section {
+                            lessonLink(VocabStore.lesson(next, language), hidesIndicator: true) {
+                                ContinueCard(number: next,
+                                             done: passed[next] ?? 0,
+                                             total: Challenge.count(wordCount: VocabStore.wordCount(next)))
+                            }
+                            .listRowBackground(Color.primary)
                         }
                     }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-
-                    // What the band adds up to, under the band's own control. The rows
-                    // each carry a lesson's standing; this is the only place that says
-                    // how the *group* is going, which is the question the picker asks.
-                    Text(groupSummary)
-                        .font(Theme.title(.footnote, weight: .regular))
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 8)
-                }
-
-                List {
-                    if query.isEmpty {
-                        // Where the learner is, whichever band is showing — the list's
-                        // one call to action, so finding your place in fifty rows is
-                        // never the first job.
-                        if let next = continueLesson {
-                            Section {
-                                NavigationLink(value: VocabStore.lesson(next, language)) {
-                                    ContinueCard(number: next,
-                                                 done: passed[next] ?? 0,
-                                                 total: Challenge.count(wordCount: VocabStore.wordCount(next)))
-                                }
-                                .navigationLinkIndicatorVisibility(.hidden)
-                                .listRowBackground(Color.primary)
+                    Section {
+                        ForEach(Self.groups[group].range, id: \.self) { n in
+                            let lesson = VocabStore.lesson(n, language)
+                            lessonLink(lesson) {
+                                LessonRow(number: n,
+                                          preview: lesson.entries.prefix(3).map(\.kanji),
+                                          done: passed[n] ?? 0,
+                                          total: Challenge.count(wordCount: lesson.entries.count),
+                                          locked: Gating.isLocked(lesson: n, isPremium: store.isPremium,
+                                                                  earnedFirstGroup: unlock.earnedFirstGroup))
                             }
+                            // The open lesson wears the accent as a border — never a fill,
+                            // which is answer feedback's and selection's-opposite.
+                            .listRowBackground(isSelectedInTwoPane(n) ? SelectedLessonBackground() : nil)
                         }
-                        Section {
-                            ForEach(Self.groups[group].range, id: \.self) { n in
-                                let lesson = VocabStore.lesson(n, language)
-                                NavigationLink(value: lesson) {
-                                    LessonRow(number: n,
-                                              preview: lesson.entries.prefix(3).map(\.kanji),
-                                              done: passed[n] ?? 0,
-                                              total: Challenge.count(wordCount: lesson.entries.count),
-                                              locked: Gating.isLocked(lesson: n, isPremium: store.isPremium,
-                                                                      earnedFirstGroup: unlock.earnedFirstGroup))
-                                }
+                    }
+                } else {
+                    // One evaluation, shared by the rows and the header count.
+                    let hits = results
+                    Section {
+                        if hits.isEmpty {
+                            // Names the query and what is searchable. "0 results"
+                            // alone leaves a learner unsure whether the word is
+                            // absent or whether they typed in the wrong script —
+                            // and this corpus takes all four.
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(L.t("Nothing matched “%@”.", query))
+                                    .font(.subheadline)
+                                Text(L.t("Try kana, kanji, romaji or the meaning."))
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
                             }
+                            .padding(.vertical, 6)
+                            .listRowSeparator(.hidden)
                         }
-                    } else {
-                        // One evaluation, shared by the rows and the header count.
-                        let hits = results
-                        Section {
-                            if hits.isEmpty {
-                                // Names the query and what is searchable. "0 results"
-                                // alone leaves a learner unsure whether the word is
-                                // absent or whether they typed in the wrong script —
-                                // and this corpus takes all four.
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(L.t("Nothing matched “%@”.", query))
-                                        .font(.subheadline)
-                                    Text(L.t("Try kana, kanji, romaji or the meaning."))
-                                        .font(.footnote)
-                                        .foregroundStyle(.secondary)
-                                }
-                                .padding(.vertical, 6)
-                                .listRowSeparator(.hidden)
-                            }
-                            ForEach(hits) { v in
-                                VocabRow(vocab: v, showLesson: true, surface: "search")
-                            }
-                        } header: {
-                            // Spelled out rather than `Section(_ title:)` so the count
-                            // can take the section-header face like every other header.
-                            SectionLabel(text: L.t("%@ results", "\(hits.count)"))
+                        ForEach(hits) { v in
+                            VocabRow(vocab: v, showLesson: true, surface: "search")
                         }
+                    } header: {
+                        // Spelled out rather than `Section(_ title:)` so the count
+                        // can take the section-header face like every other header.
+                        SectionLabel(text: L.t("%@ results", "\(hits.count)"))
                     }
                 }
             }
-            .background(Color(.systemGroupedBackground))   // match the grouped List behind the picker
-            .navigationTitle(L.t("Lessons"))
-            .onAppear { Track.screen("lessons"); reloadProgress() }
-            .onChange(of: group) { Track.event("lesson_group", ["group": group]) }
-            .navigationDestination(for: Lesson.self) { SelectModeView(lesson: $0) }
-            .searchable(text: $query, prompt: L.t("Search vocabulary"))
-            .autocorrectionDisabled()
-            .textInputAutocapitalization(.never)
-            .onChange(of: query) {
-                searchDebounce?.cancel()
-                let q = query
-                searchDebounce = Task {
-                    try? await Task.sleep(for: .milliseconds(600))
-                    guard !Task.isCancelled, !q.isEmpty else { return }
-                    // Counted *inside* the debounce. Reading `results.count` here cost a
-                    // whole extra corpus pass on every keystroke, to fill a param on an
-                    // event that only fires once the typing stops.
-                    Track.event("search_vocab", ["query_length": q.count,
-                                                 "results": searchVocab(q, in: VocabStore.allVocab(language)).count])
-                }
+        }
+        .readableWidth()
+        .background(Color(.systemGroupedBackground))   // match the grouped List behind the picker
+        .navigationTitle(L.t("Lessons"))
+        .onAppear {
+            Track.screen("lessons")
+            reloadProgress()
+            // Back on a phone-style list with nothing pushed: no lesson is open any more.
+            if !twoPaneActive { router.compactListAppeared() }
+        }
+        .onChange(of: group) { Track.event("lesson_group", ["group": group]) }
+        .searchable(text: $query, prompt: L.t("Search vocabulary"))
+        .autocorrectionDisabled()
+        .textInputAutocapitalization(.never)
+        .onChange(of: query) {
+            searchDebounce?.cancel()
+            let q = query
+            searchDebounce = Task {
+                try? await Task.sleep(for: .milliseconds(600))
+                guard !Task.isCancelled, !q.isEmpty else { return }
+                // Counted *inside* the debounce. Reading `results.count` here cost a
+                // whole extra corpus pass on every keystroke, to fill a param on an
+                // event that only fires once the typing stops.
+                Track.event("search_vocab", ["query_length": q.count,
+                                             "results": searchVocab(q, in: VocabStore.allVocab(language)).count])
             }
         }
     }
@@ -460,4 +550,16 @@ struct VocabRow: View {
     LessonListView()
         .tint(Theme.accent)
         .modelContainer(for: ChallengeResult.self, inMemory: true)
+}
+
+/// The open lesson's row in the two-pane list: the row surface with an accent border.
+private struct SelectedLessonBackground: View {
+    var body: some View {
+        ZStack {
+            Theme.surface
+            Theme.rounded(Theme.Radius.row)
+                .stroke(Theme.accent, lineWidth: 2)
+                .padding(2)
+        }
+    }
 }

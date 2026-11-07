@@ -121,6 +121,7 @@ struct ChallengeView: View {
             }
         }
         .padding()
+        .readableWidth()
         .background(Theme.canvas)
         .navigationTitle(L.t("Challenge %@", "\(model.index)"))
         .navigationBarTitleDisplayMode(.inline)
@@ -428,6 +429,10 @@ struct ChallengeView: View {
                 .frame(height: 54)
                 .animation(.easeOut(duration: 0.2), value: model.picked != nil)
             }
+            // A landscape phone can't fit the prompt, four answers and Next: it scrolls,
+            // so the last answer and the Next button are always reachable. The round
+            // itself (`model`, `phase`) lives above this, so a rotation keeps it.
+            .cardScreen()
         }
     }
 

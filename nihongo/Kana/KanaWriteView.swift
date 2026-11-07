@@ -102,6 +102,7 @@ struct KanaWriteView: View {
             .controlSize(.large)
         }
         .padding()
+        .cardScreen()
         .background(Theme.canvas)
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(L.t("Write"))
@@ -140,6 +141,9 @@ struct KanaWriteView: View {
                 }
             }
         }
+        // A square-ish drawing pad: capped like every card, and given a floor so the
+        // scrolling (landscape) layout doesn't collapse a GeometryReader to nothing.
+        .cardFrame()
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.line, lineWidth: 1))
         .contentShape(Rectangle())

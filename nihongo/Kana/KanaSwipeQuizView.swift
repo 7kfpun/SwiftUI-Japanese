@@ -31,7 +31,7 @@ struct KanaSwipeQuizView: View {
                 CardStackPeek()
                 promptCard
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .cardFrame()
 
             HStack(spacing: 12) {
                 optionChip(leftOption, side: 0)
@@ -39,6 +39,7 @@ struct KanaSwipeQuizView: View {
             }
         }
         .padding()
+        .cardScreen()
         .background(Theme.canvas)
         .overlay { if let lastCorrect { AnswerBadge(correct: lastCorrect) } }
         .navigationBarTitleDisplayMode(.inline)
