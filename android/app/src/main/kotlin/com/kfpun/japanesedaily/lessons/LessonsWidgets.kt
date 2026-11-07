@@ -43,14 +43,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kfpun.japanesedaily.R
@@ -354,7 +357,9 @@ fun ExampleSentenceView(
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            // Columns of a line start at the same top, so every reading row and kanji row lines up.
+            itemVerticalAlignment = Alignment.Top
         ) {
             for (i in example.kanji.indices) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -363,13 +368,9 @@ fun ExampleSentenceView(
                     if (a != null) {
                         Row(verticalAlignment = Alignment.Bottom) {
                             // Hidden twins of the prefix and suffix push the reading to the core's span.
-                            if (a.prefix.isNotEmpty()) {
-                                Text(a.prefix, style = Theme.jp(columnSizeSp.sp), color = Color.Transparent)
-                            }
+                            if (a.prefix.isNotEmpty()) HiddenSpan(a.prefix, columnSizeSp)
                             Text(a.reading, style = Theme.jp(readingSize), color = Theme.colors.inkSecondary)
-                            if (a.suffix.isNotEmpty()) {
-                                Text(a.suffix, style = Theme.jp(columnSizeSp.sp), color = Color.Transparent)
-                            }
+                            if (a.suffix.isNotEmpty()) HiddenSpan(a.suffix, columnSizeSp)
                         }
                     } else {
                         Text(" ", style = Theme.jp(readingSize))
@@ -392,6 +393,28 @@ fun ExampleSentenceView(
 }
 
 private const val READING_RATIO = 0.64f
+
+/**
+ * A phrase segment that takes its rendered *width* and nothing else (port of iOS `hiddenSpan`: `.frame(height: 0).hidden()`):
+ * the ruler that puts a reading over its kanji core. Zero height and never drawn or placed, so the main-line font does not
+ * inflate the small furigana row, every phrase's reading row is exactly one reading line, and the Japanese lines share a
+ * baseline whether or not a phrase has furigana.
+ */
+@Composable
+private fun HiddenSpan(text: String, sizeSp: Int) {
+    Text(
+        text,
+        style = Theme.jp(sizeSp.sp),
+        softWrap = false,
+        maxLines = 1,
+        modifier = Modifier
+            .clearAndSetSemantics { }
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity))
+                layout(placeable.width, 0) { }
+            }
+    )
+}
 
 /**
  * The toggle-driven word face both browse decks show as their card front: the same `Pref` keys as
