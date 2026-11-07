@@ -34,7 +34,7 @@
     <string name="hear_it_pick_the_word">শুনুন এবং শব্দ বেছে নিন</string>
     <string name="this_entry_is_a_full_sentence_no_tile_game">এই এন্ট্রিটি একটি পূর্ণ বাক্য — কোনো টাইল খেলা নেই।</string>
     <string name="app_language">অ্যাপ ভাষা</string>
-    <string name="interface">ইন্টারফেস</string>
+    <string name="s_interface">ইন্টারফেস</string>
     <string name="the_language_used_for_the_app_s_own_text_tabs_buttons_labels">অ্যাপের নিজস্ব লেখার ভাষা (ট্যাব, বোতাম, লেবেল)।</string>
     <string name="meanings">অর্থ</string>
     <string name="vocabulary_language">শব্দভান্ডারের ভাষা</string>
@@ -332,5 +332,5 @@
     <string name="arg_days">%1$s দিন</string>
     <string name="details">বিস্তারিত</string>
     <string name="two_choices_per_card_the_app_keeps_score">প্রতি কার্ডে দুটি বিকল্প — স্কোর রাখে অ্যাপ</string>
-    <string name="continue">চালিয়ে যান</string>
+    <string name="s_continue">চালিয়ে যান</string>
 </resources>

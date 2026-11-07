@@ -34,7 +34,7 @@
     <string name="hear_it_pick_the_word">Послушайте и выберите слово</string>
     <string name="this_entry_is_a_full_sentence_no_tile_game">Это целое предложение — без игры с плитками.</string>
     <string name="app_language">Язык приложения</string>
-    <string name="interface">Интерфейс</string>
+    <string name="s_interface">Интерфейс</string>
     <string name="the_language_used_for_the_app_s_own_text_tabs_buttons_labels">Язык текста приложения (вкладки, кнопки, подписи).</string>
     <string name="meanings">Значения</string>
     <string name="vocabulary_language">Язык словаря</string>
@@ -332,5 +332,5 @@
     <string name="arg_days">%1$s дн.</string>
     <string name="details">Подробнее</string>
     <string name="two_choices_per_card_the_app_keeps_score">Два варианта на карточку — счёт ведёт приложение</string>
-    <string name="continue">Продолжить</string>
+    <string name="s_continue">Продолжить</string>
 </resources>

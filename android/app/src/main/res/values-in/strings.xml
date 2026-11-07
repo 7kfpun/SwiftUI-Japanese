@@ -34,7 +34,7 @@
     <string name="hear_it_pick_the_word">Dengar lalu pilih katanya</string>
     <string name="this_entry_is_a_full_sentence_no_tile_game">Entri ini kalimat lengkap — tanpa permainan ubin.</string>
     <string name="app_language">Bahasa aplikasi</string>
-    <string name="interface">Antarmuka</string>
+    <string name="s_interface">Antarmuka</string>
     <string name="the_language_used_for_the_app_s_own_text_tabs_buttons_labels">Bahasa untuk teks aplikasi (tab, tombol, label).</string>
     <string name="meanings">Arti</string>
     <string name="vocabulary_language">Bahasa kosakata</string>
@@ -332,5 +332,5 @@
     <string name="arg_days">%1$s hari</string>
     <string name="details">Detail</string>
     <string name="two_choices_per_card_the_app_keeps_score">Dua pilihan per kartu — aplikasi yang mencatat skor</string>
-    <string name="continue">Lanjutkan</string>
+    <string name="s_continue">Lanjutkan</string>
 </resources>

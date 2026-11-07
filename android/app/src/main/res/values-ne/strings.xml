@@ -34,7 +34,7 @@
     <string name="hear_it_pick_the_word">सुन्नुहोस्, शब्द छान्नुहोस्</string>
     <string name="this_entry_is_a_full_sentence_no_tile_game">यो प्रविष्टि पूरा वाक्य हो — टाइल खेल छैन।</string>
     <string name="app_language">एप भाषा</string>
-    <string name="interface">इन्टरफेस</string>
+    <string name="s_interface">इन्टरफेस</string>
     <string name="the_language_used_for_the_app_s_own_text_tabs_buttons_labels">एपको आफ्नै पाठ (ट्याब, बटन, लेबल) मा प्रयोग हुने भाषा।</string>
     <string name="meanings">अर्थ</string>
     <string name="vocabulary_language">शब्दावली भाषा</string>
@@ -332,5 +332,5 @@
     <string name="arg_days">%1$s दिन</string>
     <string name="details">विवरण</string>
     <string name="two_choices_per_card_the_app_keeps_score">प्रत्येक कार्डमा दुई विकल्प — अंक एपले राख्छ</string>
-    <string name="continue">जारी राख्नुहोस्</string>
+    <string name="s_continue">जारी राख्नुहोस्</string>
 </resources>

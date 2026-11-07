@@ -16,7 +16,7 @@ The output is committed; never hand-edit it. See android/CLAUDE.md, "Strings".
 Resource names (deterministic, derived from the English key `k`):
   1. lowercase `k`, `%@` -> " arg ", `%` -> " pct ";
   2. every run of characters outside [a-z0-9] -> "_", trimmed of "_";
-  3. a name that is empty or starts with a digit gets the prefix "s_";
+  3. a name that is empty, starts with a digit or is a Java keyword ("interface") gets "s_";
   4. longer than 60 characters: cut at 52 and append "_" + 7 hex of sha1(k);
   5. names shared by two or more keys get "_" + 7 hex of sha1(k) on all of them.
 
@@ -64,6 +64,14 @@ LANGUAGES = {
     "ru": ("ru", "ru"),
 }
 
+# Java keywords and literals: aapt2 rejects them as resource names.
+JAVA_RESERVED = set(
+    "abstract assert boolean break byte case catch char class const continue default do double else enum "
+    "extends final finally float for goto if implements import instanceof int interface long native new "
+    "package private protected public return short static strictfp super switch synchronized this throw "
+    "throws transient try void volatile while true false null".split()
+)
+
 # Hand-written resource names generated names must not collide with.
 RESERVED = {"app_name"}
 
@@ -78,7 +86,7 @@ def digest(key):
 def base_name(key):
     s = key.lower().replace("%@", " arg ").replace("%", " pct ")
     s = re.sub(r"[^a-z0-9]+", "_", s).strip("_")
-    if not s or s[0].isdigit():
+    if not s or s[0].isdigit() or s in JAVA_RESERVED:
         s = "s_" + s if s else "s"
     if len(s) > 60:
         s = s[:52].rstrip("_") + "_" + digest(key)

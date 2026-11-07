@@ -34,7 +34,7 @@
     <string name="hear_it_pick_the_word">聽音選字</string>
     <string name="this_entry_is_a_full_sentence_no_tile_game">此詞條是完整句子——無拼塊遊戲。</string>
     <string name="app_language">應用程式語言</string>
-    <string name="interface">介面</string>
+    <string name="s_interface">介面</string>
     <string name="the_language_used_for_the_app_s_own_text_tabs_buttons_labels">應用程式本身文字（分頁、按鈕、標籤）所用的語言。</string>
     <string name="meanings">釋義</string>
     <string name="vocabulary_language">詞彙語言</string>
@@ -332,5 +332,5 @@
     <string name="arg_days">%1$s 天</string>
     <string name="details">詳情</string>
     <string name="two_choices_per_card_the_app_keeps_score">每張卡兩個選項——由 App 計分</string>
-    <string name="continue">繼續</string>
+    <string name="s_continue">繼續</string>
 </resources>

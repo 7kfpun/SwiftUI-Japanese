@@ -34,7 +34,7 @@
     <string name="hear_it_pick_the_word">Escúchalo y elige la palabra</string>
     <string name="this_entry_is_a_full_sentence_no_tile_game">Esta entrada es una frase completa: sin juego de fichas.</string>
     <string name="app_language">Idioma de la app</string>
-    <string name="interface">Interfaz</string>
+    <string name="s_interface">Interfaz</string>
     <string name="the_language_used_for_the_app_s_own_text_tabs_buttons_labels">El idioma del texto de la app (pestañas, botones, etiquetas).</string>
     <string name="meanings">Significados</string>
     <string name="vocabulary_language">Idioma del vocabulario</string>
@@ -332,5 +332,5 @@
     <string name="arg_days">%1$s días</string>
     <string name="details">Detalles</string>
     <string name="two_choices_per_card_the_app_keeps_score">Dos opciones por tarjeta: la app lleva la cuenta</string>
-    <string name="continue">Continuar</string>
+    <string name="s_continue">Continuar</string>
 </resources>

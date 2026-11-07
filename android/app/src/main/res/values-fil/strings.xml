@@ -34,7 +34,7 @@
     <string name="hear_it_pick_the_word">Pakinggan, piliin ang salita</string>
     <string name="this_entry_is_a_full_sentence_no_tile_game">Buong pangungusap ang entry na ito — walang tile game.</string>
     <string name="app_language">Wika ng app</string>
-    <string name="interface">Interface</string>
+    <string name="s_interface">Interface</string>
     <string name="the_language_used_for_the_app_s_own_text_tabs_buttons_labels">Ang wikang ginagamit sa teksto ng app (mga tab, button, label).</string>
     <string name="meanings">Mga kahulugan</string>
     <string name="vocabulary_language">Wika ng bokabularyo</string>
@@ -332,5 +332,5 @@
     <string name="arg_days">%1$s araw</string>
     <string name="details">Mga detalye</string>
     <string name="two_choices_per_card_the_app_keeps_score">Dalawang pagpipilian bawat card — ang app ang nagbibilang</string>
-    <string name="continue">Magpatuloy</string>
+    <string name="s_continue">Magpatuloy</string>
 </resources>

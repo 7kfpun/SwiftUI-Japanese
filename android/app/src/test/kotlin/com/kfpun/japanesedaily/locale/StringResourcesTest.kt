@@ -80,7 +80,7 @@ class StringResourcesTest {
 
     /** Placeholder shape: how many `%n$s` and the set of their indexes. */
     private fun placeholders(value: String): List<Int> =
-        Regex("%(\\d+)\\$s").findAll(value).map { it.groupValues[1].toInt() }.sorted().toList()
+        Regex("%(\\d+)\\${"$"}s").findAll(value).map { it.groupValues[1].toInt() }.sorted().toList()
 
     private fun strings(dir: String): Map<String, String> {
         val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(File(res, "$dir/strings.xml"))

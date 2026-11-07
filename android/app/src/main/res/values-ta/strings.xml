@@ -34,7 +34,7 @@
     <string name="hear_it_pick_the_word">கேட்டு சொல்லைத் தேர்வுசெய்</string>
     <string name="this_entry_is_a_full_sentence_no_tile_game">இந்த உள்ளீடு ஒரு முழு வாக்கியம் — கட்ட விளையாட்டு இல்லை.</string>
     <string name="app_language">ஆப் மொழி</string>
-    <string name="interface">இடைமுகம்</string>
+    <string name="s_interface">இடைமுகம்</string>
     <string name="the_language_used_for_the_app_s_own_text_tabs_buttons_labels">ஆப்பின் சொந்த உரையின் மொழி (தாவல்கள், பொத்தான்கள், லேபிள்கள்).</string>
     <string name="meanings">பொருள்கள்</string>
     <string name="vocabulary_language">சொற்களஞ்சிய மொழி</string>
@@ -332,5 +332,5 @@
     <string name="arg_days">%1$s நாட்கள்</string>
     <string name="details">விவரங்கள்</string>
     <string name="two_choices_per_card_the_app_keeps_score">ஒவ்வொரு அட்டைக்கும் இரண்டு தேர்வுகள் — மதிப்பெண்ணை ஆப் கணக்கிடும்</string>
-    <string name="continue">தொடரவும்</string>
+    <string name="s_continue">தொடரவும்</string>
 </resources>

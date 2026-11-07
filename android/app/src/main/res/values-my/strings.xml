@@ -34,7 +34,7 @@
     <string name="hear_it_pick_the_word">နားထောင်ပြီး စကားလုံးရွေးပါ</string>
     <string name="this_entry_is_a_full_sentence_no_tile_game">ဤစာစုသည် ဝါကျအပြည့်ဖြစ်၍ အကွက်ဂိမ်းမရှိပါ။</string>
     <string name="app_language">အက်ပ်ဘာသာစကား</string>
-    <string name="interface">အသုံးပြုမျက်နှာပြင်</string>
+    <string name="s_interface">အသုံးပြုမျက်နှာပြင်</string>
     <string name="the_language_used_for_the_app_s_own_text_tabs_buttons_labels">အက်ပ်၏ စာသား (တက်ဘ်၊ ခလုတ်၊ အညွှန်း) အတွက် သုံးသောဘာသာစကား။</string>
     <string name="meanings">အဓိပ္ပာယ်များ</string>
     <string name="vocabulary_language">ဝေါဟာရဘာသာစကား</string>
@@ -332,5 +332,5 @@
     <string name="arg_days">%1$s ရက်</string>
     <string name="details">အသေးစိတ်</string>
     <string name="two_choices_per_card_the_app_keeps_score">ကတ်တစ်ခုလျှင် ရွေးစရာ ၂ ခု — အမှတ်ကို အက်ပ်က မှတ်ပေးသည်</string>
-    <string name="continue">ဆက်လုပ်မည်</string>
+    <string name="s_continue">ဆက်လုပ်မည်</string>
 </resources>

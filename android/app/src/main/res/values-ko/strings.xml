@@ -34,7 +34,7 @@
     <string name="hear_it_pick_the_word">듣고 단어 고르기</string>
     <string name="this_entry_is_a_full_sentence_no_tile_game">이 항목은 완전한 문장입니다 — 타일 게임 없음.</string>
     <string name="app_language">앱 언어</string>
-    <string name="interface">인터페이스</string>
+    <string name="s_interface">인터페이스</string>
     <string name="the_language_used_for_the_app_s_own_text_tabs_buttons_labels">앱 자체 텍스트(탭, 버튼, 레이블)에 사용되는 언어.</string>
     <string name="meanings">뜻</string>
     <string name="vocabulary_language">어휘 언어</string>
@@ -332,5 +332,5 @@
     <string name="arg_days">%1$s일</string>
     <string name="details">자세히</string>
     <string name="two_choices_per_card_the_app_keeps_score">카드마다 두 가지 선택지 — 채점은 앱이 해요</string>
-    <string name="continue">계속</string>
+    <string name="s_continue">계속</string>
 </resources>

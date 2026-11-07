@@ -34,7 +34,7 @@
     <string name="hear_it_pick_the_word">విని పదాన్ని ఎంచుకో</string>
     <string name="this_entry_is_a_full_sentence_no_tile_game">ఈ ఎంట్రీ పూర్తి వాక్యం — టైల్ గేమ్ లేదు.</string>
     <string name="app_language">యాప్ భాష</string>
-    <string name="interface">ఇంటర్‌ఫేస్</string>
+    <string name="s_interface">ఇంటర్‌ఫేస్</string>
     <string name="the_language_used_for_the_app_s_own_text_tabs_buttons_labels">యాప్ సొంత టెక్స్ట్ (ట్యాబ్‌లు, బటన్లు, లేబుళ్లు) భాష.</string>
     <string name="meanings">అర్థాలు</string>
     <string name="vocabulary_language">పదజాల భాష</string>
@@ -332,5 +332,5 @@
     <string name="arg_days">%1$s రోజులు</string>
     <string name="details">వివరాలు</string>
     <string name="two_choices_per_card_the_app_keeps_score">ప్రతి కార్డుకు రెండు ఎంపికలు — స్కోరు యాప్ లెక్కిస్తుంది</string>
-    <string name="continue">కొనసాగించు</string>
+    <string name="s_continue">కొనసాగించు</string>
 </resources>

@@ -34,7 +34,7 @@
     <string name="hear_it_pick_the_word">ฟังแล้วเลือกคำ</string>
     <string name="this_entry_is_a_full_sentence_no_tile_game">รายการนี้เป็นประโยคเต็ม — ไม่มีเกมเรียงช่อง</string>
     <string name="app_language">ภาษาแอป</string>
-    <string name="interface">อินเทอร์เฟซ</string>
+    <string name="s_interface">อินเทอร์เฟซ</string>
     <string name="the_language_used_for_the_app_s_own_text_tabs_buttons_labels">ภาษาที่ใช้กับข้อความของแอป (แท็บ ปุ่ม ป้าย)</string>
     <string name="meanings">ความหมาย</string>
     <string name="vocabulary_language">ภาษาคำศัพท์</string>
@@ -332,5 +332,5 @@
     <string name="arg_days">%1$s วัน</string>
     <string name="details">รายละเอียด</string>
     <string name="two_choices_per_card_the_app_keeps_score">การ์ดละ 2 ตัวเลือก — แอปเป็นผู้ให้คะแนน</string>
-    <string name="continue">ดำเนินการต่อ</string>
+    <string name="s_continue">ดำเนินการต่อ</string>
 </resources>

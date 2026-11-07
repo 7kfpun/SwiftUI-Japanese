@@ -34,7 +34,7 @@
     <string name="hear_it_pick_the_word">Nghe rồi chọn từ</string>
     <string name="this_entry_is_a_full_sentence_no_tile_game">Mục này là câu hoàn chỉnh — không có trò ghép ô.</string>
     <string name="app_language">Ngôn ngữ ứng dụng</string>
-    <string name="interface">Giao diện</string>
+    <string name="s_interface">Giao diện</string>
     <string name="the_language_used_for_the_app_s_own_text_tabs_buttons_labels">Ngôn ngữ cho văn bản của ứng dụng (tab, nút, nhãn).</string>
     <string name="meanings">Nghĩa</string>
     <string name="vocabulary_language">Ngôn ngữ từ vựng</string>
@@ -332,5 +332,5 @@
     <string name="arg_days">%1$s ngày</string>
     <string name="details">Chi tiết</string>
     <string name="two_choices_per_card_the_app_keeps_score">Mỗi thẻ hai lựa chọn — ứng dụng tự chấm điểm</string>
-    <string name="continue">Tiếp tục</string>
+    <string name="s_continue">Tiếp tục</string>
 </resources>

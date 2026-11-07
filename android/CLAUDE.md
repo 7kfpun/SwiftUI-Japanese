@@ -95,7 +95,7 @@ which fails when any file is missing, stale or unexpected. Rerun the script afte
   Indonesian is `values-in`, the rest `values-<code>` (`fil`, `my`, `ne`, `ta`, `te`, `bn`, ...).
 - **Names:** from the English key: lowercase, `%@` becomes `arg`, `%` becomes `pct`, runs of
   non-alphanumerics become `_` (`"Clear %@"` is `R.string.clear_arg`, `"Lessons"` is
-  `R.string.lessons`). A name that starts with a digit gets `s_`; one over 60 characters is cut
+  `R.string.lessons`). A name that starts with a digit or is a Java keyword (`s_interface`) gets `s_`; one over 60 characters is cut
   with a sha1 suffix; two keys that map to one name both get a sha1 suffix. The default file keeps
   each original key in a comment above its string, so grep the key to find the name.
 - **Values:** `%@` becomes `%1$s`, `%2$s`... in order; `%%` stays `%%` (the app formats these
