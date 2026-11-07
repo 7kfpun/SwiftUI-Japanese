@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -258,6 +259,7 @@ private fun ContinueCard(number: Int, done: Int, total: Int, onClick: () -> Unit
         Modifier
             .fillMaxWidth()
             .background(Theme.colors.ink, Theme.rounded(Theme.Radius.row))
+            .clip(Theme.rounded(Theme.Radius.row))
             .clickable(role = Role.Button, onClick = onClick)
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -315,6 +317,7 @@ private fun LessonRow(number: Int, preview: List<String>, done: Int, total: Int,
         Modifier
             .fillMaxWidth()
             .cardChrome(Theme.Radius.row)
+            .clip(Theme.rounded(Theme.Radius.row))
             .clickable(role = Role.Button, onClick = onClick)
             .semantics(mergeDescendants = true) { contentDescription = description }
             .padding(horizontal = 14.dp, vertical = 12.dp),

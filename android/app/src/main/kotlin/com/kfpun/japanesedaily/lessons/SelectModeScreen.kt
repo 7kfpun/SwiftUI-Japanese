@@ -211,6 +211,7 @@ private fun PracticeHero(
         Modifier
             .fillMaxWidth()
             .background(Theme.colors.ink, Theme.rounded(Theme.Radius.hero))
+            .clip(Theme.rounded(Theme.Radius.hero))
             .clickable(role = Role.Button, onClick = onClick)
             .padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -285,6 +286,7 @@ private fun ModeTile(
     Column(
         modifier
             .cardChrome()
+            .clip(Theme.rounded(Theme.Radius.card))
             .clickable(role = Role.Button, onClick = onClick)
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)

@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.StrokeCap
@@ -317,6 +318,7 @@ private fun MatchTile(
                 shape
             )
             .border(bw, border, shape)
+            .clip(shape)
             .then(if (hidden) Modifier else Modifier.clickable(role = Role.Button, onClick = onTap))
             // The drag rides *beside* the tap: press-and-release is still a pick, movement becomes a line.
             .pointerInput(tile.id, hidden) {

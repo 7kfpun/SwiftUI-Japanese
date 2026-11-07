@@ -474,7 +474,7 @@ fun BookmarkStars(vocab: Vocab, tiers: Map<String, Int>, container: AppContainer
     Row(
         modifier
             .widthIn(min = 48.dp)
-            .heightIn(min = 48.dp)
+            .heightIn(min = 40.dp)
             .clickable(role = Role.Button) {
                 val next = Bookmark.next(stars)
                 scope.launch { container.progress.setBookmark(next, vocab) }
@@ -535,7 +535,7 @@ fun VocabRow(
                 }
             }
             Box(
-                Modifier.size(48.dp).clickable(role = Role.Button) { speak() },
+                Modifier.size(width = 48.dp, height = 40.dp).clickable(role = Role.Button) { speak() },
                 contentAlignment = Alignment.Center
             ) {
                 SymbolIcon(R.drawable.ic_volume_up, Theme.colors.accent, Theme.text.body.fontSize.value.toInt())
