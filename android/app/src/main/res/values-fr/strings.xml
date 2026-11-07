@@ -337,4 +337,12 @@
     <string name="details">Détails</string>
     <string name="two_choices_per_card_the_app_keeps_score">Deux choix par carte — l’app compte les points</string>
     <string name="s_continue">Continuer</string>
+    <string name="text_size">Taille du texte</string>
+    <string name="appearance">Apparence</string>
+    <string name="system">Système</string>
+    <string name="light">Clair</string>
+    <string name="dark">Sombre</string>
+    <string name="rate_the_app">Noter l\'app</string>
+    <string name="privacy_options">Options de confidentialité</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">Les notifications de cette app sont désactivées dans les réglages système.</string>
 </resources>

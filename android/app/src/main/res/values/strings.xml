@@ -672,4 +672,20 @@
     <string name="two_choices_per_card_the_app_keeps_score">Two choices per card — the app keeps score</string>
     <!-- Continue -->
     <string name="s_continue">Continue</string>
+    <!-- Text size -->
+    <string name="text_size">Text size</string>
+    <!-- Appearance -->
+    <string name="appearance">Appearance</string>
+    <!-- System -->
+    <string name="system">System</string>
+    <!-- Light -->
+    <string name="light">Light</string>
+    <!-- Dark -->
+    <string name="dark">Dark</string>
+    <!-- Rate the app -->
+    <string name="rate_the_app">Rate the app</string>
+    <!-- Privacy options -->
+    <string name="privacy_options">Privacy options</string>
+    <!-- Notifications are turned off for this app in system settings. -->
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">Notifications are turned off for this app in system settings.</string>
 </resources>

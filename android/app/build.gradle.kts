@@ -258,6 +258,8 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    // Play In-App Review, the rating prompt's 4-star hand-off (FOX-159).
+    implementation(libs.play.review)
     ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)

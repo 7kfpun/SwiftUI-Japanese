@@ -337,4 +337,12 @@
     <string name="details">বিস্তারিত</string>
     <string name="two_choices_per_card_the_app_keeps_score">প্রতি কার্ডে দুটি বিকল্প — স্কোর রাখে অ্যাপ</string>
     <string name="s_continue">চালিয়ে যান</string>
+    <string name="text_size">লেখার আকার</string>
+    <string name="appearance">চেহারা</string>
+    <string name="system">সিস্টেম</string>
+    <string name="light">হালকা</string>
+    <string name="dark">গাঢ়</string>
+    <string name="rate_the_app">অ্যাপটি রেট করুন</string>
+    <string name="privacy_options">গোপনীয়তার বিকল্প</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">এই অ্যাপের জন্য বিজ্ঞপ্তি সিস্টেম সেটিংসে বন্ধ করা আছে।</string>
 </resources>

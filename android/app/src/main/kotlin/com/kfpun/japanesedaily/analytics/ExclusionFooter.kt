@@ -1,6 +1,7 @@
 package com.kfpun.japanesedaily.analytics
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,11 +35,12 @@ class TapCounter(private val threshold: Int = 7, private val windowMillis: Long 
 
 /**
  * The version line at the foot of Settings, and the hidden developer affordance: seven quick taps flip the
- * per-device analytics opt-out ([Track.setExcluded]). The suffix is the only at-a-glance cue, as on iOS.
- * A developer-only surface, so the text is deliberately unlocalised.
+ * per-device analytics opt-out ([Track.setExcluded]), and a long press runs [onLongPress] (the intro replay).
+ * The suffix is the only at-a-glance cue, as on iOS. A developer-only surface, so the text is deliberately unlocalised.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun AnalyticsExclusionFooter(modifier: Modifier = Modifier) {
+fun AnalyticsExclusionFooter(modifier: Modifier = Modifier, onLongPress: () -> Unit = {}) {
     val counter = remember { TapCounter() }
     val haptics = LocalHapticFeedback.current
     var excluded by remember { mutableStateOf(Track.isExcluded) }
@@ -46,7 +48,13 @@ fun AnalyticsExclusionFooter(modifier: Modifier = Modifier) {
         text = BuildConfig.VERSION_NAME + if (excluded) " • Analytics off" else "",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = modifier.clickable {
+        modifier = modifier.combinedClickable(
+            onLongClick = {
+                // Long-press replays the intro, as on iOS (Settings passes the launcher in).
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                onLongPress()
+            }
+        ) {
             if (counter.tap(System.currentTimeMillis())) {
                 Track.setExcluded(!Track.isExcluded)
                 excluded = Track.isExcluded

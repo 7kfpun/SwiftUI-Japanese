@@ -13,6 +13,9 @@ import com.kfpun.japanesedaily.data.vocab.AndroidAssetSource
 import com.kfpun.japanesedaily.data.vocab.AssetSource
 import com.kfpun.japanesedaily.data.vocab.KanaData
 import com.kfpun.japanesedaily.data.vocab.VocabStore
+import com.kfpun.japanesedaily.rating.RatingCoordinator
+import com.kfpun.japanesedaily.settings.ProActions
+import com.kfpun.japanesedaily.settings.Reminders
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -40,6 +43,16 @@ class AppContainer(
     val practice = PracticeProgress(database.practice(), scope)
     val prefs = Prefs(preferences)
 
+    /**
+     * Pro (Play Billing, the paywall, UMP), supplied by FOX-158 at start-up; free and inert until then.
+     * Settings and the survey context read it.
+     */
+    @Volatile
+    var pro: ProActions = ProActions.None
+
+    /** The rating prompt. The ladder calls `rating.onRungPassed(totalPassed)` after every passed rung. */
+    val rating = RatingCoordinator(prefs, scope)
+
     /** Decodes the course data and loads Practice stages off the main thread, at launch. */
     fun preload() {
         scope.launch {
@@ -61,7 +74,9 @@ class AppContainer(
             database = ProgressDatabase.open(context),
             preferences = PreferenceDataStoreFactory.create {
                 context.filesDir.resolve("datastore/prefs.preferences_pb")
-            }
+            },
+            // Studying today cancels today's reminder: the plan is re-derived from the new streak.
+            onFirstAnswerToday = { Reminders.reschedule(context) }
         )
     }
 }

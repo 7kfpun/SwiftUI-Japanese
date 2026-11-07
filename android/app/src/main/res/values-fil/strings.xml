@@ -337,4 +337,12 @@
     <string name="details">Mga detalye</string>
     <string name="two_choices_per_card_the_app_keeps_score">Dalawang pagpipilian bawat card — ang app ang nagbibilang</string>
     <string name="s_continue">Magpatuloy</string>
+    <string name="text_size">Laki ng teksto</string>
+    <string name="appearance">Hitsura</string>
+    <string name="system">Sistema</string>
+    <string name="light">Maliwanag</string>
+    <string name="dark">Madilim</string>
+    <string name="rate_the_app">I-rate ang app</string>
+    <string name="privacy_options">Mga opsyon sa privacy</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">Naka-off ang mga notification para sa app na ito sa mga setting ng system.</string>
 </resources>

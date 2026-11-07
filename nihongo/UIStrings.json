@@ -334,7 +334,15 @@
     "%@ days": "%@ days",
     "Details": "Details",
     "Two choices per card — the app keeps score": "Two choices per card — the app keeps score",
-    "Continue": "Continue"
+    "Continue": "Continue",
+    "Text size": "Text size",
+    "Appearance": "Appearance",
+    "System": "System",
+    "Light": "Light",
+    "Dark": "Dark",
+    "Rate the app": "Rate the app",
+    "Privacy options": "Privacy options",
+    "Notifications are turned off for this app in system settings.": "Notifications are turned off for this app in system settings."
   },
   "zh": {
     "Kana": "假名",
@@ -671,7 +679,15 @@
     "%@ days": "%@ 天",
     "Details": "详情",
     "Two choices per card — the app keeps score": "每张卡两个选项——由应用计分",
-    "Continue": "继续"
+    "Continue": "继续",
+    "Text size": "文字大小",
+    "Appearance": "外观",
+    "System": "跟随系统",
+    "Light": "浅色",
+    "Dark": "深色",
+    "Rate the app": "为应用评分",
+    "Privacy options": "隐私选项",
+    "Notifications are turned off for this app in system settings.": "此应用的通知已在系统设置中关闭。"
   },
   "zh-Hant": {
     "Kana": "假名",
@@ -1008,7 +1024,15 @@
     "%@ days": "%@ 天",
     "Details": "詳情",
     "Two choices per card — the app keeps score": "每張卡兩個選項——由 App 計分",
-    "Continue": "繼續"
+    "Continue": "繼續",
+    "Text size": "文字大小",
+    "Appearance": "外觀",
+    "System": "跟隨系統",
+    "Light": "淺色",
+    "Dark": "深色",
+    "Rate the app": "為App評分",
+    "Privacy options": "隱私權選項",
+    "Notifications are turned off for this app in system settings.": "此App的通知已在系統設定中關閉。"
   },
   "vi": {
     "Kana": "Kana",
@@ -1345,7 +1369,15 @@
     "%@ days": "%@ ngày",
     "Details": "Chi tiết",
     "Two choices per card — the app keeps score": "Mỗi thẻ hai lựa chọn — ứng dụng tự chấm điểm",
-    "Continue": "Tiếp tục"
+    "Continue": "Tiếp tục",
+    "Text size": "Cỡ chữ",
+    "Appearance": "Giao diện",
+    "System": "Theo hệ thống",
+    "Light": "Sáng",
+    "Dark": "Tối",
+    "Rate the app": "Đánh giá ứng dụng",
+    "Privacy options": "Tùy chọn quyền riêng tư",
+    "Notifications are turned off for this app in system settings.": "Thông báo của ứng dụng này đã bị tắt trong cài đặt hệ thống."
   },
   "de": {
     "Kana": "Kana",
@@ -1682,7 +1714,15 @@
     "%@ days": "%@ Tage",
     "Details": "Details",
     "Two choices per card — the app keeps score": "Zwei Antworten pro Karte – die App zählt mit",
-    "Continue": "Weiter"
+    "Continue": "Weiter",
+    "Text size": "Textgröße",
+    "Appearance": "Darstellung",
+    "System": "System",
+    "Light": "Hell",
+    "Dark": "Dunkel",
+    "Rate the app": "App bewerten",
+    "Privacy options": "Datenschutzoptionen",
+    "Notifications are turned off for this app in system settings.": "Mitteilungen für diese App sind in den Systemeinstellungen ausgeschaltet."
   },
   "th": {
     "Kana": "คานะ",
@@ -2019,7 +2059,15 @@
     "%@ days": "%@ วัน",
     "Details": "รายละเอียด",
     "Two choices per card — the app keeps score": "การ์ดละ 2 ตัวเลือก — แอปเป็นผู้ให้คะแนน",
-    "Continue": "ดำเนินการต่อ"
+    "Continue": "ดำเนินการต่อ",
+    "Text size": "ขนาดตัวอักษร",
+    "Appearance": "รูปลักษณ์",
+    "System": "ตามระบบ",
+    "Light": "สว่าง",
+    "Dark": "มืด",
+    "Rate the app": "ให้คะแนนแอป",
+    "Privacy options": "ตัวเลือกความเป็นส่วนตัว",
+    "Notifications are turned off for this app in system settings.": "การแจ้งเตือนของแอปนี้ถูกปิดในการตั้งค่าระบบ"
   },
   "my": {
     "Kana": "ကာနာ",
@@ -2356,7 +2404,15 @@
     "%@ days": "%@ ရက်",
     "Details": "အသေးစိတ်",
     "Two choices per card — the app keeps score": "ကတ်တစ်ခုလျှင် ရွေးစရာ ၂ ခု — အမှတ်ကို အက်ပ်က မှတ်ပေးသည်",
-    "Continue": "ဆက်လုပ်မည်"
+    "Continue": "ဆက်လုပ်မည်",
+    "Text size": "စာလုံးအရွယ်အစား",
+    "Appearance": "အသွင်အပြင်",
+    "System": "စနစ်အတိုင်း",
+    "Light": "အလင်း",
+    "Dark": "အမှောင်",
+    "Rate the app": "အက်ပ်ကို အဆင့်သတ်မှတ်ပါ",
+    "Privacy options": "ကိုယ်ရေးကိုယ်တာ ရွေးချယ်စရာများ",
+    "Notifications are turned off for this app in system settings.": "ဤအက်ပ်အတွက် အကြောင်းကြားချက်များကို စနစ်ဆက်တင်တွင် ပိတ်ထားသည်။"
   },
   "es": {
     "Kana": "Kana",
@@ -2693,7 +2749,15 @@
     "%@ days": "%@ días",
     "Details": "Detalles",
     "Two choices per card — the app keeps score": "Dos opciones por tarjeta: la app lleva la cuenta",
-    "Continue": "Continuar"
+    "Continue": "Continuar",
+    "Text size": "Tamaño del texto",
+    "Appearance": "Apariencia",
+    "System": "Sistema",
+    "Light": "Claro",
+    "Dark": "Oscuro",
+    "Rate the app": "Valorar la app",
+    "Privacy options": "Opciones de privacidad",
+    "Notifications are turned off for this app in system settings.": "Las notificaciones de esta app están desactivadas en los ajustes del sistema."
   },
   "fr": {
     "Kana": "Kana",
@@ -3030,7 +3094,15 @@
     "%@ days": "%@ jours",
     "Details": "Détails",
     "Two choices per card — the app keeps score": "Deux choix par carte — l’app compte les points",
-    "Continue": "Continuer"
+    "Continue": "Continuer",
+    "Text size": "Taille du texte",
+    "Appearance": "Apparence",
+    "System": "Système",
+    "Light": "Clair",
+    "Dark": "Sombre",
+    "Rate the app": "Noter l'app",
+    "Privacy options": "Options de confidentialité",
+    "Notifications are turned off for this app in system settings.": "Les notifications de cette app sont désactivées dans les réglages système."
   },
   "it": {
     "Kana": "Kana",
@@ -3367,7 +3439,15 @@
     "%@ days": "%@ giorni",
     "Details": "Dettagli",
     "Two choices per card — the app keeps score": "Due scelte per carta: il punteggio lo tiene l’app",
-    "Continue": "Continua"
+    "Continue": "Continua",
+    "Text size": "Dimensione del testo",
+    "Appearance": "Aspetto",
+    "System": "Sistema",
+    "Light": "Chiaro",
+    "Dark": "Scuro",
+    "Rate the app": "Valuta l'app",
+    "Privacy options": "Opzioni sulla privacy",
+    "Notifications are turned off for this app in system settings.": "Le notifiche di questa app sono disattivate nelle impostazioni di sistema."
   },
   "ru": {
     "Kana": "Кана",
@@ -3704,7 +3784,15 @@
     "%@ days": "%@ дн.",
     "Details": "Подробнее",
     "Two choices per card — the app keeps score": "Два варианта на карточку — счёт ведёт приложение",
-    "Continue": "Продолжить"
+    "Continue": "Продолжить",
+    "Text size": "Размер текста",
+    "Appearance": "Оформление",
+    "System": "Системная",
+    "Light": "Светлая",
+    "Dark": "Тёмная",
+    "Rate the app": "Оценить приложение",
+    "Privacy options": "Параметры конфиденциальности",
+    "Notifications are turned off for this app in system settings.": "Уведомления для этого приложения отключены в настройках системы."
   },
   "bn": {
     "Kana": "কানা",
@@ -4041,7 +4129,15 @@
     "%@ days": "%@ দিন",
     "Details": "বিস্তারিত",
     "Two choices per card — the app keeps score": "প্রতি কার্ডে দুটি বিকল্প — স্কোর রাখে অ্যাপ",
-    "Continue": "চালিয়ে যান"
+    "Continue": "চালিয়ে যান",
+    "Text size": "লেখার আকার",
+    "Appearance": "চেহারা",
+    "System": "সিস্টেম",
+    "Light": "হালকা",
+    "Dark": "গাঢ়",
+    "Rate the app": "অ্যাপটি রেট করুন",
+    "Privacy options": "গোপনীয়তার বিকল্প",
+    "Notifications are turned off for this app in system settings.": "এই অ্যাপের জন্য বিজ্ঞপ্তি সিস্টেম সেটিংসে বন্ধ করা আছে।"
   },
   "hi": {
     "Kana": "काना",
@@ -4378,7 +4474,15 @@
     "%@ days": "%@ दिन",
     "Details": "विवरण",
     "Two choices per card — the app keeps score": "हर कार्ड पर दो विकल्प — स्कोर ऐप रखता है",
-    "Continue": "जारी रखें"
+    "Continue": "जारी रखें",
+    "Text size": "टेक्स्ट का आकार",
+    "Appearance": "दिखावट",
+    "System": "सिस्टम",
+    "Light": "लाइट",
+    "Dark": "डार्क",
+    "Rate the app": "ऐप को रेट करें",
+    "Privacy options": "गोपनीयता विकल्प",
+    "Notifications are turned off for this app in system settings.": "इस ऐप के लिए सूचनाएँ सिस्टम सेटिंग में बंद हैं।"
   },
   "ta": {
     "Kana": "கானா",
@@ -4715,7 +4819,15 @@
     "%@ days": "%@ நாட்கள்",
     "Details": "விவரங்கள்",
     "Two choices per card — the app keeps score": "ஒவ்வொரு அட்டைக்கும் இரண்டு தேர்வுகள் — மதிப்பெண்ணை ஆப் கணக்கிடும்",
-    "Continue": "தொடரவும்"
+    "Continue": "தொடரவும்",
+    "Text size": "எழுத்து அளவு",
+    "Appearance": "தோற்றம்",
+    "System": "சாதனம்போல்",
+    "Light": "ஒளி",
+    "Dark": "இருள்",
+    "Rate the app": "செயலியை மதிப்பிடுங்கள்",
+    "Privacy options": "தனியுரிமை விருப்பங்கள்",
+    "Notifications are turned off for this app in system settings.": "இந்தச் செயலிக்கான அறிவிப்புகள் சிஸ்டம் அமைப்புகளில் முடக்கப்பட்டுள்ளன."
   },
   "te": {
     "Kana": "కానా",
@@ -5052,7 +5164,15 @@
     "%@ days": "%@ రోజులు",
     "Details": "వివరాలు",
     "Two choices per card — the app keeps score": "ప్రతి కార్డుకు రెండు ఎంపికలు — స్కోరు యాప్ లెక్కిస్తుంది",
-    "Continue": "కొనసాగించు"
+    "Continue": "కొనసాగించు",
+    "Text size": "అక్షరాల పరిమాణం",
+    "Appearance": "రూపం",
+    "System": "సిస్టమ్",
+    "Light": "లైట్",
+    "Dark": "డార్క్",
+    "Rate the app": "యాప్‌ను రేట్ చేయండి",
+    "Privacy options": "గోప్యతా ఎంపికలు",
+    "Notifications are turned off for this app in system settings.": "ఈ యాప్‌కు నోటిఫికేషన్‌లు సిస్టమ్ సెట్టింగ్‌లలో ఆఫ్ చేయబడ్డాయి."
   },
   "ne": {
     "Kana": "काना",
@@ -5389,7 +5509,15 @@
     "%@ days": "%@ दिन",
     "Details": "विवरण",
     "Two choices per card — the app keeps score": "प्रत्येक कार्डमा दुई विकल्प — अंक एपले राख्छ",
-    "Continue": "जारी राख्नुहोस्"
+    "Continue": "जारी राख्नुहोस्",
+    "Text size": "पाठको आकार",
+    "Appearance": "स्वरूप",
+    "System": "प्रणाली",
+    "Light": "उज्यालो",
+    "Dark": "अँध्यारो",
+    "Rate the app": "एपलाई मूल्याङ्कन गर्नुहोस्",
+    "Privacy options": "गोपनीयता विकल्पहरू",
+    "Notifications are turned off for this app in system settings.": "यो एपका लागि सूचनाहरू प्रणाली सेटिङमा बन्द गरिएका छन्।"
   },
   "fil": {
     "Kana": "Kana",
@@ -5726,7 +5854,15 @@
     "%@ days": "%@ araw",
     "Details": "Mga detalye",
     "Two choices per card — the app keeps score": "Dalawang pagpipilian bawat card — ang app ang nagbibilang",
-    "Continue": "Magpatuloy"
+    "Continue": "Magpatuloy",
+    "Text size": "Laki ng teksto",
+    "Appearance": "Hitsura",
+    "System": "Sistema",
+    "Light": "Maliwanag",
+    "Dark": "Madilim",
+    "Rate the app": "I-rate ang app",
+    "Privacy options": "Mga opsyon sa privacy",
+    "Notifications are turned off for this app in system settings.": "Naka-off ang mga notification para sa app na ito sa mga setting ng system."
   },
   "id": {
     "Kana": "Kana",
@@ -6063,7 +6199,15 @@
     "%@ days": "%@ hari",
     "Details": "Detail",
     "Two choices per card — the app keeps score": "Dua pilihan per kartu — aplikasi yang mencatat skor",
-    "Continue": "Lanjutkan"
+    "Continue": "Lanjutkan",
+    "Text size": "Ukuran teks",
+    "Appearance": "Tampilan",
+    "System": "Sistem",
+    "Light": "Terang",
+    "Dark": "Gelap",
+    "Rate the app": "Beri nilai aplikasi",
+    "Privacy options": "Opsi privasi",
+    "Notifications are turned off for this app in system settings.": "Notifikasi untuk aplikasi ini dimatikan di pengaturan sistem."
   },
   "ko": {
     "Kana": "가나",
@@ -6400,6 +6544,14 @@
     "%@ days": "%@일",
     "Details": "자세히",
     "Two choices per card — the app keeps score": "카드마다 두 가지 선택지 — 채점은 앱이 해요",
-    "Continue": "계속"
+    "Continue": "계속",
+    "Text size": "글자 크기",
+    "Appearance": "화면 스타일",
+    "System": "시스템",
+    "Light": "라이트",
+    "Dark": "다크",
+    "Rate the app": "앱 평가하기",
+    "Privacy options": "개인정보 옵션",
+    "Notifications are turned off for this app in system settings.": "이 앱의 알림이 시스템 설정에서 꺼져 있습니다."
   }
 }

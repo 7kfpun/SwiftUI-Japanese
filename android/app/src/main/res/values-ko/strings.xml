@@ -337,4 +337,12 @@
     <string name="details">자세히</string>
     <string name="two_choices_per_card_the_app_keeps_score">카드마다 두 가지 선택지 — 채점은 앱이 해요</string>
     <string name="s_continue">계속</string>
+    <string name="text_size">글자 크기</string>
+    <string name="appearance">화면 스타일</string>
+    <string name="system">시스템</string>
+    <string name="light">라이트</string>
+    <string name="dark">다크</string>
+    <string name="rate_the_app">앱 평가하기</string>
+    <string name="privacy_options">개인정보 옵션</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">이 앱의 알림이 시스템 설정에서 꺼져 있습니다.</string>
 </resources>

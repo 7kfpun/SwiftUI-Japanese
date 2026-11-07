@@ -337,4 +337,12 @@
     <string name="details">विवरण</string>
     <string name="two_choices_per_card_the_app_keeps_score">हर कार्ड पर दो विकल्प — स्कोर ऐप रखता है</string>
     <string name="s_continue">जारी रखें</string>
+    <string name="text_size">टेक्स्ट का आकार</string>
+    <string name="appearance">दिखावट</string>
+    <string name="system">सिस्टम</string>
+    <string name="light">लाइट</string>
+    <string name="dark">डार्क</string>
+    <string name="rate_the_app">ऐप को रेट करें</string>
+    <string name="privacy_options">गोपनीयता विकल्प</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">इस ऐप के लिए सूचनाएँ सिस्टम सेटिंग में बंद हैं।</string>
 </resources>

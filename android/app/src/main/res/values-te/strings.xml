@@ -337,4 +337,12 @@
     <string name="details">వివరాలు</string>
     <string name="two_choices_per_card_the_app_keeps_score">ప్రతి కార్డుకు రెండు ఎంపికలు — స్కోరు యాప్ లెక్కిస్తుంది</string>
     <string name="s_continue">కొనసాగించు</string>
+    <string name="text_size">అక్షరాల పరిమాణం</string>
+    <string name="appearance">రూపం</string>
+    <string name="system">సిస్టమ్</string>
+    <string name="light">లైట్</string>
+    <string name="dark">డార్క్</string>
+    <string name="rate_the_app">యాప్‌ను రేట్ చేయండి</string>
+    <string name="privacy_options">గోప్యతా ఎంపికలు</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">ఈ యాప్‌కు నోటిఫికేషన్‌లు సిస్టమ్ సెట్టింగ్‌లలో ఆఫ్ చేయబడ్డాయి.</string>
 </resources>

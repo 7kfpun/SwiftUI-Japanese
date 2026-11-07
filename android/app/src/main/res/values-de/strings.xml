@@ -337,4 +337,12 @@
     <string name="details">Details</string>
     <string name="two_choices_per_card_the_app_keeps_score">Zwei Antworten pro Karte – die App zählt mit</string>
     <string name="s_continue">Weiter</string>
+    <string name="text_size">Textgröße</string>
+    <string name="appearance">Darstellung</string>
+    <string name="system">System</string>
+    <string name="light">Hell</string>
+    <string name="dark">Dunkel</string>
+    <string name="rate_the_app">App bewerten</string>
+    <string name="privacy_options">Datenschutzoptionen</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">Mitteilungen für diese App sind in den Systemeinstellungen ausgeschaltet.</string>
 </resources>

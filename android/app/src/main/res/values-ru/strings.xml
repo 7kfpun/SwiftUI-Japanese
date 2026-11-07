@@ -337,4 +337,12 @@
     <string name="details">Подробнее</string>
     <string name="two_choices_per_card_the_app_keeps_score">Два варианта на карточку — счёт ведёт приложение</string>
     <string name="s_continue">Продолжить</string>
+    <string name="text_size">Размер текста</string>
+    <string name="appearance">Оформление</string>
+    <string name="system">Системная</string>
+    <string name="light">Светлая</string>
+    <string name="dark">Тёмная</string>
+    <string name="rate_the_app">Оценить приложение</string>
+    <string name="privacy_options">Параметры конфиденциальности</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">Уведомления для этого приложения отключены в настройках системы.</string>
 </resources>

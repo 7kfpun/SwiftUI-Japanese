@@ -337,4 +337,12 @@
     <string name="details">详情</string>
     <string name="two_choices_per_card_the_app_keeps_score">每张卡两个选项——由应用计分</string>
     <string name="s_continue">继续</string>
+    <string name="text_size">文字大小</string>
+    <string name="appearance">外观</string>
+    <string name="system">跟随系统</string>
+    <string name="light">浅色</string>
+    <string name="dark">深色</string>
+    <string name="rate_the_app">为应用评分</string>
+    <string name="privacy_options">隐私选项</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">此应用的通知已在系统设置中关闭。</string>
 </resources>
