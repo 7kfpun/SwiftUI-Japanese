@@ -131,7 +131,7 @@ fun ChallengeScreen(
             Track.event(TrackEvents.EARNED_FIRST_GROUP, mapOf("lesson" to lessonNumber, "index" to model.index))
             return@LaunchedEffect
         }
-        if (model.passed) container.onRungPassed(container.progress.totalPassed())
+        if (model.passed) container.rating.onRungPassed(container.progress.totalPassed())
     }
 
     // The way out: an abandon past question 1, or the interstitial hook for a finished run. Never mid-run.

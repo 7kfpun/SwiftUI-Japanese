@@ -55,13 +55,6 @@ class AppContainer(
     val practice = PracticeProgress(database.practice(), scope)
     val prefs = Prefs(preferences)
 
-    /**
-     * Called with the total of rungs passed after each pass that did not earn the unlock: FOX-159 wires it to the
-     * rating prompt. A no-op until then.
-     */
-    @Volatile
-    var onRungPassed: (totalPassed: Int) -> Unit = {}
-
     /** The one source of Pro (FOX-158): Play Billing, re-read on every start, cached on the device. */
     val pro = ProRepository(billing, entitlements, scope)
 

@@ -186,8 +186,8 @@ one fixed run (10 questions, new words guaranteed a slot, forms dealt in rotatio
 when a run finishes, never on abandon) are `ProgressRepository.recordChallenge`.
 
 - **Hooks** (on `AppContainer`): `onChallengeFinished()` (FOX-158's throttled interstitial) is called when a *finished*
-  run's screen is left, never mid-run and never on abandon; `onRungPassed(totalPassed)` (a no-op `var` until FOX-159 wires
-  the rating prompt) fires after a pass that did not earn the unlock.
+  run's screen is left, never mid-run and never on abandon; `container.rating.onRungPassed(totalPassed)` (FOX-159's
+  `RatingCoordinator` owns the 21st-rung bar and the cadence) is reported after a pass that did not earn the unlock.
 - The earned unlock is detected as before/after `hasEarnedFirstGroup()` around the record: it shows `EarnedUnlockCard`,
   fires `earned_first_group` and skips the rating hook. Both `isLocked` callers already pass `earnedFirstGroup`.
 - **Shared fixtures:** `python3 scripts/dump-challenge-fixtures.py` compiles the real `Challenge.swift` with `swiftc` over the
