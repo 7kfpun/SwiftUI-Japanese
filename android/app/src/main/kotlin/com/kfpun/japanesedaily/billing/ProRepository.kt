@@ -217,11 +217,18 @@ class ProRepository(private val gateway: BillingGateway, private val store: Enti
         if (state.value == null) {
             val saved = runCatching { store.read() }.getOrNull() ?: Entitlement.FREE
             state.value = saved
-            Track.setPremium(saved == Entitlement.PRO, if (saved == Entitlement.PRO) TIER_CACHED else TIER_NONE)
+            tier = if (saved == Entitlement.PRO) TIER_CACHED else TIER_NONE
+            Track.setPremium(saved == Entitlement.PRO, tier)
         }
     }
 
+    /** The analytics tier of the last confirmed purchase list (`lifetime`, `subscription`, `cached`, `none`): Settings and the survey read it. */
+    @Volatile
+    var tier: String = TIER_NONE
+        private set
+
     private suspend fun save(entitlement: Entitlement, tier: String) {
+        this.tier = tier
         Track.setPremium(entitlement == Entitlement.PRO, tier)
         if (state.value == entitlement) return
         state.value = entitlement

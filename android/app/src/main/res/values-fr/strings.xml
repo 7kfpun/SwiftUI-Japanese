@@ -341,4 +341,12 @@
     <string name="no_purchases_found_for_this_google_account">Aucun achat trouvé pour ce compte Google.</string>
     <string name="your_payment_is_pending_premium_turns_on_once_it_completes">Votre paiement est en attente. Premium s’activera une fois terminé.</string>
     <string name="the_purchase_didn_t_go_through_please_try_again">L’achat n’a pas abouti. Veuillez réessayer.</string>
+    <string name="text_size">Taille du texte</string>
+    <string name="appearance">Apparence</string>
+    <string name="system">Système</string>
+    <string name="light">Clair</string>
+    <string name="dark">Sombre</string>
+    <string name="rate_the_app">Noter l\'app</string>
+    <string name="privacy_options">Options de confidentialité</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">Les notifications de cette app sont désactivées dans les réglages système.</string>
 </resources>

@@ -341,4 +341,12 @@
     <string name="no_purchases_found_for_this_google_account">यो Google खाताका लागि कुनै खरिद फेला परेन।</string>
     <string name="your_payment_is_pending_premium_turns_on_once_it_completes">तपाईंको भुक्तानी बाँकी छ। पूरा भएपछि प्रिमियम सक्रिय हुनेछ।</string>
     <string name="the_purchase_didn_t_go_through_please_try_again">खरिद पूरा भएन। कृपया फेरि प्रयास गर्नुहोस्।</string>
+    <string name="text_size">पाठको आकार</string>
+    <string name="appearance">स्वरूप</string>
+    <string name="system">प्रणाली</string>
+    <string name="light">उज्यालो</string>
+    <string name="dark">अँध्यारो</string>
+    <string name="rate_the_app">एपलाई मूल्याङ्कन गर्नुहोस्</string>
+    <string name="privacy_options">गोपनीयता विकल्पहरू</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">यो एपका लागि सूचनाहरू प्रणाली सेटिङमा बन्द गरिएका छन्।</string>
 </resources>

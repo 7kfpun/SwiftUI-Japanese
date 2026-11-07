@@ -341,4 +341,12 @@
     <string name="no_purchases_found_for_this_google_account">Tidak ada pembelian yang ditemukan untuk akun Google ini.</string>
     <string name="your_payment_is_pending_premium_turns_on_once_it_completes">Pembayaran Anda masih tertunda. Premium aktif setelah selesai.</string>
     <string name="the_purchase_didn_t_go_through_please_try_again">Pembelian tidak berhasil. Silakan coba lagi.</string>
+    <string name="text_size">Ukuran teks</string>
+    <string name="appearance">Tampilan</string>
+    <string name="system">Sistem</string>
+    <string name="light">Terang</string>
+    <string name="dark">Gelap</string>
+    <string name="rate_the_app">Beri nilai aplikasi</string>
+    <string name="privacy_options">Opsi privasi</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">Notifikasi untuk aplikasi ini dimatikan di pengaturan sistem.</string>
 </resources>

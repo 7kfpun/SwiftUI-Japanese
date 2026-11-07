@@ -341,4 +341,12 @@
     <string name="no_purchases_found_for_this_google_account">এই Google অ্যাকাউন্টে কোনো ক্রয় পাওয়া যায়নি।</string>
     <string name="your_payment_is_pending_premium_turns_on_once_it_completes">আপনার পেমেন্ট মুলতুবি আছে। সম্পন্ন হলে প্রিমিয়াম চালু হবে।</string>
     <string name="the_purchase_didn_t_go_through_please_try_again">ক্রয় সম্পন্ন হয়নি। আবার চেষ্টা করুন।</string>
+    <string name="text_size">লেখার আকার</string>
+    <string name="appearance">চেহারা</string>
+    <string name="system">সিস্টেম</string>
+    <string name="light">হালকা</string>
+    <string name="dark">গাঢ়</string>
+    <string name="rate_the_app">অ্যাপটি রেট করুন</string>
+    <string name="privacy_options">গোপনীয়তার বিকল্প</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">এই অ্যাপের জন্য বিজ্ঞপ্তি সিস্টেম সেটিংসে বন্ধ করা আছে।</string>
 </resources>

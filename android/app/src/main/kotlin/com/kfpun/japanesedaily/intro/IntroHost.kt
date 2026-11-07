@@ -15,6 +15,7 @@ import com.kfpun.japanesedaily.analytics.Track
 import com.kfpun.japanesedaily.analytics.TrackScreens
 import com.kfpun.japanesedaily.data.AppContainer
 import com.kfpun.japanesedaily.data.prefs.Pref
+import com.kfpun.japanesedaily.settings.rememberReminderOptIn
 import com.kfpun.japanesedaily.survey.AppInfo
 import com.kfpun.japanesedaily.survey.Survey
 import kotlinx.coroutines.Dispatchers
@@ -50,6 +51,8 @@ fun IntroHost(content: @Composable (Intro.Tab) -> Unit) {
     val container = remember { AppContainer.from(context) }
     val prefs = container.prefs
     val scope = rememberCoroutineScope()
+    // The intro's reminders "yes": the same opt-in as Settings (system permission on 13+, then plan it).
+    val optInReminders = rememberReminderOptIn()
 
     // null while the flag is being read: nothing is drawn for a few milliseconds rather than a
     // flash of the tabs that the tour then covers.
@@ -83,7 +86,11 @@ fun IntroHost(content: @Composable (Intro.Tab) -> Unit) {
             chosen = it
             scope.launch { prefs.setTranslationLanguage(it) }
         },
-        onReminders = { /* the streak reminder and its permission arrive with FOX-159 */ },
+        onReminders = { wants ->
+            scope.launch { prefs.set(Pref.notificationAskedAt, System.currentTimeMillis()) }
+            // Only a yes ever reaches the system permission; "Not now" must never be followed by it.
+            if (wants) optInReminders()
+        },
         onFinish = { answers, tab, completed ->
             if (landing == null) landing = tab
             IntroLauncher.done()

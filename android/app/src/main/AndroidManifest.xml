@@ -3,6 +3,9 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- The streak reminder (FOX-159): asked on Android 13+ only from an explicit opt-in, and re-planned after a reboot. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- Progress stays on the device (FOX-146): no Auto Backup, no device-to-device copy.
          allowBackup=false covers Android 11 and below; data_extraction_rules covers 12+. -->
@@ -53,6 +56,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- The streak reminder: the alarm itself, and what re-plans it after a reboot, an update, a clock
+             change or a time-zone change. Neither is exported; the system's protected broadcasts reach both. -->
+        <receiver
+            android:name=".settings.ReminderReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".settings.RescheduleReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
         <!-- Keeps the in-app language choice on Android 12 and below (AppCompat's per-app locale
              store), and moves it to the system's after an upgrade to 13+. -->

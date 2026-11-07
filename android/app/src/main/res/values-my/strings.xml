@@ -341,4 +341,12 @@
     <string name="no_purchases_found_for_this_google_account">ဤ Google အကောင့်အတွက် ဝယ်ယူမှု မတွေ့ပါ။</string>
     <string name="your_payment_is_pending_premium_turns_on_once_it_completes">သင့်ငွေပေးချေမှု ဆိုင်းငံ့ထားသည်။ ပြီးစီးသည်နှင့် ပရီမီယံ ဖွင့်ပေးပါမည်။</string>
     <string name="the_purchase_didn_t_go_through_please_try_again">ဝယ်ယူမှု မအောင်မြင်ပါ။ ထပ်ကြိုးစားပါ။</string>
+    <string name="text_size">စာလုံးအရွယ်အစား</string>
+    <string name="appearance">အသွင်အပြင်</string>
+    <string name="system">စနစ်အတိုင်း</string>
+    <string name="light">အလင်း</string>
+    <string name="dark">အမှောင်</string>
+    <string name="rate_the_app">အက်ပ်ကို အဆင့်သတ်မှတ်ပါ</string>
+    <string name="privacy_options">ကိုယ်ရေးကိုယ်တာ ရွေးချယ်စရာများ</string>
+    <string name="notifications_are_turned_off_for_this_app_in_system_settings">ဤအက်ပ်အတွက် အကြောင်းကြားချက်များကို စနစ်ဆက်တင်တွင် ပိတ်ထားသည်။</string>
 </resources>
