@@ -34,6 +34,7 @@ import com.kfpun.japanesedaily.analytics.TrackEvents
 import com.kfpun.japanesedaily.data.progress.ChallengeResult
 import com.kfpun.japanesedaily.data.progress.LadderRules
 import com.kfpun.japanesedaily.data.vocab.Lesson
+import com.kfpun.japanesedaily.ladder.Challenge
 import com.kfpun.japanesedaily.ui.Theme
 import com.kfpun.japanesedaily.ui.components.SymbolIcon
 import com.kfpun.japanesedaily.ui.components.accentPlate
@@ -41,31 +42,28 @@ import com.kfpun.japanesedaily.ui.components.cardChrome
 
 /*
  * ============================================================================================
- * FOX-154 ENTRY POINT: the Challenge ladder.
+ * The Challenge ladder's entry (FOX-154 provides the run: see `ladder/ChallengeScreen`).
  *
  * Everything on the lesson screen below the practice modes is the ladder's *entry*: the rung
- * strip, the "next up" card and the retry card. They are drawn here from the persisted results
- * (read-only), and every tap on an open rung goes through [LocalOpenChallenge]. The ladder
- * ticket (FOX-154) provides the real [OpenChallenge], which pushes the run (briefing, play and
- * result screens), and replaces the question-count estimate in [nextQuestions] with
- * `Challenge.pool(...)`. Nothing else in the Lessons tab needs to change.
+ * strip, the "next up" card and the retry card, drawn from the persisted results. Every tap on
+ * an open rung goes through [LocalOpenChallenge], which `LessonsTab` provides by pushing
+ * `LessonRoute.Challenge`.
  *
  * Lock rules, unchanged from iOS: a premium lock opens the paywall (`locked_challenge`,
  * reason "paywall"); a rung locked by progress is dimmed and only logs.
  * ============================================================================================
  */
 
-/** Opens rung [index] of [lesson]. A no-op until FOX-154 provides the real ladder. */
+/** Opens rung [index] of [lesson]. A no-op by default; `LessonsTab` provides the real one. */
 fun interface OpenChallenge {
     fun open(lesson: Int, index: Int)
 }
 
 val LocalOpenChallenge = staticCompositionLocalOf { OpenChallenge { _, _ -> } }
 
-/** How many questions a rung will ask, for the "next up" card. FOX-154 replaces this with the pool's real size. */
-internal fun nextQuestions(lesson: Lesson): Int = minOf(QUESTIONS_PER_CHALLENGE, lesson.entries.size)
-
-private const val QUESTIONS_PER_CHALLENGE = 10
+/** How many questions rung [index] will ask, for the "next up" card: the cap, or the pool when it is smaller. */
+internal fun nextQuestions(lesson: Lesson, index: Int): Int =
+    minOf(Challenge.QUESTIONS_PER_CHALLENGE, Challenge.pool(lesson.entries, index).size)
 
 /**
  * The Challenge section of the lesson screen (port of `challengeSection`): header with the star tally,
@@ -140,7 +138,7 @@ fun ChallengeSection(
         if (!locked && previousCleared &&
             next != null
         ) {
-            NextCard(next, nextQuestions(lesson)) { open.open(lesson.number, next) }
+            NextCard(next, nextQuestions(lesson, next)) { open.open(lesson.number, next) }
         }
         val retry = LessonStanding.retryTarget(results)
         if (!locked && previousCleared && retry != null) {

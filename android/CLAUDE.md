@@ -169,7 +169,7 @@ enforced), Practice, Vocab List, Read along, Flashcards, Match, Learn, Bookmarks
   `NotPremium`), `LocalOpenPaywall` (hosted by `PaywallHost`, a *placeholder dialog* until FOX-158 swaps in the real
   paywall), `LocalLessonExits.onLeavePractice/onLeaveMatch(answered)` (the interstitial hook), and
   `LocalOpenChallenge` (**FOX-154's entry point**: the rung strip, next-up and retry cards are drawn read-only and
-  call it; replace `nextQuestions` with the pool size).
+  call it; `LessonsTab` provides it, see Challenge ladder below).
 - **Models are pure Kotlin** (`PracticeModel`, `MatchModel`, `LearnModel`, `LessonPlayer`) with Compose state for the
   screen and an injectable `Random`; the mirrored iOS tests are in `app/src/test/.../lessons/`. Practice writes only
   `PracticeProgress` stages (through `StageStore`); Flashcards writes nothing at all.
@@ -189,6 +189,26 @@ koboyo `ill_skill_tree` empty state replaces the streak and tiles, never the Boo
 - Debug only: `adb shell am start -n com.kfpun.japanesedaily/.catalog.ProgressDemoActivity [--ez empty true]` renders the real
   screen over made-up numbers (writes nothing) for screenshots.
 - Not ported: the iOS `StreakBadge` toolbar chip and the streak reminder (Today, FOX-155 / Settings, FOX-159).
+
+## Challenge ladder (`ladder/`, FOX-154)
+
+Port of `nihongo/Lessons/Challenge.swift`, `ChallengeView.swift` and `context/02-challenge-ladder.md`. `Challenge` (pure) holds
+rung sizing (via `LadderRules`), the 3-step review window, form tiering, `supports`, `allowedWrong`; `ChallengeModel` builds
+one fixed run (10 questions, new words guaranteed a slot, forms dealt in rotation, a random voice per question from
+`Speech.randomVoice`); `Cheer` is the result-screen phrase. `ChallengeScreen` is briefing, play and result, pushed as
+`LessonRoute.Challenge` from `LocalOpenChallenge`. Best-only persistence, the unlock chain and `StudyDay` (written once,
+when a run finishes, never on abandon) are `ProgressRepository.recordChallenge`.
+
+- **Hooks** (on `AppContainer`): `onChallengeFinished()` (FOX-158's throttled interstitial) is called when a *finished*
+  run's screen is left, never mid-run and never on abandon; `container.rating.onRungPassed(totalPassed)` (FOX-159's
+  `RatingCoordinator` owns the 21st-rung bar and the cadence) is reported after a pass that did not earn the unlock.
+- The earned unlock is detected as before/after `hasEarnedFirstGroup()` around the record: it shows `EarnedUnlockCard`,
+  fires `earned_first_group` and skips the rating hook. Both `isLocked` callers already pass `earnedFirstGroup`.
+- **Shared fixtures:** `python3 scripts/dump-challenge-fixtures.py` compiles the real `Challenge.swift` with `swiftc` over the
+  real 50 lessons and writes `app/src/test/resources/challenge/ladder-fixtures.json`; `LadderFixturesTest` asserts steps,
+  windows, pools, new words, forms, `supports`, lookalike scores, stars and `allowedWrong` identical. Selection is random on
+  both sides, so `ChallengeModelTest` mirrors the iOS invariants (answerable, distinct options, new words asked, mixed forms).
+- Not ported: the report flag, the share nudge, and the rating sheet itself (FOX-157/FOX-159).
 
 ## Strings (FOX-150)
 
@@ -253,8 +273,8 @@ from the app's own strings, never from Play titles; Play only supplies the price
 - `container.openPaywall(PaywallSource.X, lesson)` shows the paywall (`PaywallHost`, composed in
   `MainActivity`); a no-op for Pro. It closes itself when Pro turns on. Terms of Use and Privacy
   Policy are shown in-app from `nihongo/Legal/*.txt`, packaged in place (`LegalDialog`).
-- `container.onChallengeFinished()` is the ladder's interstitial hook (**not yet wired**, FOX-154): call it
-  when a run reaches its end, never mid-run. `container.onLeavePractice(answered)` is the same throttle.
+- `container.onChallengeFinished()` is the ladder's interstitial hook, called by `ChallengeScreen` when a
+  finished run's screen is left, never mid-run. `container.onLeavePractice(answered)` is the same throttle.
 - One banner sits above the tab bar (`AppScaffold(banner = ...)`): Today, Kana, Lessons, Progress and
   Settings(`about`) by tab. A pushed screen with its own slot calls `UseBannerSlot(AdSlot.X)`: Select mode,
   Vocab List and the Lessons search results do. `AdBanner(AdSlot.X)` takes no space for Pro, before consent,

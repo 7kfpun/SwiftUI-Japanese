@@ -109,9 +109,12 @@ sealed interface LessonRoute {
 
     data class Learn(val lesson: Int) : LessonRoute
 
+    data class Challenge(val lesson: Int, val index: Int) : LessonRoute
+
     data object Bookmarks : LessonRoute
 
     fun encode(): String = when (this) {
+        is Challenge -> "challenge:$lesson:$index"
         is Select -> "select:$lesson"
         is Practice -> "practice:$lesson"
         is VocabList -> "vocab:$lesson"
@@ -134,6 +137,7 @@ sealed interface LessonRoute {
                 "flash" -> n?.let { Flashcards(it) }
                 "match" -> n?.let { Match(it) }
                 "learn" -> n?.let { Learn(it) }
+                "challenge" -> n?.let { l -> p.getOrNull(2)?.toIntOrNull()?.let { Challenge(l, it) } }
                 "bookmarks" -> Bookmarks
                 else -> null
             }
