@@ -4,8 +4,11 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import com.kfpun.japanesedaily.intro.Intro
+import com.kfpun.japanesedaily.intro.IntroHost
 import com.kfpun.japanesedaily.ui.AppScaffold
 import com.kfpun.japanesedaily.ui.JapaneseDailyTheme
+import com.kfpun.japanesedaily.ui.Tab
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -13,7 +16,9 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContent {
             JapaneseDailyTheme {
-                AppScaffold()
+                IntroHost { landing ->
+                    AppScaffold(if (landing == Intro.Tab.KANA) Tab.Kana else Tab.Today)
+                }
             }
         }
     }

@@ -34,8 +34,8 @@ enum class Tab(@StringRes val label: Int, @DrawableRes val icon: Int) {
 }
 
 @Composable
-fun AppScaffold() {
-    var selected by rememberSaveable { mutableStateOf(Tab.Today) }
+fun AppScaffold(startTab: Tab = Tab.Today) {
+    var selected by rememberSaveable { mutableStateOf(startTab) }
     Scaffold(
         bottomBar = {
             NavigationBar {
