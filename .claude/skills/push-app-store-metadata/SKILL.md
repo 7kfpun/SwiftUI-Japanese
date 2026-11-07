@@ -1,6 +1,6 @@
 ---
 name: push-app-store-metadata
-description: Push App Store Connect text metadata (name, subtitle, description, keywords, release notes, promotional text, URLs) from fastlane/minna/metadata/ — including when `fastlane deliver` cannot be used because the version isn't in a state its hardcoded filter recognises, in which case Spaceship::ConnectAPI is driven directly. Use when asked to "push the metadata", "update the App Store description/keywords/release notes", "upload the store text", or when a metadata lane hangs retrying "Cannot find edit app store version" for ten minutes and fails. Also covers why `bundle exec` must be pinned to the system Ruby here, and why `ta` is silently dropped.
+description: Push App Store Connect text metadata (name, subtitle, description, keywords, release notes, promotional text, URLs) from fastlane/minna/metadata/ — including when `fastlane deliver` cannot be used because the version isn't in a state its hardcoded filter recognises, in which case Spaceship::ConnectAPI is driven directly. Use when asked to "push the metadata", "update the App Store description/keywords/release notes", "upload the store text", or when a metadata lane hangs retrying "Cannot find edit app store version" for ten minutes and fails. Also covers the Ruby and bundler setup fastlane needs here, and why `ta` is silently dropped.
 when_to_use: push App Store metadata, update the App Store description, upload keywords, release notes, fastlane deliver, fastlane metadata lane, Cannot find edit app store version, deliver retrying with backoff, bundle exec broken, GemNotFound, ta not uploading, App Store Connect localizations
 allowed-tools: Bash, Read, Edit
 ---
@@ -25,31 +25,31 @@ asked.** Editing the `.txt` files is the default deliverable. Stop there.
 ## Step 0, always: find out what state the version is in
 
 ```sh
-PATH=/usr/bin:/bin:/usr/sbin:/sbin /usr/bin/bundle exec \
-  ruby .claude/skills/push-app-store-metadata/asc_state.rb
+bundle exec ruby .claude/skills/push-app-store-metadata/asc_state.rb
 ```
 
 Read-only (GETs only). It prints every version and its `appVersionState`, whether
 `get_edit_app_store_version` finds one, and which localizations exist. **Skipping
 this step is what costs the twenty minutes below.**
 
-## Trap 1: `bundle exec` is broken under the default Ruby
+## Trap 1: fastlane needs Homebrew's Ruby, not macOS's
 
-`ruby` on the PATH is Homebrew's (`/usr/local/Cellar/ruby/4.0.6`, x86_64), but
-`vendor/bundle` only contains `ruby/2.6.0` gems — installed for macOS's system
-Ruby. A plain `bundle exec` therefore dies with a wall of
-`Could not find fastlane-2.230.0, … (Bundler::GemNotFound)`, which reads like a
-missing `bundle install` and is not. Don't run `bundle install`; pin the Ruby:
+fastlane is 2.241+ (`Gemfile.lock`), which needs **Ruby ≥ 3.2**; it was moved off
+2.230 because that version's limits pinned `rubyzip` < 3, `excon` < 1 and an old
+`aws-sdk-s3`, all with published advisories. macOS's system Ruby is 2.6, so
+`/usr/bin/bundle` (the old pinned form, `PATH=/usr/bin:… /usr/bin/bundle exec`) no
+longer works — don't use it. Use Homebrew's Ruby (`/opt/homebrew/bin/ruby`, 4.0.x)
+and its bundler 4, which `Gemfile.lock`'s `BUNDLED WITH` names. Once per checkout:
 
 ```sh
-PATH=/usr/bin:/bin:/usr/sbin:/sbin /usr/bin/bundle exec fastlane ios metadata
+bundle config set --local path vendor/bundle
+bundle install
 ```
 
-`/usr/bin/bundle` is shebanged to `/System/…/Ruby.framework/Versions/2.6/…/ruby`,
-and the stripped PATH keeps Homebrew's `ruby`/`gem` out of the way. `BUNDLE_PATH`
-is already `vendor/bundle` via `.bundle/config`, so it needn't be passed.
-(`scripts/asc_update_subscriptions.rb`'s header still shows the old
-`BUNDLE_PATH=vendor/bundle bundle exec …` form — same fix applies.)
+Then a plain `bundle exec fastlane ios metadata` works. Symptoms of the wrong Ruby:
+`undefined method 'untaint'` (bundler 1.x under Ruby 4), or `Bundler::GemNotFound`
+for gems that `vendor/bundle` has under a different `ruby/<version>/` folder — the
+fix for both is the two commands above, not pinning a Ruby.
 
 ## Trap 2: `deliver` only sees versions in six states
 

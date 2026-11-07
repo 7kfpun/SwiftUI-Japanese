@@ -4,7 +4,7 @@
 #     the subscription group, and the lifetime in-app purchase (14 locales)
 # Prices and review screenshots are intentionally left to the ASC UI.
 #
-# Run: BUNDLE_PATH=vendor/bundle bundle exec ruby scripts/asc_update_subscriptions.rb
+# Run: bundle exec ruby scripts/asc_update_subscriptions.rb  (setup: push-app-store-metadata skill, Trap 1)
 # Credentials come from fastlane/.env (git-ignored).
 
 require "jwt"
