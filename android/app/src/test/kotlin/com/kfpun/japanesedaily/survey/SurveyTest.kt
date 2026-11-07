@@ -15,7 +15,7 @@ import org.junit.Test
  * Port of the iOS `SurveyTests`, with a fake Directus on a local port: tests never reach the real one.
  */
 class SurveyTest {
-    /** Transcribed from the Directus columns every `japanese_survey_*` collection shares (iOS test: columnContextKeys). */
+    /** Transcribed from the Directus columns every `nihongo_survey_*` collection shares (iOS test: columnContextKeys). */
     private val columnContextKeys = setOf(
         "platform", "app_version", "os", "device",
         "os_language", "app_language", "vocab_language", "region",
@@ -101,10 +101,10 @@ class SurveyTest {
         val client = DirectusClient("https://cms.example.test/", "test-token")
         val row = Survey.fields(Survey.Rating(2), context)
         val request = client.createRequest(Survey.RATING_COLLECTION, row)!!
-        assertEquals("https://cms.example.test/items/japanese_survey_rating", request.url)
+        assertEquals("https://cms.example.test/items/nihongo_survey_rating", request.url)
         assertEquals("test-token", request.token)
-        assertEquals(Survey.INTRO_COLLECTION, "japanese_survey_intro")
-        assertEquals(Survey.FEEDBACK_COLLECTION, "japanese_survey_feedback")
+        assertEquals(Survey.INTRO_COLLECTION, "nihongo_survey_intro")
+        assertEquals(Survey.FEEDBACK_COLLECTION, "nihongo_survey_feedback")
         // Flat object, sorted keys, booleans and ints stay typed.
         assertTrue(request.body.startsWith("{\"analytics_excluded\":false,"))
         assertTrue(request.body.contains("\"is_premium\":false"))
@@ -123,8 +123,8 @@ class SurveyTest {
         listOf(null, "", "   ", "placeholder-directus-token").forEach {
             val client = DirectusClient("http://127.0.0.1:1", it)
             assertFalse(client.isConfigured)
-            assertNull(client.createRequest("japanese_survey_intro", mapOf("a" to 1)))
-            client.submit("japanese_survey_intro", mapOf("a" to 1)) // must not throw or connect
+            assertNull(client.createRequest("nihongo_survey_intro", mapOf("a" to 1)))
+            client.submit("nihongo_survey_intro", mapOf("a" to 1)) // must not throw or connect
         }
         assertTrue(DirectusClient("http://x", "real-token").isConfigured)
     }
@@ -140,7 +140,7 @@ class SurveyTest {
 
         val hit = hits.single()
         assertEquals("POST", hit.method)
-        assertEquals("/items/japanese_survey_intro", hit.path)
+        assertEquals("/items/nihongo_survey_intro", hit.path)
         assertEquals("Bearer fake-token", hit.auth)
         assertEquals("application/json", hit.type)
         assertEquals(request.body, hit.body)
@@ -160,7 +160,7 @@ class SurveyTest {
         val failure = client.deliver(Survey.INTRO_COLLECTION, request)
         assertNotNull(failure)
         assertTrue(failure!!.startsWith("HTTP 400 — Value for field"))
-        assertEquals(listOf("japanese_survey_intro"), failures)
+        assertEquals(listOf("nihongo_survey_intro"), failures)
         assertEquals(1, logs.size)
         assertEquals(1, hits.size)
     }
@@ -171,7 +171,7 @@ class SurveyTest {
         val client = DirectusClient("http://127.0.0.1:1", "t", { Survey.FailureReporter { failures += it } }, { })
         val request = client.createRequest(Survey.RATING_COLLECTION, mapOf("a" to 1))!!
         assertNotNull(client.deliver(Survey.RATING_COLLECTION, request))
-        assertEquals(listOf("japanese_survey_rating"), failures)
+        assertEquals(listOf("nihongo_survey_rating"), failures)
     }
 
     @Test

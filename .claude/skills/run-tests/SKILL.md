@@ -120,6 +120,6 @@ supposed to be annoying:
   unescaped `%` — most of its tests are that check — see the
   `check-i18n-parity` skill.
 - `SurveyTests.contextKeysMatchTheDirectusColumns` fails when `Survey.Context`
-  and its transcription of the `japanese_survey_*` Directus columns disagree. That
+  and its transcription of the `nihongo_survey_*` Directus columns disagree. That
   is not a test to edit alone: the column has to exist in Directus before a build
   sends it, or every survey write fails.

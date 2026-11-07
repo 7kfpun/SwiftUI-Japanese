@@ -49,7 +49,7 @@ advertising use of AdMob data is declared as shared.
 | **Device or other IDs** | Yes | Yes (advertising ID to Google for ads) | Required | Advertising or marketing, Fraud prevention (advertising ID, AdMob); Analytics, App functionality (Firebase installation ID and Firebase's app-instance ID) | Advertising ID: AdMob only, see section 3. The Firebase installation ID (FID) is created by `firebase-installations`, pulled in by Analytics and Crashlytics; Crashlytics adds its own installation UUID ([Firebase](https://firebase.google.com/docs/android/play-data-disclosure)). **The app never mints or sends an identifier of its own**: `android/CLAUDE.md` ("No persistent identifier"), `Track.kt` ("No identifier of our own") |
 | **Location → Approximate location** | Yes | Yes (AdMob) | Required | Advertising or marketing, Fraud prevention | Not from a permission: the app declares no location permission. AdMob collects the IP address, "which may estimate a device's general location" ([AdMob](https://developers.google.com/admob/android/privacy/play-data-disclosure)). Declared because Play counts the estimate |
 | **Financial info → Purchase history** | Yes | No | Required | App functionality (premium state), Analytics | Play Billing returns purchase tokens to the device; the app keeps premium state locally. What leaves the device is the derived flag: `is_premium` on every event and the `user_type` / `premium_tier` user properties (`Track.kt`, `setPremium`), and `is_premium` / `tier` in survey rows (`Survey.Context`). Card and payment details never reach the app: Google Play handles them. No server-side receipt validation (FOX-146) |
-| **Personal info → Email address** | Yes (only if typed) | No | **Optional** | App functionality (a reply to the feedback) | `Feedback.email` in the `japanese_survey_feedback` row; "optional, and never gates sending" (`nihongo/Feedback/Feedback.swift`) |
+| **Personal info → Email address** | Yes (only if typed) | No | **Optional** | App functionality (a reply to the feedback) | `Feedback.email` in the `nihongo_survey_feedback` row; "optional, and never gates sending" (`nihongo/Feedback/Feedback.swift`) |
 | **Messages → Other in-app messages** | Yes (only if sent) | No | **Optional** | App functionality | `Feedback.message`, free text typed in the feedback sheet, plus `kind`, `area`, `source`, `stars`, `lesson`, `item` (the word reported) |
 
 Declared **not collected**: name, address, phone, contacts, precise location, photos or files, audio
@@ -59,7 +59,7 @@ drawing is sent (the only server write is the survey).
 
 ### Survey rows in detail (Directus, optional)
 
-Written only after the user taps submit. Create-only static token on `japanese_survey_{intro,rating,feedback}`
+Written only after the user taps submit. Create-only static token on `nihongo_survey_{intro,rating,feedback}`
 (`Survey.Directus`); no read, update or delete, and no user, session or reply channel. Columns, exactly
 `Survey.Context.keys` plus the per-collection fields:
 
@@ -67,7 +67,7 @@ Written only after the user taps submit. Create-only static token on `japanese_s
   `os_language`, `app_language`, `vocab_language`, `region`, `is_premium`, `tier`, `challenges_passed`,
   `kana_answered`, `sound_on`, `analytics_excluded`, `shown_fields`, `text_size`, `appearance`,
   `last_screen`, `knows_kana`, `goal`, `textbook_lesson`, `debug`, `v`.
-- `japanese_survey_rating`: `stars`. `japanese_survey_feedback`: `kind`, `area`, `message`, `email`,
+- `nihongo_survey_rating`: `stars`. `nihongo_survey_feedback`: `kind`, `area`, `message`, `email`,
   `source`, `stars`, `lesson`, `item`.
 
 Not linked to identity because nothing in the row identifies a person or joins two rows
