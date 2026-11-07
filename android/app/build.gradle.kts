@@ -79,7 +79,7 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0.0"
+        versionName = "3.0.0"
 
         // Pinned by IdentityTest: the FOX-146 decisions, readable from a JVM test.
         buildConfigField("int", "MIN_SDK", minSdk.toString())

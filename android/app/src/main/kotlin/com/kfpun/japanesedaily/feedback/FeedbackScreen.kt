@@ -56,7 +56,7 @@ import kotlinx.coroutines.launch
 
 /**
  * The feedback screen over everything (port of `FeedbackView.swift`), reached from Settings, from a low
- * star pick and from a word's flag. Writes one `japanese_survey_feedback` row through [Survey].
+ * star pick and from a word's flag. Writes one `nihongo_survey_feedback` row through [Survey].
  */
 @Composable
 fun FeedbackDialog(source: Feedback.Source, onClose: () -> Unit, stars: Int = 0, item: Feedback.Item? = null) {

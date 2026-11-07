@@ -376,9 +376,9 @@ enum Survey {
     enum Directus {
         static let baseURL = URL(string: "https://cms.wahthefox.com")!
 
-        static let introCollection = "japanese_survey_intro"
-        static let ratingCollection = "japanese_survey_rating"
-        static let feedbackCollection = "japanese_survey_feedback"
+        static let introCollection = "nihongo_survey_intro"
+        static let ratingCollection = "nihongo_survey_rating"
+        static let feedbackCollection = "nihongo_survey_feedback"
 
         /// `nil` when no `Secrets.plist` is bundled or it has no `directusToken` — which
         /// turns every submission into a no-op rather than a request bound to fail.

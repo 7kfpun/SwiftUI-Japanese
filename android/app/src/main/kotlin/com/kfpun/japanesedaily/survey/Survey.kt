@@ -17,9 +17,9 @@ object Survey {
     /** Bumped when a field is added or removed. Same number as iOS: the column set is shared. */
     const val SCHEMA_VERSION = 4
 
-    const val INTRO_COLLECTION = "japanese_survey_intro"
-    const val RATING_COLLECTION = "japanese_survey_rating"
-    const val FEEDBACK_COLLECTION = "japanese_survey_feedback"
+    const val INTRO_COLLECTION = "nihongo_survey_intro"
+    const val RATING_COLLECTION = "nihongo_survey_rating"
+    const val FEEDBACK_COLLECTION = "nihongo_survey_feedback"
 
     /** One completed intro run. Skips and partial runs submit nothing. */
     data class Intro(val knowsKana: String, val textbookLesson: Int, val goal: String)
@@ -95,7 +95,7 @@ object Survey {
             )
 
         companion object {
-            /** Unverified against the Directus `platform` column (iOS pins 'iOS'); see the PR. */
+            /** The `platform` column is a free-text input in all three collections (checked 2026-11-07); iOS sends 'iOS'. */
             const val PLATFORM = "Android"
 
             const val MAX_SCREEN = 40

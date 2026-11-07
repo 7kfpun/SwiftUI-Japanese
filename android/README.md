@@ -112,7 +112,7 @@ answers for the Play Console forms are in [`docs/play-data-safety.md`](docs/play
 1. All feature tickets (FOX-152 to FOX-160) are merged and `./gradlew ktlintCheck lint test assembleDebug`
    passes. Run `python3 scripts/check-play-listing.py` and `python3 scripts/build-android-strings.py --check`.
 2. Re-check the compliance answers against the merged code (`docs/play-data-safety.md`, the last section).
-3. Bump `versionCode` and `versionName` in `app/build.gradle.kts` (the first upload is `1` / `1.0.0`; Play
+3. Bump `versionCode` and `versionName` in `app/build.gradle.kts` (the first upload is `1` / `3.0.0`, matching iOS 3.x; Play
    rejects a repeated `versionCode`).
 4. The **VOICEVOX credit** (e.g. `VOICEVOX:WhiteCUL`) is visible in Settings, Licenses: the voice terms
    require it, and the root `CLAUDE.md` says nothing in the app carries one yet.

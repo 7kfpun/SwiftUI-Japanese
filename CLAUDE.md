@@ -59,7 +59,7 @@ first and follow its index; it is kept current and is the fastest way in.
 ## Invariants that bite
 
 - **Survey columns must exist before the app sends them.** Rows go to Directus
-  (`https://cms.wahthefox.com`, `japanese_survey_{intro,rating,feedback}`) through a
+  (`https://cms.wahthefox.com`, `nihongo_survey_{intro,rating,feedback}`) through a
   create-only static token in the git-ignored `Secrets.plist` (`directusToken`). Adding a
   field to `Survey.Context` or a payload without adding the column fails **every** write,
   visible only as a console line and a `survey_failed` event. No token bundled means every
