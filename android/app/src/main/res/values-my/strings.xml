@@ -56,7 +56,7 @@
     <string name="restore_purchases">ဝယ်ယူမှုများ ပြန်ယူရန်</string>
     <string name="premium_active">ပရီမီယံ အသုံးပြုနေသည်</string>
     <string name="no_ads_ever">ကြော်ငြာ လုံးဝမရှိ</string>
-    <string name="flashcards_train_learn_and_the_full_ladder">ကတ်ပြားများ၊ လေ့ကျင့်ရန်၊ လေ့လာရန်နှင့် စိန်ခေါ်မှုလှေကားတစ်ခုလုံး</string>
+    <string name="practice_flashcards_match_learn_and_the_full_ladder">လေ့ကျင့်ရန်၊ ကတ်ပြားများ၊ တွဲပါ၊ လေ့လာရန်နှင့် စိန်ခေါ်မှုလှေကားတစ်ခုလုံး</string>
     <string name="audio_in_every_practice_and_learning_task_to_help_it_stick">လေ့ကျင့်ခန်းနှင့် သင်ခန်းစာတိုင်းတွင် အသံပါ၍ မှတ်မိလွယ်</string>
     <string name="study_offline_anywhere">အင်တာနက်မလို ဘယ်နေရာမဆို လေ့လာပါ</string>
     <string name="feedback">အကြံပြုချက်</string>

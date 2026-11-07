@@ -1,32 +1,23 @@
 package com.kfpun.japanesedaily.rating
 
-import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import com.google.android.play.core.review.ReviewManagerFactory
 import com.kfpun.japanesedaily.analytics.Track
 import com.kfpun.japanesedaily.analytics.TrackEvents
 
-/** Play In-App Review and the store page; the two ways a good rating leaves the app. */
+/**
+ * The app's Play listing. Play In-App Review is deliberately not used anywhere: Google forbids asking an
+ * opinion question before its card, and the rating star row is one (`RatingHost`).
+ */
 object PlayReview {
     /**
-     * Asks Play for its review sheet over [activity]. Play decides whether it shows and rations it; there
-     * is no callback saying what was written, so `review_requested` counts *asks*, not sheets. Quiet where
-     * Play is absent (an emulator without Play Store, a sideloaded build).
+     * Opens the listing, in the Play Store app when there is one, else on the web. [source] says which
+     * surface asked (`rating` after a 4- or 5-star pick, `settings` for Rate the app).
      */
-    fun request(activity: Activity) {
-        Track.event(TrackEvents.REVIEW_REQUESTED, mapOf("source" to "rating"))
-        val manager = ReviewManagerFactory.create(activity)
-        manager.requestReviewFlow().addOnCompleteListener { task ->
-            val info = task.result?.takeIf { task.isSuccessful } ?: return@addOnCompleteListener
-            if (!activity.isFinishing) manager.launchReviewFlow(activity, info)
-        }
-    }
-
-    /** The app's Play listing, in the Play Store app when there is one, else on the web. */
-    fun openStorePage(context: Context) {
+    fun openStorePage(context: Context, source: String) {
+        Track.event(TrackEvents.STORE_PAGE_OPENED, mapOf("source" to source))
         val id = context.packageName
         val store = Intent(
             Intent.ACTION_VIEW,

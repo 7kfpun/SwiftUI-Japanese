@@ -350,8 +350,10 @@ toggle the analytics opt-out, a long press calls `IntroLauncher.replay()`.
   holds the 60-day soft-ask policy and the streak-7 milestone rule for the Today ticket to call.
 - **Rating:** `container.rating.onRungPassed(totalPassed)` is the hook the ladder calls after a *passed* rung. After 21 passed
   rungs and at most every 60 days (stamped when shown) `RatingHost` shows the star row; every tap writes a
-  `japanese_survey_rating` row, then 4-5 stars go to Play In-App Review and 1-3 to the feedback screen with the stars
-  attached. "Not now" leads nowhere. Not a rating gate: Settings -> Rate the app is always there.
+  `japanese_survey_rating` row, then 4-5 stars open the Play listing (`PlayReview.openStorePage`, the Settings -> Rate the app path, logging the
+  Android-only `store_page_opened`) and 1-3 go to the feedback screen with the stars attached. **Play In-App Review is not
+  used**: Google forbids an opinion question before its card and the star row is one (iOS's `review_requested` has no Android
+  equivalent). "Not now" leads nowhere. Not a rating gate: Settings -> Rate the app is always there.
 - **Feedback** drops iOS's `watch` area (no Wear OS). `FeedbackDraft` is the testable model; `AppContainer.surveyContext` builds
   the shared row context (premium, tier, counts, text size, appearance).
 

@@ -413,7 +413,10 @@ private fun FeedbackSection(onFeedback: () -> Unit) {
         SettingsRow(stringResource(R.string.send_feedback), onClick = onFeedback)
         RowDivider()
         // The store page is reachable from here whatever the star row was answered: this is not a rating gate.
-        SettingsRow(stringResource(R.string.rate_the_app), onClick = { PlayReview.openStorePage(context) })
+        SettingsRow(
+            stringResource(R.string.rate_the_app),
+            onClick = { PlayReview.openStorePage(context, source = "settings") }
+        )
     }
 }
 

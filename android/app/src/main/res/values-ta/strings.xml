@@ -56,7 +56,7 @@
     <string name="restore_purchases">கொள்முதலை மீட்டமை</string>
     <string name="premium_active">பிரீமியம் செயலில்</string>
     <string name="no_ads_ever">விளம்பரம் இல்லை, எப்போதும்</string>
-    <string name="flashcards_train_learn_and_the_full_ladder">ஃப்ளாஷ்கார்டுகள், பயிற்சி, கற்று மற்றும் முழு சவால் ஏணி</string>
+    <string name="practice_flashcards_match_learn_and_the_full_ladder">பயிற்சி, ஃப்ளாஷ்கார்டுகள், பொருத்து, கற்று மற்றும் முழு சவால் ஏணி</string>
     <string name="audio_in_every_practice_and_learning_task_to_help_it_stick">ஒவ்வொரு பயிற்சியிலும் பாடத்திலும் ஒலி, நினைவில் நிற்க</string>
     <string name="study_offline_anywhere">எங்கும் ஆஃப்லைனில் கற்று</string>
     <string name="feedback">கருத்து</string>

@@ -36,7 +36,6 @@ import com.kfpun.japanesedaily.analytics.TrackEvents
 import com.kfpun.japanesedaily.data.AppContainer
 import com.kfpun.japanesedaily.feedback.Feedback
 import com.kfpun.japanesedaily.feedback.FeedbackDialog
-import com.kfpun.japanesedaily.settings.findActivity
 import com.kfpun.japanesedaily.survey.Survey
 import com.kfpun.japanesedaily.survey.surveyContext
 import com.kfpun.japanesedaily.ui.Theme
@@ -48,7 +47,7 @@ import kotlinx.coroutines.launch
  * Shows the star row when [RatingCoordinator] raises an offer, and routes the answer. Mounted once, over
  * the whole app, so it works whichever screen the passed rung ended on.
  *
- * Routing happens **after the row has gone**, not in the star tap, so the destination (Play's sheet or the
+ * Routing happens **after the row has gone**, not in the star tap, so the destination (the store listing or the
  * feedback screen) is never asked to appear over a sheet that is still animating away.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -86,11 +85,12 @@ fun RatingHost() {
                     TrackEvents.RATING_GIVEN,
                     mapOf("stars" to stars, "passed_total" to current.passedTotal, "source" to "challenge")
                 )
-                // Every star tap writes a rating row before branching, so a later ask buys sentiment over time
-                // even when Play's sheet never appears.
+                // Every star tap writes a rating row before branching: the star row is the app's own survey.
                 Survey.submit(Survey.Rating(stars), container.surveyContext(context))
-                if (RatingPrompt.handsOffToStore(stars)) {
-                    context.findActivity()?.let { PlayReview.request(it) }
+                if (RatingPrompt.opensStorePage(stars)) {
+                    // The listing, never Play In-App Review: Google forbids asking an opinion question
+                    // before that card, and the star row is one. Same path as Settings -> Rate the app.
+                    PlayReview.openStorePage(context, source = "rating")
                 } else {
                     feedbackStars = stars
                 }
@@ -128,7 +128,7 @@ private const val PICK_BEAT_MILLIS = 350L
 
 /**
  * The star row itself. Deliberately not an `AlertDialog`, which cannot hold a tappable row: the rating is
- * chosen here rather than in Play's sheet.
+ * chosen here, in the app's own question.
  */
 @Composable
 internal fun RatingRow(picked: Int, onStar: (Int) -> Unit, onNotNow: () -> Unit, scrollable: Boolean = true) {

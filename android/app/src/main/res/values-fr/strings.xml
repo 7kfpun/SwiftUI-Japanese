@@ -56,7 +56,7 @@
     <string name="restore_purchases">Restaurer les achats</string>
     <string name="premium_active">Premium actif</string>
     <string name="no_ads_ever">Aucune pub, jamais</string>
-    <string name="flashcards_train_learn_and_the_full_ladder">Cartes mémo, Entraînement, Apprendre et toute l\'échelle</string>
+    <string name="practice_flashcards_match_learn_and_the_full_ladder">Entraînement, Cartes mémo, Associer, Apprendre et toute l\'échelle</string>
     <string name="audio_in_every_practice_and_learning_task_to_help_it_stick">De l\'audio dans chaque exercice et chaque leçon, pour mieux retenir</string>
     <string name="study_offline_anywhere">Étudiez hors ligne, partout</string>
     <string name="feedback">Commentaires</string>

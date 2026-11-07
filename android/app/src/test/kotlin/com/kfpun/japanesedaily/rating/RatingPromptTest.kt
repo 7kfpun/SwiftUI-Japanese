@@ -52,8 +52,8 @@ class RatingPromptTest {
     }
 
     @Test
-    fun fourStarsAndUpGoToTheStoreAndTheRestToFeedback() {
-        assertEquals(listOf(false, false, false, true, true), (1..5).map { RatingPrompt.handsOffToStore(it) })
+    fun fourStarsAndUpOpenTheStoreListingAndTheRestGoToFeedback() {
+        assertEquals(listOf(false, false, false, true, true), (1..5).map { RatingPrompt.opensStorePage(it) })
     }
 
     private fun TestScope.coordinator(clock: () -> Instant): Pair<RatingCoordinator, Prefs> {

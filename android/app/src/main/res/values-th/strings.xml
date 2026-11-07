@@ -56,7 +56,7 @@
     <string name="restore_purchases">กู้คืนการซื้อ</string>
     <string name="premium_active">เปิดใช้พรีเมียมแล้ว</string>
     <string name="no_ads_ever">ไม่มีโฆษณา ตลอดไป</string>
-    <string name="flashcards_train_learn_and_the_full_ladder">บัตรคำ ฝึกฝน เรียนรู้ และบันไดท้าทายทั้งหมด</string>
+    <string name="practice_flashcards_match_learn_and_the_full_ladder">ฝึกฝน บัตรคำ จับคู่ เรียนรู้ และบันไดท้าทายทั้งหมด</string>
     <string name="audio_in_every_practice_and_learning_task_to_help_it_stick">มีเสียงในทุกแบบฝึกและทุกบทเรียน ช่วยให้จำได้</string>
     <string name="study_offline_anywhere">เรียนออฟไลน์ได้ทุกที่</string>
     <string name="feedback">ข้อเสนอแนะ</string>

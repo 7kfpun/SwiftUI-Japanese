@@ -56,7 +56,7 @@
     <string name="restore_purchases">Khôi phục mua hàng</string>
     <string name="premium_active">Đã kích hoạt cao cấp</string>
     <string name="no_ads_ever">Không quảng cáo, mãi mãi</string>
-    <string name="flashcards_train_learn_and_the_full_ladder">Thẻ ghi nhớ, Luyện tập, Học và cả thang thử thách</string>
+    <string name="practice_flashcards_match_learn_and_the_full_ladder">Luyện tập, Thẻ ghi nhớ, Ghép cặp, Học và cả thang thử thách</string>
     <string name="audio_in_every_practice_and_learning_task_to_help_it_stick">Có âm thanh trong mọi bài luyện và bài học, giúp nhớ lâu</string>
     <string name="study_offline_anywhere">Học ngoại tuyến, mọi nơi</string>
     <string name="feedback">Phản hồi</string>
