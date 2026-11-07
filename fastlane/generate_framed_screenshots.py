@@ -461,8 +461,8 @@ ASSET_COPY = {
               "search": ("Apprends le vocabulaire japonais", "Pratique, cartes mémo, association et plus")},
     "id": {"header": ("Bahasa Jepang, sedikit tiap hari", "Kosakata, kana, dan latihan menyimak"),
            "search": ("Belajar kosakata Jepang", "Latihan, kartu kilas, pasangkan, dan lainnya")},
-    "ja": {"header": ("毎日少しずつ日本語", "単語・かな・リスニング練習"),
-           "search": ("日本語の単語を学ぶ", "練習・フラッシュカード・マッチほか")},
+    "ja": {"header": ("毎日少しずつ\n日本語", "単語・かな・リスニング練習"),
+           "search": ("日本語の\n単語を学ぶ", "練習・フラッシュカード・マッチほか")},
     "it": {"header": ("Giapponese, un po' ogni giorno", "Vocabolario, kana e ascolto"),
            "search": ("Impara le parole giapponesi", "Pratica, flashcard, abbina e altro")},
     "ko": {"header": ("매일 조금씩 일본어", "단어, 가나, 듣기 연습"),
@@ -487,6 +487,17 @@ ASSET_CANVASES = {k: v["canvas"] for k, v in CREATIVE_ASSETS.items()}
 # (the simulator cannot unfold) and live in screenshot_raw/duo/<key>.png, the same keys
 # as LOCALES. Without one the key is skipped, like iPad.
 DUO = dict(canvas=(2853, 2007), raw_dir="duo")
+# Duo reuses LOCALES' copy. Unspaced scripts are never auto-broken (see asset_lines), so a
+# title too wide for the Duo column gets its phrase break here rather than in LOCALES,
+# whose strings the portrait screenshots draw without "\n" handling.
+DUO_BREAKS = {
+    ("ja", "00-lessons"): "みんなの\n日本語50課",
+    ("zh-Hant", "00-lessons"): "50 課\n大家的日本語課程",
+}
+
+
+def duo_title(locale, key, title):
+    return DUO_BREAKS.get((LOCALE_ALIASES.get(locale, locale), key), title)
 
 LOCALE_ALIASES = {"zh-Hans": "zh-Hant"}
 
@@ -731,8 +742,24 @@ def asset_out_dir(locale):
     return os.path.join(os.path.dirname(OUT_DIR), "creative_assets", locale)
 
 
+def asset_lines(draw, text, font, max_width, wrap):
+    """Lines for the creative assets and the Duo layout, which never split a word.
+
+    Spaced scripts break at spaces only (an over-wide single word overflows and fails
+    `--check`). Unspaced scripts (wrap="char": ja, zh) are NOT auto-broken at all: a
+    character-level break puts half of 日本語 on each line. Their copy carries explicit
+    "\n" phrase breaks, and each phrase must fit on one line.
+    """
+    if wrap == "char":
+        return text.split("\n")
+    lines = []
+    for phrase in text.split("\n"):
+        lines += wrap_lines(draw, phrase, font, max_width, "word")
+    return lines
+
+
 def draw_left_text(draw, x, top_y, text, font, fill, max_width, line_gap, wrap):
-    lines = wrap_lines(draw, text, font, max_width, wrap)
+    lines = asset_lines(draw, text, font, max_width, wrap)
     ascent, descent = font.getmetrics()
     line_h = int((ascent + descent) * line_gap)
     for i, ln in enumerate(lines):
@@ -741,8 +768,8 @@ def draw_left_text(draw, x, top_y, text, font, fill, max_width, line_gap, wrap):
 
 
 def text_block_height(draw, title, sub, tfont, sfont, max_w, wrap, gap):
-    th = sum(int(sum(tfont.getmetrics()) * 1.05) for _ in wrap_lines(draw, title, tfont, max_w, wrap))
-    sh = sum(int(sum(sfont.getmetrics()) * 1.1) for _ in wrap_lines(draw, sub, sfont, max_w, wrap))
+    th = sum(int(sum(tfont.getmetrics()) * 1.05) for _ in asset_lines(draw, title, tfont, max_w, wrap))
+    sh = sum(int(sum(sfont.getmetrics()) * 1.1) for _ in asset_lines(draw, sub, sfont, max_w, wrap))
     return th + gap + sh
 
 
@@ -793,6 +820,7 @@ def render_duo(locale, key):
         return None
     W, H = DUO["canvas"]
     title, subtitle = LOCALES[LOCALE_ALIASES.get(locale, locale)][key]
+    title = duo_title(locale, key, title)
     typo = typography(locale)
     bg = make_gradient(W, H, *GRADIENTS[APP]).convert("RGBA")
     draw = ImageDraw.Draw(bg)
@@ -915,12 +943,14 @@ def check(locale_filter=None):
                     if gaps:
                         ok = False
                         print(f"  FAIL {locale} {kind} {role}: no glyph for {gaps}")
-                    for line in wrap_lines(probe, text, font, col, typo["wrap"]):
+                    for line in asset_lines(probe, text, font, col, typo["wrap"]):
                         w = probe.textlength(line, font=font)
                         if w > col:
                             ok = False
-                            print(f"  FAIL {locale} {kind} {role}: line {w:.0f}px > {col:.0f}px: {line!r}")
-                    n = len(wrap_lines(probe, text, font, col, typo["wrap"]))
+                            print(f"  FAIL {locale} {kind} {role}: line {w:.0f}px > {col:.0f}px: {line!r}"
+                                  + (" (unspaced script: add an explicit \\n phrase break)"
+                                     if typo["wrap"] == "char" else ""))
+                    n = len(asset_lines(probe, text, font, col, typo["wrap"]))
                     if role == "title" and n > 3:
                         ok = False
                         print(f"  FAIL {locale} {kind} title wraps to {n} lines")
@@ -937,11 +967,11 @@ def check(locale_filter=None):
                 for key, strings in copy.items():
                     if key == "01-watch-today":
                         continue
-                    text = strings[idx]
+                    text = duo_title(locale, key, strings[0]) if idx == 0 else strings[idx]
                     if missing_glyphs(font, text):
                         ok = False
                         print(f"  FAIL duo {locale} {key} {role}: missing glyph")
-                    for line in wrap_lines(probe, text, font, col, typo["wrap"]):
+                    for line in asset_lines(probe, text, font, col, typo["wrap"]):
                         if probe.textlength(line, font=font) > col:
                             ok = False
                             print(f"  FAIL duo {locale} {key} {role}: overflow {line!r}")
