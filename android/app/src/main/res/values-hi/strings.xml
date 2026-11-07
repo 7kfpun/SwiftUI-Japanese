@@ -72,6 +72,8 @@
     <string name="write">लिखें</string>
     <string name="hear_it_draw_it">सुनें और लिखें</string>
     <string name="licenses">लाइसेंस</string>
+    <string name="no_japanese_voice_is_installed_on_this_device_add_on_3cd64e5">इस डिवाइस पर जापानी आवाज़ इंस्टॉल नहीं है। हर ध्वनि सुनने के लिए फ़ोन की टेक्स्ट-टू-स्पीच सेटिंग में एक जोड़ें।</string>
+    <string name="the_spoken_audio_in_this_app_is_synthesised_with_voicevox">इस ऐप की बोली गई ऑडियो VOICEVOX से तैयार की गई है।</string>
     <string name="hiragana">हिरागाना</string>
     <string name="katakana">कातकाना</string>
     <string name="romaji">रोमाजी</string>

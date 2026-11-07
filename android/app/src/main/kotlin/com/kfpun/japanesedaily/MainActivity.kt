@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import com.kfpun.japanesedaily.audio.ProvidePronouncer
 import com.kfpun.japanesedaily.data.AppContainer
 import com.kfpun.japanesedaily.intro.Intro
 import com.kfpun.japanesedaily.intro.IntroHost
@@ -16,11 +17,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         // Decode the course data and load Practice stages off the main thread.
-        AppContainer.from(this).preload()
+        val container = AppContainer.from(this)
+        container.preload()
         setContent {
             JapaneseDailyTheme {
-                IntroHost { landing ->
-                    AppScaffold(if (landing == Intro.Tab.KANA) Tab.Kana else Tab.Today)
+                ProvidePronouncer(container.vocab) {
+                    IntroHost { landing ->
+                        AppScaffold(if (landing == Intro.Tab.KANA) Tab.Kana else Tab.Today)
+                    }
                 }
             }
         }

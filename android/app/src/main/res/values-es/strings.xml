@@ -72,6 +72,8 @@
     <string name="write">Escribir</string>
     <string name="hear_it_draw_it">Escúchalo y escríbelo</string>
     <string name="licenses">Licencias</string>
+    <string name="no_japanese_voice_is_installed_on_this_device_add_on_3cd64e5">Este dispositivo no tiene ninguna voz japonesa instalada. Añade una en los ajustes de texto a voz del teléfono para oír todos los sonidos.</string>
+    <string name="the_spoken_audio_in_this_app_is_synthesised_with_voicevox">El audio hablado de esta app está sintetizado con VOICEVOX.</string>
     <string name="hiragana">Hiragana</string>
     <string name="katakana">Katakana</string>
     <string name="romaji">Romaji</string>

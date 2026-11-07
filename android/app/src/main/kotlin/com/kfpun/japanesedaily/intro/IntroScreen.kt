@@ -57,6 +57,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
 import com.kfpun.japanesedaily.analytics.TrackEvents
+import com.kfpun.japanesedaily.audio.LocalPronouncer
 import com.kfpun.japanesedaily.data.vocab.Vocab
 import java.util.Locale
 
@@ -314,7 +315,13 @@ private fun nativeName(code: String): String =
 
 @Composable
 private fun WordFace(word: Vocab) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    // Tap to hear it, through the same Pronouncer (and bundled clip) as the rest of the app.
+    val pronouncer = LocalPronouncer.current
+    Column(
+        Modifier.clickable { pronouncer.speak(word) },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         if (word.displaysKanji) {
             Text(
                 word.kanji,
