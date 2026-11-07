@@ -3,7 +3,7 @@ name: Claude Code Review
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    branches: [main]
+    branches: [main, feature/fox-145-android]
 
 concurrency:
   group: claude-review-${{ github.event.pull_request.number }}
