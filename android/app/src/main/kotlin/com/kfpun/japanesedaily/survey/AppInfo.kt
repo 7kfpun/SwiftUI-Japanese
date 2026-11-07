@@ -5,9 +5,12 @@ import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Build
 import com.kfpun.japanesedaily.BuildConfig
+import com.kfpun.japanesedaily.analytics.Track
+import com.kfpun.japanesedaily.data.prefs.Pref
+import com.kfpun.japanesedaily.data.prefs.Prefs
 import com.kfpun.japanesedaily.intro.IntroAnswers
-import com.kfpun.japanesedaily.intro.IntroPrefs
 import com.kfpun.japanesedaily.locale.AppLocale
+import kotlinx.coroutines.flow.first
 
 /**
  * Build, OS and device strings for [Survey.Context]: characteristics only, never an identity.
@@ -63,30 +66,54 @@ object AppInfo {
 
     /**
      * The context a submission is built from, read at submit time so it reports a setting the sender
-     * may have changed seconds ago. Premium, the two progress counts and the last screen come from
-     * the data and analytics layers (FOX-148, FOX-158, FOX-160); until those are wired they report
-     * the free, nothing-done defaults.
+     * may have changed seconds ago. [vocabFallback] is the device-default meaning language for an unset
+     * choice. Premium and the two progress counts come from the billing and progress layers (FOX-158,
+     * the screens that submit ratings and feedback); the intro runs before either has anything to say,
+     * so they are passed in and default to the free, nothing-done values.
      */
-    fun surveyContext(context: Context, lastScreen: String = ""): Survey.Context {
-        val prefs = IntroPrefs(context)
+    suspend fun surveyContext(
+        context: Context,
+        prefs: Prefs,
+        vocabFallback: String,
+        isPremium: Boolean = false,
+        tier: String = "none",
+        challengesPassed: Int = 0,
+        kanaAnswered: Int = 0
+    ): Survey.Context {
         val configuration = context.resources.configuration
+        val knows = prefs.get(Pref.knowsKana)
+        val goal = prefs.get(Pref.goal)
+        val shown = listOf(
+            "kanji" to Pref.kanjiShown,
+            "kana" to Pref.kanaShown,
+            "romaji" to Pref.romajiShown,
+            "translation" to Pref.translationShown
+        ).filter { prefs.get(it.second) }.joinToString(",") { it.first }
         return Survey.Context(
             appVersion = version,
             os = os,
             device = device,
             osLanguage = osLanguage,
             appLanguage = AppLocale.chosen(context)?.id ?: "en",
-            vocabLanguage = prefs.translationLanguage ?: "en",
+            vocabLanguage = prefs.translationLanguage(vocabFallback).first(),
             region = region,
-            soundOn = prefs.soundOn,
-            analyticsExcluded = prefs.analyticsExcluded,
-            shownFields = prefs.shownFields,
+            isPremium = isPremium,
+            tier = tier,
+            challengesPassed = challengesPassed,
+            kanaAnswered = kanaAnswered,
+            soundOn = prefs.get(Pref.soundOn),
+            analyticsExcluded = Track.isExcluded,
+            shownFields = shown,
             textSize = textSize(configuration.fontScale),
             appearance = appearance(configuration),
-            lastScreen = lastScreen,
-            knowsKana = prefs.knowsKana ?: IntroAnswers.UNANSWERED,
-            goal = prefs.goal ?: IntroAnswers.UNANSWERED,
-            textbookLesson = prefs.textbookLesson ?: IntroAnswers.UNANSWERED_LESSON,
+            lastScreen = Track.lastScreen,
+            knowsKana = knows.ifEmpty { IntroAnswers.UNANSWERED },
+            goal = goal.ifEmpty { IntroAnswers.UNANSWERED },
+            textbookLesson = if (prefs.isSet(Pref.textbookLesson)) {
+                prefs.get(Pref.textbookLesson)
+            } else {
+                IntroAnswers.UNANSWERED_LESSON
+            },
             debug = BuildConfig.DEBUG
         )
     }

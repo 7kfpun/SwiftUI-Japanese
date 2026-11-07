@@ -7,14 +7,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.kfpun.japanesedaily.analytics.Track
 import com.kfpun.japanesedaily.analytics.TrackScreens
+import com.kfpun.japanesedaily.data.AppContainer
+import com.kfpun.japanesedaily.data.prefs.Pref
 import com.kfpun.japanesedaily.survey.AppInfo
 import com.kfpun.japanesedaily.survey.Survey
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
@@ -42,42 +47,58 @@ object IntroLauncher {
 @Composable
 fun IntroHost(content: @Composable (Intro.Tab) -> Unit) {
     val context = LocalContext.current
-    val prefs = remember { IntroPrefs(context) }
-    var landing by rememberSaveable { mutableStateOf<Intro.Tab?>(if (prefs.introAnswered) Intro.Tab.TODAY else null) }
-    val showing by remember { derivedStateOf { landing == null || IntroLauncher.replaying } }
+    val container = remember { AppContainer.from(context) }
+    val prefs = container.prefs
+    val scope = rememberCoroutineScope()
 
-    landing?.let { content(it) }
+    // null while the flag is being read: nothing is drawn for a few milliseconds rather than a
+    // flash of the tabs that the tour then covers.
+    val answered by produceState<Boolean?>(null) { value = prefs.get(Pref.introAnswered) }
+    var landing by rememberSaveable { mutableStateOf<Intro.Tab?>(null) }
+    val current = landing ?: if (answered == true) Intro.Tab.TODAY else null
+    val showing by remember { derivedStateOf { (answered == false && landing == null) || IntroLauncher.replaying } }
+
+    current?.let { content(it) }
     if (!showing) return
 
-    // Meaning language: the stored choice, else the device's when the data has it. Card 1 writes it
-    // as it changes; the app language is never touched here (it would rebuild the UI mid-tour).
-    var language by rememberSaveable { mutableStateOf<String?>(prefs.translationLanguage) }
-    val samples by produceState<IntroSamples?>(null, language) {
-        val chosen = language
+    // Meaning language: the stored choice, else the device's. Card 1 writes it as it changes; the app
+    // language is never touched here (it would rebuild the UI under the tour).
+    val language by produceState<String?>(null) {
         value = withContext(Dispatchers.IO) {
-            val resolved = chosen ?: IntroSamples.defaultLanguage(IntroSamples.load(context, "en").languages)
-            IntroSamples.load(context, resolved)
+            prefs.translationLanguage(container.vocab.deviceDefaultLanguage()).first()
         }
+    }
+    var chosen by rememberSaveable { mutableStateOf<String?>(null) }
+    val shown = chosen ?: language ?: return
+    val samples by produceState<IntroSamples?>(null, shown) {
+        value = withContext(Dispatchers.IO) { IntroSamples.from(container.vocab, shown) }
     }
     LaunchedEffect(Unit) { Track.screen(TrackScreens.INTRO) }
 
     val ready = samples ?: return
     IntroScreen(
         samples = ready,
-        language = language ?: IntroSamples.defaultLanguage(ready.languages),
+        language = shown,
         onLanguage = {
-            language = it
-            prefs.translationLanguage = it
+            chosen = it
+            scope.launch { prefs.setTranslationLanguage(it) }
         },
         onReminders = { /* the streak reminder and its permission arrive with FOX-159 */ },
         onFinish = { answers, tab, completed ->
-            answers.save(prefs)
-            // Only a fully answered run is submitted. Fire and forget, off the main thread.
-            if (completed) {
-                answers.submission?.let { Survey.submit(it, AppInfo.surveyContext(context, Track.lastScreen)) }
-            }
             if (landing == null) landing = tab
             IntroLauncher.done()
+            // Written and sent from the application scope, so it outlives this composition. Only a
+            // fully answered run is submitted: fire and forget, never blocking the tap.
+            container.scope.launch(Dispatchers.IO) {
+                answers.save(prefs)
+                val row = answers.submission?.takeIf { completed } ?: return@launch
+                val survey = AppInfo.surveyContext(
+                    context.applicationContext,
+                    prefs,
+                    container.vocab.deviceDefaultLanguage()
+                )
+                Survey.submit(row, survey)
+            }
         }
     )
 }

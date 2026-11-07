@@ -57,6 +57,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
 import com.kfpun.japanesedaily.analytics.TrackEvents
+import com.kfpun.japanesedaily.data.vocab.Vocab
 import java.util.Locale
 
 /** Analytics seam of the intro; the default is `Track`, tests and previews pass their own. */
@@ -312,7 +313,7 @@ private fun nativeName(code: String): String =
     Locale.forLanguageTag(code).let { it.getDisplayName(it) }.replaceFirstChar { c -> c.uppercase() }
 
 @Composable
-private fun WordFace(word: IntroWord) {
+private fun WordFace(word: Vocab) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (word.displaysKanji) {
             Text(

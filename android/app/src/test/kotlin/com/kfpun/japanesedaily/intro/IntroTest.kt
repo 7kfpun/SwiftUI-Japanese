@@ -1,31 +1,36 @@
 package com.kfpun.japanesedaily.intro
 
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import com.kfpun.japanesedaily.data.prefs.Pref
+import com.kfpun.japanesedaily.data.prefs.Prefs
+import com.kfpun.japanesedaily.data.vocab.FileAssetSource
+import com.kfpun.japanesedaily.data.vocab.VocabStore
 import java.io.File
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 /** Port of the iOS `IntroTests` (nihongoTests.swift). Unit tests run from android/app. */
+@OptIn(ExperimentalCoroutinesApi::class)
 class IntroTest {
-    private class MapStore : IntroStore {
-        override var introAnswered = false
-        val values = mutableMapOf<String, Any>()
+    @get:Rule
+    val tmp = TemporaryFolder()
 
-        override fun putKnowsKana(value: String) {
-            values["knowsKana"] = value
+    private fun TestScope.newPrefs() = Prefs(
+        PreferenceDataStoreFactory.create(scope = CoroutineScope(UnconfinedTestDispatcher(testScheduler))) {
+            File(tmp.root, "prefs.preferences_pb")
         }
-
-        override fun putTextbookLesson(value: Int) {
-            values["textbookLesson"] = value
-        }
-
-        override fun putGoal(value: String) {
-            values["goal"] = value
-        }
-    }
+    )
 
     @Test
     fun cardsAreNumberedInPagingOrder() {
@@ -57,30 +62,34 @@ class IntroTest {
     }
 
     @Test
-    fun answersMapOntoPreferences() {
-        val store = MapStore()
-        IntroAnswers(Intro.KanaLevel.BOTH, 12, Intro.Goal.JLPT).save(store)
-        assertTrue(store.introAnswered)
-        assertEquals("both", store.values["knowsKana"])
-        assertEquals(12, store.values["textbookLesson"])
-        assertEquals("jlpt", store.values["goal"])
+    fun answersMapOntoPreferences() = runTest {
+        val prefs = newPrefs()
+        IntroAnswers(Intro.KanaLevel.BOTH, 12, Intro.Goal.JLPT).save(prefs)
+        assertTrue(prefs.get(Pref.introAnswered))
+        assertEquals("both", prefs.get(Pref.knowsKana))
+        assertEquals(12, prefs.get(Pref.textbookLesson))
+        assertEquals("jlpt", prefs.get(Pref.goal))
     }
 
-    /** "Never studied it" is the answer 0, not the absence of one. */
+    /** "Never studied it" is the answer 0, not the absence of one: it must be written, so it is `isSet`. */
     @Test
-    fun startingFreshIsStoredAsZero() {
-        val store = MapStore()
-        IntroAnswers(textbookLesson = 0).save(store)
-        assertEquals(0, store.values["textbookLesson"])
+    fun startingFreshIsStoredAsZero() = runTest {
+        val prefs = newPrefs()
+        assertFalse(prefs.isSet(Pref.textbookLesson))
+        IntroAnswers(textbookLesson = 0).save(prefs)
+        assertTrue(prefs.isSet(Pref.textbookLesson))
+        assertEquals(0, prefs.get(Pref.textbookLesson))
     }
 
     /** A skipped question writes nothing, but the intro is still marked seen or the tour reopens. */
     @Test
-    fun skippedQuestionsWriteNothingButStillCloseTheIntro() {
-        val store = MapStore()
-        IntroAnswers().save(store)
-        assertTrue(store.introAnswered)
-        assertTrue(store.values.isEmpty())
+    fun skippedQuestionsWriteNothingButStillCloseTheIntro() = runTest {
+        val prefs = newPrefs()
+        IntroAnswers().save(prefs)
+        assertTrue(prefs.get(Pref.introAnswered))
+        assertFalse(prefs.isSet(Pref.knowsKana))
+        assertFalse(prefs.isSet(Pref.textbookLesson))
+        assertFalse(prefs.isSet(Pref.goal))
     }
 
     @Test
@@ -154,8 +163,7 @@ class IntroTest {
     /** Card 1 skips わたし (kana only) for the first entry with a distinct kanji; lesson 1 comes from the data. */
     @Test
     fun samplesComeFromLessonOneOfTheBundledData() {
-        val json = File("../../nihongo/Resources/MinnaData.json").readText()
-        val samples = IntroSamples.parse(json, "en")
+        val samples = IntroSamples.from(VocabStore(FileAssetSource(File("../../nihongo/Resources"))), "en")
         assertTrue(samples.lesson1.size > 10)
         assertEquals("わたし", samples.lesson1.first().kana)
         assertFalse(samples.lesson1.first().displaysKanji)
@@ -163,7 +171,5 @@ class IntroTest {
         assertTrue(samples.anatomyWord!!.translation.isNotEmpty())
         assertEquals(50, samples.lessonCount)
         assertTrue("en" in samples.languages && samples.languages.size >= 19)
-        assertEquals("en", IntroSamples.defaultLanguage(samples.languages, java.util.Locale.forLanguageTag("xx")))
-        assertEquals("de", IntroSamples.defaultLanguage(samples.languages, java.util.Locale.GERMANY))
     }
 }

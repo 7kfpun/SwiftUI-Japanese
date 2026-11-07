@@ -84,6 +84,22 @@ Check `nihongo/Store.swift` and `nihongo/Challenge.swift` before writing a claim
 Material Symbols icons. Keep shared files (`MainActivity`, navigation, `libs.versions.toml`,
 `Theme`) to small additive edits so parallel tickets merge cleanly.
 
+## Data layer (`data/`, FOX-148)
+
+One entry point, `AppContainer.from(context)`, gives `vocab` (`VocabStore`: 50 lessons, 2100
+words, 19 meaning languages, audio asset paths), `kana` (`KanaData`), `progress`
+(`ProgressRepository` over Room: `ChallengeResult`, `KanaResult`, `StudyDay`, bookmarks),
+`practice` (`PracticeProgress`) and `prefs` (DataStore, `Pref` registry). `Course` holds the
+course constants; only `Course.Minna` exists.
+
+- No table has a unique constraint; every reader tolerates duplicate rows (`ChallengeResult.better`,
+  latest-timestamp for kana, newest bookmark), so a later sign-in sync needs no rewrite.
+- Day stamps come from `StudyDay.stamp` (`java.time`, ISO numbering, the user's zone), never
+  `Calendar`/`DateFormat`. `LadderRules` holds the pass bar, stars and rung count the progress
+  rules need; the Challenge ladder feature reuses it.
+- Tests read `nihongo/Resources` in place through `FileAssetSource`; the Room tests run under
+  Robolectric. The Room schema is exported to `app/schemas/` for future migration tests.
+
 ## Strings (FOX-150)
 
 `scripts/build-android-strings.py` (stdlib only) writes `res/values/strings.xml` (English, the

@@ -2,6 +2,9 @@ package com.kfpun.japanesedaily.intro
 
 import androidx.annotation.StringRes
 import com.kfpun.japanesedaily.R
+import com.kfpun.japanesedaily.data.prefs.Pref
+import com.kfpun.japanesedaily.data.prefs.Prefs
+import com.kfpun.japanesedaily.survey.Survey
 
 /**
  * The first-launch intro: six cards that show what the app does and ask the three questions worth
@@ -101,17 +104,6 @@ object Intro {
     fun landingTab(kana: KanaLevel?): Tab = if (kana == KanaLevel.NOT_YET) Tab.KANA else Tab.TODAY
 }
 
-/** Where the intro keeps its flag and answers. SharedPreferences-backed in the app, a map in tests. */
-interface IntroStore {
-    var introAnswered: Boolean
-
-    fun putKnowsKana(value: String)
-
-    fun putTextbookLesson(value: Int)
-
-    fun putGoal(value: String)
-}
-
 /**
  * The three answers the intro collects, and the single place they get written. Each is nullable
  * because Skip sits on every card: an unanswered question writes no preference at all, rather than
@@ -130,23 +122,23 @@ data class IntroAnswers(
      * The survey row for a completed run, or null for a partial one: a half-answered row could not
      * be told from a deliberate "0" once it is in the collection. Drop-off is counted in Analytics.
      */
-    val submission: com.kfpun.japanesedaily.survey.Survey.Intro?
+    val submission: Survey.Intro?
         get() {
             val kana = kana ?: return null
             val textbookLesson = textbookLesson ?: return null
             val goal = goal ?: return null
-            return com.kfpun.japanesedaily.survey.Survey.Intro(kana.id, textbookLesson, goal.id)
+            return Survey.Intro(kana.id, textbookLesson, goal.id)
         }
 
     /**
      * Marks the intro seen and persists whatever was answered. The flag goes down even on a skip,
      * or asking again on the next launch would turn a first-run tour into a nag.
      */
-    fun save(to: IntroStore) {
-        to.introAnswered = true
-        kana?.let { to.putKnowsKana(it.id) }
-        textbookLesson?.let { to.putTextbookLesson(it) }
-        goal?.let { to.putGoal(it.id) }
+    suspend fun save(to: Prefs) {
+        to.set(Pref.introAnswered, true)
+        kana?.let { to.set(Pref.knowsKana, it.id) }
+        textbookLesson?.let { to.set(Pref.textbookLesson, it) }
+        goal?.let { to.set(Pref.goal, it.id) }
     }
 
     /** Params for `intro_done`: always the same three keys, so a funnel can count "unanswered". */
