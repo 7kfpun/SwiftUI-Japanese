@@ -7,6 +7,7 @@
     <!-- Progress stays on the device (FOX-146): no Auto Backup, no device-to-device copy.
          allowBackup=false covers Android 11 and below; data_extraction_rules covers 12+. -->
     <application
+        android:name=".JapaneseDailyApp"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
@@ -28,6 +29,20 @@
         <meta-data
             android:name="firebase_crashlytics_collection_enabled"
             android:value="${FIREBASE_COLLECTION_ENABLED}" />
+        <!-- Non-personalized, with no advertising id of our own: Analytics keeps no ad id and sends no
+             ad-personalization signals from first launch (FirebaseSink also sets consent at runtime). -->
+        <meta-data
+            android:name="google_analytics_adid_collection_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_default_allow_ad_personalization_signals"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_default_allow_ad_user_data"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_default_allow_ad_storage"
+            android:value="false" />
 
         <activity
             android:name=".MainActivity"

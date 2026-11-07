@@ -22,6 +22,7 @@ on:
       - "nihongo/Resources/**"
       - "nihongo/UIStrings.json"
       - "scripts/build-android-strings.py"
+      - "scripts/extract-track-events.py"
       - ".github/workflows/android.yml"
   workflow_dispatch:
 
@@ -54,7 +55,7 @@ jobs:
           PUSH_AFTER: ${{ github.sha }}
         run: |
           set -euo pipefail
-          paths=(android/ nihongo/Resources/ nihongo/UIStrings.json scripts/build-android-strings.py .github/workflows/android.yml)
+          paths=(android/ nihongo/Resources/ nihongo/UIStrings.json scripts/build-android-strings.py scripts/extract-track-events.py .github/workflows/android.yml)
           build=true
           case "$EVENT" in
             pull_request)
@@ -101,6 +102,11 @@ jobs:
       - name: Check the generated Android strings are current
         if: steps.changes.outputs.build == 'true'
         run: python3 scripts/build-android-strings.py --check
+
+      # The Track catalog the Android events are pinned to is read from the Swift source.
+      - name: Check the iOS analytics catalog is current
+        if: steps.changes.outputs.build == 'true'
+        run: python3 scripts/extract-track-events.py --check
 
       - name: Set up JDK 17
         if: steps.changes.outputs.build == 'true'

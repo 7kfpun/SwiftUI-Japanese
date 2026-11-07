@@ -74,6 +74,22 @@ Other gitignored local files:
 Never commit any of these. Real values for the iOS app live in the main checkout's
 `nihongo/Secrets.plist`.
 
+## Analytics and Crashlytics
+
+`analytics/Track` is the only seam: nothing else imports Firebase (`FirebaseSink` is the one file that
+does). Names carry the iOS `nihongo_2026_` prefix, so Android and iOS land in the same reports; the
+catalog is `TrackEvents`/`TrackScreens`, pinned by `TrackCatalogTest` to
+`android/app/src/test/resources/ios-track-catalog.txt`, which `python3 scripts/extract-track-events.py`
+generates from the Swift source (CI runs it with `--check`). Without `app/google-services.json` Track is a
+no-op. No user id, no advertising id; consent is denied for ads and personalization.
+
+- **Excluded device:** seven quick taps on the version line at the foot of Settings toggle the opt-out
+  (`Track.setExcluded`, persisted as `analyticsExcluded` in the `settings` prefs); the line then reads
+  "Analytics off". It stops Analytics and Crashlytics together.
+- **Debug builds are excluded**, like iOS DEBUG. To check events in DebugView: put
+  `FIREBASE_DEBUG_COLLECTION=true` in `secrets.properties`, copy the real `google-services.json` to
+  `app/`, install the debug build, then `adb shell setprop debug.firebase.analytics.app com.kfpun.japanesedaily`.
+
 ## Backups
 
 `android:allowBackup="false"`, `fullBackupContent="false"` and `data_extraction_rules.xml`

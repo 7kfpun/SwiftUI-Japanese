@@ -44,8 +44,9 @@ Edit the generators or the source JSON, never the output.
   selection is an accent *border*, never a fill. Dynamic type: `sp` text, no fixed-height
   frames (German, Vietnamese and Burmese run long). Cards sit lighter than the screen in both
   appearances.
-- **Analytics: `Track` only** (FOX-160); nothing else imports Firebase Analytics. Event names
-  and param keys are `lower_snake_case` and match the iOS names.
+- **Analytics: `Track` only** (`analytics/Track.kt`); nothing else imports Firebase. Event names
+  and param keys are `lower_snake_case` and match the iOS names: add the constant to `TrackEvents`, and
+  rerun `python3 scripts/extract-track-events.py` when iOS adds one (`TrackCatalogTest` fails otherwise).
 - **Server writes: `Survey` only** (FOX-157), the app's only server write, to Directus
   (`DIRECTUS_URL`, create-only `DIRECTUS_TOKEN`). Add the Directus column before the app
   sends a field. An empty or placeholder token means submissions are a silent no-op.
