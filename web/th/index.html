@@ -14,7 +14,7 @@
 </script>
 
 <title>Japanese Daily 每日日本語 — เรียนภาษาญี่ปุ่นวันละนิด</title>
-<meta name="description" content="เรียนภาษาญี่ปุ่นทุกวัน: ครบ 50 บทของ Minna no Nihongo — 2,100 คำใน 19 ภาษา ฮิรางานะ-คาตาคานะพร้อมเสียง ฟรีบน iPhone และ iPad">
+<meta name="description" content="เรียนภาษาญี่ปุ่นทุกวัน: ครบ 50 บทของ Minna no Nihongo — 2,100 คำใน 19 ภาษา ฮิรางานะ-คาตาคานะพร้อมเสียง ฟรีบน iPhone, iPad และ Android">
 <link rel="icon" href="/img/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="icon" href="/img/icon-512.png" sizes="512x512" type="image/png">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
@@ -43,7 +43,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Japanese Daily 每日日本語">
 <meta property="og:title" content="Japanese Daily 每日日本語 — เรียนภาษาญี่ปุ่นวันละนิด">
-<meta property="og:description" content="เรียนภาษาญี่ปุ่นทุกวัน: ครบ 50 บทของ Minna no Nihongo — 2,100 คำใน 19 ภาษา ฮิรางานะ-คาตาคานะพร้อมเสียง ฟรีบน iPhone และ iPad">
+<meta property="og:description" content="เรียนภาษาญี่ปุ่นทุกวัน: ครบ 50 บทของ Minna no Nihongo — 2,100 คำใน 19 ภาษา ฮิรางานะ-คาตาคานะพร้อมเสียง ฟรีบน iPhone, iPad และ Android">
 <meta property="og:url" content="https://japanesedaily.wahthefox.com/th/">
 <meta property="og:locale" content="th_TH">
 <meta property="og:locale:alternate" content="en_US">
@@ -69,20 +69,20 @@
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="แอป Japanese Daily บน iPhone — ตารางคานะ คำศัพท์ของวันนี้ และบัตรคำศัพท์">
+<meta property="og:image:alt" content="แอป Japanese Daily บน iPhone และ Android — ตารางคานะ คำศัพท์ของวันนี้ และบัตรคำศัพท์">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Japanese Daily 每日日本語 — เรียนภาษาญี่ปุ่นวันละนิด">
-<meta name="twitter:description" content="เรียนภาษาญี่ปุ่นทุกวัน: ครบ 50 บทของ Minna no Nihongo — 2,100 คำใน 19 ภาษา ฮิรางานะ-คาตาคานะพร้อมเสียง ฟรีบน iPhone และ iPad">
+<meta name="twitter:description" content="เรียนภาษาญี่ปุ่นทุกวัน: ครบ 50 บทของ Minna no Nihongo — 2,100 คำใน 19 ภาษา ฮิรางานะ-คาตาคานะพร้อมเสียง ฟรีบน iPhone, iPad และ Android">
 <meta name="twitter:image" content="https://japanesedaily.wahthefox.com/img/og-card.png">
-<meta name="twitter:image:alt" content="แอป Japanese Daily บน iPhone — ตารางคานะ คำศัพท์ของวันนี้ และบัตรคำศัพท์">
+<meta name="twitter:image:alt" content="แอป Japanese Daily บน iPhone และ Android — ตารางคานะ คำศัพท์ของวันนี้ และบัตรคำศัพท์">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "Japanese Daily 每日日本語",
-  "operatingSystem": "iOS",
+  "operatingSystem": "iOS, iPadOS, Android",
   "applicationCategory": "EducationalApplication",
-  "description": "เรียนภาษาญี่ปุ่นทุกวัน: ครบ 50 บทของ Minna no Nihongo — 2,100 คำใน 19 ภาษา ฮิรางานะ-คาตาคานะพร้อมเสียง ฟรีบน iPhone และ iPad",
+  "description": "เรียนภาษาญี่ปุ่นทุกวัน: ครบ 50 บทของ Minna no Nihongo — 2,100 คำใน 19 ภาษา ฮิรางานะ-คาตาคานะพร้อมเสียง ฟรีบน iPhone, iPad และ Android",
   "inLanguage": "th",
   "image": "https://japanesedaily.wahthefox.com/img/og-card.png",
   "url": "https://japanesedaily.wahthefox.com/th/",
@@ -284,6 +284,9 @@
     background: var(--badge-bg);
     color: var(--badge-fg);
     text-decoration: none;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 198px; /* the Google Play badge's visible art is 198x59, so the two sit as a matched pair */
     border-radius: 14px;
     padding: 0.7rem 1.4rem 0.7rem 1.1rem;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -295,6 +298,10 @@
   .appstore-badge .badge-text { text-align: left; line-height: 1.2; }
   .appstore-badge .badge-text small { display: block; font-size: 0.68rem; font-weight: 400; opacity: 0.85; }
   .appstore-badge .badge-text strong { display: block; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }
+  .play-badge { display: inline-block; line-height: 0; transition: transform 0.15s ease; }
+  .play-badge:hover { transform: translateY(-2px) scale(1.02); }
+  .play-badge img { height: 88px; width: auto; max-width: 100%; }
+  .bottom-cta .appstore-badge, .bottom-cta .play-badge { margin: 0.25rem; vertical-align: middle; }
 
   .scroll-hint {
     position: absolute;
@@ -744,6 +751,7 @@
   .quiz-box .qscore { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
   .quiz-box .qpitch { color: var(--fg-muted); max-width: 26rem; margin: 0 auto 1.2rem; }
   .quiz-box .qend .appstore-badge { margin-bottom: 0.4rem; }
+  .quiz-box .qbadges { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.25rem 0.5rem; }
   .quiz-box .qrestart { display: block; margin: 0.8rem auto 0; background: transparent; color: var(--accent); border: 1px solid var(--accent); }
   .noscript-note { color: var(--fg-muted); font-size: 0.9rem; }
 
@@ -835,7 +843,7 @@
         <span class="jp-name jp">每日日本語</span>
         <span class="h1-sub">เรียนภาษาญี่ปุ่น: ฮิรางานะ คาตากานะ และ JLPT N5–N4</span>
       </h1>
-      <p class="tagline">2,100 คำ ตารางคานะครบชุด บัตรคำ ฝึกเขียนตามลำดับขีด และด่านท้าทายที่มีคะแนน — ครบในแอป iOS ที่สวยงามแอปเดียว</p>
+      <p class="tagline">2,100 คำ ตารางคานะครบชุด บัตรคำ ฝึกเขียนตามลำดับขีด และด่านท้าทายที่มีคะแนน — ครบในแอปสวยงามแอปเดียวสำหรับ iPhone, iPad และ Android</p>
       <div class="cta">
         <a class="appstore-badge" href="https://apps.apple.com/app/id1447639161" rel="noopener" aria-label="Download Japanese Daily on the App Store">
           <svg viewBox="0 0 24 29" fill="currentColor" aria-hidden="true">
@@ -846,7 +854,8 @@
             <strong>App Store</strong>
           </span>
         </a>
-        <span class="free-note"><span class="dot-green" aria-hidden="true">●</span> ฟรีบน iPhone และ iPad</span>
+        <a class="play-badge" href="https://play.google.com/store/apps/details?id=com.kfpun.japanesedaily" rel="noopener"><img src="/img/google-play/th.png" width="646" height="250" alt="ดาวน์โหลดบน Google Play"></a>
+        <span class="free-note"><span class="dot-green" aria-hidden="true">●</span> ฟรีบน iPhone, iPad และ Android</span>
       </div>
     </div>
     <div class="hero-shots">
@@ -942,8 +951,8 @@
     <article class="frow">
       <div class="fcopy">
         <span class="fnum">05</span>
-        <h3>บัตรคำและโหมดฝึกฝน</h3>
-        <p>รู้ก็ปัดขวา ไม่รู้ก็ปัดซ้าย แล้วให้โหมดฝึกฝนถามซ้ำ เลือกหนึ่งจากสองตัวเลือกแบบเร็ว ๆ</p>
+        <h3>ฝึกฝนและบัตรคำ</h3>
+        <p>ฝึกฝนคือเลือกจากสองคำตอบแบบเร็ว ๆ และคำที่ตอบผิดจะกลับมาอีก ส่วนบัตรคำคือสำรับให้เปิดดู — ปัดเพื่อเปลี่ยนใบ กดค้างเพื่อพลิก</p>
       </div>
       <div class="fviz">
         <div class="v-cards" aria-hidden="true">
@@ -991,7 +1000,7 @@
       <div class="fcopy">
         <span class="fnum">07</span>
         <h3>อยู่บนทุกหน้าจอ</h3>
-        <p>คำของวันนี้อยู่บนหน้าจอโฮม หน้าจอล็อก และ Apple Watch — เรียนได้ก่อนปลดล็อกเสียอีก</p>
+        <p>คำของวันนี้อยู่บนหน้าจอโฮม และบน iPhone ยังอยู่บนหน้าจอล็อกและ Apple Watch ด้วย — เรียนได้ก่อนปลดล็อกเสียอีก</p>
       </div>
       <div class="fviz">
         <div class="v-widget" aria-hidden="true">
@@ -1021,12 +1030,12 @@
       <div class="how-step">
         <span class="how-n">2</span>
         <h3>2. เรียนไปทีละบท</h3>
-        <p>เลือกบทเรียน จำคำศัพท์ด้วยบัตรคำ ฝึกฝน จับคู่ และเรียนรู้ แล้วไปพิสูจน์ตัวเองที่ด่านท้าทาย</p>
+        <p>เลือกบทเรียน จำคำศัพท์ด้วยฝึกฝน รายการคำศัพท์ บัตรคำ จับคู่ และเรียนรู้ แล้วไปพิสูจน์ตัวเองที่ด่านท้าทาย</p>
       </div>
       <div class="how-step">
         <span class="how-n">3</span>
         <h3>3. สร้างนิสัยเรียนทุกวัน</h3>
-        <p>เช็กวิดเจ็ต Today ทุกเช้าเพื่อเรียนคำใหม่ และดูดาวของคุณสะสมขึ้นทีละบท — ความคืบหน้าซิงก์ข้ามอุปกรณ์ผ่าน iCloud</p>
+        <p>ดูวิดเจ็ตทุกเช้าเพื่อเรียนคำใหม่ และดูดาวของคุณสะสมขึ้นทีละบท — ความคืบหน้าซิงก์ข้ามอุปกรณ์ Apple ผ่าน iCloud ส่วนบน Android จะเก็บไว้ในเครื่อง</p>
       </div>
     </div>
   </section>
@@ -1077,6 +1086,7 @@
         <strong>App Store</strong>
       </span>
     </a>
+    <a class="play-badge" href="https://play.google.com/store/apps/details?id=com.kfpun.japanesedaily" rel="noopener"><img src="/img/google-play/th.png" width="646" height="250" alt="ดาวน์โหลดบน Google Play"></a>
   </section>
 </main>
 
@@ -1109,6 +1119,7 @@
     <a href="/privacy.html">นโยบายความเป็นส่วนตัว</a>
     <a href="/terms.html">ข้อกำหนดการใช้งาน</a>
     <a href="https://apps.apple.com/app/id1447639161" rel="noopener">App Store</a>
+    <a href="https://play.google.com/store/apps/details?id=com.kfpun.japanesedaily" rel="noopener">Google Play</a>
   </nav>
   <p>&copy; 2026 Japanese Daily 每日日本語. สงวนลิขสิทธิ์</p>
 </footer>
@@ -1147,7 +1158,12 @@
     a.href = "https://apps.apple.com/app/id1447639161";
     a.rel = "noopener";
     a.innerHTML = document.querySelector(".bottom-cta .appstore-badge").innerHTML;
-    return a;
+    var play = document.querySelector(".bottom-cta .play-badge");
+    if (!play) return a;
+    var row = el("div", "qbadges");
+    row.appendChild(a);
+    row.appendChild(play.cloneNode(true));
+    return row;
   }
 
   function start() {

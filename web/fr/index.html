@@ -14,7 +14,7 @@
 </script>
 
 <title>Japanese Daily 每日日本語 — Le japonais, un peu chaque jour</title>
-<meta name="description" content="Apprenez le japonais chaque jour : les 50 leçons de Minna no Nihongo — 2 100 mots en 19 langues, hiragana et katakana en audio. Gratuit sur iPhone et iPad.">
+<meta name="description" content="Apprenez le japonais chaque jour : les 50 leçons de Minna no Nihongo — 2 100 mots en 19 langues, hiragana et katakana en audio. Gratuit sur iPhone, iPad et Android.">
 <link rel="icon" href="/img/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="icon" href="/img/icon-512.png" sizes="512x512" type="image/png">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
@@ -43,7 +43,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Japanese Daily 每日日本語">
 <meta property="og:title" content="Japanese Daily 每日日本語 — Le japonais, un peu chaque jour">
-<meta property="og:description" content="Apprenez le japonais chaque jour : les 50 leçons de Minna no Nihongo — 2 100 mots en 19 langues, hiragana et katakana en audio. Gratuit sur iPhone et iPad.">
+<meta property="og:description" content="Apprenez le japonais chaque jour : les 50 leçons de Minna no Nihongo — 2 100 mots en 19 langues, hiragana et katakana en audio. Gratuit sur iPhone, iPad et Android.">
 <meta property="og:url" content="https://japanesedaily.wahthefox.com/fr/">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:locale:alternate" content="en_US">
@@ -69,20 +69,20 @@
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="L&#x27;application Japanese Daily sur iPhone : le tableau des kana, le mot du jour et une carte mémo de vocabulaire.">
+<meta property="og:image:alt" content="L&#x27;application Japanese Daily sur iPhone et Android : le tableau des kana, le mot du jour et une carte mémo de vocabulaire.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Japanese Daily 每日日本語 — Le japonais, un peu chaque jour">
-<meta name="twitter:description" content="Apprenez le japonais chaque jour : les 50 leçons de Minna no Nihongo — 2 100 mots en 19 langues, hiragana et katakana en audio. Gratuit sur iPhone et iPad.">
+<meta name="twitter:description" content="Apprenez le japonais chaque jour : les 50 leçons de Minna no Nihongo — 2 100 mots en 19 langues, hiragana et katakana en audio. Gratuit sur iPhone, iPad et Android.">
 <meta name="twitter:image" content="https://japanesedaily.wahthefox.com/img/og-card.png">
-<meta name="twitter:image:alt" content="L&#x27;application Japanese Daily sur iPhone : le tableau des kana, le mot du jour et une carte mémo de vocabulaire.">
+<meta name="twitter:image:alt" content="L&#x27;application Japanese Daily sur iPhone et Android : le tableau des kana, le mot du jour et une carte mémo de vocabulaire.">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "Japanese Daily 每日日本語",
-  "operatingSystem": "iOS",
+  "operatingSystem": "iOS, iPadOS, Android",
   "applicationCategory": "EducationalApplication",
-  "description": "Apprenez le japonais chaque jour : les 50 leçons de Minna no Nihongo — 2 100 mots en 19 langues, hiragana et katakana en audio. Gratuit sur iPhone et iPad.",
+  "description": "Apprenez le japonais chaque jour : les 50 leçons de Minna no Nihongo — 2 100 mots en 19 langues, hiragana et katakana en audio. Gratuit sur iPhone, iPad et Android.",
   "inLanguage": "fr",
   "image": "https://japanesedaily.wahthefox.com/img/og-card.png",
   "url": "https://japanesedaily.wahthefox.com/fr/",
@@ -284,6 +284,9 @@
     background: var(--badge-bg);
     color: var(--badge-fg);
     text-decoration: none;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 198px; /* the Google Play badge's visible art is 198x59, so the two sit as a matched pair */
     border-radius: 14px;
     padding: 0.7rem 1.4rem 0.7rem 1.1rem;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -295,6 +298,10 @@
   .appstore-badge .badge-text { text-align: left; line-height: 1.2; }
   .appstore-badge .badge-text small { display: block; font-size: 0.68rem; font-weight: 400; opacity: 0.85; }
   .appstore-badge .badge-text strong { display: block; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }
+  .play-badge { display: inline-block; line-height: 0; transition: transform 0.15s ease; }
+  .play-badge:hover { transform: translateY(-2px) scale(1.02); }
+  .play-badge img { height: 88px; width: auto; max-width: 100%; }
+  .bottom-cta .appstore-badge, .bottom-cta .play-badge { margin: 0.25rem; vertical-align: middle; }
 
   .scroll-hint {
     position: absolute;
@@ -744,6 +751,7 @@
   .quiz-box .qscore { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
   .quiz-box .qpitch { color: var(--fg-muted); max-width: 26rem; margin: 0 auto 1.2rem; }
   .quiz-box .qend .appstore-badge { margin-bottom: 0.4rem; }
+  .quiz-box .qbadges { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.25rem 0.5rem; }
   .quiz-box .qrestart { display: block; margin: 0.8rem auto 0; background: transparent; color: var(--accent); border: 1px solid var(--accent); }
   .noscript-note { color: var(--fg-muted); font-size: 0.9rem; }
 
@@ -835,7 +843,7 @@
         <span class="jp-name jp">每日日本語</span>
         <span class="h1-sub">Apprendre le japonais : hiragana, katakana et JLPT N5–N4</span>
       </h1>
-      <p class="tagline">2 100 mots, les tableaux complets de hiragana et katakana, des cartes mémo, l&#x27;écriture à la main et une échelle de défis notés — le tout dans une belle app iOS.</p>
+      <p class="tagline">2 100 mots, les tableaux complets de hiragana et katakana, des cartes mémo, l&#x27;écriture à la main et une échelle de défis notés — le tout dans une belle app pour iPhone, iPad et Android.</p>
       <div class="cta">
         <a class="appstore-badge" href="https://apps.apple.com/app/id1447639161" rel="noopener" aria-label="Download Japanese Daily on the App Store">
           <svg viewBox="0 0 24 29" fill="currentColor" aria-hidden="true">
@@ -846,7 +854,8 @@
             <strong>App Store</strong>
           </span>
         </a>
-        <span class="free-note"><span class="dot-green" aria-hidden="true">●</span> Gratuit sur iPhone et iPad</span>
+        <a class="play-badge" href="https://play.google.com/store/apps/details?id=com.kfpun.japanesedaily" rel="noopener"><img src="/img/google-play/fr.png" width="646" height="250" alt="Disponible sur Google Play"></a>
+        <span class="free-note"><span class="dot-green" aria-hidden="true">●</span> Gratuit sur iPhone, iPad et Android</span>
       </div>
     </div>
     <div class="hero-shots">
@@ -942,8 +951,8 @@
     <article class="frow">
       <div class="fcopy">
         <span class="fnum">05</span>
-        <h3>Cartes mémo et Entraînement</h3>
-        <p>Glissez à droite si vous savez, à gauche sinon — puis l&#x27;Entraînement vous repose la question entre deux réponses.</p>
+        <h3>Entraînement et Cartes mémo</h3>
+        <p>L&#x27;Entraînement, c&#x27;est un choix rapide entre deux réponses, et un mot raté revient. Les Cartes mémo forment un paquet à feuilleter : glissez pour passer, maintenez pour retourner.</p>
       </div>
       <div class="fviz">
         <div class="v-cards" aria-hidden="true">
@@ -991,7 +1000,7 @@
       <div class="fcopy">
         <span class="fnum">07</span>
         <h3>Sur tous vos écrans</h3>
-        <p>Le mot du jour sur l&#x27;écran d&#x27;accueil, l&#x27;écran verrouillé et l&#x27;Apple Watch — apprenez avant même de déverrouiller.</p>
+        <p>Le mot du jour sur l&#x27;écran d&#x27;accueil — et sur iPhone, aussi sur l&#x27;écran verrouillé et l&#x27;Apple Watch — apprenez avant même de déverrouiller.</p>
       </div>
       <div class="fviz">
         <div class="v-widget" aria-hidden="true">
@@ -1021,12 +1030,12 @@
       <div class="how-step">
         <span class="how-n">2</span>
         <h3>2. Avancez leçon par leçon</h3>
-        <p>Choisissez une leçon, travaillez son vocabulaire avec les Cartes mémo, l&#x27;Entraînement, Associer et Apprendre, puis grimpez son échelle de défis.</p>
+        <p>Choisissez une leçon, travaillez son vocabulaire avec l&#x27;Entraînement, la Liste de vocabulaire, les Cartes mémo, Associer et Apprendre, puis grimpez son échelle de défis.</p>
       </div>
       <div class="how-step">
         <span class="how-n">3</span>
         <h3>3. Créez une habitude quotidienne</h3>
-        <p>Consultez le widget Aujourd&#x27;hui chaque matin pour un nouveau mot, et regardez vos étoiles s&#x27;accumuler leçon après leçon — votre progression se synchronise entre vos appareils via iCloud.</p>
+        <p>Jetez un œil au widget chaque matin pour un nouveau mot, et regardez vos étoiles s&#x27;accumuler leçon après leçon — votre progression se synchronise entre vos appareils Apple via iCloud, et reste sur l&#x27;appareil sous Android.</p>
       </div>
     </div>
   </section>
@@ -1077,6 +1086,7 @@
         <strong>App Store</strong>
       </span>
     </a>
+    <a class="play-badge" href="https://play.google.com/store/apps/details?id=com.kfpun.japanesedaily" rel="noopener"><img src="/img/google-play/fr.png" width="646" height="250" alt="Disponible sur Google Play"></a>
   </section>
 </main>
 
@@ -1109,6 +1119,7 @@
     <a href="/privacy.html">Politique de confidentialité</a>
     <a href="/terms.html">Conditions d&#x27;utilisation</a>
     <a href="https://apps.apple.com/app/id1447639161" rel="noopener">App Store</a>
+    <a href="https://play.google.com/store/apps/details?id=com.kfpun.japanesedaily" rel="noopener">Google Play</a>
   </nav>
   <p>&copy; 2026 Japanese Daily 每日日本語. Tous droits réservés.</p>
 </footer>
@@ -1147,7 +1158,12 @@
     a.href = "https://apps.apple.com/app/id1447639161";
     a.rel = "noopener";
     a.innerHTML = document.querySelector(".bottom-cta .appstore-badge").innerHTML;
-    return a;
+    var play = document.querySelector(".bottom-cta .play-badge");
+    if (!play) return a;
+    var row = el("div", "qbadges");
+    row.appendChild(a);
+    row.appendChild(play.cloneNode(true));
+    return row;
   }
 
   function start() {
