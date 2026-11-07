@@ -72,6 +72,8 @@
     <string name="write">రాయి</string>
     <string name="hear_it_draw_it">విని రాయండి</string>
     <string name="licenses">లైసెన్సులు</string>
+    <string name="no_japanese_voice_is_installed_on_this_device_add_on_3cd64e5">ఈ పరికరంలో జపనీస్ వాయిస్ ఇన్‌స్టాల్ చేయలేదు. అన్ని శబ్దాలు వినడానికి ఫోన్ టెక్స్ట్-టు-స్పీచ్ సెట్టింగ్‌లలో ఒకదాన్ని జోడించండి.</string>
+    <string name="the_spoken_audio_in_this_app_is_synthesised_with_voicevox">ఈ యాప్‌లోని మాట్లాడే ఆడియో VOICEVOXతో సృష్టించబడింది.</string>
     <string name="hiragana">హిరగానా</string>
     <string name="katakana">కటకానా</string>
     <string name="romaji">రోమాజీ</string>

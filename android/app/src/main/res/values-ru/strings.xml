@@ -72,6 +72,8 @@
     <string name="write">Письмо</string>
     <string name="hear_it_draw_it">Послушай и напиши</string>
     <string name="licenses">Лицензии</string>
+    <string name="no_japanese_voice_is_installed_on_this_device_add_on_3cd64e5">На устройстве не установлен японский голос. Добавьте его в настройках синтеза речи телефона, чтобы слышать все звуки.</string>
+    <string name="the_spoken_audio_in_this_app_is_synthesised_with_voicevox">Озвучка в этом приложении синтезирована с помощью VOICEVOX.</string>
     <string name="hiragana">Хирагана</string>
     <string name="katakana">Катакана</string>
     <string name="romaji">Ромадзи</string>
