@@ -1238,8 +1238,9 @@ enum ScreenLayout {
 
     /// ...with regular width and a height that isn't compact. Everything else (a phone in
     /// landscape, a 7-inch tablet in portrait, narrow Split View) keeps one pane.
-    static func usesTwoPane(windowWidth: CGFloat, regularWidth: Bool, compactHeight: Bool) -> Bool {
-        regularWidth && !compactHeight && windowWidth >= twoPaneMinWidth
+    static func usesTwoPane(windowWidth: CGFloat?, regularWidth: Bool, compactHeight: Bool) -> Bool {
+        // An unmeasured window (first frame) is judged by the size classes alone.
+        regularWidth && !compactHeight && (windowWidth ?? twoPaneMinWidth) >= twoPaneMinWidth
     }
 
     static func listPaneWidth(in windowWidth: CGFloat) -> CGFloat {

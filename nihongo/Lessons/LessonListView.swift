@@ -18,7 +18,9 @@ struct LessonListView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     /// The window's width, for the list pane's share of it.
-    @State private var windowWidth: CGFloat = 0
+    /// Nil until the first layout has measured it; `usesTwoPane` then decides from the
+    /// size classes alone, so an iPad doesn't start single-pane and flip to split.
+    @State private var windowWidth: CGFloat?
     private static let groups = Course.current.groups
 
     /// Search hits for the current query.
@@ -45,8 +47,8 @@ struct LessonListView: View {
                 }
             }
         }
-        .onChange(of: twoPaneActive) { old, new in
-            if old, !new { carrySelectionIntoStack() }
+        .onChange(of: twoPaneActive) { _, new in
+            if new { router.enterTwoPane() } else { router.leaveTwoPane() }
         }
         // Measured here, on the stable outer view, because the decision itself depends on it.
         .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { windowWidth = $0 }
@@ -63,7 +65,7 @@ struct LessonListView: View {
     private var twoPane: some View {
         NavigationSplitView(columnVisibility: .constant(.all)) {
             listPane
-                .navigationSplitViewColumnWidth(ScreenLayout.listPaneWidth(in: windowWidth))
+                .navigationSplitViewColumnWidth(ScreenLayout.listPaneWidth(in: windowWidth ?? 0))
         } detail: {
             NavigationStack {
                 SelectModeView(lesson: VocabStore.lesson(selectedNumber, language))
@@ -79,14 +81,6 @@ struct LessonListView: View {
     /// until then the one they'd study next, so the pane is never empty.
     private var selectedNumber: Int {
         router.selectedLesson?.number ?? continueLesson ?? 1
-    }
-
-    /// Going narrow (Split View dragged, phone turned upright) keeps the lesson that was
-    /// open: it is pushed onto the phone-style stack so the learner lands where they were.
-    /// Only an *explicit* selection travels — the default one is just the pane's filler.
-    private func carrySelectionIntoStack() {
-        guard let lesson = router.selectedLesson, router.lessonPath.isEmpty else { return }
-        router.lessonPath.append(lesson)
     }
 
     /// Two panes only where the right one is clearly the larger: a window at least 720pt
@@ -205,9 +199,13 @@ struct LessonListView: View {
         .readableWidth()
         .background(Color(.systemGroupedBackground))   // match the grouped List behind the picker
         .navigationTitle(L.t("Lessons"))
-        .onAppear { Track.screen("lessons"); reloadProgress() }
+        .onAppear {
+            Track.screen("lessons")
+            reloadProgress()
+            // Back on a phone-style list with nothing pushed: no lesson is open any more.
+            if !twoPaneActive { router.compactListAppeared() }
+        }
         .onChange(of: group) { Track.event("lesson_group", ["group": group]) }
-        .navigationDestination(for: Lesson.self) { SelectModeView(lesson: $0) }
         .searchable(text: $query, prompt: L.t("Search vocabulary"))
         .autocorrectionDisabled()
         .textInputAutocapitalization(.never)

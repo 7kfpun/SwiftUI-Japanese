@@ -2930,6 +2930,43 @@ struct RouterSelectionTests {
         #expect(router.tab == .lessons)
     }
 
+    /// open 3 -> pop -> two-pane -> one pane again: nothing is pushed back.
+    @Test func aPoppedLessonIsNotPushedAgainByAWidthFlip() {
+        let router = Router()
+        router.openLesson(VocabStore.lesson(3))
+        router.lessonPath = NavigationPath()      // the learner pops back to the list
+        router.compactListAppeared()
+        router.enterTwoPane()
+        router.leaveTwoPane()
+        #expect(router.lessonPath.isEmpty)
+        #expect(router.selectedLesson == nil)
+    }
+
+    /// open 3 -> two-pane -> one pane: lesson 3 is still open, pushed once.
+    @Test func anOpenLessonSurvivesAWidthRoundTrip() {
+        let router = Router()
+        let lesson = VocabStore.lesson(3)
+        router.openLesson(lesson)
+        router.compactListAppeared()              // a list appearance with a lesson pushed
+        router.enterTwoPane()
+        router.leaveTwoPane()
+        #expect(router.selectedLesson == lesson)
+        #expect(router.lessonPath.count == 1)
+    }
+
+    @Test func theDefaultSelectionNeverTravels() {
+        let router = Router()
+        router.enterTwoPane()
+        router.leaveTwoPane()
+        #expect(router.lessonPath.isEmpty)
+    }
+
+    @Test func anUnmeasuredWindowIsJudgedBySizeClassesAlone() {
+        #expect(ScreenLayout.usesTwoPane(windowWidth: nil, regularWidth: true, compactHeight: false))
+        #expect(!ScreenLayout.usesTwoPane(windowWidth: nil, regularWidth: true, compactHeight: true))
+        #expect(!ScreenLayout.usesTwoPane(windowWidth: nil, regularWidth: false, compactHeight: false))
+    }
+
     @Test func openingTheListClearsTheSelection() {
         let router = Router()
         router.openLesson(VocabStore.lesson(3))

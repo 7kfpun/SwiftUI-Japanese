@@ -29,6 +29,26 @@ import SwiftUI
     /// and conflating the two would make a developer's replay look like a fresh install.
     var replayIntro = false
 
+    /// The phone-style list came (back) into view. With nothing pushed, no lesson is open:
+    /// clearing here is what stops a popped lesson being pushed again by a later width flip.
+    func compactListAppeared() {
+        if lessonPath.isEmpty { selectedLesson = nil }
+    }
+
+    /// The window grew into two panes: the right pane now shows `selectedLesson`, so the
+    /// phone stack is emptied rather than left holding a lesson the learner may change.
+    func enterTwoPane() {
+        lessonPath = NavigationPath()
+    }
+
+    /// The window shrank back to one pane: an explicitly chosen lesson stays open, pushed
+    /// onto the stack. The default (never chosen) selection does not travel.
+    func leaveTwoPane() {
+        var path = NavigationPath()
+        if let selectedLesson { path.append(selectedLesson) }
+        lessonPath = path
+    }
+
     /// Just the Lessons tab, at its root. Where a link lands when the rung it names is
     /// behind the paywall: the list is the honest destination, since pushing into a
     /// lesson the user can't open would only dead-end them a screen deeper.
