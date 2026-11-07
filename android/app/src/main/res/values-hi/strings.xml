@@ -337,4 +337,8 @@
     <string name="details">विवरण</string>
     <string name="two_choices_per_card_the_app_keeps_score">हर कार्ड पर दो विकल्प — स्कोर ऐप रखता है</string>
     <string name="s_continue">जारी रखें</string>
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">सदस्यताएँ अपने आप नवीनीकृत होती हैं, जब तक अवधि समाप्त होने से कम से कम 24 घंटे पहले रद्द न की जाएँ। भुगतान आपके Google Play खाते से लिया जाएगा; इसे Google Play में प्रबंधित करें।</string>
+    <string name="no_purchases_found_for_this_google_account">इस Google खाते के लिए कोई खरीदारी नहीं मिली।</string>
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">आपका भुगतान लंबित है। पूरा होते ही प्रीमियम चालू हो जाएगा।</string>
+    <string name="the_purchase_didn_t_go_through_please_try_again">खरीदारी पूरी नहीं हुई। कृपया फिर से कोशिश करें।</string>
 </resources>

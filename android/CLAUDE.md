@@ -73,8 +73,8 @@ Check `nihongo/Store.swift` and `nihongo/Challenge.swift` before writing a claim
 - **All audio is synthesised (VOICEVOX for Minna), never native-speaker recordings** — never
   claim "native audio". VOICEVOX needs a visible credit.
 - Subscriptions: 1, 3, 6, 12 months + lifetime; product ids are case-sensitive and immutable.
-  Minna uses uppercase `3M`/`6M`/`12M` and `premium.lifetime` on iOS; Play product ids are
-  FOX-158's to create.
+  Minna uses uppercase `3M`/`6M`/`12M` and `premium.lifetime` on iOS; the Play ids are separate
+  and recorded under *Pro and ads* below.
 - No third-party trademark (the textbook name) in any store field.
 
 ## Layout
@@ -121,8 +121,8 @@ Screens call `StopSoundOnExit()`; the host also stops on `ON_STOP`.
 
 - `AudioVoice.Alternate.suffix` (`-kenzaki`) must equal `ALT_SUFFIX` in `build-minna-data.py`;
   `AudioTest` reads the script. `speakText` is TTS only (bare text tiles); `speak(K)` uses the kana clip.
-- Rates: `PlaybackRates.effective(stored, premium)`; only 1x is free. `PremiumStatus` defaults to
-  `NotPremium` until FOX-158 supplies Pro.
+- Rates: `PlaybackRates.effective(stored, premium)`; only 1x is free. `PremiumStatus` is
+  implemented by `ProRepository` (`AppContainer.premium`); `NotPremium` is only the default for tests.
 - `Licenses.voicevox` holds the required credit lines; `LicensesScreen` is what Settings (FOX-159) links to.
 
 ## Kana tab (`kana/`, FOX-152)
@@ -208,3 +208,50 @@ the phone. Anything without an activity (widget, notification, worker) must read
 `AppLocale.localizedContext(context).getString(...)`, never the plain context. The Settings
 picker (a later ticket) calls `AppLocale.set` and labels each language by its own name
 (`Locale.forLanguageTag(tag).getDisplayName(locale)`).
+
+## Pro and ads (`billing/`, `ads/`, FOX-158)
+
+Port of `Store`/`PaywallView` and `Ads`; `context/06-monetization.md` is the spec. **One source of
+Pro:** `ProRepository` (`AppContainer.pro`, also `AppContainer.premium` as the `PremiumStatus` the
+gating and the audio rates read). It is re-read from Play on every start (`AppContainer.preload`),
+cached in its own DataStore file (`pro.preferences_pb`, left out of every backup), and keeps the cached
+value when Play is unreachable. Play's purchase list drops expired, refunded and on-hold
+subscriptions, so Pro turns off by itself; a lifetime purchase stays. Pending payments are not Pro.
+
+### Play Console must hold exactly this (permanent once created)
+
+| Product | Id | Type |
+|---|---|---|
+| Subscription | `premium.subscription` | one subscription, four base plans |
+| Base plans | `p1m`, `p3m`, `p6m`, `p12m` | auto-renewing, 1, 3, 6 and 12 months, no offers |
+| Lifetime | `premium.lifetime` | one-time (in-app) product, non-consumable |
+
+The ids live on `Course.Products`; `ProProductsTest` pins them. Plan names and `Best value` are built
+from the app's own strings, never from Play titles; Play only supplies the prices.
+
+### What is wired, and what screens call
+
+`MainActivity` provides the Lessons seams (`lessons/Ports.kt`): `LocalPremium` is a view of `ProRepository`
+(one source), `LocalOpenPaywall` is `AppContainer.openPaywall(source, lesson)`, and `LocalLessonExits`
+(`onLeavePractice` / `onLeaveMatch`) is the throttled interstitial, shown only when something was answered.
+`Gating` stays pure and takes `isPremium`; screens pass `LocalPremium.current.isPremium`.
+
+- `container.openPaywall(PaywallSource.X, lesson)` shows the paywall (`PaywallHost`, composed in
+  `MainActivity`); a no-op for Pro. It closes itself when Pro turns on. Terms of Use and Privacy
+  Policy are shown in-app from `nihongo/Legal/*.txt`, packaged in place (`LegalDialog`).
+- `container.onChallengeFinished()` is the ladder's interstitial hook (**not yet wired**, FOX-154): call it
+  when a run reaches its end, never mid-run. `container.onLeavePractice(answered)` is the same throttle.
+- One banner sits above the tab bar (`AppScaffold(banner = ...)`): Today, Kana, Lessons, Progress and
+  Settings(`about`) by tab. A pushed screen with its own slot calls `UseBannerSlot(AdSlot.X)`: Select mode,
+  Vocab List and the Lessons search results do. `AdBanner(AdSlot.X)` takes no space for Pro, before consent,
+  or until an ad loads.
+- `AdConsent.privacyOptionsRequired` / `AdConsent.showPrivacyOptions(activity)` are the Settings
+  (FOX-159) entry point for UMP's privacy options form.
+- Ads are always non-personalized (`npa=1` on every request). Unit ids come from
+  `secrets.properties` (`AD_UNIT_ID_*`), falling back to Google's test ids in the example file.
+
+### Debug-only demo billing
+
+`adb shell am start -n com.kfpun.japanesedaily/.MainActivity --ez demo_billing true --es open_paywall settings`
+sells five made-up plans from `DemoBillingGateway` (in memory, every purchase succeeds, gone on
+the next launch) and opens the paywall. Both extras are ignored by release builds.

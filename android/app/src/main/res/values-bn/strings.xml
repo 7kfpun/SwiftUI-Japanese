@@ -337,4 +337,8 @@
     <string name="details">বিস্তারিত</string>
     <string name="two_choices_per_card_the_app_keeps_score">প্রতি কার্ডে দুটি বিকল্প — স্কোর রাখে অ্যাপ</string>
     <string name="s_continue">চালিয়ে যান</string>
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">সাবস্ক্রিপশন স্বয়ংক্রিয়ভাবে নবায়ন হয়, যদি না মেয়াদ শেষ হওয়ার অন্তত ২৪ ঘণ্টা আগে বাতিল করা হয়। মূল্য আপনার Google Play অ্যাকাউন্ট থেকে কাটা হবে; Google Play-তে পরিচালনা করুন।</string>
+    <string name="no_purchases_found_for_this_google_account">এই Google অ্যাকাউন্টে কোনো ক্রয় পাওয়া যায়নি।</string>
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">আপনার পেমেন্ট মুলতুবি আছে। সম্পন্ন হলে প্রিমিয়াম চালু হবে।</string>
+    <string name="the_purchase_didn_t_go_through_please_try_again">ক্রয় সম্পন্ন হয়নি। আবার চেষ্টা করুন।</string>
 </resources>
