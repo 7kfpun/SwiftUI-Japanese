@@ -6,9 +6,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -347,12 +350,16 @@ fun KanaSwipeQuizScreen(env: KanaEnv, table: KanaTable, onBack: () -> Unit, modi
                         )
                     }
                 }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(
+                    Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     for (side in 0..1) {
                         val opt = model.options.getOrNull(side)
                         // Kana readings are one to three characters, so they take a much larger face than vocab glosses.
-                        Box(Modifier.weight(1f)) {
+                        Box(Modifier.weight(1f).fillMaxHeight()) {
                             SwipeOptionChip(
+                                modifier = Modifier.fillMaxHeight(),
                                 text = opt?.value(model.to).orEmpty(),
                                 side = side,
                                 picked = model.picked,
