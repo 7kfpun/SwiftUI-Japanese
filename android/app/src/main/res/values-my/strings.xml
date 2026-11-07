@@ -104,6 +104,8 @@
     <string name="arg_stars">ကြယ် %1$s ပွင့်</string>
     <string name="not_now">ယခု မလိုပါ</string>
     <string name="seion">ဆေအွန်</string>
+    <string name="turn_sound_off">အသံပိတ်ရန်</string>
+    <string name="turn_sound_on">အသံဖွင့်ရန်</string>
     <string name="dakuon">ဒါကုအွန်</string>
     <string name="youon">ယိုအွန်</string>
     <string name="skip">ကျော်ရန်</string>

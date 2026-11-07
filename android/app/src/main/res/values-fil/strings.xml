@@ -104,6 +104,8 @@
     <string name="arg_stars">%1$s bituin</string>
     <string name="not_now">Hindi muna</string>
     <string name="seion">Seion</string>
+    <string name="turn_sound_off">Patayin ang tunog</string>
+    <string name="turn_sound_on">Buksan ang tunog</string>
     <string name="dakuon">Dakuon</string>
     <string name="youon">Youon</string>
     <string name="skip">Laktawan</string>

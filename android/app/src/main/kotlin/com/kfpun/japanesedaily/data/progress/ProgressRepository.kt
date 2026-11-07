@@ -130,6 +130,9 @@ class ProgressRepository(
         recordStudyDay()
     }
 
+    /** Wipes every kana row (the browser's trash button): the tiles reset. Study days stay, they were earned. */
+    suspend fun clearKana() = db.kana().deleteAll()
+
     suspend fun kanaResults(): Map<String, KanaResult> = KanaResult.latest(db.kana().all().map { it.toDomain() })
 
     fun observeKana(): Flow<Map<String, KanaResult>> =

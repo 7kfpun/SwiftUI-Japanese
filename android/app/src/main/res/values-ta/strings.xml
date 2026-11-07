@@ -104,6 +104,8 @@
     <string name="arg_stars">%1$s நட்சத்திரங்கள்</string>
     <string name="not_now">இப்போது வேண்டாம்</string>
     <string name="seion">செயோன்</string>
+    <string name="turn_sound_off">ஒலியை அணை</string>
+    <string name="turn_sound_on">ஒலியை இயக்கு</string>
     <string name="dakuon">தகுயோன்</string>
     <string name="youon">யோஒன்</string>
     <string name="skip">தவிர்</string>
