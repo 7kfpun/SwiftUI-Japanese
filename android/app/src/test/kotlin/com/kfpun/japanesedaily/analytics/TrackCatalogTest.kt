@@ -23,11 +23,21 @@ class TrackCatalogTest {
         .toSet()
 
     /** iOS-only: nothing on Android to log (FOX-146: no remote push in v1). */
-    private val notOnAndroid = setOf("push_registered", "push_register_failed", "fcm_token")
+    private val notOnAndroid = setOf(
+        "push_registered",
+        "push_register_failed",
+        "fcm_token",
+        // SKStoreReviewController was asked. Android never uses Play In-App Review (Google forbids an opinion
+        // question before its card), so there is no such ask; see `store_page_opened`.
+        "review_requested"
+    )
+
+    /** Android-only: the Play listing was opened from the rating star row or Settings -> Rate the app. */
+    private val androidOnly = setOf("store_page_opened")
 
     @Test
-    fun androidEventsAreTheIosEventsLessThePushOnes() {
-        assertEquals(iOS("event") - notOnAndroid, constants(TrackEvents::class.java))
+    fun androidEventsAreTheIosEventsLessThePushOnesPlusTheAndroidOnes() {
+        assertEquals(iOS("event") - notOnAndroid + androidOnly, constants(TrackEvents::class.java))
     }
 
     @Test

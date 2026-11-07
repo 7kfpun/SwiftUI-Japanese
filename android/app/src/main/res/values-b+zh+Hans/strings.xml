@@ -56,7 +56,7 @@
     <string name="restore_purchases">恢复购买</string>
     <string name="premium_active">高级版已启用</string>
     <string name="no_ads_ever">永久无广告</string>
-    <string name="flashcards_train_learn_and_the_full_ladder">闪卡、练习、学习和整条挑战阶梯</string>
+    <string name="practice_flashcards_match_learn_and_the_full_ladder">练习、闪卡、配对、学习和整条挑战阶梯</string>
     <string name="audio_in_every_practice_and_learning_task_to_help_it_stick">每个练习和学习环节都有发音，帮你记牢</string>
     <string name="study_offline_anywhere">随时随地离线学习</string>
     <string name="feedback">反馈</string>

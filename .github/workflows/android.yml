@@ -138,6 +138,14 @@ jobs:
         # uses secrets.example.properties and no google-services.json.
         run: ./gradlew ktlintCheck lint test assembleDebug --stacktrace
 
+      # Release turns R8 and resource shrinking on, so a missing keep rule only shows up in a release build.
+      # Unsigned on purpose: with no android/keystore.properties the build skips signing, and CI has no
+      # keystore, so this proves the shrink without ever touching a signing key.
+      - name: Release build (R8, unsigned)
+        if: steps.changes.outputs.build == 'true'
+        working-directory: android
+        run: ./gradlew assembleMinnaRelease --stacktrace
+
       # The flavour packages nihongo/Resources as assets in place; prove the debug APK has them.
       - name: Check the APK carries the course data
         if: steps.changes.outputs.build == 'true'

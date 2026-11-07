@@ -110,8 +110,8 @@
     <string name="premium_active">Premium active</string>
     <!-- No ads, ever -->
     <string name="no_ads_ever">No ads, ever</string>
-    <!-- Flashcards, Train, Learn and the full ladder -->
-    <string name="flashcards_train_learn_and_the_full_ladder">Flashcards, Train, Learn and the full ladder</string>
+    <!-- Practice, Flashcards, Match, Learn and the full ladder -->
+    <string name="practice_flashcards_match_learn_and_the_full_ladder">Practice, Flashcards, Match, Learn and the full ladder</string>
     <!-- Audio in every practice and learning task, to help it stick -->
     <string name="audio_in_every_practice_and_learning_task_to_help_it_stick">Audio in every practice and learning task, to help it stick</string>
     <!-- Study offline, anywhere -->

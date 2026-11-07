@@ -205,7 +205,7 @@ private fun Features() {
         Feature(stringResource(R.string.all_arg_lessons_unlocked, lessons))
         Feature(stringResource(R.string.every_challenge_from_lesson_1_to_arg, lessons))
         Feature(stringResource(R.string.no_ads_ever))
-        Feature(stringResource(R.string.flashcards_train_learn_and_the_full_ladder))
+        Feature(stringResource(R.string.practice_flashcards_match_learn_and_the_full_ladder))
         Feature(stringResource(R.string.audio_in_every_practice_and_learning_task_to_help_it_stick))
         Feature(stringResource(R.string.study_offline_anywhere))
     }

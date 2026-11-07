@@ -56,7 +56,7 @@
     <string name="restore_purchases">回復購買</string>
     <string name="premium_active">進階版已啟用</string>
     <string name="no_ads_ever">永久無廣告</string>
-    <string name="flashcards_train_learn_and_the_full_ladder">單字卡、練習、學習和整條挑戰階梯</string>
+    <string name="practice_flashcards_match_learn_and_the_full_ladder">練習、單字卡、配對、學習和整條挑戰階梯</string>
     <string name="audio_in_every_practice_and_learning_task_to_help_it_stick">每個練習和學習環節都有發音，幫你記牢</string>
     <string name="study_offline_anywhere">隨時隨地離線學習</string>
     <string name="feedback">意見回饋</string>

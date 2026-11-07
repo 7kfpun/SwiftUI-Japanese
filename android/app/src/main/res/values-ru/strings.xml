@@ -56,7 +56,7 @@
     <string name="restore_purchases">Восстановить покупки</string>
     <string name="premium_active">Премиум активен</string>
     <string name="no_ads_ever">Никакой рекламы</string>
-    <string name="flashcards_train_learn_and_the_full_ladder">Карточки, Тренировка, Учить и вся лестница испытаний</string>
+    <string name="practice_flashcards_match_learn_and_the_full_ladder">Практика, Карточки, Сопоставь, Учить и вся лестница испытаний</string>
     <string name="audio_in_every_practice_and_learning_task_to_help_it_stick">Озвучка в каждом упражнении и задании — так запоминается</string>
     <string name="study_offline_anywhere">Учитесь офлайн где угодно</string>
     <string name="feedback">Обратная связь</string>

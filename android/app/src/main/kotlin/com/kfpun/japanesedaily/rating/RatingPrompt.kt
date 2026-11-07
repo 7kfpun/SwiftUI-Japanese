@@ -16,10 +16,10 @@ import kotlinx.coroutines.launch
  * Asks for a rating, but only from people who have earned the right to be asked, and no more than once
  * every couple of months (port of `RatingPrompt.swift`; `context/06-monetization.md`).
  *
- * The shape is deliberate: **the app's own star row first**, and only a 4- or 5-star pick hands off to Play
- * In-App Review. A lower pick opens the feedback screen with the stars attached. Play gives no signal about
- * what was submitted and rations how often its sheet shows, so spending one on someone about to leave two
- * stars wastes the only asks the app gets.
+ * The shape is deliberate: **the app's own star row first**, and only a 4- or 5-star pick opens the app's
+ * Play Store listing. A lower pick opens the feedback screen with the stars attached. Play In-App Review is
+ * deliberately not used: Google forbids an opinion question ahead of its card, and the star row is one. The
+ * listing is the same screen Settings -> Rate the app opens.
  *
  * This is **not a rating gate**: the stores prohibit making a review path conditional on sentiment, and
  * nothing here blocks anyone. The star row is the app's own question, every answer leads somewhere, and the
@@ -48,8 +48,8 @@ object RatingPrompt {
     fun shouldAsk(passed: Boolean, passedCount: Int, lastAskedAt: Long, now: Instant): Boolean =
         passed && passedCount >= CHALLENGES_REQUIRED && mayAskAgain(lastAskedAt, now)
 
-    /** 4 stars and up goes to Play's sheet; anything lower to feedback. Never conditions *access* to a review. */
-    fun handsOffToStore(stars: Int): Boolean = stars >= STORE_MINIMUM
+    /** 4 stars and up opens the store listing; anything lower, feedback. Never conditions *access* to a review. */
+    fun opensStorePage(stars: Int): Boolean = stars >= STORE_MINIMUM
 
     private const val STORE_MINIMUM = 4
 }

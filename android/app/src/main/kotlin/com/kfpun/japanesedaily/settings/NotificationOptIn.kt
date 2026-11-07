@@ -121,7 +121,7 @@ fun rememberReminderOptIn(onResult: (granted: Boolean) -> Unit = {}): () -> Unit
     }
 }
 
-/** The hosting activity, for APIs that need one (UMP, In-App Review). */
+/** The hosting activity, for APIs that need one (UMP, the reminder permission). */
 tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is android.content.ContextWrapper -> baseContext.findActivity()

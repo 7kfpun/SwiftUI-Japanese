@@ -168,7 +168,7 @@ struct PaywallView: View {
             // clips are `say -v Kyoko`, with two sentence templates having none at all.
             // Neither is a claim worth making on the screen that asks for money: what the
             // audio is *for* sells better than who recorded it, and it happens to be true.
-            feature(L.t("Flashcards, Train, Learn and the full ladder"))
+            feature(L.t("Practice, Flashcards, Match, Learn and the full ladder"))
             feature(L.t("Audio in every practice and learning task, to help it stick"))
             feature(L.t("Study offline, anywhere"))
         }
