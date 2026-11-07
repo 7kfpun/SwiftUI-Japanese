@@ -284,6 +284,9 @@
     background: var(--badge-bg);
     color: var(--badge-fg);
     text-decoration: none;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 198px; /* the Google Play badge's visible art is 198x59, so the two sit as a matched pair */
     border-radius: 14px;
     padding: 0.7rem 1.4rem 0.7rem 1.1rem;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -295,6 +298,10 @@
   .appstore-badge .badge-text { text-align: left; line-height: 1.2; }
   .appstore-badge .badge-text small { display: block; font-size: 0.68rem; font-weight: 400; opacity: 0.85; }
   .appstore-badge .badge-text strong { display: block; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }
+  .play-badge { display: inline-block; line-height: 0; transition: transform 0.15s ease; }
+  .play-badge:hover { transform: translateY(-2px) scale(1.02); }
+  .play-badge img { height: 88px; width: auto; max-width: 100%; }
+  .bottom-cta .appstore-badge, .bottom-cta .play-badge { margin: 0.25rem; vertical-align: middle; }
 
   .scroll-hint {
     position: absolute;
@@ -847,6 +854,7 @@
             <strong>App Store</strong>
           </span>
         </a>
+        <a class="play-badge" href="https://play.google.com/store/apps/details?id=com.kfpun.japanesedaily" rel="noopener"><img src="/img/google-play/fil.png" width="646" height="250" alt="I-download sa Google Play"></a>
         <span class="free-note"><span class="dot-green" aria-hidden="true">●</span> Libre sa iPhone, iPad at Android</span>
       </div>
     </div>
@@ -1078,6 +1086,7 @@
         <strong>App Store</strong>
       </span>
     </a>
+    <a class="play-badge" href="https://play.google.com/store/apps/details?id=com.kfpun.japanesedaily" rel="noopener"><img src="/img/google-play/fil.png" width="646" height="250" alt="I-download sa Google Play"></a>
   </section>
 </main>
 
@@ -1110,6 +1119,7 @@
     <a href="/privacy.html">Patakaran sa Privacy</a>
     <a href="/terms.html">Mga Tuntunin ng Paggamit</a>
     <a href="https://apps.apple.com/app/id1447639161" rel="noopener">App Store</a>
+    <a href="https://play.google.com/store/apps/details?id=com.kfpun.japanesedaily" rel="noopener">Google Play</a>
   </nav>
   <p>&copy; 2026 Japanese Daily 每日日本語. Nakalaan ang lahat ng karapatan.</p>
 </footer>

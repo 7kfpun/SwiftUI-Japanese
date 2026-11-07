@@ -19,10 +19,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
 BASE_URL = "https://japanesedaily.wahthefox.com"
 APP_STORE = "https://apps.apple.com/app/id1447639161"
-# The Android listing (FOX-161). The link is written for the package's final URL, but the site must not
-# point at a listing that is not public yet, so the badge is OFF by default. Turn it on for the build
-# that ships after the app is live: `python3 scripts/build-web.py --all --google-play` (or
-# SHOW_GOOGLE_PLAY=1). Flag off, the pages carry the Android copy but no store badge or link.
+# The Android listing (FOX-161). The pages always show the Play badge and link next to the App Store one.
 GOOGLE_PLAY = "https://play.google.com/store/apps/details?id=com.kfpun.japanesedaily"
 # AdMob verifies the publisher of both apps from <site>/app-ads.txt (the Play listing names this site).
 APP_ADS_TXT = "google.com, pub-8610011634603119, DIRECT, f08c47fec0942fa0\n"
@@ -254,6 +251,9 @@ $faq_jsonld
     background: var(--badge-bg);
     color: var(--badge-fg);
     text-decoration: none;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 198px; /* the Google Play badge's visible art is 198x59, so the two sit as a matched pair */
     border-radius: 14px;
     padding: 0.7rem 1.4rem 0.7rem 1.1rem;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -2449,7 +2449,6 @@ T = {
 import html as _html
 import json as _json
 import sys as _sys
-import os as _os
 
 QUIZ_ROMAJI = ["watashi", "anata", "gakusei", "isha",
                "daigaku", "byouin", "hai", "dare"]
@@ -2490,7 +2489,6 @@ def google_play_badge(code, alt_prefix):
 
 
 def build(langs_to_build):
-    show_play = "--google-play" in _sys.argv or _os.environ.get("SHOW_GOOGLE_PLAY") == "1"
     quiz_words = load_quiz_words()
     ui = load_app_strings()
     built = [m for m in LANG_META if m[0] in langs_to_build and m[0] in T]
@@ -2591,10 +2589,10 @@ def build(langs_to_build):
             gp_css=("\n  .play-badge { display: inline-block; line-height: 0; transition: transform 0.15s ease; }"
                     "\n  .play-badge:hover { transform: translateY(-2px) scale(1.02); }"
                     "\n  .play-badge img { height: 88px; width: auto; max-width: 100%; }"
-                    "\n  .bottom-cta .appstore-badge, .bottom-cta .play-badge { margin: 0.25rem; vertical-align: middle; }") if show_play else "",
-            gp_hero=("\n        " + google_play_badge(code, e["gp_small"])) if show_play else "",
-            gp_bottom=("\n    " + google_play_badge(code, e["gp_small"])) if show_play else "",
-            gp_footer=('\n    <a href="%s" rel="noopener">Google Play</a>' % GOOGLE_PLAY) if show_play else "",
+                    "\n  .bottom-cta .appstore-badge, .bottom-cta .play-badge { margin: 0.25rem; vertical-align: middle; }"),
+            gp_hero=("\n        " + google_play_badge(code, e["gp_small"])),
+            gp_bottom=("\n    " + google_play_badge(code, e["gp_small"])),
+            gp_footer=('\n    <a href="%s" rel="noopener">Google Play</a>' % GOOGLE_PLAY),
             title=e["title"],
             desc=e["desc"],
             kicker=e["kicker"],
