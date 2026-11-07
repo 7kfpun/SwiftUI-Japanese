@@ -40,6 +40,17 @@ class AppContainer(
     val practice = PracticeProgress(database.practice(), scope)
     val prefs = Prefs(preferences)
 
+    /**
+     * Hooks other tickets wire up, no-ops by default. [onChallengeFinished] fires when a finished run's screen is
+     * left (FOX-158 shows the interstitial there, never mid-run); [onRungPassed] gets the total of rungs passed
+     * after each pass that did not earn the unlock (FOX-159 decides whether to ask for a rating).
+     */
+    @Volatile
+    var onChallengeFinished: (com.kfpun.japanesedaily.ladder.ChallengeRun) -> Unit = {}
+
+    @Volatile
+    var onRungPassed: (totalPassed: Int) -> Unit = {}
+
     /** Decodes the course data and loads Practice stages off the main thread, at launch. */
     fun preload() {
         scope.launch {

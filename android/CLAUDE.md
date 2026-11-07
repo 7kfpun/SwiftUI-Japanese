@@ -169,12 +169,32 @@ enforced), Practice, Vocab List, Read along, Flashcards, Match, Learn, Bookmarks
   `NotPremium`), `LocalOpenPaywall` (hosted by `PaywallHost`, a *placeholder dialog* until FOX-158 swaps in the real
   paywall), `LocalLessonExits.onLeavePractice/onLeaveMatch(answered)` (the interstitial hook), and
   `LocalOpenChallenge` (**FOX-154's entry point**: the rung strip, next-up and retry cards are drawn read-only and
-  call it; replace `nextQuestions` with the pool size).
+  call it; `LessonsTab` provides it, see Challenge ladder below).
 - **Models are pure Kotlin** (`PracticeModel`, `MatchModel`, `LearnModel`, `LessonPlayer`) with Compose state for the
   screen and an injectable `Random`; the mirrored iOS tests are in `app/src/test/.../lessons/`. Practice writes only
   `PracticeProgress` stages (through `StageStore`); Flashcards writes nothing at all.
 - Not ported yet: the report flag and swipe-to-report (the Feedback sheet is FOX-157's), and no screen reaches
   `BookmarksScreen` until Progress/Settings push `LessonRoute.Bookmarks`.
+
+## Challenge ladder (`ladder/`, FOX-154)
+
+Port of `nihongo/Lessons/Challenge.swift`, `ChallengeView.swift` and `context/02-challenge-ladder.md`. `Challenge` (pure) holds
+rung sizing (via `LadderRules`), the 3-step review window, form tiering, `supports`, `allowedWrong`; `ChallengeModel` builds
+one fixed run (10 questions, new words guaranteed a slot, forms dealt in rotation, a random voice per question from
+`Speech.randomVoice`); `Cheer` is the result-screen phrase. `ChallengeScreen` is briefing, play and result, pushed as
+`LessonRoute.Challenge` from `LocalOpenChallenge`. Best-only persistence, the unlock chain and `StudyDay` (written once,
+when a run finishes, never on abandon) are `ProgressRepository.recordChallenge`.
+
+- **Hooks, no-ops until their ticket wires them** (on `AppContainer`): `onChallengeFinished(ChallengeRun)` fires when a
+  finished run's screen is left (FOX-158's interstitial; never mid-run) and `onRungPassed(totalPassed)` after a pass that did
+  not earn the unlock (FOX-159 decides the rating prompt).
+- The earned unlock is detected as before/after `hasEarnedFirstGroup()` around the record: it shows `EarnedUnlockCard`,
+  fires `earned_first_group` and skips the rating hook. Both `isLocked` callers already pass `earnedFirstGroup`.
+- **Shared fixtures:** `python3 scripts/dump-challenge-fixtures.py` compiles the real `Challenge.swift` with `swiftc` over the
+  real 50 lessons and writes `app/src/test/resources/challenge/ladder-fixtures.json`; `LadderFixturesTest` asserts steps,
+  windows, pools, new words, forms, `supports`, lookalike scores, stars and `allowedWrong` identical. Selection is random on
+  both sides, so `ChallengeModelTest` mirrors the iOS invariants (answerable, distinct options, new words asked, mixed forms).
+- Not ported: the report flag, the share nudge, and the rating sheet itself (FOX-157/FOX-159).
 
 ## Strings (FOX-150)
 

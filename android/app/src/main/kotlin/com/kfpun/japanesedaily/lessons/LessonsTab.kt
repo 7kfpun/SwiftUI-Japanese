@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.kfpun.japanesedaily.R
+import com.kfpun.japanesedaily.ladder.ChallengeScreen
 import com.kfpun.japanesedaily.ui.Theme
 
 /** The Lessons tab: the list, and the screens pushed from it, as a hoisted [LessonsNav] stack. */
@@ -28,7 +29,18 @@ fun LessonsTab(nav: LessonsNav, modifier: Modifier = Modifier) {
         return
     }
     BackHandler(enabled = nav.stack.isNotEmpty()) { nav.pop() }
+    // FOX-154: every tap on an open rung pushes the run.
+    CompositionLocalProvider(
+        LocalOpenChallenge provides OpenChallenge { lesson, index -> nav.push(LessonRoute.Challenge(lesson, index)) }
+    ) {
+        LessonsRoutes(env, nav, modifier)
+    }
+}
+
+@Composable
+private fun LessonsRoutes(env: LessonsEnv, nav: LessonsNav, modifier: Modifier) {
     when (val route = nav.current) {
+        is LessonRoute.Challenge -> ChallengeScreen(route.lesson, route.index, env, nav, modifier)
         null -> LessonListScreen(env, nav, modifier)
         is LessonRoute.Select -> SelectModeScreen(route.lesson, env, nav, modifier)
         is LessonRoute.Practice -> PracticeScreen(route.lesson, env, nav, modifier)
