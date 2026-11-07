@@ -2884,6 +2884,22 @@ struct ScreenLayoutTests {
         }
     }
 
+    @Test func twoPanesNeedRoomForALargerRightPane() {
+        // iPad mini portrait, iPad Pro 13" landscape.
+        #expect(ScreenLayout.usesTwoPane(windowWidth: 744, regularWidth: true, compactHeight: false))
+        #expect(ScreenLayout.usesTwoPane(windowWidth: 1366, regularWidth: true, compactHeight: false))
+        // iPad 2/3 Split View.
+        #expect(!ScreenLayout.usesTwoPane(windowWidth: 694, regularWidth: true, compactHeight: false))
+        // iPhone Pro Max landscape: regular width, compact height.
+        #expect(!ScreenLayout.usesTwoPane(windowWidth: 932, regularWidth: true, compactHeight: true))
+        // Compact width, whatever the number says.
+        #expect(!ScreenLayout.usesTwoPane(windowWidth: 800, regularWidth: false, compactHeight: false))
+        // Wherever it is on, the list is under half the window.
+        for width in stride(from: ScreenLayout.twoPaneMinWidth, through: 2000, by: 1) {
+            #expect(ScreenLayout.listPaneWidth(in: width) < width / 2)
+        }
+    }
+
     @Test func cardBoundsAreSane() {
         #expect(ScreenLayout.cardMinHeight < ScreenLayout.cardMaxHeight)
     }

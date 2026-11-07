@@ -16,6 +16,7 @@ struct LessonListView: View {
     @Environment(Store.self) private var store
     @Environment(Unlock.self) private var unlock
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     /// The window's width, for the list pane's share of it.
     @State private var windowWidth: CGFloat = 0
     private static let groups = Course.current.groups
@@ -32,7 +33,7 @@ struct LessonListView: View {
     var body: some View {
         @Bindable var router = router
         Group {
-            if horizontalSizeClass == .regular {
+            if twoPaneActive {
                 twoPane
             } else {
                 NavigationStack(path: $router.lessonPath) {
@@ -44,9 +45,11 @@ struct LessonListView: View {
                 }
             }
         }
-        .onChange(of: horizontalSizeClass) { old, new in
-            if old == .regular, new != .regular { carrySelectionIntoStack() }
+        .onChange(of: twoPaneActive) { old, new in
+            if old, !new { carrySelectionIntoStack() }
         }
+        // Measured here, on the stable outer view, because the decision itself depends on it.
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { windowWidth = $0 }
     }
 
     // MARK: - Wide windows: list | selected lesson
@@ -70,7 +73,6 @@ struct LessonListView: View {
             .id(selectedNumber)
         }
         .navigationSplitViewStyle(.balanced)
-        .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { windowWidth = $0 }
     }
 
     /// The lesson showing on the right: the one the learner picked (or a link named), and
@@ -87,8 +89,17 @@ struct LessonListView: View {
         router.lessonPath.append(lesson)
     }
 
+    /// Two panes only where the right one is clearly the larger: a window at least 720pt
+    /// wide whose height isn't compact. A phone sideways (even a Pro Max), a 7-inch
+    /// portrait window and a narrow Split View stay on the phone's push navigation.
+    private var twoPaneActive: Bool {
+        ScreenLayout.usesTwoPane(windowWidth: windowWidth,
+                                 regularWidth: horizontalSizeClass == .regular,
+                                 compactHeight: verticalSizeClass == .compact)
+    }
+
     private func isSelectedInTwoPane(_ number: Int) -> Bool {
-        horizontalSizeClass == .regular && number == selectedNumber
+        twoPaneActive && number == selectedNumber
     }
 
     /// A row that opens a lesson. Compact pushes it onto the stack, as it always has;
@@ -96,7 +107,7 @@ struct LessonListView: View {
     @ViewBuilder
     private func lessonLink<Label: View>(_ lesson: Lesson, hidesIndicator: Bool = false,
                                          @ViewBuilder label: () -> Label) -> some View {
-        if horizontalSizeClass == .regular {
+        if twoPaneActive {
             Button { router.selectedLesson = lesson } label: {
                 label().contentShape(Rectangle())
             }

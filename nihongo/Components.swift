@@ -1232,6 +1232,16 @@ enum ScreenLayout {
     static let listPaneMinWidth: CGFloat = 280
     static let listPaneMaxWidth: CGFloat = 400
 
+    /// A two-pane screen needs room for a right pane that is clearly larger than the
+    /// left: a window at least this wide (pt)...
+    static let twoPaneMinWidth: CGFloat = 720
+
+    /// ...with regular width and a height that isn't compact. Everything else (a phone in
+    /// landscape, a 7-inch tablet in portrait, narrow Split View) keeps one pane.
+    static func usesTwoPane(windowWidth: CGFloat, regularWidth: Bool, compactHeight: Bool) -> Bool {
+        regularWidth && !compactHeight && windowWidth >= twoPaneMinWidth
+    }
+
     static func listPaneWidth(in windowWidth: CGFloat) -> CGFloat {
         min(max(windowWidth / 3, listPaneMinWidth), listPaneMaxWidth)
     }
