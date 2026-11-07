@@ -112,6 +112,12 @@ android {
     }
 
     sourceSets {
+        // KanjiStrokeOrders (and its licence) is the same file iOS bundles and the handwriting scoring
+        // template, so it is packaged from nihongo/Fonts in place, not copied. Fonts are not generated
+        // files. Noto Serif JP lives in src/main/assets/fonts with its OFL text in assets/licenses.
+        getByName("main") {
+            assets.directories.add(rootProject.file("../nihongo/Fonts").path)
+        }
         getByName("minna") {
             assets.directories.add(minnaResources.path)
         }
