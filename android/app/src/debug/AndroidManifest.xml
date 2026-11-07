@@ -8,5 +8,10 @@
             android:name=".catalog.CatalogActivity"
             android:exported="true"
             android:theme="@style/Theme.JapaneseDaily" />
+        <!-- Debug only: the Progress tab over made-up numbers, for screenshots (FOX-156). -->
+        <activity
+            android:name=".catalog.ProgressDemoActivity"
+            android:exported="true"
+            android:theme="@style/Theme.JapaneseDaily" />
     </application>
 </manifest>

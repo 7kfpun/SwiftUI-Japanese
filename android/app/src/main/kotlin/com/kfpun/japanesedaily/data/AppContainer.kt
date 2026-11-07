@@ -6,6 +6,8 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import com.kfpun.japanesedaily.ads.AdConsent
 import com.kfpun.japanesedaily.ads.AdMobInterstitials
+import com.kfpun.japanesedaily.analytics.Track
+import com.kfpun.japanesedaily.analytics.TrackEvents
 import com.kfpun.japanesedaily.audio.PremiumStatus
 import com.kfpun.japanesedaily.billing.BillingGateway
 import com.kfpun.japanesedaily.billing.DataStoreEntitlementStore
@@ -45,7 +47,7 @@ class AppContainer(
     preferences: DataStore<Preferences>,
     val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
     val course: Course = Course.current,
-    onFirstAnswerToday: (Streak) -> Unit = {},
+    onFirstAnswerToday: (Streak) -> Unit = ::trackStudyDay,
     billing: BillingGateway = UnavailableBillingGateway,
     entitlements: com.kfpun.japanesedaily.billing.EntitlementStore = InMemoryEntitlementStore()
 ) {
@@ -72,21 +74,11 @@ class AppContainer(
     /** Leaving Practice. Shows an interstitial (at most one per 3 minutes) only if [answered] anything. */
     fun onLeavePractice(answered: Boolean) = interstitials.onLeavePractice(answered)
 
+    /** A Challenge run finished. Never call it mid-run. */
+    fun onChallengeFinished() = interstitials.onChallengeFinished()
+
     /** The rating prompt. The ladder calls `rating.onRungPassed(totalPassed)` after every passed rung. */
     val rating = RatingCoordinator(prefs, scope)
-
-    /**
-     * The ladder's hooks (FOX-154), wired to the pieces FOX-158 and FOX-159 supply. [onChallengeFinished] fires when a
-     * finished run's screen is left, never mid-run: it shows the interstitial (free users only, throttled).
-     * [onRungPassed] gets the total of rungs passed after each pass that did not earn the unlock: the rating prompt.
-     */
-    @Volatile
-    var onChallengeFinished: (
-        com.kfpun.japanesedaily.ladder.ChallengeRun
-    ) -> Unit = { interstitials.onChallengeFinished() }
-
-    @Volatile
-    var onRungPassed: (totalPassed: Int) -> Unit = { rating.onRungPassed(it) }
 
     /** Decodes the course data and loads Practice stages off the main thread, at launch. */
     fun preload() {
@@ -123,7 +115,18 @@ class AppContainer(
             billing = if (demoBilling) DemoBillingGateway() else PlayBillingGateway(context),
             entitlements = DataStoreEntitlementStore(context),
             // Studying today cancels today's reminder: the plan is re-derived from the new streak.
-            onFirstAnswerToday = { Reminders.reschedule(context) }
+            onFirstAnswerToday = { streak ->
+                // study_day (FOX-156), then today's reminder is no longer a nag (FOX-159).
+                trackStudyDay(streak)
+                Reminders.reschedule(context)
+            }
         )
     }
 }
+
+/**
+ * iOS logs `study_day` when the first answer of a day creates a `StudyDay`: one event per studied day,
+ * carrying how long the run is (`streak`) and the record (`best`). Behavioural counts, never an identifier.
+ */
+internal fun trackStudyDay(streak: Streak, track: (String, Map<String, Any?>) -> Unit = Track::event) =
+    track(TrackEvents.STUDY_DAY, mapOf("streak" to streak.current, "best" to streak.best))

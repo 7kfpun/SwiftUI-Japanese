@@ -130,9 +130,6 @@ data class ChallengeQuestion(
     fun isCorrect(optionIndex: Int): Boolean = options[optionIndex].id == answer.id
 }
 
-/** What a finished run hands to the hooks (ads, rating): enough to decide, nothing identifying. */
-data class ChallengeRun(val lesson: Int, val index: Int, val score: Int, val stars: Int, val passed: Boolean)
-
 /**
  * One run, fixed up front (port of iOS `ChallengeModel`): the questions, their forms and their order are all decided at
  * construction, because a score only means something when the run is the same shape every time. Observable fields are

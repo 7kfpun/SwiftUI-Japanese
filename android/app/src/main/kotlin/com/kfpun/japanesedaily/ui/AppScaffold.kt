@@ -31,6 +31,7 @@ import com.kfpun.japanesedaily.ads.LocalBannerSlot
 import com.kfpun.japanesedaily.kana.KanaTab
 import com.kfpun.japanesedaily.lessons.LessonsTab
 import com.kfpun.japanesedaily.lessons.rememberLessonsNav
+import com.kfpun.japanesedaily.progress.ProgressTab
 import com.kfpun.japanesedaily.settings.SettingsTab
 import com.kfpun.japanesedaily.today.TodayNav
 import com.kfpun.japanesedaily.today.TodayTab
@@ -60,6 +61,7 @@ fun AppScaffold(
             onTabRequestHandled()
         }
     }
+    val progressNav = rememberLessonsNav()
     val bannerSlot = remember { BannerSlotState() }
     CompositionLocalProvider(LocalBannerSlot provides bannerSlot) {
         Scaffold(
@@ -91,6 +93,8 @@ fun AppScaffold(
                 Tab.Kana -> KanaTab(Modifier.padding(padding))
 
                 Tab.Lessons -> LessonsTab(lessonsNav, Modifier.padding(padding))
+
+                Tab.Progress -> ProgressTab(progressNav, Modifier.padding(padding))
 
                 Tab.Settings -> SettingsTab(Modifier.padding(padding))
 
