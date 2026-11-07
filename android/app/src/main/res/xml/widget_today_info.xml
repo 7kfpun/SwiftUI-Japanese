@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FOX-155: resizable from small (2x2) to wide (4x2). WorkManager redraws it on the hour
+     (TodayWidgetSchedule), so updatePeriodMillis is off. The picker shows previewLayout (before Android 15) or the
+     generated preview (15+, TodayWidget.providePreview); previewImage is the fallback. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/today"
+    android:initialLayout="@layout/widget_today_loading"
+    android:minWidth="110dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="110dp"
+    android:previewImage="@drawable/widget_today_preview"
+    android:previewLayout="@layout/widget_today_preview"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellWidth="2"
+    android:targetCellHeight="2"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />

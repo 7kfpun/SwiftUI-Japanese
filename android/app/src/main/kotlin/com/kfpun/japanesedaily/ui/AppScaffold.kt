@@ -14,6 +14,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,6 +33,8 @@ import com.kfpun.japanesedaily.lessons.LessonsTab
 import com.kfpun.japanesedaily.lessons.rememberLessonsNav
 import com.kfpun.japanesedaily.progress.ProgressTab
 import com.kfpun.japanesedaily.settings.SettingsTab
+import com.kfpun.japanesedaily.today.TodayNav
+import com.kfpun.japanesedaily.today.TodayTab
 
 /** The five tabs, in the iOS app's order. Icons are Material Symbols (outlined). */
 enum class Tab(@StringRes val label: Int, @DrawableRes val icon: Int) {
@@ -43,9 +46,21 @@ enum class Tab(@StringRes val label: Int, @DrawableRes val icon: Int) {
 }
 
 @Composable
-fun AppScaffold(startTab: Tab = Tab.Today, banner: @Composable (Tab) -> Unit = {}) {
+fun AppScaffold(
+    startTab: Tab = Tab.Today,
+    banner: @Composable (Tab) -> Unit = {},
+    tabRequest: Tab? = null,
+    onTabRequestHandled: () -> Unit = {}
+) {
     var selected by rememberSaveable { mutableStateOf(startTab) }
     val lessonsNav = rememberLessonsNav()
+    // A deep link (the widget) asks for a tab while the app is already running.
+    LaunchedEffect(tabRequest) {
+        if (tabRequest != null) {
+            selected = tabRequest
+            onTabRequestHandled()
+        }
+    }
     val progressNav = rememberLessonsNav()
     val bannerSlot = remember { BannerSlotState() }
     CompositionLocalProvider(LocalBannerSlot provides bannerSlot) {
@@ -60,10 +75,29 @@ fun AppScaffold(startTab: Tab = Tab.Today, banner: @Composable (Tab) -> Unit = {
             }
         ) { padding ->
             when (selected) {
+                Tab.Today -> TodayTab(
+                    TodayNav(
+                        openLesson = { lesson ->
+                            lessonsNav.openLesson(lesson)
+                            selected = Tab.Lessons
+                        },
+                        openLessonList = {
+                            lessonsNav.openList()
+                            selected = Tab.Lessons
+                        },
+                        openProgress = { selected = Tab.Progress }
+                    ),
+                    Modifier.padding(padding)
+                )
+
                 Tab.Kana -> KanaTab(Modifier.padding(padding))
+
                 Tab.Lessons -> LessonsTab(lessonsNav, Modifier.padding(padding))
+
                 Tab.Progress -> ProgressTab(progressNav, Modifier.padding(padding))
+
                 Tab.Settings -> SettingsTab(Modifier.padding(padding))
+
                 else -> PlaceholderScreen(selected, Modifier.padding(padding))
             }
         }

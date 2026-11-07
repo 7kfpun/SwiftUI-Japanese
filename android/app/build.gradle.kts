@@ -271,6 +271,10 @@ dependencies {
     implementation(libs.play.services.ads)
     implementation(libs.google.ump)
 
+    // Home screen widget (FOX-155).
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.work.runtime.ktx)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
