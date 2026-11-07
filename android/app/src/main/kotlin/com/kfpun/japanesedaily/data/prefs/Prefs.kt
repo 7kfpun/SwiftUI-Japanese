@@ -70,6 +70,9 @@ class Prefs(private val store: DataStore<Preferences>) {
 
     suspend fun <T : Any> get(pref: PrefKey<T>): T = flow(pref).first()
 
+    /** Whether [pref] was ever written, for answers where the default (0) is itself a real answer. */
+    suspend fun isSet(pref: PrefKey<*>): Boolean = store.data.first().contains(pref.key)
+
     suspend fun <T : Any> set(pref: PrefKey<T>, value: T) {
         store.edit { it[pref.key] = value }
     }
