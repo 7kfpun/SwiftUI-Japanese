@@ -322,6 +322,6 @@ private fun TabBar() = Section("Tab bar with a banner slot") {
 @Composable
 private fun RatingStarRow() = Section("Rating star row") {
     Column(Modifier.fillMaxWidth().cardChrome(Theme.Radius.deck)) {
-        com.kfpun.japanesedaily.rating.RatingRow(picked = 4, onStar = {}, onNotNow = {})
+        com.kfpun.japanesedaily.rating.RatingRow(picked = 4, onStar = {}, onNotNow = {}, scrollable = false)
     }
 }

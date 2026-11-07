@@ -131,11 +131,11 @@ private const val PICK_BEAT_MILLIS = 350L
  * chosen here rather than in Play's sheet.
  */
 @Composable
-internal fun RatingRow(picked: Int, onStar: (Int) -> Unit, onNotNow: () -> Unit) {
+internal fun RatingRow(picked: Int, onStar: (Int) -> Unit, onNotNow: () -> Unit, scrollable: Boolean = true) {
     Column(
         Modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
+            .let { if (scrollable) it.verticalScroll(rememberScrollState()) else it }
             .navigationBarsPadding()
             .padding(horizontal = 28.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
