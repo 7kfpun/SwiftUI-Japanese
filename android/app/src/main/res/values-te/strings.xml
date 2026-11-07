@@ -337,4 +337,8 @@
     <string name="details">వివరాలు</string>
     <string name="two_choices_per_card_the_app_keeps_score">ప్రతి కార్డుకు రెండు ఎంపికలు — స్కోరు యాప్ లెక్కిస్తుంది</string>
     <string name="s_continue">కొనసాగించు</string>
+    <string name="subscriptions_renew_automatically_unless_canceled_at_ebd80c9">కాలవ్యవధి ముగియడానికి కనీసం 24 గంటల ముందు రద్దు చేయకపోతే చందాలు ఆటోమేటిక్‌గా పునరుద్ధరించబడతాయి. చెల్లింపు మీ Google Play ఖాతా నుండి వసూలు చేయబడుతుంది; Google Play లో నిర్వహించండి.</string>
+    <string name="no_purchases_found_for_this_google_account">ఈ Google ఖాతాకు కొనుగోళ్లు ఏవీ కనుగొనబడలేదు.</string>
+    <string name="your_payment_is_pending_premium_turns_on_once_it_completes">మీ చెల్లింపు పెండింగ్‌లో ఉంది. పూర్తయిన వెంటనే ప్రీమియం ఆన్ అవుతుంది.</string>
+    <string name="the_purchase_didn_t_go_through_please_try_again">కొనుగోలు పూర్తి కాలేదు. దయచేసి మళ్లీ ప్రయత్నించండి.</string>
 </resources>

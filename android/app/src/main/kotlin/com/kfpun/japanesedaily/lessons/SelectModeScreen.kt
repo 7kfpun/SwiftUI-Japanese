@@ -34,6 +34,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kfpun.japanesedaily.R
+import com.kfpun.japanesedaily.ads.AdSlot
+import com.kfpun.japanesedaily.ads.UseBannerSlot
 import com.kfpun.japanesedaily.analytics.PaywallSource
 import com.kfpun.japanesedaily.analytics.Track
 import com.kfpun.japanesedaily.analytics.TrackEvents
@@ -65,6 +67,7 @@ object LessonMode {
 fun SelectModeScreen(lessonNumber: Int, env: LessonsEnv, nav: LessonsNav, modifier: Modifier = Modifier) {
     val isPremium = LocalPremium.current.isPremium
     val openPaywall = LocalOpenPaywall.current
+    UseBannerSlot(AdSlot.SelectMode)
     val container = env.container
     val lesson = remember(lessonNumber, env.language) { env.lesson(lessonNumber) }
     val results by remember { container.progress.observeChallenges() }.collectAsState(emptyMap())

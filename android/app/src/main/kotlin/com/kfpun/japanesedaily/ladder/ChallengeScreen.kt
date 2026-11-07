@@ -152,7 +152,7 @@ fun ChallengeScreen(
                 )
             }
             if (m.isDone) {
-                container.onChallengeFinished(ChallengeRun(lessonNumber, m.index, m.scorePercent, m.stars, m.passed))
+                container.onChallengeFinished()
             }
         }
     }

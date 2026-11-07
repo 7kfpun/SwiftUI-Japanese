@@ -26,10 +26,11 @@ data class Course(
     }
 
     /**
-     * Play product ids. FOX-158 creates the real Play products; these mirror the iOS ids' shape
-     * and are case-sensitive like them. [legacy] is restore-only, never sold.
+     * The Play products (FOX-158), permanent once created in Play Console. One subscription whose
+     * base plans are the 1, 3, 6 and 12 month periods, plus the one-time [lifetime] product. They are
+     * independent of the iOS ids, which carry a bundle prefix and the 3M/6M case workaround.
      */
-    data class Products(val lifetime: String, val subscriptions: List<String>, val legacy: List<String>)
+    data class Products(val lifetime: String, val subscription: String, val basePlans: List<String>)
 
     fun hasLesson(n: Int): Boolean = n in 1..lessonCount
 
@@ -48,8 +49,8 @@ data class Course(
             freeLessonLimit = 5,
             products = Products(
                 lifetime = "premium.lifetime",
-                subscriptions = listOf("premium.1m", "premium.3M", "premium.6M", "premium.12M"),
-                legacy = listOf("premium.3m", "premium.6m", "premium.12m")
+                subscription = "premium.subscription",
+                basePlans = listOf("p1m", "p3m", "p6m", "p12m")
             )
         )
 
