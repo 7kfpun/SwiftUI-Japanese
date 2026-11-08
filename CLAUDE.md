@@ -232,6 +232,25 @@ Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
   "१८ भाषा"), so a new language makes 18 files wrong at once. Grep the count across
   `fastlane/*/metadata/*/description.txt` whenever `UIStrings.json` gains a language.
 
+## CI tooling
+
+PRs into `main` (or any `feature/*` integration branch) are gated by GitHub Actions, for every
+head branch: `Tests`, `Android`, `Vulnerabilities`, `PR policy`, `Public text`, the `LGTM`
+status and an advisory Claude review. The rules and the proposed ruleset are in
+`docs/ci-cd-guardrails.md` and `docs/master-protection.md`; applying a ruleset is the user's
+action. The helpers live in `tools/` and have stdlib-only tests, runnable from the CLI with no
+simulator: `python3 -m unittest discover -s tools -p 'test_*.py'` and
+`python3 tools/lgtm_gate.py --self-test`.
+
+- `tools/ci_test_level.py` decides whether a PR needs the iOS tests. A new top-level folder
+  runs them; add it to `SKIP_PREFIXES` only if no iOS target reads it.
+- `tools/lgtm_gate.py`, `tools/pr_policy.py`, `tools/public_text_check.py` run from the base
+  branch's copy in CI. The repo is public: name hosts by role in PR text and docs, never the
+  Directus host.
+- The review prompt in `.github/workflows/claude-code-review.yml` restates this file's product
+  facts and store policies. When a rule here changes, change the prompt in the same PR. It
+  cannot review its own edit (the action requires the workflow to match `main`).
+
 ## Android
 
 The Android port lives in `android/`; read `android/CLAUDE.md` before touching it. Its rules

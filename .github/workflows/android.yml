@@ -14,7 +14,7 @@ name: Android
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    branches: [main, feature/fox-145-android]
+    branches: [main, "feature/**"]
   push:
     branches: [main]
     paths:

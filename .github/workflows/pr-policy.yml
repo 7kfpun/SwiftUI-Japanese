@@ -1,0 +1,47 @@
+name: PR policy
+
+# Cheap checks for every pull request into main or an integration branch: drafts included,
+# and whatever the branch is called, since the branch name is one of the rules. The job is
+# meant to be a required status check (docs/master-protection.md).
+#
+# The gate script runs from the base branch's copy when it has one, so a pull request can't
+# loosen a check in the same change it is checked by.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+    branches: [main, "feature/**"]
+
+concurrency:
+  group: pr-policy-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  policy:
+    name: PR policy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Branch name, ticket and merge order
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          set -euo pipefail
+          script="$RUNNER_TEMP/pr_policy.py"
+          git show "origin/$BASE_REF:tools/pr_policy.py" >"$script" 2>/dev/null || cp tools/pr_policy.py "$script"
+          python3 "$script"

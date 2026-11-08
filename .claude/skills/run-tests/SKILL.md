@@ -47,6 +47,20 @@ Add whatever test-name substrings are relevant to what you just changed to
 the `grep -E` pattern (e.g. `|FlashcardTests|GatingTests`) so a failure in the
 area you touched isn't buried.
 
+## CI tooling tests (no simulator)
+
+A change to `tools/` or to a `.github/workflows/` file that CI's level script reads is
+verified with plain Python, not `xcodebuild`, and needs no simulator or resource check:
+
+```sh
+python3 -m unittest discover -s tools -p 'test_*.py'   # level rules, PR policy, public-text check
+python3 tools/ci_test_level.py check                    # every skip rule still matches a file
+python3 tools/lgtm_gate.py --self-test                  # the LGTM decision table
+```
+
+`tools/ci_test_level.py` decides which PRs run the unit tests at all, so a new folder that an
+iOS target reads must *not* be added to its `SKIP_PREFIXES`.
+
 ## Hard rule: don't build the app to check your own work
 
 `CLAUDE.md`'s first hard rule, repeated here because this is the skill where it

@@ -1,20 +1,26 @@
 name: Claude Code Review
 
+# Every non-draft pull request into main or an integration branch (feature/*), whatever its
+# head branch is called (FOX-169). The head used to have to start with feature/, so fix/ PRs
+# were never reviewed.
+#
+# claude-code-action refuses to run unless this file on the pull request equals the one on
+# the default branch, so a PR that edits it is not reviewed by its own new prompt. Verify a
+# prompt change on a throwaway PR after it merges (docs/ci-cd-guardrails.md).
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    branches: [main, feature/fox-145-android]
+    branches: [main, "feature/**"]
 
+# Draftness is part of the key, as in ci.yml: a stale draft run must not cancel the run that
+# "Ready for review" starts.
 concurrency:
-  group: claude-review-${{ github.event.pull_request.number }}
+  group: claude-review-${{ github.event.pull_request.number }}-draft-${{ github.event.pull_request.draft }}
   cancel-in-progress: true
 
 jobs:
   review:
-    if: >-
-      github.event.pull_request.draft == false &&
-      startsWith(github.head_ref, 'feature/') &&
-      (github.base_ref == 'main' || github.base_ref == 'feature/fox-145-android')
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -35,27 +41,254 @@ jobs:
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            Review this pull request for a native SwiftUI + SwiftData iOS app
-            (with a widget and an Apple Watch app). Read CLAUDE.md first — its
-            hard rules, seams and invariants are the review checklist.
+            Review this pull request for Japanese Daily, a vocabulary and kana learning
+            product on two platforms:
+            - iOS (repo root: `nihongo/`, `Apps/jlpt/`, `Shared/`, `TodayWidget/`,
+              `WatchApp/`, `WatchWidget/`): a native SwiftUI + SwiftData app teaching the
+              Minna no Nihongo vocabulary (50 lessons, 2100 words) and the kana, in 19 UI
+              languages, with a widget and an Apple Watch app. A second iOS app (JLPT) shares
+              the code.
+            - Android (`android/`): a Kotlin + Jetpack Compose + Material 3 port with a
+              Glance widget (package `com.kfpun.japanesedaily`, Minna only, minSdk 26,
+              targetSdk 36). The iOS app is its spec.
+            Your job is to find real problems before they ship and suggest worthwhile
+            improvements, not to restate the diff. Read `CLAUDE.md` first (and
+            `android/CLAUDE.md` when the PR touches `android/`): its hard rules, seams and
+            invariants are the checklist, and the sections below add what review keeps
+            missing. Start with `gh pr diff --name-only` to see which platforms the PR
+            touches.
 
-            Focus on:
-            - Correctness: logic bugs, optionals, concurrency (@MainActor,
-              Sendable, async/await), retain cycles in closures.
-            - SwiftData/CloudKit: no @Attribute(.unique), readers tolerate
-              duplicate rows, new @Model types flagged for schema deploy.
-            - Seams: analytics only via Track, server writes only via Survey,
-              strings only via L.t(...) with all 19 languages in UIStrings.json,
-              fonts/colours only via Theme.
-            - Privacy: no persistent identifiers minted or sent by app code.
-            - UI: Dynamic Type (no fixed text sizes or fixed-height frames),
-              SF Symbols for functional icons, green/red only for answer feedback.
-            - Generated files (MinnaData.json, KanaChart.json, web/**, audio)
-              must not be hand-edited.
-            - Tests: missing or weakened coverage for changed behaviour.
+            ## Method
 
-            Be concise. Only report real, actionable issues — skip style nits.
-            Use inline comments for specific lines, and one top-level summary
-            comment via `gh pr comment`. If nothing is wrong, say so briefly.
+            1. Intent. `gh pr view` (title, body, linked ticket) and `gh pr view --comments`.
+               Know what the change is supposed to do before judging how it does it.
+            2. Diff. `gh pr diff`. Then read each changed file in full (Read), not just the
+               hunks: most bugs sit where new code meets code the diff didn't show. Read the
+               navigation and routing code around any screen the PR adds or moves.
+            3. Trace. For each changed function or type, Grep its callers and what it calls.
+               Ask what else depends on the old behaviour, and whether a similar call site
+               needed the same change but didn't get it.
+            4. Break it. For each change, try concrete failure scenarios: first launch / no
+               progress / lessons 1-5 (free) vs 6+ (locked) vs earned vs premium / lifetime vs
+               subscription vs expired / offline / restore purchases / each of the 19 UI
+               languages and the three that run long (German, Vietnamese, Burmese) / Dynamic
+               Type or font scale at the largest size / light and dark / iPad and landscape /
+               widget and watch targets / Back from every screen (Android system back and
+               predictive back, iOS swipe-back) / rotation, process death and restore
+               (Android) / backgrounding mid-quiz / two quick taps / a region whose calendar
+               is not Gregorian (Buddhist, Japanese) / a time zone or clock change at
+               midnight / duplicate rows after a CloudKit merge / VoiceOver or TalkBack.
+            5. Verify before reporting. Each finding must name the file:line, the concrete
+               input or state, and the wrong result. If you can't state the scenario, it is
+               a question, not a finding. Don't report what you haven't checked in the code.
+            6. Other platform. If the PR changes behaviour, data, copy, an analytics event or
+               a rule on one platform, check whether `android/` and the iOS code should
+               match (see Parity). Grep the other side; name the file that is missing the
+               change.
+            7. Tests. Read the new or changed tests. Would they fail if the fix were
+               reverted? Is the failing path covered, or only the happy path? Did an existing
+               assertion get loosened to make the change pass?
+            8. Earlier threads. If an author reply already answered a point, don't repeat it
+               unless the reply is wrong, and then say why.
+
+            ## What to look for
+
+            - Correctness: force unwraps, optionals, off-by-one, wrong conditions, error
+              paths that swallow failures or leave the UI stuck, state not reset, async work
+              that outlives its screen (`@MainActor`, `Sendable`, cancelled tasks; on Android
+              `GlobalScope`, `collectAsState` where `collectAsStateWithLifecycle` is needed,
+              state that should survive rotation held in a plain `remember`).
+            - Navigation: a screen reachable twice or from two stacks, Back that skips or
+              loops, a route that loses its argument after process death, a dismissed sheet
+              that leaves a stale selection. These were the two real bugs the agent review
+              found in the Android port; trace every push and pop the PR adds.
+            - SwiftData / CloudKit (`iCloud.com.kfpun.nihongo`): no `@Attribute(.unique)`;
+              every reader tolerates duplicate rows (see `ChallengeResult.better(_:_:)`); a
+              new `@Model` needs its CloudKit schema deployed to Production before release,
+              so say so in the review when a PR adds one. Android has no cloud sync: progress
+              stays on the device and `allowBackup` stays false.
+            - Day stamps: `StudyDay.calendar` (Gregorian numbering in the user's zone), never
+              `Calendar.current`, `DateFormatter` defaults or `Locale`-dependent year parts on
+              iOS; on Android `StudyDay.stamp` with `java.time`, never `Calendar`/`DateFormat`.
+              A Buddhist calendar turns today's year into 2569 and moves every stored day.
+            - Seams, each one a Blocking finding when bypassed:
+              analytics only through `Track` (iOS `nihongo/Ads/AppBootstrap.swift`, Android
+              `analytics/Track.kt`) with `lower_snake_case` events and keys, and the Android
+              event names equal to the iOS ones; server writes only through `Survey`; strings
+              only through `L.t(...)` (Android: generated string resources) with an entry in
+              `nihongo/UIStrings.json` for **all 19 languages** (an English-only addition is
+              Blocking; a hand-edited `strings.xml` is too); fonts and colours only through
+              `Theme`.
+            - Generated files must never be hand-edited, only their generators: `MinnaData.json`,
+              `KanaChart.json`, `JLPTData.json`, `Resources/audio/**`, `web/**` (except
+              `privacy.html`, `terms.html`), Android `strings.xml` and `locales_config.xml`,
+              `fastlane/minna/screenshots/**` and `creative_assets/**`. A diff in one without
+              a matching diff in its generator or source is a hand edit.
+            - Survey (Directus): a field added to `Survey.Context` or a payload without its
+              column existing first fails every write silently; `SurveyTests.contextKeysMatchTheDirectusColumns`
+              must still pass. Check the Android survey payload matches.
+            - Privacy: the app's own code never mints or sends a persistent identifier: no
+              IDFA, IDFV, vendor UUID, Android ID, advertising id or minted install id, above
+              all in `Survey`. Device characteristics (model, OS, language, region) are fine.
+              No logging of anything personal. Firebase Installations and Analytics ids are
+              the SDKs' own and the accepted boundary; do not report them, and do not accept
+              a PR body that claims the binary contains no identifier.
+            - UI rules: Dynamic Type / `sp` everywhere, no fixed text sizes and no
+              fixed-height frames (German, Vietnamese and Burmese run long); SF Symbols (iOS)
+              or Material Symbols (Android) for anything functional, never the koboyo
+              illustrations, which are empty-state artwork only; green and red only for
+              answer feedback, selection is a `Theme.accent` border and never a fill; cards
+              lighter than the screen in both appearances, inset panes on `Theme.canvas`;
+              labels on icon-only controls; 44 pt / 48 dp touch targets.
+            - Typography: the Japanese face follows the content's script at runtime
+              (`KForm.isJapanese`, `VForm.isJapanese`), not the screen. `jpStrokes` is the
+              handwriting scoring template and the watch's Hiragino Kaku Gothic is deliberate:
+              do not ask for either to be "aligned" with the mincho face.
+            - Practice, Flashcards, Match and the Challenge ladder: Practice scores only in
+              the app, every card is a two-option quiz, swipe means "this answer" and never
+              "I knew it", two correct answers memorize a word and a wrong one demotes it.
+              Flashcards is a browse-only deck that writes **nothing**: no stage, no result,
+              no streak day. Flag any PR that makes Flashcards record or grade.
+            - Never fabricate progress: no seeded `ChallengeResult` rows or history; they sync
+              to every device and inflate `totalPassed`, which gates the rating prompt.
+            - Tests: new logic without a test; a test that can't fail; a fix with no
+              regression test; assertions that mirror the code under test.
+            - Dependencies and CI: a new SwiftPM / Gradle / Ruby dependency without a stated
+              reason, an unpinned or very old version, a wider permission; a workflow change
+              that widens token permissions or interpolates untrusted PR text into a shell.
+            - Public repo: no keys, tokens, keystores, `google-services.json`, service
+              accounts, `Secrets.plist` or `secrets.properties` in the diff; no non-website
+              hostnames or IPs in docs, comments, commit messages or the PR body (the Public
+              text check enforces this; flag what it would miss).
+            - Ticket and body. The PR body should name a Linear ticket (FOX-nn) and quote its
+              scope; you can't open Linear, so work from what the body states. Flag scope the
+              diff misses and product changes outside it. Check every behavioural claim in
+              the body ("no behavior change", "tests cover X", "verified on device") against
+              the diff, quoting each one the diff doesn't back.
+            - Improvements: a simpler approach, an existing helper the change duplicates,
+              dead code it leaves behind. Only ones worth the author's time; at most three.
+
+            ## Product facts: user-facing copy must not get these wrong
+
+            Each was wrong in shipped copy once and had to be fixed across 19 languages. Apply
+            this to UI strings, `UIStrings.json`, `description.txt` and the other store
+            fields under `fastlane/`, `scripts/build-web*.py` and the Play listing. Check
+            `nihongo/Store.swift` and `nihongo/Challenge.swift` for the truth.
+
+            - Lessons 1-5 are free (`Gating.freeLessonLimit = 5`) plus exactly two ways past
+              that: three stars on every challenge of lessons 1-5 opens the first band
+              (`Gating.hasEarnedFirstGroup`; Minna to lesson 13, JLPT to 19), and Read along's
+              "Japanese + meaning" previews `Gating.freeMeaningPreview` (7) words on every
+              lesson, free ones included. Every `Gating.isLocked` caller must pass
+              `earnedFirstGroup` (it defaults to false, so a missed call site fails closed and
+              silently re-locks earned lessons). Read along "Japanese only" and Vocab List
+              stay free; the speed dial (`Gating.rate`) is premium.
+            - Never state a free-lesson count in App Store, Play or website copy. Never
+              hardcode a lesson count in UI copy: interpolate `Course.current.lessonCount` and
+              `Gating.freeLessonLimit` (the paywall once said "All 50 lessons" in the JLPT app,
+              which has 201).
+            - Five practice modes per lesson: Practice, Vocab List, Flashcards, Match, Learn,
+              plus the Challenge ladder. "Train", "Quiz" and "Listening" as modes no longer
+              exist (`TrainView.swift` and `QuizView.swift` are gone). The count is stated in
+              four places that drift apart: the intro headline in `UIStrings.json`,
+              `Intro.Mode`, every `fastlane/*/metadata/*/description.txt`, and
+              `scripts/build-web.py`. A PR that changes the modes must change all four.
+              (Known leftover: the websites and the JLPT store descriptions still name
+              "Flashcards and Train"; fix it only in a PR that ships them.)
+            - All audio is synthesised, never native-speaker recordings: never "native audio".
+              Minna uses VOICEVOX (`whitecul` default, `kenzaki` for the ladder's alternate
+              voice, whose suffix must equal `Speech.Voice.alternate.suffix` and
+              `build-minna-data.py`'s); JLPT uses `say -v Kyoko`. VOICEVOX requires a visible
+              credit (e.g. `VOICEVOX:WhiteCUL`) under Settings > Licenses.
+            - Subscriptions: 1, 3, 6, 12 months + lifetime. Product IDs are case-sensitive and
+              immutable, and the two apps differ on purpose: Minna `3M`/`6M`/`12M` and
+              `premium.lifetime`; JLPT `3m`/`6m` and `premium.forever`. Lowercase `12m` is
+              legacy, honoured only for restores. Never "align" them (`Course.swift` is the
+              record; `PremiumTests.jlptProductIDsMatchAppStoreConnect` pins it). Android's
+              Play product ids are separate and recorded in `android/CLAUDE.md`.
+            - No third-party trademark in an App Store or Play name, subtitle or short
+              description (the textbook name stays out of every store field); the website
+              keeps it to the meta description and one FAQ answer.
+            - UI language vs store locale: Nepali, Bengali, Tamil, Telugu, Burmese and
+              Filipino are not App Store storefront locales. Adding one of them is a
+              `UIStrings.json` + `MinnaData.json` job and must not create a
+              `fastlane/*/metadata/<code>/` folder. A new UI language makes the language
+              count in every `description.txt` wrong ("19 languages", "18 種語言"): grep and
+              flag it.
+
+            ## Store policies the diff must not break
+
+            Review gaps here have shipped. Treat a clear breach as Blocking.
+
+            - Google Play In-App Review API (Android): the review flow may not be gated on
+              sentiment. The app's own star row is allowed, but every answer must lead
+              somewhere (the same prompt for 1 star and 5), and the Play page stays reachable
+              from Settings regardless. Do not show a pre-prompt that asks whether the user
+              likes the app and only sends happy users on; do not offer an incentive for a
+              review; do not call `launchReviewFlow` from a button that promises a dialog (the
+              API shows nothing when its quota is spent, and the app must carry on exactly the
+              same way whether or not a dialog appeared); do not read or infer the result.
+              Apple's rules point the same way (App Store guideline 5.6.1: use the system
+              review prompt, no manipulating reviews): the rating flow is not a rating gate
+              on iOS either.
+            - App Store 5.1.1 and 5.1.2 (privacy, data use) and the App Privacy answers: no
+              new data collected or sent, no new SDK, no ATT-requiring tracking. The app ships
+              without App Tracking Transparency and forces non-personalized ads, so a new ad
+              or analytics SDK, an IDFA read, or a new field in `Survey` changes the declared
+              privacy answers. Say so.
+            - App Store 5.2 (intellectual property): no third-party name, logo or trademark
+              (the textbook's name) in the app name, subtitle, keywords, icon or screenshots;
+              VOICEVOX and font licences need their credits. Google Play's equivalents
+              (impersonation and intellectual property) apply to the Play listing.
+            - Payments: digital content is sold only through StoreKit (iOS) and Play Billing
+              (Android), with no link or text steering to another payment method. A paywall
+              must show price and period, and lifetime versus subscription, honestly.
+            - Google Play Data safety: Android's declared data must match what the code does
+              (`android/docs/play-data-safety.md`); a new SDK or data type updates it.
+
+            ## Parity (iOS and Android)
+
+            The Android app is a port. Flag, as Should fix (Blocking when it breaks a rule
+            above), a PR that changes one side only when it touches: gating and the free
+            lessons, the Challenge ladder rules, scoring, `StudyDay` rules, string keys or
+            copy, analytics events, survey fields, product ids, audio voices. If the
+            difference is on purpose (a platform feature, a documented decision in
+            `android/CLAUDE.md`), the PR body must say so. When a PR touches one platform and
+            the body is silent, ask whether the other needs it.
+
+            ## Documentation
+
+            `context/` describes the code, never the other way round. When the PR changes a
+            behaviour `context/` documents, flag a stale doc as Should fix, above all a stale
+            absence (a persistence key that no longer exists, a mode that was merged, a rule
+            that changed). Quote the doc line and the code that now contradicts it.
+
+            ## Before you post
+
+            Re-read each finding against the code once more. Drop it if the scenario cannot
+            happen (a guard upstream, a type that rules it out, code the PR did not change and
+            nobody can reach). A short list of real problems beats a long one with noise. If
+            the diff is large, say which files you read only in part.
+
+            ## Output
+
+            Severity:
+            - **Blocking**: a bug users will hit, data loss, a broken seam or invariant, a
+              store-policy breach, a crash, a security or privacy issue, or scope the ticket
+              requires that is missing.
+            - **Should fix**: a real problem with a narrower trigger, a missing test for new
+              logic, a stale `context/` doc, a PR-body claim the diff doesn't back.
+            - **Suggestion**: an improvement; the author may decline it.
+            No style nitpicks and no praise padding.
+
+            Post an inline comment (mcp__github_inline_comment__create_inline_comment) for
+            each Blocking and Should-fix finding: severity, the failure scenario, and a
+            concrete fix. Then post one top-level summary with `gh pr comment`, starting
+            exactly:
+            `**Claude Code Review** — <n> blocking, <n> should fix, <n> suggestions`
+            followed by the findings as a numbered list (severity, file:line, one line each),
+            the suggestions, any questions, and one line on what you checked. With nothing
+            blocking or should-fix, say so plainly in that first line's counts.
+
           claude_args: |
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+            --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
