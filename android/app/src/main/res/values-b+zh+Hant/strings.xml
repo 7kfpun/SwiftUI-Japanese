@@ -349,4 +349,7 @@
     <string name="rate_the_app">為App評分</string>
     <string name="privacy_options">隱私權選項</string>
     <string name="notifications_are_turned_off_for_this_app_in_system_settings">此App的通知已在系統設定中關閉。</string>
+    <string name="share_progress">分享進度</string>
+    <string name="playing">播放中</string>
+    <string name="paused">已暫停</string>
 </resources>
