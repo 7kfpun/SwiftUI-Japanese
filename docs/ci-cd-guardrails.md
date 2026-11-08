@@ -126,13 +126,14 @@ of the workflow file equals the default branch's, so a PR that edits
 `claude-code-review.yml` gets no review from the new prompt. Verify a prompt change after it
 merges:
 
-1. From `main`, branch `docs/fox-nn-review-check` and add one line to a doc that the prompt
-   cares about, e.g. a free-lesson count in `docs/` ("Lessons 1–5 are free"), plus a hand
-   edit to a generated file path you then revert in a second commit if you want a Blocking
-   hit.
+1. From `main`, branch `docs/fox-nn-review-check` and make a change the prompt should flag,
+   for example a UI string in `nihongo/UIStrings.json` with an English entry and none for
+   the other 18 languages, or "Lessons 1–5 are free" added to a store `description.txt`
+   (both are Blocking in the prompt). Nothing needs to be correct or buildable.
 2. Open it as a **draft**. Confirm no review ran (drafts are skipped).
 3. Mark it ready. Within a few minutes a summary comment starting `**Claude Code Review** —`
-   should appear, with inline comments if it found something.
+   should appear, with an inline comment on the flagged line. The `review` check should be
+   green, not skipped.
 4. Close the PR and delete the branch.
 
 ## Undraft race
