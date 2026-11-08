@@ -52,6 +52,11 @@ if [ "${CI_XCODEBUILD_ACTION:-}" = "archive" ]; then
       exit 1
     fi
   done
+  # Without it every survey submission is a silent no-op — no crash, no failure event.
+  if ! /usr/libexec/PlistBuddy -c "Print :directusToken" nihongo/Secrets.plist >/dev/null 2>&1; then
+    echo "error: nihongo/Secrets.plist has no directusToken — survey rows would never be sent." >&2
+    exit 1
+  fi
 fi
 
 echo "== post-clone done"

@@ -214,7 +214,7 @@ struct MatchView: View {
                     }
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .cardFrame()
             .coordinateSpace(name: "match")
             .onPreferenceChange(TileFramesKey.self) { frames = $0 }
             // The lines draw over the board but swallow nothing: never hit-tested,
@@ -231,7 +231,7 @@ struct MatchView: View {
                 .foregroundStyle(.tertiary)
         }
         .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .cardScreen()
         .background(Theme.canvas)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

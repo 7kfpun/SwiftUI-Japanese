@@ -375,7 +375,7 @@ struct PracticeView: View {
                 // Next drift to the screen's floor, a tab bar's height from the
                 // answers it follows.
                 topCard(item)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .cardFrame()
                 optionRow
                 // Only after a miss, and only as the way forward. The way to *see* a
                 // word without answering is to hold the card — a button saying the same
@@ -386,6 +386,7 @@ struct PracticeView: View {
             }
         }
         .padding()
+        .cardScreen()
         .background(Theme.canvas)
         .navigationBarTitleDisplayMode(.inline)
         .overlay { if let lastCorrect { AnswerBadge(correct: lastCorrect) } }
@@ -645,6 +646,8 @@ struct PracticeView: View {
             optionChip(side: 0)
             optionChip(side: 1)
         }
+        // The two answers always share one height, whichever one wraps.
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     /// What the current question asks, in words. Mirrors `ChallengeView.promptLabel`,

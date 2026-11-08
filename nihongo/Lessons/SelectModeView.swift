@@ -14,6 +14,9 @@ struct SelectModeView: View {
     @Environment(Unlock.self) private var unlock
     @Environment(PracticeProgress.self) private var practice
     @Environment(\.modelContext) private var context
+    /// Regular width lays the ladder out as a wrapping grid and the modes in as many
+    /// columns as fit; compact keeps the phone's horizontal strip.
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var showPaywall = false
     /// Which row opened the paywall — a locked mode or a locked challenge rung. Every
     /// presenting path overwrites this before the sheet appears, so the initial value
@@ -48,6 +51,7 @@ struct SelectModeView: View {
                 challengeSection
             }
             .padding(16)
+            .readableWidth()
         }
         // A results card is a fixed shape, not a document —
         // the bar sat over the content and reported a position nobody needed.
@@ -147,11 +151,20 @@ struct SelectModeView: View {
             HStack(spacing: 12) {
                 // Not the card-stack glyph any more — Flashcards owns that, and it *is*
                 // a stack of cards. Practice is the one that teaches and tests.
+                // Set in an accent well: the glyph is the one colour on the card, so the
+                // hero reads as Practice's even before the title does.
                 Image(systemName: "graduationcap")
                     .font(.title2)
+                    .foregroundStyle(Theme.accent)
+                    .frame(minWidth: 48, minHeight: 48)
+                    // Stronger than `wash`: 10% vanishes on the ink fill.
+                    .background(Theme.accent.opacity(0.18), in: Theme.rounded(Theme.Radius.row))
+                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(L.t("Practice")).font(Theme.title(.title2))
-                    Text(L.t("Cards first, then a quick quiz"))
+                    // What it is, not a sequence: there is no teaching card any more —
+                    // every card is a two-option quiz and only the app scores.
+                    Text(L.t("Two choices per card — the app keeps score"))
                         .font(.footnote)
                         .opacity(0.65)
                 }
@@ -181,37 +194,39 @@ struct SelectModeView: View {
         }
         .foregroundStyle(Color(.systemBackground))
         .padding(18)
-        .background(Color.primary, in: RoundedRectangle(cornerRadius: 22))
+        .background(Color.primary, in: Theme.rounded(Theme.Radius.hero))
+        .shadow(color: Theme.shadow, radius: Theme.Elevation.deckBlur, y: Theme.Elevation.deckY)
     }
 
     // MARK: - The other modes
 
     private var otherWays: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(L.t("Other ways to practice"))
-                .font(Theme.title(.footnote))
-                .foregroundStyle(.secondary)
-            VStack(spacing: 0) {
+            SectionLabel(text: L.t("Other ways to practice"))
+            // A 2×2 grid rather than four rows: the modes are peers, and a list ranked
+            // them by position. Each tile takes its row's height, so a long German or
+            // Burmese description grows both tiles together instead of staggering them.
+            // Two flexible columns at every width: four peers are a 2x2, and an adaptive
+            // count would leave a lone tile in a third column on a 640 column.
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10),
+                                GridItem(.flexible(), spacing: 10)],
+                      spacing: 10) {
                 // Vocab List is free on every lesson — browsing and search stay open.
                 NavigationLink { Deferred { VocabListView(lesson: current) } } label: {
                     wayRow(key: "vocab_list", icon: "list.bullet", title: L.t("Vocab List"),
                            subtitle: L.t("Browse & hear all words"), gated: false)
                 }
                 .buttonStyle(.plain)
-                Divider().padding(.leading, 56)
                 // Second because it asks *nothing*: a deck to page through before
                 // anything starts testing you.
                 way(key: "flashcards", icon: "rectangle.on.rectangle.angled",
                     title: L.t("Flashcards"),
                     subtitle: L.t("Swipe through the words")) { FlashcardView(lesson: current) }
-                Divider().padding(.leading, 56)
                 way(key: "match", icon: "link", title: L.t("Match"),
                     subtitle: L.t("Pair each word with its meaning")) { MatchView(lesson: current) }
-                Divider().padding(.leading, 56)
                 way(key: "learn", icon: "square.grid.2x2", title: L.t("Learn"),
                     subtitle: L.t("Rebuild the reading from tiles")) { LearnView(lesson: current) }
             }
-            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
         }
     }
 
@@ -237,38 +252,42 @@ struct SelectModeView: View {
         }
     }
 
-    /// Icon, name, one-line description — and on the trailing edge, whether this lesson
-    /// has tried the mode yet. Honest data only: "tried", not a made-up completion.
+    /// Icon and status on top, then name and one-line description — whether this
+    /// lesson has tried the mode yet. Honest data only: "tried", not a made-up completion.
     private func wayRow(key: String, icon: String, title: String, subtitle: String,
                         gated: Bool) -> some View {
-        HStack(spacing: 14) {
-            Image(systemName: icon)
-                .font(.title3)
-                .frame(width: 30)
-                .foregroundStyle(gated ? Color.secondary : Theme.accent)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top) {
+                IconWell(systemName: icon, active: !gated)
+                Spacer(minLength: 6)
+                if gated {
+                    Image(systemName: "lock.fill").font(.footnote).foregroundStyle(Theme.streak)
+                } else if visits.contains(key) {
+                    Text(L.t("Tried"))
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(Theme.accent)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 4)
+                        .background(Theme.wash(Theme.accent), in: Capsule())
+                } else {
+                    Text(L.t("Not tried yet"))
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .multilineTextAlignment(.trailing)
+                }
+            }
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(Theme.title(.headline))
-                Text(subtitle).font(.caption).foregroundStyle(.secondary)
-            }
-            Spacer(minLength: 10)
-            if gated {
-                Image(systemName: "lock.fill").font(.footnote).foregroundStyle(.secondary)
-            } else if visits.contains(key) {
-                Text(L.t("Tried"))
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(Theme.accent)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 4)
-                    .background(Theme.accent.opacity(0.12), in: Capsule())
-            } else {
-                Text(L.t("Not tried yet"))
+                Text(subtitle)
                     .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .contentShape(Rectangle())
+        .padding(14)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .cardChrome()
+        .contentShape(Theme.rounded(Theme.Radius.card))
         .foregroundStyle(.primary)
     }
 
@@ -295,9 +314,7 @@ struct SelectModeView: View {
     private var challengeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(L.t("Challenge"))
-                    .font(Theme.title(.footnote))
-                    .foregroundStyle(.secondary)
+                SectionLabel(text: L.t("Challenge"))
                 Spacer()
                 // Numerals and a star — no localization to drift.
                 Text("\(earnedStars) / \(challengeCount * 3) ★")
@@ -330,14 +347,25 @@ struct SelectModeView: View {
     /// Every rung as a chip: passed ones show their stars, the next one is the filled
     /// call to action, later ones wait behind a lock. Passed and next chips push the
     /// run directly — the strip is the ladder, not a diagram of it.
+    @ViewBuilder
     private var rungStrip: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+        if horizontalSizeClass == .regular {
+            // Wide windows wrap the rungs into a grid: a strip would leave most of the
+            // screen empty and still scroll sideways for a long ladder. Cells grow no
+            // larger than a chip reasonably gets.
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 72, maximum: 96), spacing: 8)],
+                      spacing: 8) {
                 ForEach(1...challengeCount, id: \.self) { i in rungChip(i) }
             }
-            .padding(.vertical, 2)
+        } else {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(1...challengeCount, id: \.self) { i in rungChip(i) }
+                }
+                .padding(.vertical, 2)
+            }
+            .scrollClipDisabled()
         }
-        .scrollClipDisabled()
     }
 
     @ViewBuilder
@@ -402,13 +430,13 @@ struct SelectModeView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .frame(minWidth: 56)
+        .frame(minWidth: 56, maxWidth: horizontalSizeClass == .regular ? .infinity : nil)
         .padding(.horizontal, 8)
         .padding(.vertical, 10)
-        .foregroundStyle(isNext ? Color(.systemBackground) : Color.primary)
+        .foregroundStyle(isNext ? Theme.onAccent : Color.primary)
         .background(isNext ? AnyShapeStyle(Theme.accent) : AnyShapeStyle(Theme.surface),
-                    in: RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14)
+                    in: Theme.rounded(Theme.Radius.row))
+        .overlay(Theme.rounded(Theme.Radius.row)
             .stroke(isNext ? Color.clear : Theme.line, lineWidth: 1))
         .contentShape(Rectangle())
         .accessibilityLabel(L.t("Challenge %@", "\(i)"))
@@ -426,7 +454,7 @@ struct SelectModeView: View {
                     Circle().fill(Theme.accent).frame(width: 32, height: 32)
                     Text("\(i)")
                         .font(.subheadline.weight(.bold))
-                        .foregroundStyle(Color(.systemBackground))
+                        .foregroundStyle(Theme.onAccent)
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L.t("Challenge %@", "\(i)")).font(Theme.title(.headline))
@@ -440,9 +468,8 @@ struct SelectModeView: View {
                     .foregroundStyle(Theme.accent)
             }
             .padding(14)
-            .background(Theme.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.accent, lineWidth: 1.5))
-            .contentShape(Rectangle())
+            .accentPlate()
+            .contentShape(Theme.rounded(Theme.Radius.card))
         }
         .buttonStyle(.plain)
         .foregroundStyle(.primary)
@@ -468,8 +495,8 @@ struct SelectModeView: View {
                     .foregroundStyle(.tertiary)
             }
             .padding(14)
-            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
-            .contentShape(Rectangle())
+            .cardChrome()
+            .contentShape(Theme.rounded(Theme.Radius.card))
         }
         .buttonStyle(.plain)
         .foregroundStyle(.primary)

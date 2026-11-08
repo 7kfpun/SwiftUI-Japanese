@@ -14,6 +14,12 @@ import SwiftUI
     /// The Lessons tab's stack. Ordinary row taps append to this too, so a deep link and
     /// a tap leave the user in the same place, with a working back button either way.
     var lessonPath = NavigationPath()
+    /// The lesson open in the two-pane layout's right pane, and — in the phone layout —
+    /// the last one opened, so widening the window (or narrowing it) keeps the learner on
+    /// the same lesson. Nil until a lesson is chosen; the two-pane list then falls back to
+    /// the one the learner would study next, so its right pane is never empty.
+    var selectedLesson: Lesson?
+
     /// The lesson whose Read along screen is currently up, if any. A Live Activity tap
     /// while that screen is already showing must not rebuild the stack: rebuilding
     /// disposes the player, which stops the audio the tap was meant to return to.
@@ -33,11 +39,32 @@ import SwiftUI
     /// and conflating the two would make a developer's replay look like a fresh install.
     var replayIntro = false
 
+    /// The phone-style list came (back) into view. With nothing pushed, no lesson is open:
+    /// clearing here is what stops a popped lesson being pushed again by a later width flip.
+    func compactListAppeared() {
+        if lessonPath.isEmpty { selectedLesson = nil }
+    }
+
+    /// The window grew into two panes: the right pane now shows `selectedLesson`, so the
+    /// phone stack is emptied rather than left holding a lesson the learner may change.
+    func enterTwoPane() {
+        lessonPath = NavigationPath()
+    }
+
+    /// The window shrank back to one pane: an explicitly chosen lesson stays open, pushed
+    /// onto the stack. The default (never chosen) selection does not travel.
+    func leaveTwoPane() {
+        var path = NavigationPath()
+        if let selectedLesson { path.append(selectedLesson) }
+        lessonPath = path
+    }
+
     /// Just the Lessons tab, at its root. Where a link lands when the rung it names is
     /// behind the paywall: the list is the honest destination, since pushing into a
     /// lesson the user can't open would only dead-end them a screen deeper.
     func openLessonList() {
         lessonPath = NavigationPath()
+        selectedLesson = nil
         tab = .lessons
     }
 
@@ -54,6 +81,7 @@ import SwiftUI
         var path = NavigationPath()
         path.append(lesson)
         lessonPath = path
+        selectedLesson = lesson
         tab = .lessons
     }
 
@@ -69,5 +97,6 @@ import SwiftUI
         path.append(lesson)
         path.append(ReadAlongRoute(lesson: lesson.number))
         lessonPath = path
+        selectedLesson = lesson
     }
 }

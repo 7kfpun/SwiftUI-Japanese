@@ -13,6 +13,14 @@ struct LessonListView: View {
     /// The stack lives on the router so the widget's "Ready for Challenge N?" link can
     /// push lesson + rung directly. Row taps append to the same path.
     @Environment(Router.self) private var router
+    @Environment(Store.self) private var store
+    @Environment(Unlock.self) private var unlock
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    /// The window's width, for the list pane's share of it.
+    /// Nil until the first layout has measured it; `usesTwoPane` then decides from the
+    /// size classes alone, so an iPad doesn't start single-pane and flip to split.
+    @State private var windowWidth: CGFloat?
     private static let groups = Course.current.groups
 
     /// Search hits for the current query.
@@ -26,94 +34,196 @@ struct LessonListView: View {
 
     var body: some View {
         @Bindable var router = router
-        NavigationStack(path: $router.lessonPath) {
-            VStack(spacing: 0) {
-                if query.isEmpty {
-                    Picker("", selection: $group) {
-                        ForEach(Self.groups.indices, id: \.self) { i in
-                            Text(L.t(Self.groups[i].name)).tag(i)
+        Group {
+            if twoPaneActive {
+                twoPane
+            } else {
+                NavigationStack(path: $router.lessonPath) {
+                    listPane
+                        .navigationDestination(for: Lesson.self) { lesson in
+                            SelectModeView(lesson: lesson)
+                                .onAppear { router.selectedLesson = lesson }
                         }
+                        .navigationDestination(for: Router.ReadAlongRoute.self) { route in
+                            let lesson = VocabStore.lesson(route.lesson, language)
+                            ReadAlongView(lesson: lesson, words: lesson.entries)
+                        }
+                }
+            }
+        }
+        .onChange(of: twoPaneActive) { _, new in
+            if new { router.enterTwoPane() } else { router.leaveTwoPane() }
+        }
+        // Measured here, on the stable outer view, because the decision itself depends on it.
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { windowWidth = $0 }
+    }
+
+    // MARK: - Wide windows: list | selected lesson
+
+    /// Regular width (iPad, wide Split View, a Max phone sideways): the lesson list on the
+    /// left at about a third of the window, the selected lesson — and whatever it opens —
+    /// on the right. The right pane is its own stack, so Practice, Match and the rest push
+    /// *inside* it and the list stays put beside them.
+    ///
+    /// Compact width never reaches this: it keeps the phone's push navigation untouched.
+    private var twoPane: some View {
+        NavigationSplitView(columnVisibility: .constant(.all)) {
+            listPane
+                .navigationSplitViewColumnWidth(ScreenLayout.listPaneWidth(in: windowWidth ?? 0))
+        } detail: {
+            NavigationStack {
+                SelectModeView(lesson: VocabStore.lesson(selectedNumber, language))
+            }
+            // A different lesson is a different screen: this drops whatever the previous
+            // one had pushed, instead of leaving Lesson 3's Match board open over Lesson 4.
+            .id(selectedNumber)
+        }
+        .navigationSplitViewStyle(.balanced)
+    }
+
+    /// The lesson showing on the right: the one the learner picked (or a link named), and
+    /// until then the one they'd study next, so the pane is never empty.
+    private var selectedNumber: Int {
+        router.selectedLesson?.number ?? continueLesson ?? 1
+    }
+
+    /// Two panes only where the right one is clearly the larger: a window at least 720pt
+    /// wide whose height isn't compact. A phone sideways (even a Pro Max), a 7-inch
+    /// portrait window and a narrow Split View stay on the phone's push navigation.
+    private var twoPaneActive: Bool {
+        ScreenLayout.usesTwoPane(windowWidth: windowWidth,
+                                 regularWidth: horizontalSizeClass == .regular,
+                                 compactHeight: verticalSizeClass == .compact)
+    }
+
+    private func isSelectedInTwoPane(_ number: Int) -> Bool {
+        twoPaneActive && number == selectedNumber
+    }
+
+    /// A row that opens a lesson. Compact pushes it onto the stack, as it always has;
+    /// two-pane has nowhere to push to, so the row *selects* it and the right pane shows it.
+    @ViewBuilder
+    private func lessonLink<Label: View>(_ lesson: Lesson, hidesIndicator: Bool = false,
+                                         @ViewBuilder label: () -> Label) -> some View {
+        if twoPaneActive {
+            Button { router.selectedLesson = lesson } label: {
+                label().contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        } else {
+            NavigationLink(value: lesson, label: label)
+                .navigationLinkIndicatorVisibility(hidesIndicator ? .hidden : .automatic)
+        }
+    }
+
+    private var listPane: some View {
+        VStack(spacing: 0) {
+            if query.isEmpty {
+                Picker("", selection: $group) {
+                    ForEach(Self.groups.indices, id: \.self) { i in
+                        Text(L.t(Self.groups[i].name)).tag(i)
                     }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .padding(.top, 8)
+
+                // What the band adds up to, under the band's own control. The rows
+                // each carry a lesson's standing; this is the only place that says
+                // how the *group* is going, which is the question the picker asks.
+                Text(groupSummary)
+                    .font(Theme.title(.footnote, weight: .regular))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 20)
                     .padding(.top, 8)
+            }
 
-                    // What the band adds up to, under the band's own control. The rows
-                    // each carry a lesson's standing; this is the only place that says
-                    // how the *group* is going, which is the question the picker asks.
-                    Text(groupSummary)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 8)
-                }
-
-                List {
-                    if query.isEmpty {
-                        ForEach(Self.groups[group].range, id: \.self) { n in
-                            NavigationLink(value: VocabStore.lesson(n, language)) {
-                                LessonRow(number: n,
-                                          done: passed[n] ?? 0,
-                                          total: Challenge.count(
-                                            wordCount: VocabStore.lesson(n, language).entries.count))
-                            }
-                        }
-                    } else {
-                        // One evaluation, shared by the rows and the header count.
-                        let hits = results
+            List {
+                if query.isEmpty {
+                    // Where the learner is, whichever band is showing — the list's
+                    // one call to action, so finding your place in fifty rows is
+                    // never the first job.
+                    if let next = continueLesson {
                         Section {
-                            if hits.isEmpty {
-                                // Names the query and what is searchable. "0 results"
-                                // alone leaves a learner unsure whether the word is
-                                // absent or whether they typed in the wrong script —
-                                // and this corpus takes all four.
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(L.t("Nothing matched “%@”.", query))
-                                        .font(.subheadline)
-                                    Text(L.t("Try kana, kanji, romaji or the meaning."))
-                                        .font(.footnote)
-                                        .foregroundStyle(.secondary)
-                                }
-                                .padding(.vertical, 6)
-                                .listRowSeparator(.hidden)
+                            lessonLink(VocabStore.lesson(next, language), hidesIndicator: true) {
+                                ContinueCard(number: next,
+                                             done: passed[next] ?? 0,
+                                             total: Challenge.count(wordCount: VocabStore.wordCount(next)))
                             }
-                            ForEach(hits) { v in
-                                VocabRow(vocab: v, showLesson: true, surface: "search")
-                            }
-                        } header: {
-                            // Spelled out rather than `Section(_ title:)` so the count
-                            // can take the section-header face like every other header.
-                            Text(L.t("%@ results", "\(hits.count)"))
-                                .font(Theme.title(.footnote))
+                            .listRowBackground(Color.primary)
                         }
+                    }
+                    Section {
+                        ForEach(Self.groups[group].range, id: \.self) { n in
+                            let lesson = VocabStore.lesson(n, language)
+                            lessonLink(lesson) {
+                                LessonRow(number: n,
+                                          preview: lesson.entries.prefix(3).map(\.kanji),
+                                          done: passed[n] ?? 0,
+                                          total: Challenge.count(wordCount: lesson.entries.count),
+                                          locked: Gating.isLocked(lesson: n, isPremium: store.isPremium,
+                                                                  earnedFirstGroup: unlock.earnedFirstGroup))
+                            }
+                            // The open lesson wears the accent as a border — never a fill,
+                            // which is answer feedback's and selection's-opposite.
+                            .listRowBackground(isSelectedInTwoPane(n) ? SelectedLessonBackground() : nil)
+                        }
+                    }
+                } else {
+                    // One evaluation, shared by the rows and the header count.
+                    let hits = results
+                    Section {
+                        if hits.isEmpty {
+                            // Names the query and what is searchable. "0 results"
+                            // alone leaves a learner unsure whether the word is
+                            // absent or whether they typed in the wrong script —
+                            // and this corpus takes all four.
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(L.t("Nothing matched “%@”.", query))
+                                    .font(.subheadline)
+                                Text(L.t("Try kana, kanji, romaji or the meaning."))
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(.vertical, 6)
+                            .listRowSeparator(.hidden)
+                        }
+                        ForEach(hits) { v in
+                            VocabRow(vocab: v, showLesson: true, surface: "search")
+                        }
+                    } header: {
+                        // Spelled out rather than `Section(_ title:)` so the count
+                        // can take the section-header face like every other header.
+                        SectionLabel(text: L.t("%@ results", "\(hits.count)"))
                     }
                 }
             }
-            .background(Color(.systemGroupedBackground))   // match the grouped List behind the picker
-            .navigationTitle(L.t("Lessons"))
-            .onAppear { Track.screen("lessons"); reloadProgress() }
-            .onChange(of: group) { Track.event("lesson_group", ["group": group]) }
-            .navigationDestination(for: Lesson.self) { SelectModeView(lesson: $0) }
-            .navigationDestination(for: Router.ReadAlongRoute.self) { route in
-                let lesson = VocabStore.lesson(route.lesson, language)
-                ReadAlongView(lesson: lesson, words: lesson.entries)
-            }
-            .searchable(text: $query, prompt: L.t("Search vocabulary"))
-            .autocorrectionDisabled()
-            .textInputAutocapitalization(.never)
-            .onChange(of: query) {
-                searchDebounce?.cancel()
-                let q = query
-                searchDebounce = Task {
-                    try? await Task.sleep(for: .milliseconds(600))
-                    guard !Task.isCancelled, !q.isEmpty else { return }
-                    // Counted *inside* the debounce. Reading `results.count` here cost a
-                    // whole extra corpus pass on every keystroke, to fill a param on an
-                    // event that only fires once the typing stops.
-                    Track.event("search_vocab", ["query_length": q.count,
-                                                 "results": searchVocab(q, in: VocabStore.allVocab(language)).count])
-                }
+        }
+        .readableWidth()
+        .background(Color(.systemGroupedBackground))   // match the grouped List behind the picker
+        .navigationTitle(L.t("Lessons"))
+        .onAppear {
+            Track.screen("lessons")
+            reloadProgress()
+            // Back on a phone-style list with nothing pushed: no lesson is open any more.
+            if !twoPaneActive { router.compactListAppeared() }
+        }
+        .onChange(of: group) { Track.event("lesson_group", ["group": group]) }
+        .searchable(text: $query, prompt: L.t("Search vocabulary"))
+        .autocorrectionDisabled()
+        .textInputAutocapitalization(.never)
+        .onChange(of: query) {
+            searchDebounce?.cancel()
+            let q = query
+            searchDebounce = Task {
+                try? await Task.sleep(for: .milliseconds(600))
+                guard !Task.isCancelled, !q.isEmpty else { return }
+                // Counted *inside* the debounce. Reading `results.count` here cost a
+                // whole extra corpus pass on every keystroke, to fill a param on an
+                // event that only fires once the typing stops.
+                Track.event("search_vocab", ["query_length": q.count,
+                                             "results": searchVocab(q, in: VocabStore.allVocab(language)).count])
             }
         }
     }
@@ -136,6 +246,16 @@ struct LessonListView: View {
         return "\(L.t("Lesson %@", "\(band.first)–\(band.last)")) · \(lessons) · \(rungs)"
     }
 
+    /// The first lesson still holding an unpassed challenge — the rule Today's deck
+    /// follows, read from the same `passed` tally as the rows. Nil once everything is
+    /// passed: there is nowhere to continue *to*, and pointing at lesson 50 would be a
+    /// call to action with no action behind it.
+    private var continueLesson: Int? {
+        (1...Course.current.lessonCount).first { n in
+            (passed[n] ?? 0) < Challenge.count(wordCount: VocabStore.wordCount(n))
+        }
+    }
+
     private func reloadProgress() {
         let descriptor = FetchDescriptor<ChallengeResult>()
         let rows = (try? context.fetch(descriptor)) ?? []
@@ -146,11 +266,59 @@ struct LessonListView: View {
     }
 }
 
-/// A lesson row with its challenge progress — the bar is the reason to come back, so
-/// it sits on the screen you see most rather than one level in. Laid out to match the
-/// promo site's lesson list: numbered badge, title, then the bar trailing.
-private struct LessonRow: View {
+/// The list's one inverted card: the lesson you're on, and how far up its ladder.
+/// The same ink fill as the lesson screen's "Up next" hero, so the two read as one
+/// thread — this card is how you get to that one.
+private struct ContinueCard: View {
     let number: Int, done: Int, total: Int
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Text("\(number)")
+                .font(Theme.title(.title2, weight: .bold))
+                .monospacedDigit()
+                .frame(minWidth: 48, minHeight: 48)
+                .background(Color(.systemBackground).opacity(0.12), in: Theme.rounded(Theme.Radius.card))
+            VStack(alignment: .leading, spacing: 4) {
+                Text(L.t("Up next"))
+                    .font(.caption.weight(.semibold))
+                    .textCase(.uppercase)
+                    .opacity(0.7)
+                Text(L.t("Lesson %@", "\(number)"))
+                    .font(Theme.title(.title3, weight: .bold))
+                // The hero's light-on-ink track: the default track is a grey wash
+                // that vanishes on the ink fill, and an empty bar read as no bar.
+                CapsuleBar(fraction: total > 0 ? Double(done) / Double(total) : 0,
+                           track: Color(.systemBackground).opacity(0.25))
+                    .padding(.top, 2)
+                Text(L.t("%@ challenges passed", "\(done)"))
+                    .font(.footnote)
+                    .opacity(0.7)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            // Drawn here in the card's ink, in place of the list's own indicator —
+            // the system grey all but disappears on this fill.
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .opacity(0.7)
+                .accessibilityHidden(true)
+        }
+        .foregroundStyle(Color(.systemBackground))
+        .padding(.vertical, 6)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// A lesson row with its challenge progress — the ring is the reason to come back, so
+/// it sits on the screen you see most rather than one level in. Numbered badge, title,
+/// the lesson's first few words, then the standing trailing.
+private struct LessonRow: View {
+    let number: Int
+    /// The first words of the lesson, so fifty rows that all say "Lesson n" each say
+    /// what is *in* them — the thing a returning learner actually remembers.
+    let preview: [String]
+    let done: Int, total: Int
+    let locked: Bool
 
     private var fraction: Double { total > 0 ? Double(done) / Double(total) : 0 }
 
@@ -158,37 +326,64 @@ private struct LessonRow: View {
         HStack(spacing: 12) {
             Text("\(number)")
                 .font(.subheadline.weight(.semibold).monospacedDigit())
-                .foregroundStyle(Theme.accent)
-                .frame(width: 32, height: 32)
-                .background(Theme.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 9))
+                .foregroundStyle(locked ? Color.secondary : Theme.accent)
+                .frame(minWidth: 36, minHeight: 36)
+                .background(Theme.wash(locked ? Color.secondary : Theme.accent),
+                            in: Theme.rounded(Theme.Radius.chip))
 
-            // The row's name, so it takes the title face — but at the weight it already
-            // had. `Theme.title`'s default semibold across all fifty rows reads as fifty
-            // headings competing with each other rather than a list.
-            Text(L.t("Lesson %@", "\(number)"))
-                .font(Theme.title(.body, weight: .regular))
+            VStack(alignment: .leading, spacing: 2) {
+                // The row's name, so it takes the title face — but at the weight it
+                // already had. `Theme.title`'s default semibold across all fifty rows
+                // reads as fifty headings competing rather than a list.
+                Text(L.t("Lesson %@", "\(number)"))
+                    .font(Theme.title(.body, weight: .regular))
+                Text(preview.joined(separator: "・"))
+                    .font(Theme.jp(.subheadline))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
 
             Spacer(minLength: 12)
 
-            // Untouched lessons show nothing at all — an empty track and a "0 / 6" on
+            // Untouched lessons show nothing at all — an empty ring and a "0 / 6" on
             // all fifty rows would read as "nothing works" rather than "nothing
-            // started". Once a lesson is under way the count leads the bar: the bar
-            // says *roughly how far*, the numbers say exactly, and on a ladder of six
-            // rungs the difference between 4 and 5 is worth reading rather than
-            // estimating from 16pt of fill.
-            if done > 0 {
+            // started". Once under way the count leads the ring: the ring says
+            // *roughly how far*, the numbers say exactly.
+            if locked {
+                // Amber, not red: a lock is an offer, not an error.
+                Image(systemName: "lock.fill")
+                    .font(.footnote)
+                    .foregroundStyle(Theme.streak)
+            } else if done > 0 {
                 Text("\(done) / \(total)")
                     .font(.footnote.monospacedDigit())
                     .foregroundStyle(.secondary)
-                // Fixed width so the bars line up down the list instead of jittering
-                // with each row's title length.
-                CapsuleBar(fraction: fraction, width: 92)
+                ProgressRing(fraction: fraction)
             }
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(done > 0
                             ? L.t("Lesson %@", "\(number)") + ", \(done) / \(total)"
                             : L.t("Lesson %@", "\(number)"))
+    }
+}
+
+/// A lesson's ladder as a ring — compact enough to sit beside a count in a list row.
+/// Scales with the footnote it sits next to rather than taking a fixed size.
+struct ProgressRing: View {
+    let fraction: Double
+    @ScaledMetric(relativeTo: .footnote) private var size: CGFloat = 20
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(Theme.line, lineWidth: size * 0.18)
+            Circle()
+                .trim(from: 0, to: max(0, min(1, fraction)))
+                .stroke(Theme.accent, style: StrokeStyle(lineWidth: size * 0.18, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
     }
 }
 
@@ -344,7 +539,7 @@ struct VocabRow: View {
                 // An inset pane, so the sentence reads as the row's attachment rather
                 // than another row — Theme.canvas on the Theme.surface card, per the
                 // house rule that inset panes take canvas.
-                .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 10))
+                .background(Theme.canvas, in: Theme.rounded(Theme.Radius.inset))
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -359,4 +554,16 @@ struct VocabRow: View {
     LessonListView()
         .tint(Theme.accent)
         .modelContainer(for: ChallengeResult.self, inMemory: true)
+}
+
+/// The open lesson's row in the two-pane list: the row surface with an accent border.
+private struct SelectedLessonBackground: View {
+    var body: some View {
+        ZStack {
+            Theme.surface
+            Theme.rounded(Theme.Radius.row)
+                .stroke(Theme.accent, lineWidth: 2)
+                .padding(2)
+        }
+    }
 }

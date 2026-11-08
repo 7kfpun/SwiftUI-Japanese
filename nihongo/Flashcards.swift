@@ -105,6 +105,7 @@ struct FlashcardScreen<Element, Face: View>: View {
             }
         }
         .padding()
+        .cardScreen()
         .background(Theme.canvas)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { autoPlay() }
@@ -148,7 +149,7 @@ struct FlashcardScreen<Element, Face: View>: View {
             CardStackPeek(count: deck.peek(2).count)
             topCard(element)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .cardFrame()
     }
 
     private func topCard(_ element: Element) -> some View {

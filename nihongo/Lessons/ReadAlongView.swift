@@ -21,6 +21,9 @@ struct ReadAlongView: View {
     @Environment(Router.self) private var router
     @Environment(\.pronouncer) private var pronouncer
     @State private var player = LessonPlayer()
+    /// A landscape phone has no height to spare for a pinned player: the card scrolls
+    /// away with the playlist instead, so the playlist keeps the whole screen.
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var showPaywall = false
     /// Which gate opened the paywall — the meanings preview running out, or the speed
     /// dial. One sheet, two reasons, and the funnel is worthless if they report as one.
@@ -45,20 +48,11 @@ struct ReadAlongView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            playerCard
-                .padding(.horizontal, 16)
-                .padding(.bottom, 14)
-
-            Text(L.t("Playlist"))
-                .font(Theme.title(.footnote))
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 6)
-
+            if verticalSizeClass != .compact { header }
             playlist
         }
         .padding(.top, 12)
+        .readableWidth()
         .background(Theme.canvas)
         .navigationTitle(L.t("Read along"))
         .navigationBarTitleDisplayMode(.inline)
@@ -113,6 +107,21 @@ struct ReadAlongView: View {
         }
     }
 
+    /// The player and the playlist's label: pinned above the list normally, the first
+    /// thing *in* the list on a landscape phone.
+    private var header: some View {
+        VStack(spacing: 0) {
+            playerCard
+                .padding(.horizontal, 16)
+                .padding(.bottom, 14)
+
+            SectionLabel(text: L.t("Playlist"))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 6)
+        }
+    }
+
     // MARK: - The player card
 
     private var playerCard: some View {
@@ -147,8 +156,7 @@ struct ReadAlongView: View {
             }
         }
         .padding(16)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 20))
-        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.line, lineWidth: 1))
+        .cardChrome(radius: Theme.Radius.deck, lifted: true)
     }
 
     /// Spelled out under the card, because the short segment labels are cumulative and
@@ -251,7 +259,7 @@ struct ReadAlongView: View {
             }
         }
         .padding(3)
-        .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 14))
+        .background(Theme.canvas, in: Theme.rounded(Theme.Radius.row))
     }
 
     private func modeSegment(_ mode: ReadMode, title: String) -> some View {
@@ -274,7 +282,7 @@ struct ReadAlongView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
-            .contentShape(RoundedRectangle(cornerRadius: 11))
+            .contentShape(Theme.rounded(Theme.Radius.inset))
         }
         .buttonStyle(.plain)
         // Inside a tinted track the selected segment is the one that *lifts* — the
@@ -282,9 +290,9 @@ struct ReadAlongView: View {
         // would draw a box inside a box (see `07-ux-ui.md`).
         .background {
             if selected {
-                RoundedRectangle(cornerRadius: 11)
+                Theme.rounded(Theme.Radius.inset)
                     .fill(Theme.surface)
-                    .shadow(color: Theme.shadow, radius: 2, y: 1)
+                    .shadow(color: Theme.shadow, radius: Theme.Elevation.restY, y: 1)
             }
         }
         .foregroundStyle(selected ? Color.primary : .secondary)
@@ -295,6 +303,7 @@ struct ReadAlongView: View {
     private var playlist: some View {
         ScrollViewReader { proxy in
             ScrollView {
+                if verticalSizeClass == .compact { header }
                 LazyVStack(spacing: 8) {
                     ForEach(Array(words.enumerated()), id: \.element.id) { i, word in
                         row(i, word).id(word.id)
@@ -412,15 +421,15 @@ struct ReadAlongView: View {
                     .padding(10)
                     // An inset pane on the row's card — `Theme.canvas` on `Theme.surface`,
                     // the house rule for a pane inside a card.
-                    .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 10))
+                    .background(Theme.canvas, in: Theme.rounded(Theme.Radius.inset))
                     .padding(.leading, Self.gutterWidth + Self.gutterGap)
                 }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 11)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14)
-            .stroke(isCurrent ? Theme.accent : Color.clear, lineWidth: 2))
+        .background(Theme.surface, in: Theme.rounded(Theme.Radius.row))
+        .overlay(Theme.rounded(Theme.Radius.row)
+            .stroke(isCurrent ? Theme.accent : Theme.line, lineWidth: isCurrent ? 2 : 1))
     }
 
     // MARK: - Live Activity

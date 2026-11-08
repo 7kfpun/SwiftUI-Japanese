@@ -41,6 +41,61 @@ enum Theme {
     /// comes from the lighter surface + `line` border, so the shadow goes clear.
     static let shadow = dynamic(UIColor(white: 0, alpha: 0.10), .clear)
 
+    /// Amber for streaks and the earn-path — a different message from the teal
+    /// accent, and never green or red. Softened in dark the same way feedback
+    /// colours are: full saturation blooms on a near-black canvas.
+    static let streak = dynamic(UIColor(red: 0.98, green: 0.55, blue: 0.10, alpha: 1),
+                                UIColor(red: 1.00, green: 0.72, blue: 0.38, alpha: 1))
+
+    /// Earned stars. System yellow is the same neon in both appearances; this
+    /// pair stays gold on white and lifts off black without glowing.
+    static let star = dynamic(UIColor(red: 0.92, green: 0.68, blue: 0.10, alpha: 1),
+                              UIColor(red: 0.98, green: 0.82, blue: 0.40, alpha: 1))
+
+    /// Ink for labels that sit on an `accent` fill. The accent is a mid teal in
+    /// light and a brighter one in dark, so white fails contrast in both, and a
+    /// flipping `systemBackground` fails in light. One near-black holds either way.
+    static let onAccent = Color(red: 0.06, green: 0.13, blue: 0.15)
+
+    /// Wash behind tinted callouts — banners, the "next" card, empty-state art.
+    /// One opacity so those plates don't drift between 8% and 12%.
+    static func wash(_ color: Color) -> Color { color.opacity(0.10) }
+
+    /// Corner radii. Continuous (`Theme.rounded`), one scale, so a chip, a panel
+    /// and the deck don't each invent a number.
+    enum Radius {
+        /// The study calendar's day squares.
+        static let tick: CGFloat = 4
+        /// A pane set into a card (canvas on surface).
+        static let inset: CGFloat = 10
+        /// Wells, kana tiles, swipe stamps.
+        static let chip: CGFloat = 12
+        /// Playlist rows, plan rows, stat tiles.
+        static let row: CGFloat = 14
+        /// Panels and prompts.
+        static let card: CGFloat = 16
+        /// Action pills and choice chips.
+        static let pill: CGFloat = 18
+        /// The swipe deck and the read-along player.
+        static let deck: CGFloat = 20
+        /// The one inverted hero on the lesson screen.
+        static let hero: CGFloat = 22
+    }
+
+    /// How far a card lifts. Dark mode ignores the blur — `shadow` is clear there.
+    enum Elevation {
+        static let restBlur: CGFloat = 8
+        static let restY: CGFloat = 3
+        static let deckBlur: CGFloat = 16
+        static let deckY: CGFloat = 8
+    }
+
+    /// The app's corner. Continuous, not the circular default: iOS draws its own
+    /// cards as squircles, and a circular corner next to one reads as a different kit.
+    static func rounded(_ radius: CGFloat) -> RoundedRectangle {
+        RoundedRectangle(cornerRadius: radius, style: .continuous)
+    }
+
     /// Japanese display font for the big word/kana text — **Hiragino Mincho ProN**,
     /// iOS's built-in serif (明朝) face. No bundled font files needed.
     ///
@@ -58,6 +113,28 @@ enum Theme {
     ///
     /// To swap in a bundled typeface later, change only this name (and `jpBold`).
     static func jp(_ size: CGFloat) -> Font { .custom("HiraMinProN-W3", size: size) }
+
+    /// `jp` for Japanese that sits in running text rather than in a glyph slot — a
+    /// lesson row's word preview — so it scales with Dynamic Type like the text around it.
+    ///
+    /// The base is the style's size at the default text size, *not* the current one:
+    /// `relativeTo` applies the user's scale itself, and starting from an already-scaled
+    /// size would apply it twice.
+    static func jp(_ style: Font.TextStyle) -> Font {
+        let base: CGFloat = switch style {
+        case .largeTitle: 34
+        case .title: 28
+        case .title2: 22
+        case .title3: 20
+        case .callout: 16
+        case .subheadline: 15
+        case .footnote: 13
+        case .caption: 12
+        case .caption2: 11
+        default: 17
+        }
+        return .custom("HiraMinProN-W3", size: base, relativeTo: style)
+    }
 
     /// Bold Japanese display font — Hiragino Mincho ProN W6, the same family's heavy
     /// weight (mincho ships W3 and W6 on iOS, so unlike the old rounded Maru Gothic
@@ -107,10 +184,11 @@ enum Theme {
     /// Two kinds of caller, both deliberately outside `title(_:)`'s Dynamic Type contract:
     ///
     /// - **Layouts with no slack.** The Challenge result percentage (56) between a stars
-    ///   row and a verdict line, and Kana Write's romaji prompt (40) directly above a
-    ///   drawing canvas whose height is the thing being drawn on. Through
-    ///   `title(.largeTitle)` both would start at 34pt (a visible shrink) and then grow
-    ///   with the text size until they pushed those neighbours off screen.
+    ///   row and a verdict line, the Progress streak count (56) beside its flame, and
+    ///   Kana Write's romaji prompt (40) directly above a drawing canvas whose height is
+    ///   the thing being drawn on. Through `title(.largeTitle)` they would start at 34pt
+    ///   (a visible shrink) and then grow with the text size until they pushed those
+    ///   neighbours off screen.
     /// - **The Latin half of a script-switchable slot.** Where the same slot shows kana in
     ///   a Japanese face at some fixed size *or* romaji depending on a setting — the
     ///   browser tiles and their toolbar glyph (26/15), both kana quizzes' prompts

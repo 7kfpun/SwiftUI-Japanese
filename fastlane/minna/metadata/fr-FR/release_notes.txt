@@ -1,8 +1,7 @@
-Version 3.0.2
+Version 3.0.6
 
-Débloquez plus sans payer : trois étoiles à chaque défi des premières leçons ouvrent tout le groupe Débutant 1
-Rappels quotidiens : optionnels, seulement les jours sans révision, silencieux les autres
-Un abonnement de 12 mois rejoint ceux de 1, 3 et 6 mois
-Favoris et liste de vocabulaire plus lisibles
+Les commentaires, les notes en étoiles et vos réponses du premier lancement sont de nouveau envoyés — ils ne nous parvenaient pas dans la 3.0.5
+L'écran Premium nomme désormais les bons modes : Entraînement, Cartes mémo, Associer, Apprendre et toute l'échelle
+Petites corrections
 
 Dites-nous la suite dans Réglages → Commentaires !

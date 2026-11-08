@@ -35,6 +35,8 @@ struct BookmarksView: View {
                         }
                     }
                 }
+                .readableWidth()
+                .background(Color(.systemGroupedBackground))
             }
         }
         .navigationTitle(L.t("Bookmarks"))
@@ -46,8 +48,8 @@ struct BookmarksView: View {
     private var empty: some View {
         EmptyStatePanel(text: L.t("Tap the star beside any word to save it here.")) {
             Image(systemName: "star")
-                .font(.system(size: 40))
-                .foregroundStyle(Theme.accent.opacity(0.5))
+                .font(Theme.title(.largeTitle))
+                .foregroundStyle(Theme.accent.opacity(0.55))
         }
     }
 

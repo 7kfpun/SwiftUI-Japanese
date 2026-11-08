@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- The streak reminder (FOX-159): asked on Android 13+ only from an explicit opt-in, and re-planned after a reboot. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Progress stays on the device (FOX-146): no Auto Backup, no device-to-device copy.
+         allowBackup=false covers Android 11 and below; data_extraction_rules covers 12+. -->
+    <application
+        android:name=".JapaneseDailyApp"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:localeConfig="@xml/locales_config"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.JapaneseDaily">
+
+        <!-- AdMob app id (FOX-158), from secrets.properties. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="${ADMOB_APP_ID}" />
+        <!-- Firebase collection at start-up: off in debug builds (FOX-160 owns the opt-out). -->
+        <meta-data
+            android:name="firebase_analytics_collection_enabled"
+            android:value="${FIREBASE_COLLECTION_ENABLED}" />
+        <meta-data
+            android:name="firebase_crashlytics_collection_enabled"
+            android:value="${FIREBASE_COLLECTION_ENABLED}" />
+        <!-- Non-personalized, with no advertising id of our own: Analytics keeps no ad id and sends no
+             ad-personalization signals from first launch (FirebaseSink also sets consent at runtime). -->
+        <meta-data
+            android:name="google_analytics_adid_collection_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_default_allow_ad_personalization_signals"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_default_allow_ad_user_data"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_default_allow_ad_storage"
+            android:value="false" />
+
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|density|keyboard|keyboardHidden|navigation"
+            android:exported="true"
+            android:resizeableActivity="true"
+            android:theme="@style/Theme.JapaneseDaily">
+            <!-- FOX-166: rotating, folding, unfolding and resizing the window are handled in place (Compose reads
+                 the new size), so the tab, the pushed screen and a round in progress (Practice queue, Match board,
+                 Challenge rung) survive. Locale and night mode still recreate, as AppCompat expects. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- The streak reminder: the alarm itself, and what re-plans it after a reboot, an update, a clock
+             change or a time-zone change. Neither is exported; the system's protected broadcasts reach both. -->
+        <receiver
+            android:name=".settings.ReminderReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".settings.RescheduleReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Home screen widget (FOX-155): today's word, rotating hourly. WorkManager redraws it. -->
+        <receiver
+            android:name=".today.TodayWidgetReceiver"
+            android:exported="true"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_today_info" />
+        </receiver>
+
+        <!-- Keeps the in-app language choice on Android 12 and below (AppCompat's per-app locale
+             store), and moves it to the system's after an upgrade to 13+. -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
+    </application>
+</manifest>

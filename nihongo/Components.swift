@@ -46,9 +46,10 @@ struct ToolbarStatus<Content: View>: View {
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
                 .padding(.horizontal, 14)
-                .padding(.vertical, 5)
+                .padding(.vertical, 6)
                 .background(Capsule().fill(Theme.surface))
                 .overlay(Capsule().stroke(Theme.line, lineWidth: 1))
+                .shadow(color: Theme.shadow, radius: Theme.Elevation.restBlur, y: Theme.Elevation.restY)
             if let caption {
                 Text(caption)
                     .font(.caption2)
@@ -120,9 +121,8 @@ struct QuizPromptPanel<Content: View>: View {
 
     var body: some View {
         Group(content: content)
-            .frame(maxWidth: .infinity)
-            .frame(maxHeight: .infinity)
-            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
+            .cardFrame()
+            .cardChrome(lifted: true)
             .contentShape(Rectangle())
             .onTapGesture(perform: onTap)
     }
@@ -173,10 +173,7 @@ struct ModeRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Image(systemName: icon)
-                .font(.title3)
-                .frame(width: 30)
-                .foregroundStyle(locked ? Color.secondary : Theme.accent)
+            IconWell(systemName: icon, active: !locked)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(Theme.title(.headline))
                 Text(subtitle).font(.caption).foregroundStyle(.secondary)
@@ -251,9 +248,10 @@ struct QuizOptionButton: View {
         // wasn't much quieter — both spent the palette on the resting state. Colour
         // now appears only with the verdict, which is the moment it means something.
         .background(answered ? color.opacity(0.12) : Theme.surface,
-                    in: RoundedRectangle(cornerRadius: 16))
-        .shadow(color: answered ? .clear : Theme.shadow, radius: 5, y: 2)
-        .overlay(RoundedRectangle(cornerRadius: 16)
+                    in: Theme.rounded(Theme.Radius.card))
+        .shadow(color: answered ? .clear : Theme.shadow,
+                radius: Theme.Elevation.restBlur, y: Theme.Elevation.restY)
+        .overlay(Theme.rounded(Theme.Radius.card)
             .stroke(answered ? color : .clear, lineWidth: 2))
         // Corner badge rather than inline, so revealing the verdict doesn't reflow
         // the label. Colour alone would exclude red/green colourblind users.
@@ -278,8 +276,8 @@ extension View {
     /// design language instead of two (pill buttons vs. bordered boxes).
     func choiceChip(_ color: Color) -> some View {
         foregroundStyle(color)
-            .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).stroke(color, lineWidth: 2))
+            .background(color.opacity(0.12), in: Theme.rounded(Theme.Radius.pill))
+            .overlay(Theme.rounded(Theme.Radius.pill).stroke(color, lineWidth: 2))
     }
 }
 
@@ -355,7 +353,10 @@ struct SwipeOptionChip: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 14)
-            .frame(maxWidth: .infinity, minHeight: 96)   // min, not fixed: long glosses need room
+            // min, not fixed: long glosses need room. `maxHeight: .infinity` lets the shorter chip of a
+            // pair grow to its partner's height — every pair row is `.fixedSize(horizontal: false,
+            // vertical: true)`, so the row is as tall as the taller chip and both fill it.
+            .frame(maxWidth: .infinity, minHeight: 96, maxHeight: .infinity)
             .contentShape(Rectangle())                   // the whole chip is the target
         }
         .buttonStyle(.plain)
@@ -409,14 +410,15 @@ struct SwipeCard<Content: View>: View {
     var showsHint = true
     @ViewBuilder var content: () -> Content
 
-    private static var radius: CGFloat { 20 }
+    private static var radius: CGFloat { Theme.Radius.deck }
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: Self.radius)
+            Theme.rounded(Self.radius)
                 .fill(Theme.surface)
-                .overlay(RoundedRectangle(cornerRadius: Self.radius).stroke(Theme.line, lineWidth: 1))
-                .shadow(color: Theme.shadow, radius: 8, y: 4)
+                .overlay(Theme.rounded(Self.radius).stroke(Theme.line, lineWidth: 1))
+                .shadow(color: Theme.shadow,
+                        radius: Theme.Elevation.deckBlur, y: Theme.Elevation.deckY)
             content()
         }
         .overlay(alignment: .topTrailing) { stamp(rightStamp, rotation: 8, active: drag.width > 0) }
@@ -477,16 +479,56 @@ struct EmptyStatePanel<Art: View>: View {
     @ViewBuilder var art: () -> Art
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             art()
+                .padding(20)
+                .background(Theme.wash(Theme.accent), in: Theme.rounded(Theme.Radius.deck))
             Text(text)
                 .font(Theme.title(.subheadline, weight: .regular))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+                .frame(maxWidth: 320)
         }
         .padding(32)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.canvas)
+    }
+}
+
+/// The accent (or quiet) icon well list rows share — lesson modes, kana modes,
+/// the progress counters. A bare glyph at the row's leading edge was the one
+/// thing those lists didn't agree on.
+struct IconWell: View {
+    let systemName: String
+    var active = true
+
+    var body: some View {
+        Image(systemName: systemName)
+            .font(.title3)
+            .foregroundStyle(active ? Theme.accent : Color.secondary)
+            .frame(minWidth: 36, minHeight: 36)
+            .background(Theme.wash(active ? Theme.accent : Color.secondary),
+                        in: Theme.rounded(Theme.Radius.chip))
+            .accessibilityHidden(true)
+    }
+}
+
+/// A section caption with a short accent tick, so the label reads as structure
+/// rather than as another footnote. The tick takes the text's height — no fixed
+/// frame — so it follows Dynamic Type.
+struct SectionLabel: View {
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Capsule()
+                .fill(Theme.accent)
+                .frame(width: 3)
+            Text(text)
+                .font(Theme.title(.footnote))
+                .foregroundStyle(.secondary)
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -507,8 +549,8 @@ struct PrimaryPillButton<Content: View>: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
                 .foregroundStyle(Color(.systemBackground))
-                .background(Color.primary, in: RoundedRectangle(cornerRadius: 18))
-                .contentShape(RoundedRectangle(cornerRadius: 18))
+                .background(Color.primary, in: Theme.rounded(Theme.Radius.pill))
+                .contentShape(Theme.rounded(Theme.Radius.pill))
         }
         .buttonStyle(.plain)
     }
@@ -640,6 +682,25 @@ struct AnswerBadge: View {
 }
 
 extension View {
+    /// Surface, hairline, and a lift. `lifted` is the deck; the resting blur is
+    /// for a panel sitting among other panels. Dark mode drops the shadow
+    /// (`Theme.shadow` is clear) and keeps the line.
+    func cardChrome(radius: CGFloat = Theme.Radius.card, lifted: Bool = false) -> some View {
+        let blur = lifted ? Theme.Elevation.deckBlur : Theme.Elevation.restBlur
+        let y = lifted ? Theme.Elevation.deckY : Theme.Elevation.restY
+        return background(Theme.surface, in: Theme.rounded(radius))
+            .overlay(Theme.rounded(radius).stroke(Theme.line, lineWidth: 1))
+            .shadow(color: Theme.shadow, radius: blur, y: y)
+    }
+
+    /// A tinted callout: wash plus a hairline in the same colour. Accent for
+    /// "go here", streak for the earn-path. Not a fill — a fill would spend the
+    /// accent the way a selected answer must not.
+    func accentPlate(radius: CGFloat = Theme.Radius.card, tint: Color = Theme.accent) -> some View {
+        background(Theme.wash(tint), in: Theme.rounded(radius))
+            .overlay(Theme.rounded(radius).stroke(tint, lineWidth: 1))
+    }
+
     /// Sheet content that scrolls only when it doesn't fit.
     ///
     /// The prompt sheets sit in fixed-height detents; at accessibility type sizes (or
@@ -711,7 +772,7 @@ enum CardSwipe {
                       then delay: TimeInterval = 0.25,
                       _ continuation: @escaping () -> Void) {
         withAnimation(.easeOut(duration: 0.25)) {
-            drag.wrappedValue.width = toRight ? 700 : -700
+            drag.wrappedValue.width = toRight ? ScreenLayout.exitDistance : -ScreenLayout.exitDistance
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: continuation)
     }
@@ -743,7 +804,7 @@ struct SwipeStamp: View {
             .font(.system(size: 22, weight: .bold))
             .foregroundStyle(color)
             .padding(10)
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(color, lineWidth: 3))
+            .overlay(Theme.rounded(Theme.Radius.chip).stroke(color, lineWidth: 3))
             .rotationEffect(.degrees(rotation))
     }
 }
@@ -754,9 +815,9 @@ struct CardStackPeek: View {
     var count: Int = 2   // how many peek layers to show (0–2)
 
     private var layer: some View {
-        RoundedRectangle(cornerRadius: 20)
+        Theme.rounded(Theme.Radius.deck)
             .fill(Theme.surface)
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.line, lineWidth: 1))
+            .overlay(Theme.rounded(Theme.Radius.deck).stroke(Theme.line, lineWidth: 1))
     }
 
     var body: some View {
@@ -1142,5 +1203,111 @@ struct VocabFace: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// MARK: - Adaptive layout (iPad, Split View, landscape)
+
+/// The numbers behind the layout rules iOS and Android share (FOX-165). Pure, so the
+/// width rule is testable without a window.
+///
+/// Width classes are decided from the **window**, never the device: Split View and Slide
+/// Over on iPad, and an iPhone turned sideways, all fall out of it.
+enum ScreenLayout {
+    /// Regular width starts here (pt). Below it the phone layout is already right.
+    static let regularMinWidth: CGFloat = 600
+    /// Scrolling content and pushed screens never get wider than this on a regular window.
+    static let readableWidth: CGFloat = 640
+    /// A card is a card, not a full-screen slab: it stops growing here.
+    static let cardMaxHeight: CGFloat = 560
+    /// What a card keeps when the screen scrolls instead of squeezing it (landscape phone).
+    static let cardMinHeight: CGFloat = 240
+    /// Square tiles (kana chart, Learn) stop growing here — a wider window gets more
+    /// space around them, not bigger cells.
+    static let tileMaxSize: CGFloat = 96
+    /// How far a card travels when it is flung away. It was 500–700pt, which clears a
+    /// phone but not a 640pt card centred in an iPad window — the card would stop short
+    /// of the edge, hang there, and re-enter from the middle of the screen.
+    static let exitDistance: CGFloat = 1100
+
+    /// The list pane of a two-pane screen: about a third of the window, never narrower
+    /// than a lesson row needs nor wider than a list should be — and never half.
+    static let listPaneMinWidth: CGFloat = 280
+    static let listPaneMaxWidth: CGFloat = 400
+
+    /// A two-pane screen needs room for a right pane that is clearly larger than the
+    /// left: a window at least this wide (pt)...
+    static let twoPaneMinWidth: CGFloat = 720
+
+    /// ...with regular width and a height that isn't compact. Everything else (a phone in
+    /// landscape, a 7-inch tablet in portrait, narrow Split View) keeps one pane.
+    static func usesTwoPane(windowWidth: CGFloat?, regularWidth: Bool, compactHeight: Bool) -> Bool {
+        // An unmeasured window (first frame) is judged by the size classes alone.
+        regularWidth && !compactHeight && (windowWidth ?? twoPaneMinWidth) >= twoPaneMinWidth
+    }
+
+    static func listPaneWidth(in windowWidth: CGFloat) -> CGFloat {
+        min(max(windowWidth / 3, listPaneMinWidth), listPaneMaxWidth)
+    }
+
+    static func isRegular(width: CGFloat) -> Bool { width >= regularMinWidth }
+
+    /// The width content actually gets in a window `width` wide. Compact windows are
+    /// untouched; regular ones are capped at `readableWidth`.
+    static func contentWidth(in width: CGFloat) -> CGFloat {
+        isRegular(width: width) ? min(width, readableWidth) : width
+    }
+}
+
+extension View {
+    /// Caps this screen's content at `ScreenLayout.readableWidth` and centres it.
+    ///
+    /// Apply it to the content, **before** `.background(...)`: the frame it returns is
+    /// full width, so the canvas colour stays full-bleed and only the content is
+    /// narrowed. The cap is a no-op below 640pt, so on a phone in portrait it changes
+    /// nothing. It never touches height, so a flexible card inside still fills the screen.
+    func readableWidth() -> some View {
+        frame(maxWidth: ScreenLayout.readableWidth)
+            .frame(maxWidth: .infinity)
+    }
+
+    /// Sizes a card: it fills the space it is offered up to `ScreenLayout.cardMaxHeight`,
+    /// and when the screen scrolls (`cardScreen`) it keeps a readable minimum instead of
+    /// collapsing to nothing.
+    func cardFrame() -> some View { modifier(CardFrame()) }
+
+    /// The shell for a screen that is one card and its answers: padded content at the
+    /// readable width, centred in the window.
+    ///
+    /// On a landscape phone (compact height) the stack cannot fit, so it scrolls instead
+    /// and the answer buttons stay reachable. Which branch shows depends only on the
+    /// vertical size class, so it changes on rotation — and every round's state lives in
+    /// the screen's own model, above this modifier, so a rotation keeps the round.
+    func cardScreen() -> some View { modifier(CardScreen()) }
+}
+
+private struct CardFrame: ViewModifier {
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+    func body(content: Content) -> some View {
+        if verticalSizeClass == .compact {
+            // No cap here: the page scrolls, so the card takes the height it needs and
+            // the cap's only job (not being a slab) is moot.
+            content.frame(maxWidth: .infinity, minHeight: ScreenLayout.cardMinHeight)
+        } else {
+            content.frame(maxWidth: .infinity, maxHeight: ScreenLayout.cardMaxHeight)
+        }
+    }
+}
+
+private struct CardScreen: ViewModifier {
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+    func body(content: Content) -> some View {
+        if verticalSizeClass == .compact {
+            ScrollView { content.readableWidth() }
+        } else {
+            content.readableWidth().frame(maxHeight: .infinity)
+        }
     }
 }

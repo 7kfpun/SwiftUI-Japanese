@@ -105,6 +105,7 @@ struct LearnView: View {
             controls
         }
         .padding()
+        .cardScreen()
         .background(Theme.canvas)
         .navigationTitle("\(model.index + 1) / \(model.vocab.count)")
         .navigationBarTitleDisplayMode(.inline)
@@ -195,7 +196,7 @@ struct LearnView: View {
                     .multilineTextAlignment(.center)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .cardFrame()
         .padding(.vertical, 24)
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
         .overlay(alignment: .bottom) {
@@ -229,8 +230,12 @@ struct LearnView: View {
                 .buttonStyle(.plain)
             }
         }
-        .frame(maxWidth: .infinity)
+        // Capped at `tileCols` full-size tiles, so a wide window leaves room around the
+        // grid instead of inflating the tiles. Measured *after* the cap — `tileSize` reads it.
+        .frame(maxWidth: CGFloat(tileCols) * ScreenLayout.tileMaxSize
+                         + tileSpacing * CGFloat(tileCols - 1))
         .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { tileGridWidth = $0 }
+        .frame(maxWidth: .infinity)
         .disabled(model.state != .inProgress)
     }
 

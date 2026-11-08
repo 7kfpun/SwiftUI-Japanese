@@ -81,6 +81,7 @@ struct KanaBrowserView: View {
                         .padding(.bottom, 24)
                 }
             }
+            .readableWidth()
             .background(Theme.canvas)
             .navigationTitle(L.t("Kana"))
             .navigationBarTitleDisplayMode(.inline)
@@ -161,6 +162,9 @@ private struct KanaGrid: View {
 
     private let spacing: CGFloat = 6
     private let flexibleHeight: CGFloat = 64
+    /// The widest a cell gets. Square tiles share the app-wide tile cap; the combo
+    /// table's wide cells (three to a row) get a little more.
+    private var maxCell: CGFloat { square ? ScreenLayout.tileMaxSize : 160 }
 
     /// Latest answer per kana. Merged by timestamp, not first-wins: a CloudKit merge
     /// can leave duplicate rows, and "the most recent answer" is this store's meaning.
@@ -201,8 +205,13 @@ private struct KanaGrid: View {
                 }
             }
         }
-        .frame(maxWidth: .infinity)   // measure the full row width, not the content's own
+        // Measure the full row width, not the content's own — but never more than the
+        // chart's columns at their largest cell, so a wide window centres the chart
+        // rather than inflating the tiles. The rows stay `cols` wide: a 5-vowel row *is*
+        // the chart, and re-flowing it into more columns would break a/i/u/e/o apart.
+        .frame(maxWidth: CGFloat(cols) * maxCell + spacing * CGFloat(cols - 1))
         .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width = $0 }
+        .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder private func sized<V: View>(_ view: V) -> some View {
@@ -252,8 +261,22 @@ struct KanaTileView: View {
             .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(border, lineWidth: 1.5))
+        .background(Theme.surface, in: Theme.rounded(Theme.Radius.chip))
+        .overlay(Theme.rounded(Theme.Radius.chip)
+            .stroke(border, lineWidth: lastCorrect == nil ? 1 : 1.5))
+        // The verdict's glyph beside its colour, as everywhere else in the app — a
+        // green and a red border are one colour to roughly 8% of men.
+        .overlay(alignment: .topTrailing) {
+            if let lastCorrect {
+                Image(systemName: lastCorrect ? "checkmark" : "xmark")
+                    .font(.caption2.weight(.heavy))
+                    .imageScale(.small)
+                    .foregroundStyle(border)
+                    .padding(5)
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityValue(lastCorrect.map { L.t($0 ? "Correct!" : "Wrong") } ?? "")
     }
 }
 

@@ -125,6 +125,7 @@ struct ChallengeView: View {
             }
         }
         .padding()
+        .readableWidth()
         .background(Theme.canvas)
         .navigationTitle(L.t("Challenge %@", "\(model.index)"))
         .navigationBarTitleDisplayMode(.inline)
@@ -273,16 +274,14 @@ struct ChallengeView: View {
                 // then stated as a count rather than drawn, because which older words
                 // come up is decided per run and naming them would be a promise.
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(L.t("New in this challenge"))
-                        .font(Theme.title(.footnote))
-                        .foregroundStyle(.secondary)
+                    SectionLabel(text: L.t("New in this challenge"))
                     FlowLayout(spacing: 6, lineSpacing: 6) {
                         ForEach(newWords, id: \.id) { word in
                             Text(word.displaysKanji ? word.kanji : word.kana)
                                 .font(Theme.jp(15))
                                 .padding(.horizontal, 11)
                                 .padding(.vertical, 6)
-                                .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 9))
+                                .background(Theme.canvas, in: Theme.rounded(Theme.Radius.inset))
                         }
                     }
                     Text(reviewCount > 0
@@ -293,21 +292,19 @@ struct ChallengeView: View {
                 }
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
+                .cardChrome()
 
                 // The star bands, phrased in misses — computed from this run's real
                 // question count, never hardcoded to ten.
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(L.t("How stars work"))
-                        .font(Theme.title(.footnote))
-                        .foregroundStyle(.secondary)
+                    SectionLabel(text: L.t("How stars work"))
                     starRule(stars: 3, text: L.t("All correct"))
                     if w2 > 0 { starRule(stars: 2, text: L.t("Up to %@ wrong", "\(w2)")) }
                     if w1 > w2 { starRule(stars: 1, text: L.t("Up to %@ wrong", "\(w1)")) }
                 }
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
+                .cardChrome()
 
                 // The comeback line, only when there is something to come back for.
                 if let best, best.bestScore > 0, best.stars < 3 {
@@ -323,8 +320,7 @@ struct ChallengeView: View {
                         StarRow(stars: best.stars, size: 12)
                     }
                     .padding(14)
-                    .background(Theme.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
-                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.accent, lineWidth: 1))
+                    .accentPlate()
                 }
 
                 startButton
@@ -439,6 +435,10 @@ struct ChallengeView: View {
                 .frame(height: 54)
                 .animation(.easeOut(duration: 0.2), value: model.picked != nil)
             }
+            // A landscape phone can't fit the prompt, four answers and Next: it scrolls,
+            // so the last answer and the Next button are always reachable. The round
+            // itself (`model`, `phase`) lives above this, so a rotation keeps it.
+            .cardScreen()
         }
     }
 
@@ -725,7 +725,7 @@ private struct ChallengeResultView: View {
                     }
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
+                    .cardChrome()
                 }
 
                 // What is left to win, stated where the retry button is — the same job
@@ -802,10 +802,7 @@ private struct ChallengeResultView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background((passed ? Theme.accent : Color.streak).opacity(0.10),
-                    in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16)
-            .stroke(passed ? Theme.accent : Color.streak, lineWidth: 1))
+        .accentPlate(tint: passed ? Theme.accent : Theme.streak)
     }
 
     private func statCard(_ label: String, _ value: String,
@@ -825,7 +822,7 @@ private struct ChallengeResultView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
+        .cardChrome(radius: Theme.Radius.row)
     }
 
     /// The phrase, in Japanese, with its reading and meaning under it.
@@ -954,7 +951,7 @@ struct StarRow: View {
             ForEach(1...3, id: \.self) { i in
                 Image(systemName: i <= stars ? "star.fill" : "star")
                     .font(.system(size: size))
-                    .foregroundStyle(i <= stars ? Color.yellow : Color.secondary.opacity(0.35))
+                    .foregroundStyle(i <= stars ? Theme.star : Color.secondary.opacity(0.35))
                     .symbolEffect(.bounce, value: landed[i - 1])
             }
         }

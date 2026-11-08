@@ -18,6 +18,21 @@ struct nihongoApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([KanaResult.self, ChallengeResult.self, StudyDay.self, Bookmark.self])
 
+        // XCTest / CI: skip CloudKit. On GitHub Actions the private-DB configuration
+        // can hang for minutes waiting for an iCloud account that will never appear,
+        // then the test host dies with SIGTRAP before XCTest connects.
+        let underTest = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || ProcessInfo.processInfo.environment["CI"] == "true"
+        if underTest {
+            do {
+                return try ModelContainer(
+                    for: schema,
+                    configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)])
+            } catch {
+                fatalError("Could not create in-memory ModelContainer for tests: \(error)")
+            }
+        }
+
         // CloudKit private database first, so kana mastery and challenge progress
         // follow the user across devices. Neither model carries `.unique` — CloudKit
         // forbids it; see `ChallengeResult` for how uniqueness is enforced instead.

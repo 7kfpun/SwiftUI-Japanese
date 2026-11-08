@@ -41,7 +41,9 @@ first and follow its index; it is kept current and is the fastest way in.
 | `Apps/jlpt/Resources/JLPTData.json`, `Resources/audio/` | `scripts/build-jlpt-data.py` ← the same submodule's `jlpt/` half |
 | `nihongo/Resources/audio/cheer/` | `scripts/build-minna-data.py` ← the submodule's `voices/cheer-<voice>-<key>.m4a` |
 | `web/**` (except `privacy.html`, `terms.html`) | `scripts/build-web.py` — all copy lives in its `T` dict |
+| `android/app/src/main/res/values*/strings.xml`, `res/xml/locales_config.xml` | `scripts/build-android-strings.py` ← `nihongo/UIStrings.json` |
 | `fastlane/minna/screenshots/**` | `fastlane/generate_framed_screenshots.py` ← `fastlane/minna/screenshot_raw/` |
+| `fastlane/minna/creative_assets/**` (header, search results, Duo) | same script, `header` / `search` / `duo` filters |
 
 ## Seams — go through them, don't bypass
 
@@ -56,13 +58,16 @@ first and follow its index; it is kept current and is the fastest way in.
 
 ## Invariants that bite
 
-- **Firestore rules must ship with the app.** `hasOnly`/`hasAll` close each collection's
-  field set, so adding a field without republishing `firestore.rules` rejects **every**
-  write, visible only as a console line and a `survey_failed` event.
-  `SurveyTests.contextKeysMatchThePublishedRules` guards this — keep it passing.
+- **Survey columns must exist before the app sends them.** Rows go to Directus
+  (`https://cms.wahthefox.com`, `nihongo_survey_{intro,rating,feedback}`) through a
+  create-only static token in the git-ignored `Secrets.plist` (`directusToken`). Adding a
+  field to `Survey.Context` or a payload without adding the column fails **every** write,
+  visible only as a console line and a `survey_failed` event. No token bundled means every
+  submission is a silent no-op. `SurveyTests.contextKeysMatchTheDirectusColumns` guards the
+  key set — keep it passing, and add the column first.
 - **The app never mints or sends a persistent identifier of its own.** No IDFA, IDFV,
   vendor UUID or minted install ID in anything *this code* writes — above all `Survey`,
-  whose Firestore documents carry no user, session or reply channel. It ships without App
+  whose Directus rows carry no user, session or reply channel. It ships without App
   Tracking Transparency and forces non-personalized ads. Device *characteristics* (model,
   OS, language, region) are fine; anything that joins two rows to one person is not, and
   `Survey.Context.model` is a characteristic precisely because every unit of a model
@@ -180,9 +185,11 @@ Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
   or merging a mode means all four — the merge to four and the return to five both had to
   walk this list.
 
-  **The store descriptions and websites are right about the count and wrong about the
-  names**: they say five, which is true again, but they name *Flashcards and Train*, and
-  Train no longer exists. Fix the names with the release that ships Practice.
+  **The Minna store descriptions now name the modes correctly** (Practice, Vocab List,
+  Flashcards, Match, Learn). **The websites (`scripts/build-web.py`'s `T` dict) and the
+  JLPT store descriptions are right about the count and still wrong about the names**:
+  they say five, which is true again, but they name *Flashcards and Train*, and Train no
+  longer exists. Fix those with the release that ships them.
 - **All the audio is synthesised, never native-speaker recordings — so never claim
   "native audio"**, whatever the voice. The two courses use different engines:
   - **Minna: VOICEVOX** (neural). `whitecul` is the default for vocab and kana;
@@ -224,6 +231,11 @@ Check `Store.swift` and `Challenge.swift` before writing any user-facing claim.
   states the interface language count in its own words ("19 languages", "18 種語言",
   "१८ भाषा"), so a new language makes 18 files wrong at once. Grep the count across
   `fastlane/*/metadata/*/description.txt` whenever `UIStrings.json` gains a language.
+
+## Android
+
+The Android port lives in `android/`; read `android/CLAUDE.md` before touching it. Its rules
+extend this file, and the iOS hard rules above (no build or launch of the *iOS* app) still stand.
 
 ## Documentation
 

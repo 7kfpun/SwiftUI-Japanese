@@ -17,7 +17,7 @@ print(len(d), 'languages x', len(d['en']), 'keys')"
 ```
 
 It is a
-**different file** from the vocabulary translations (`minna/<lang>/{1..50}.json`,
+**different file** from the vocabulary translations (`minna/words/<lang>/{1..50}.json`,
 compiled into `MinnaData.json`'s `translations` map — see
 `context/01-data-model.md`). Don't confuse the two when someone says "check
 translations".

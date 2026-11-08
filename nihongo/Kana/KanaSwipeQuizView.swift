@@ -31,14 +31,16 @@ struct KanaSwipeQuizView: View {
                 CardStackPeek()
                 promptCard
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .cardFrame()
 
             HStack(spacing: 12) {
                 optionChip(leftOption, side: 0)
                 optionChip(rightOption, side: 1)
             }
+            .fixedSize(horizontal: false, vertical: true)   // one height for the pair, whichever wraps
         }
         .padding()
+        .cardScreen()
         .background(Theme.canvas)
         .overlay { if let lastCorrect { AnswerBadge(correct: lastCorrect) } }
         .navigationBarTitleDisplayMode(.inline)

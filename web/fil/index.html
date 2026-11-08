@@ -14,7 +14,7 @@
 </script>
 
 <title>Japanese Daily 每日日本語 — Matuto ng Japanese, kaunti bawat araw</title>
-<meta name="description" content="Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,100 salita sa 19 wika, hiragana at katakana na may audio. Libre sa iPhone at iPad.">
+<meta name="description" content="Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,100 salita sa 19 wika, hiragana at katakana na may audio. Libre sa iPhone, iPad at Android.">
 <link rel="icon" href="/img/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="icon" href="/img/icon-512.png" sizes="512x512" type="image/png">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
@@ -43,7 +43,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Japanese Daily 每日日本語">
 <meta property="og:title" content="Japanese Daily 每日日本語 — Matuto ng Japanese, kaunti bawat araw">
-<meta property="og:description" content="Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,100 salita sa 19 wika, hiragana at katakana na may audio. Libre sa iPhone at iPad.">
+<meta property="og:description" content="Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,100 salita sa 19 wika, hiragana at katakana na may audio. Libre sa iPhone, iPad at Android.">
 <meta property="og:url" content="https://japanesedaily.wahthefox.com/fil/">
 <meta property="og:locale" content="fil_PH">
 <meta property="og:locale:alternate" content="en_US">
@@ -69,20 +69,20 @@
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Ang Japanese Daily app sa iPhone — ang talahanayan ng kana, ang salita ngayong araw at isang flashcard ng bokabularyo.">
+<meta property="og:image:alt" content="Ang Japanese Daily app sa iPhone at Android — ang talahanayan ng kana, ang salita ngayong araw at isang flashcard ng bokabularyo.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Japanese Daily 每日日本語 — Matuto ng Japanese, kaunti bawat araw">
-<meta name="twitter:description" content="Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,100 salita sa 19 wika, hiragana at katakana na may audio. Libre sa iPhone at iPad.">
+<meta name="twitter:description" content="Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,100 salita sa 19 wika, hiragana at katakana na may audio. Libre sa iPhone, iPad at Android.">
 <meta name="twitter:image" content="https://japanesedaily.wahthefox.com/img/og-card.png">
-<meta name="twitter:image:alt" content="Ang Japanese Daily app sa iPhone — ang talahanayan ng kana, ang salita ngayong araw at isang flashcard ng bokabularyo.">
+<meta name="twitter:image:alt" content="Ang Japanese Daily app sa iPhone at Android — ang talahanayan ng kana, ang salita ngayong araw at isang flashcard ng bokabularyo.">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "Japanese Daily 每日日本語",
-  "operatingSystem": "iOS",
+  "operatingSystem": "iOS, iPadOS, Android",
   "applicationCategory": "EducationalApplication",
-  "description": "Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,100 salita sa 19 wika, hiragana at katakana na may audio. Libre sa iPhone at iPad.",
+  "description": "Matuto ng Japanese araw-araw: 50 aralin ng Minna no Nihongo — 2,100 salita sa 19 wika, hiragana at katakana na may audio. Libre sa iPhone, iPad at Android.",
   "inLanguage": "fil",
   "image": "https://japanesedaily.wahthefox.com/img/og-card.png",
   "url": "https://japanesedaily.wahthefox.com/fil/",
@@ -284,6 +284,9 @@
     background: var(--badge-bg);
     color: var(--badge-fg);
     text-decoration: none;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 198px; /* the Google Play badge's visible art is 198x59, so the two sit as a matched pair */
     border-radius: 14px;
     padding: 0.7rem 1.4rem 0.7rem 1.1rem;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -295,6 +298,10 @@
   .appstore-badge .badge-text { text-align: left; line-height: 1.2; }
   .appstore-badge .badge-text small { display: block; font-size: 0.68rem; font-weight: 400; opacity: 0.85; }
   .appstore-badge .badge-text strong { display: block; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }
+  .play-badge { display: inline-block; line-height: 0; transition: transform 0.15s ease; }
+  .play-badge:hover { transform: translateY(-2px) scale(1.02); }
+  .play-badge img { height: 88px; width: auto; max-width: 100%; }
+  .bottom-cta .appstore-badge, .bottom-cta .play-badge { margin: 0.25rem; vertical-align: middle; }
 
   .scroll-hint {
     position: absolute;
@@ -744,6 +751,7 @@
   .quiz-box .qscore { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
   .quiz-box .qpitch { color: var(--fg-muted); max-width: 26rem; margin: 0 auto 1.2rem; }
   .quiz-box .qend .appstore-badge { margin-bottom: 0.4rem; }
+  .quiz-box .qbadges { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.25rem 0.5rem; }
   .quiz-box .qrestart { display: block; margin: 0.8rem auto 0; background: transparent; color: var(--accent); border: 1px solid var(--accent); }
   .noscript-note { color: var(--fg-muted); font-size: 0.9rem; }
 
@@ -835,7 +843,7 @@
         <span class="jp-name jp">每日日本語</span>
         <span class="h1-sub">Matuto ng Hapon: hiragana, katakana at JLPT N5–N4</span>
       </h1>
-      <p class="tagline">2,100 salita, kumpletong talahanayan ng hiragana at katakana, flashcards, pagsasanay sa pagsulat, at hagdan ng mga hamon na may puntos — lahat sa isang magandang iOS app.</p>
+      <p class="tagline">2,100 salita, kumpletong talahanayan ng hiragana at katakana, flashcards, pagsasanay sa pagsulat, at hagdan ng mga hamon na may puntos — lahat sa isang magandang app para sa iPhone, iPad at Android.</p>
       <div class="cta">
         <a class="appstore-badge" href="https://apps.apple.com/app/id1447639161" rel="noopener" aria-label="Download Japanese Daily on the App Store">
           <svg viewBox="0 0 24 29" fill="currentColor" aria-hidden="true">
@@ -846,7 +854,8 @@
             <strong>App Store</strong>
           </span>
         </a>
-        <span class="free-note"><span class="dot-green" aria-hidden="true">●</span> Libre sa iPhone &amp; iPad</span>
+        <a class="play-badge" href="https://play.google.com/store/apps/details?id=com.kfpun.japanesedaily" rel="noopener"><img src="/img/google-play/fil.png" width="646" height="250" alt="I-download sa Google Play"></a>
+        <span class="free-note"><span class="dot-green" aria-hidden="true">●</span> Libre sa iPhone, iPad at Android</span>
       </div>
     </div>
     <div class="hero-shots">
@@ -942,8 +951,8 @@
     <article class="frow">
       <div class="fcopy">
         <span class="fnum">05</span>
-        <h3>Flashcards at Magsanay</h3>
-        <p>Mag-swipe pakanan kung alam mo, pakaliwa kung hindi — pagkatapos, sa Magsanay, pumili nang mabilis sa dalawang sagot.</p>
+        <h3>Pagsasanay at Flashcards</h3>
+        <p>Ang Pagsasanay ay mabilis na pagpili sa dalawang sagot, at bumabalik ang salitang namali mo. Ang Flashcards ay deck na pwedeng i-browse — mag-swipe para lumipat, pindutin nang matagal para i-flip.</p>
       </div>
       <div class="fviz">
         <div class="v-cards" aria-hidden="true">
@@ -991,7 +1000,7 @@
       <div class="fcopy">
         <span class="fnum">07</span>
         <h3>Sa lahat ng screen</h3>
-        <p>Ang salita ngayong araw sa Home Screen, Lock Screen at Apple Watch — matuto bago mo pa ma-unlock ang telepono.</p>
+        <p>Ang salita ngayong araw sa Home Screen — at sa iPhone, pati sa Lock Screen at Apple Watch — matuto bago mo pa ma-unlock ang telepono.</p>
       </div>
       <div class="fviz">
         <div class="v-widget" aria-hidden="true">
@@ -1021,12 +1030,12 @@
       <div class="how-step">
         <span class="how-n">2</span>
         <h3>2. Umusad aralin sa aralin</h3>
-        <p>Pumili ng aralin, pag-aralan ang bokabularyo nito gamit ang Flashcards, Magsanay, Pagtambalin at Matuto, pagkatapos ay akyatin ang hagdan ng mga hamon.</p>
+        <p>Pumili ng aralin, pag-aralan ang bokabularyo nito gamit ang Pagsasanay, Listahan ng bokabularyo, Flashcards, Pagtambalin at Matuto, pagkatapos ay akyatin ang hagdan ng mga hamon.</p>
       </div>
       <div class="how-step">
         <span class="how-n">3</span>
         <h3>3. Bumuo ng araw-araw na gawi</h3>
-        <p>Tingnan ang Today widget bawat umaga para sa bagong salita, at panoorin ang pagdami ng iyong mga bituin aralin sa aralin — nagsi-sync ang progreso sa lahat ng device mo sa pamamagitan ng iCloud.</p>
+        <p>Silipin ang widget tuwing umaga para sa bagong salita, at panoorin ang pagdami ng iyong mga bituin aralin sa aralin — nagsi-sync ang progreso sa mga Apple device mo sa pamamagitan ng iCloud, at nananatili sa device mo sa Android.</p>
       </div>
     </div>
   </section>
@@ -1077,6 +1086,7 @@
         <strong>App Store</strong>
       </span>
     </a>
+    <a class="play-badge" href="https://play.google.com/store/apps/details?id=com.kfpun.japanesedaily" rel="noopener"><img src="/img/google-play/fil.png" width="646" height="250" alt="I-download sa Google Play"></a>
   </section>
 </main>
 
@@ -1109,6 +1119,7 @@
     <a href="/privacy.html">Patakaran sa Privacy</a>
     <a href="/terms.html">Mga Tuntunin ng Paggamit</a>
     <a href="https://apps.apple.com/app/id1447639161" rel="noopener">App Store</a>
+    <a href="https://play.google.com/store/apps/details?id=com.kfpun.japanesedaily" rel="noopener">Google Play</a>
   </nav>
   <p>&copy; 2026 Japanese Daily 每日日本語. Nakalaan ang lahat ng karapatan.</p>
 </footer>
@@ -1147,7 +1158,12 @@
     a.href = "https://apps.apple.com/app/id1447639161";
     a.rel = "noopener";
     a.innerHTML = document.querySelector(".bottom-cta .appstore-badge").innerHTML;
-    return a;
+    var play = document.querySelector(".bottom-cta .play-badge");
+    if (!play) return a;
+    var row = el("div", "qbadges");
+    row.appendChild(a);
+    row.appendChild(play.cloneNode(true));
+    return row;
   }
 
   function start() {

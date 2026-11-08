@@ -1,8 +1,7 @@
-Phiên bản 3.0.2
+Phiên bản 3.0.6
 
-Mở khoá thêm mà không cần trả tiền — ba sao ở mọi thử thách của các bài đầu sẽ mở toàn bộ nhóm Khởi đầu 1
-Nhắc nhở hằng ngày — tuỳ chọn, chỉ đến vào ngày bạn chưa học và im lặng vào ngày đã học
-Gói 12 tháng bổ sung cho 1, 3 và 6 tháng
-Mục Đã lưu và danh sách từ dễ đọc hơn
+Phản hồi, đánh giá sao và câu trả lời của bạn ở lần mở đầu tiên đã được gửi lại — ở bản 3.0.5 chúng không đến được với chúng tôi
+Màn hình Premium nay nêu đúng tên các chế độ: Luyện tập, Thẻ ghi nhớ, Ghép cặp, Học và cả thang thử thách
+Sửa lỗi nhỏ
 
 Hãy cho chúng tôi biết điều tiếp theo tại Cài đặt → Phản hồi!
