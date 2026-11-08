@@ -82,6 +82,16 @@ struct WatchTodayWidgetEntryView: View {
                     .minimumScaleFactor(0.35).lineLimit(2)
                     .multilineTextAlignment(.center)
                     .padding(2)
+            case .accessoryCorner:
+                // The kana sits in the corner; the meaning curves along the bezel as the
+                // `widgetLabel`, which the system truncates to the arc for us.
+                Text(entry.word?.kana ?? "日本")
+                    .font(.title3.weight(.semibold))
+                    .minimumScaleFactor(0.4).lineLimit(1)
+                    .widgetAccentable()
+                    .widgetLabel {
+                        Text(entry.word?.meaning ?? "Japanese Daily")
+                    }
             default:
                 // accessoryRectangular — same three-line block as the iOS Lock Screen.
                 VStack(alignment: .leading, spacing: 1) {
@@ -119,12 +129,38 @@ struct WatchTodayWidget: Widget {
         }
         .configurationDisplayName("Japanese Daily")
         .description("A word from your current lesson.")
-        .supportedFamilies([.accessoryCircular, .accessoryRectangular, .accessoryInline])
+        .supportedFamilies([.accessoryCircular, .accessoryCorner, .accessoryRectangular, .accessoryInline])
     }
 }
 
-#Preview(as: .accessoryRectangular) {
+// Three states per family: a normal word, a long German meaning, and no snapshot.
+private func previewEntry(meaning: String = "student", empty: Bool = false) -> WatchTodayEntry {
+    WatchTodayEntry(date: .now,
+                    word: empty ? nil : .init(kana: "がくせい", kanji: "学生", romaji: "gakusei", meaning: meaning),
+                    lesson: 1)
+}
+private let germanLong = "Studentin oder Student einer Universität"
+
+#Preview("Circular", as: .accessoryCircular) {
     WatchTodayWidget()
 } timeline: {
-    WatchTodayEntry(date: .now, word: .init(kana: "がくせい", kanji: "学生", romaji: "gakusei", meaning: "student"), lesson: 1)
+    previewEntry(); previewEntry(meaning: germanLong); previewEntry(empty: true)
+}
+
+#Preview("Corner", as: .accessoryCorner) {
+    WatchTodayWidget()
+} timeline: {
+    previewEntry(); previewEntry(meaning: germanLong); previewEntry(empty: true)
+}
+
+#Preview("Rectangular", as: .accessoryRectangular) {
+    WatchTodayWidget()
+} timeline: {
+    previewEntry(); previewEntry(meaning: germanLong); previewEntry(empty: true)
+}
+
+#Preview("Inline", as: .accessoryInline) {
+    WatchTodayWidget()
+} timeline: {
+    previewEntry(); previewEntry(meaning: germanLong); previewEntry(empty: true)
 }
