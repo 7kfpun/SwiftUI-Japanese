@@ -29,6 +29,8 @@ enum SharePrompt {
         case prompt = "app_share_prompt"
         /// The Settings row, tapped deliberately rather than offered.
         case settings = "app_share_settings"
+        /// The streak card on Progress. The image is the point; the link still rides along.
+        case progress = "app_share_progress"
     }
 
     /// The listing to send people to. Course-specific: the two apps are two listings, and

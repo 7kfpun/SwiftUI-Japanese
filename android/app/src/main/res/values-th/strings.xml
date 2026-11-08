@@ -349,4 +349,7 @@
     <string name="rate_the_app">ให้คะแนนแอป</string>
     <string name="privacy_options">ตัวเลือกความเป็นส่วนตัว</string>
     <string name="notifications_are_turned_off_for_this_app_in_system_settings">การแจ้งเตือนของแอปนี้ถูกปิดในการตั้งค่าระบบ</string>
+    <string name="share_progress">แชร์ความคืบหน้า</string>
+    <string name="playing">กำลังเล่น</string>
+    <string name="paused">หยุดชั่วคราว</string>
 </resources>

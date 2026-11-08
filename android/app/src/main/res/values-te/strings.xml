@@ -349,4 +349,7 @@
     <string name="rate_the_app">యాప్‌ను రేట్ చేయండి</string>
     <string name="privacy_options">గోప్యతా ఎంపికలు</string>
     <string name="notifications_are_turned_off_for_this_app_in_system_settings">ఈ యాప్‌కు నోటిఫికేషన్‌లు సిస్టమ్ సెట్టింగ్‌లలో ఆఫ్ చేయబడ్డాయి.</string>
+    <string name="share_progress">పురోగతిని షేర్ చేయండి</string>
+    <string name="playing">ప్లే అవుతోంది</string>
+    <string name="paused">విరామంలో ఉంది</string>
 </resources>

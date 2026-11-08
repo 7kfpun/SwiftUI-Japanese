@@ -349,4 +349,7 @@
     <string name="rate_the_app">Оценить приложение</string>
     <string name="privacy_options">Параметры конфиденциальности</string>
     <string name="notifications_are_turned_off_for_this_app_in_system_settings">Уведомления для этого приложения отключены в настройках системы.</string>
+    <string name="share_progress">Поделиться прогрессом</string>
+    <string name="playing">Играет</string>
+    <string name="paused">На паузе</string>
 </resources>

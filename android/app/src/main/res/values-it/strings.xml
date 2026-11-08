@@ -349,4 +349,7 @@
     <string name="rate_the_app">Valuta l\'app</string>
     <string name="privacy_options">Opzioni sulla privacy</string>
     <string name="notifications_are_turned_off_for_this_app_in_system_settings">Le notifiche di questa app sono disattivate nelle impostazioni di sistema.</string>
+    <string name="share_progress">Condividi i progressi</string>
+    <string name="playing">In riproduzione</string>
+    <string name="paused">In pausa</string>
 </resources>

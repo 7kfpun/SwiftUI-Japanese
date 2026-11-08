@@ -349,4 +349,7 @@
     <string name="rate_the_app">အက်ပ်ကို အဆင့်သတ်မှတ်ပါ</string>
     <string name="privacy_options">ကိုယ်ရေးကိုယ်တာ ရွေးချယ်စရာများ</string>
     <string name="notifications_are_turned_off_for_this_app_in_system_settings">ဤအက်ပ်အတွက် အကြောင်းကြားချက်များကို စနစ်ဆက်တင်တွင် ပိတ်ထားသည်။</string>
+    <string name="share_progress">တိုးတက်မှုကို မျှဝေရန်</string>
+    <string name="playing">ဖွင့်နေသည်</string>
+    <string name="paused">ခဏရပ်ထားသည်</string>
 </resources>

@@ -346,7 +346,10 @@
     "Dark": "Dark",
     "Rate the app": "Rate the app",
     "Privacy options": "Privacy options",
-    "Notifications are turned off for this app in system settings.": "Notifications are turned off for this app in system settings."
+    "Notifications are turned off for this app in system settings.": "Notifications are turned off for this app in system settings.",
+    "Share progress": "Share progress",
+    "Playing": "Playing",
+    "Paused": "Paused"
   },
   "zh": {
     "Kana": "假名",
@@ -695,7 +698,10 @@
     "Dark": "深色",
     "Rate the app": "为应用评分",
     "Privacy options": "隐私选项",
-    "Notifications are turned off for this app in system settings.": "此应用的通知已在系统设置中关闭。"
+    "Notifications are turned off for this app in system settings.": "此应用的通知已在系统设置中关闭。",
+    "Share progress": "分享进度",
+    "Playing": "播放中",
+    "Paused": "已暂停"
   },
   "zh-Hant": {
     "Kana": "假名",
@@ -1044,7 +1050,10 @@
     "Dark": "深色",
     "Rate the app": "為App評分",
     "Privacy options": "隱私權選項",
-    "Notifications are turned off for this app in system settings.": "此App的通知已在系統設定中關閉。"
+    "Notifications are turned off for this app in system settings.": "此App的通知已在系統設定中關閉。",
+    "Share progress": "分享進度",
+    "Playing": "播放中",
+    "Paused": "已暫停"
   },
   "vi": {
     "Kana": "Kana",
@@ -1393,7 +1402,10 @@
     "Dark": "Tối",
     "Rate the app": "Đánh giá ứng dụng",
     "Privacy options": "Tùy chọn quyền riêng tư",
-    "Notifications are turned off for this app in system settings.": "Thông báo của ứng dụng này đã bị tắt trong cài đặt hệ thống."
+    "Notifications are turned off for this app in system settings.": "Thông báo của ứng dụng này đã bị tắt trong cài đặt hệ thống.",
+    "Share progress": "Chia sẻ tiến độ",
+    "Playing": "Đang phát",
+    "Paused": "Đã tạm dừng"
   },
   "de": {
     "Kana": "Kana",
@@ -1742,7 +1754,10 @@
     "Dark": "Dunkel",
     "Rate the app": "App bewerten",
     "Privacy options": "Datenschutzoptionen",
-    "Notifications are turned off for this app in system settings.": "Mitteilungen für diese App sind in den Systemeinstellungen ausgeschaltet."
+    "Notifications are turned off for this app in system settings.": "Mitteilungen für diese App sind in den Systemeinstellungen ausgeschaltet.",
+    "Share progress": "Fortschritt teilen",
+    "Playing": "Wiedergabe",
+    "Paused": "Pausiert"
   },
   "th": {
     "Kana": "คานะ",
@@ -2091,7 +2106,10 @@
     "Dark": "มืด",
     "Rate the app": "ให้คะแนนแอป",
     "Privacy options": "ตัวเลือกความเป็นส่วนตัว",
-    "Notifications are turned off for this app in system settings.": "การแจ้งเตือนของแอปนี้ถูกปิดในการตั้งค่าระบบ"
+    "Notifications are turned off for this app in system settings.": "การแจ้งเตือนของแอปนี้ถูกปิดในการตั้งค่าระบบ",
+    "Share progress": "แชร์ความคืบหน้า",
+    "Playing": "กำลังเล่น",
+    "Paused": "หยุดชั่วคราว"
   },
   "my": {
     "Kana": "ကာနာ",
@@ -2440,7 +2458,10 @@
     "Dark": "အမှောင်",
     "Rate the app": "အက်ပ်ကို အဆင့်သတ်မှတ်ပါ",
     "Privacy options": "ကိုယ်ရေးကိုယ်တာ ရွေးချယ်စရာများ",
-    "Notifications are turned off for this app in system settings.": "ဤအက်ပ်အတွက် အကြောင်းကြားချက်များကို စနစ်ဆက်တင်တွင် ပိတ်ထားသည်။"
+    "Notifications are turned off for this app in system settings.": "ဤအက်ပ်အတွက် အကြောင်းကြားချက်များကို စနစ်ဆက်တင်တွင် ပိတ်ထားသည်။",
+    "Share progress": "တိုးတက်မှုကို မျှဝေရန်",
+    "Playing": "ဖွင့်နေသည်",
+    "Paused": "ခဏရပ်ထားသည်"
   },
   "es": {
     "Kana": "Kana",
@@ -2789,7 +2810,10 @@
     "Dark": "Oscuro",
     "Rate the app": "Valorar la app",
     "Privacy options": "Opciones de privacidad",
-    "Notifications are turned off for this app in system settings.": "Las notificaciones de esta app están desactivadas en los ajustes del sistema."
+    "Notifications are turned off for this app in system settings.": "Las notificaciones de esta app están desactivadas en los ajustes del sistema.",
+    "Share progress": "Compartir el progreso",
+    "Playing": "Reproduciendo",
+    "Paused": "En pausa"
   },
   "fr": {
     "Kana": "Kana",
@@ -3138,7 +3162,10 @@
     "Dark": "Sombre",
     "Rate the app": "Noter l'app",
     "Privacy options": "Options de confidentialité",
-    "Notifications are turned off for this app in system settings.": "Les notifications de cette app sont désactivées dans les réglages système."
+    "Notifications are turned off for this app in system settings.": "Les notifications de cette app sont désactivées dans les réglages système.",
+    "Share progress": "Partager la progression",
+    "Playing": "Lecture",
+    "Paused": "En pause"
   },
   "it": {
     "Kana": "Kana",
@@ -3487,7 +3514,10 @@
     "Dark": "Scuro",
     "Rate the app": "Valuta l'app",
     "Privacy options": "Opzioni sulla privacy",
-    "Notifications are turned off for this app in system settings.": "Le notifiche di questa app sono disattivate nelle impostazioni di sistema."
+    "Notifications are turned off for this app in system settings.": "Le notifiche di questa app sono disattivate nelle impostazioni di sistema.",
+    "Share progress": "Condividi i progressi",
+    "Playing": "In riproduzione",
+    "Paused": "In pausa"
   },
   "ru": {
     "Kana": "Кана",
@@ -3836,7 +3866,10 @@
     "Dark": "Тёмная",
     "Rate the app": "Оценить приложение",
     "Privacy options": "Параметры конфиденциальности",
-    "Notifications are turned off for this app in system settings.": "Уведомления для этого приложения отключены в настройках системы."
+    "Notifications are turned off for this app in system settings.": "Уведомления для этого приложения отключены в настройках системы.",
+    "Share progress": "Поделиться прогрессом",
+    "Playing": "Играет",
+    "Paused": "На паузе"
   },
   "bn": {
     "Kana": "কানা",
@@ -4185,7 +4218,10 @@
     "Dark": "গাঢ়",
     "Rate the app": "অ্যাপটি রেট করুন",
     "Privacy options": "গোপনীয়তার বিকল্প",
-    "Notifications are turned off for this app in system settings.": "এই অ্যাপের জন্য বিজ্ঞপ্তি সিস্টেম সেটিংসে বন্ধ করা আছে।"
+    "Notifications are turned off for this app in system settings.": "এই অ্যাপের জন্য বিজ্ঞপ্তি সিস্টেম সেটিংসে বন্ধ করা আছে।",
+    "Share progress": "অগ্রগতি শেয়ার করুন",
+    "Playing": "চলছে",
+    "Paused": "বিরতিতে"
   },
   "hi": {
     "Kana": "काना",
@@ -4534,7 +4570,10 @@
     "Dark": "डार्क",
     "Rate the app": "ऐप को रेट करें",
     "Privacy options": "गोपनीयता विकल्प",
-    "Notifications are turned off for this app in system settings.": "इस ऐप के लिए सूचनाएँ सिस्टम सेटिंग में बंद हैं।"
+    "Notifications are turned off for this app in system settings.": "इस ऐप के लिए सूचनाएँ सिस्टम सेटिंग में बंद हैं।",
+    "Share progress": "प्रगति साझा करें",
+    "Playing": "चल रहा है",
+    "Paused": "रुका हुआ"
   },
   "ta": {
     "Kana": "கானா",
@@ -4883,7 +4922,10 @@
     "Dark": "இருள்",
     "Rate the app": "செயலியை மதிப்பிடுங்கள்",
     "Privacy options": "தனியுரிமை விருப்பங்கள்",
-    "Notifications are turned off for this app in system settings.": "இந்தச் செயலிக்கான அறிவிப்புகள் சிஸ்டம் அமைப்புகளில் முடக்கப்பட்டுள்ளன."
+    "Notifications are turned off for this app in system settings.": "இந்தச் செயலிக்கான அறிவிப்புகள் சிஸ்டம் அமைப்புகளில் முடக்கப்பட்டுள்ளன.",
+    "Share progress": "முன்னேற்றத்தைப் பகிரவும்",
+    "Playing": "இயங்குகிறது",
+    "Paused": "இடைநிறுத்தப்பட்டது"
   },
   "te": {
     "Kana": "కానా",
@@ -5232,7 +5274,10 @@
     "Dark": "డార్క్",
     "Rate the app": "యాప్‌ను రేట్ చేయండి",
     "Privacy options": "గోప్యతా ఎంపికలు",
-    "Notifications are turned off for this app in system settings.": "ఈ యాప్‌కు నోటిఫికేషన్‌లు సిస్టమ్ సెట్టింగ్‌లలో ఆఫ్ చేయబడ్డాయి."
+    "Notifications are turned off for this app in system settings.": "ఈ యాప్‌కు నోటిఫికేషన్‌లు సిస్టమ్ సెట్టింగ్‌లలో ఆఫ్ చేయబడ్డాయి.",
+    "Share progress": "పురోగతిని షేర్ చేయండి",
+    "Playing": "ప్లే అవుతోంది",
+    "Paused": "విరామంలో ఉంది"
   },
   "ne": {
     "Kana": "काना",
@@ -5581,7 +5626,10 @@
     "Dark": "अँध्यारो",
     "Rate the app": "एपलाई मूल्याङ्कन गर्नुहोस्",
     "Privacy options": "गोपनीयता विकल्पहरू",
-    "Notifications are turned off for this app in system settings.": "यो एपका लागि सूचनाहरू प्रणाली सेटिङमा बन्द गरिएका छन्।"
+    "Notifications are turned off for this app in system settings.": "यो एपका लागि सूचनाहरू प्रणाली सेटिङमा बन्द गरिएका छन्।",
+    "Share progress": "प्रगति साझा गर्नुहोस्",
+    "Playing": "बज्दै छ",
+    "Paused": "रोकिएको"
   },
   "fil": {
     "Kana": "Kana",
@@ -5930,7 +5978,10 @@
     "Dark": "Madilim",
     "Rate the app": "I-rate ang app",
     "Privacy options": "Mga opsyon sa privacy",
-    "Notifications are turned off for this app in system settings.": "Naka-off ang mga notification para sa app na ito sa mga setting ng system."
+    "Notifications are turned off for this app in system settings.": "Naka-off ang mga notification para sa app na ito sa mga setting ng system.",
+    "Share progress": "Ibahagi ang progreso",
+    "Playing": "Nagpe-play",
+    "Paused": "Naka-pause"
   },
   "id": {
     "Kana": "Kana",
@@ -6279,7 +6330,10 @@
     "Dark": "Gelap",
     "Rate the app": "Beri nilai aplikasi",
     "Privacy options": "Opsi privasi",
-    "Notifications are turned off for this app in system settings.": "Notifikasi untuk aplikasi ini dimatikan di pengaturan sistem."
+    "Notifications are turned off for this app in system settings.": "Notifikasi untuk aplikasi ini dimatikan di pengaturan sistem.",
+    "Share progress": "Bagikan kemajuan",
+    "Playing": "Diputar",
+    "Paused": "Dijeda"
   },
   "ko": {
     "Kana": "가나",
@@ -6628,6 +6682,9 @@
     "Dark": "다크",
     "Rate the app": "앱 평가하기",
     "Privacy options": "개인정보 옵션",
-    "Notifications are turned off for this app in system settings.": "이 앱의 알림이 시스템 설정에서 꺼져 있습니다."
+    "Notifications are turned off for this app in system settings.": "이 앱의 알림이 시스템 설정에서 꺼져 있습니다.",
+    "Share progress": "진행 상황 공유",
+    "Playing": "재생 중",
+    "Paused": "일시정지"
   }
 }

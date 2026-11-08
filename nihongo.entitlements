@@ -47,5 +47,12 @@
 		-->
 		<string>group.com.kfpun.nihongo.onesignal</string>
 	</array>
+	<!--
+	  Live Activities are not an entitlement. `NSSupportsLiveActivities` in
+	  Info.plist is the switch, and a key invented here would have to exist in
+	  the provisioning profile or signing fails. Read along updates locally
+	  (`pushType: nil`), so it also does not use a push-to-update token.
+	  Do not point the activity at either App Group above.
+	-->
 </dict>
 </plist>

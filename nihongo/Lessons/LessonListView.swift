@@ -44,6 +44,10 @@ struct LessonListView: View {
                             SelectModeView(lesson: lesson)
                                 .onAppear { router.selectedLesson = lesson }
                         }
+                        .navigationDestination(for: Router.ReadAlongRoute.self) { route in
+                            let lesson = VocabStore.lesson(route.lesson, language)
+                            ReadAlongView(lesson: lesson, words: lesson.entries)
+                        }
                 }
             }
         }

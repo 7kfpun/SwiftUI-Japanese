@@ -86,6 +86,7 @@ event read_all_loop
 event read_all_pause
 event read_all_speed
 event read_all_stop
+event read_along_open
 event report_swipe
 event restore
 event review_requested

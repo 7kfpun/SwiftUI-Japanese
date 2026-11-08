@@ -37,7 +37,9 @@ own doc (`02-challenge-ladder.md`); this one covers everything around it.
 - **The navigation stack lives on `Router`**, not in the view, so the widget's
   "Ready for Challenge N?" link can push a lesson into a tab the user isn't on. Row taps
   append to the same path, so a deep link and a tap leave the user in the same place with
-  a working back button either way.
+  a working back button either way. `nihongo://read?lesson=N` pushes that lesson and then
+  Read along (`Router.openReadAlong`). If that player is already on screen, the link only
+  switches to the Lessons tab, so it does not tear the running player down.
 - `VocabRow` (also reused by search results, `VocabListView` and `BookmarksView`) is
   **one left-aligned stack** — kana, kanji, then the meaning under the word it belongs
   to (design 3a; the old layout pushed the meaning to the row's far edge, splitting each
@@ -337,6 +339,22 @@ it was and what came next were all inferred from one highlighted row.
   `AVAudioPlayerDelegate`/`AVSpeechSynthesizerDelegate` that plays each word's clip in
   sequence and falls back to live TTS. It loops **only for subscribers**
   (`06-monetization.md`); a free listener hears the lesson through once.
+- **Live Activity while it plays** (`Shared/ReadAlongActivity.swift`, drawn in
+  `TodayWidget/ReadAlongActivityWidget.swift`). Play requests it; a new word, a pause
+  or a resume updates it; stop, leaving the screen, or a non-looping finish ends it.
+  A looping subscriber keeps the same activity across laps. Lock Screen plus Dynamic
+  Island compact, minimal and expanded. Pause/resume is an `AudioPlaybackIntent` and
+  a `LiveActivityIntent`: it runs in the app (`ReadAlongRemote`) with the phone locked,
+  without bringing the app forward.
+  The extension does not ship `UIStrings.json` — the app sends already-localized
+  labels in the content state. The payload is the lesson number and the current word.
+  No push token, no stored activity id, and nothing is written to either App Group.
+  Offered only when `Course.current.id == "minna"`: JLPT does not embed this widget.
+  `NSSupportsLiveActivities` in `Info.plist` is the whole capability. There is no
+  entitlements key and no extra Developer Portal capability; the App ID's existing
+  push entitlement is not used (`pushType: nil`). After a signed install, the toggle
+  is Settings → Japanese Daily → Live Activities. The island needs a device (or a
+  simulator that has one) to see; the unit tests do not render it.
 
 ## §2c Flashcards — a deck to page through (`Lessons/FlashcardView.swift`)
 

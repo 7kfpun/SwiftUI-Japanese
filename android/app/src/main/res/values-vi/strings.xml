@@ -349,4 +349,7 @@
     <string name="rate_the_app">Đánh giá ứng dụng</string>
     <string name="privacy_options">Tùy chọn quyền riêng tư</string>
     <string name="notifications_are_turned_off_for_this_app_in_system_settings">Thông báo của ứng dụng này đã bị tắt trong cài đặt hệ thống.</string>
+    <string name="share_progress">Chia sẻ tiến độ</string>
+    <string name="playing">Đang phát</string>
+    <string name="paused">Đã tạm dừng</string>
 </resources>

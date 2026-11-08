@@ -696,4 +696,10 @@
     <string name="privacy_options">Privacy options</string>
     <!-- Notifications are turned off for this app in system settings. -->
     <string name="notifications_are_turned_off_for_this_app_in_system_settings">Notifications are turned off for this app in system settings.</string>
+    <!-- Share progress -->
+    <string name="share_progress">Share progress</string>
+    <!-- Playing -->
+    <string name="playing">Playing</string>
+    <!-- Paused -->
+    <string name="paused">Paused</string>
 </resources>

@@ -140,6 +140,13 @@ changed. See `build-and-deploy-web` skill.
   Lock-Screen/Home-Screen widget via an App Group and the watch over
   WatchConnectivity; both rotate hourly off the wall clock
   (`TodayShared.rotationIndex`).
+- **Progress** can share a fixed 4:5 image of the real streak and counts
+  (`ShareCardView`). The text share in Settings and the post-challenge nudge
+  stay; the nudge attaches the same image when it renders.
+- **Read along**, while it is playing, shows a Live Activity (Lock Screen and
+  Dynamic Island) drawn by the Today widget extension. It updates per word and
+  ends when playback stops, the screen closes, or a non-looping run finishes.
+  See `04-lessons.md`.
 - **First launch**: a five-card intro tour that also asks three questions —
   see `09-intro-and-survey.md`.
 - **Settings**: separate app-UI language vs. vocabulary-translation language

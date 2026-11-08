@@ -349,4 +349,7 @@
     <string name="rate_the_app">অ্যাপটি রেট করুন</string>
     <string name="privacy_options">গোপনীয়তার বিকল্প</string>
     <string name="notifications_are_turned_off_for_this_app_in_system_settings">এই অ্যাপের জন্য বিজ্ঞপ্তি সিস্টেম সেটিংসে বন্ধ করা আছে।</string>
+    <string name="share_progress">অগ্রগতি শেয়ার করুন</string>
+    <string name="playing">চলছে</string>
+    <string name="paused">বিরতিতে</string>
 </resources>

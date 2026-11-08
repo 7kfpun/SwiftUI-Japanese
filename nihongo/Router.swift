@@ -20,6 +20,16 @@ import SwiftUI
     /// the one the learner would study next, so its right pane is never empty.
     var selectedLesson: Lesson?
 
+    /// The lesson whose Read along screen is currently up, if any. A Live Activity tap
+    /// while that screen is already showing must not rebuild the stack: rebuilding
+    /// disposes the player, which stops the audio the tap was meant to return to.
+    var readAlongLesson: Int?
+
+    /// Pushed after a `Lesson` so back lands on the mode list, not on a dead end.
+    struct ReadAlongRoute: Hashable {
+        let lesson: Int
+    }
+
     /// Replay the first-launch tour on demand — the hidden long-press in Settings.
     ///
     /// Here for the same reason `tab` is: the trigger lives in a tab and the cover lives
@@ -73,5 +83,20 @@ import SwiftUI
         lessonPath = path
         selectedLesson = lesson
         tab = .lessons
+    }
+
+    /// Lessons tab → this lesson's mode list → Read along, on the full word list.
+    ///
+    /// Japanese-only Read along is free on every lesson, so this does not stop at the
+    /// paywall the way a locked challenge link does. When the player is already up for
+    /// this lesson, only the tab changes.
+    func openReadAlong(_ lesson: Lesson) {
+        tab = .lessons
+        if readAlongLesson == lesson.number { return }
+        var path = NavigationPath()
+        path.append(lesson)
+        path.append(ReadAlongRoute(lesson: lesson.number))
+        lessonPath = path
+        selectedLesson = lesson
     }
 }

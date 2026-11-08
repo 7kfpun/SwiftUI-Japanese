@@ -349,4 +349,7 @@
     <string name="rate_the_app">앱 평가하기</string>
     <string name="privacy_options">개인정보 옵션</string>
     <string name="notifications_are_turned_off_for_this_app_in_system_settings">이 앱의 알림이 시스템 설정에서 꺼져 있습니다.</string>
+    <string name="share_progress">진행 상황 공유</string>
+    <string name="playing">재생 중</string>
+    <string name="paused">일시정지</string>
 </resources>

@@ -349,4 +349,7 @@
     <string name="rate_the_app">App bewerten</string>
     <string name="privacy_options">Datenschutzoptionen</string>
     <string name="notifications_are_turned_off_for_this_app_in_system_settings">Mitteilungen für diese App sind in den Systemeinstellungen ausgeschaltet.</string>
+    <string name="share_progress">Fortschritt teilen</string>
+    <string name="playing">Wiedergabe</string>
+    <string name="paused">Pausiert</string>
 </resources>
