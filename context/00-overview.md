@@ -140,6 +140,21 @@ changed. See `build-and-deploy-web` skill.
   Lock-Screen/Home-Screen widget via an App Group and the watch over
   WatchConnectivity; both rotate hourly off the wall clock
   (`TodayShared.rotationIndex`).
+  - **Widget families** (`TodayWidget/`, `WatchWidget/`) — every family has its own
+    layout, none falls through to another's. `TodayWidget`: `systemSmall`
+    (arrows in the header row), `systemMedium` (arrows flank the word, "Ready for
+    Challenge N?" link), `systemLarge` (big word + arrows + challenge link + the next
+    four words as rows), `systemExtraLarge` (iPad: word and arrows in one column, the
+    next eight as a two-column card grid), `accessoryCircular` (kana on
+    `AccessoryWidgetBackground`), `accessoryRectangular`, `accessoryInline`.
+    `WatchTodayWidget`: `accessoryCircular`, `accessoryCorner` (kana + curved
+    `widgetLabel` meaning), `accessoryRectangular`, `accessoryInline`. Only the home-screen
+    families take buttons or `Link`s (`Link` from medium up); WidgetKit has no
+    gestures, so paging is arrows, never swipeable-looking dots. Accent-coloured
+    elements carry `.widgetAccentable()` so tinted/clear icon rendering and StandBy
+    recolour them. `TodayEntry.deck` carries the whole deck for the large families.
+    Text is Dynamic Type styles, no fixed heights; the widgets use the system face, as
+    the extensions can't reach `Theme`.
 - **First launch**: a five-card intro tour that also asks three questions —
   see `09-intro-and-survey.md`.
 - **Settings**: separate app-UI language vs. vocabulary-translation language
