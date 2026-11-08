@@ -225,3 +225,4 @@ Play Billing only works on a build installed from Play, with products that are A
    (`python3 scripts/build-web.py --all --google-play`) and deploy it only when the user asks
    (see the `build-and-deploy-web` skill). Read the page copy at the same time: it still says "iOS app" and
    "Free on iPhone & iPad".
+<!-- FOX-169 throwaway check, not merged -->
