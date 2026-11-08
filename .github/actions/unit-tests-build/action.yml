@@ -1,0 +1,152 @@
+name: Unit tests build
+description: >-
+  The build half of the Tests job, shared by ci.yml (pull requests) and ci-cache.yml
+  (main): the course data, the placeholder plists, the Swift package and DerivedData
+  caches, and build-for-testing of the nihongo scheme. One copy, so the cache keys and
+  build flags the main run fills are the ones pull requests restore (FOX-169). Run after
+  actions/checkout.
+
+inputs:
+  minna-deploy-key:
+    description: >-
+      Read-only deploy key for the private minna submodule. nihongoTests reads the bundled
+      JSON and clips that ci_scripts/ci_post_clone.sh generates from it.
+    required: true
+  skip-build-if-cached:
+    description: >-
+      'true' skips the build when both caches hit their exact keys (the main run: nothing
+      new to save). Pull requests leave it 'false': they need the build products.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    # GITHUB_TOKEN cannot read the private submodule's repo, so a deploy key does.
+    # The submodule URL is SSH.
+    - name: Generate bundled course data
+      shell: bash
+      env:
+        MINNA_DEPLOY_KEY: ${{ inputs.minna-deploy-key }}
+      run: |
+        set -euo pipefail
+        if [ -z "${MINNA_DEPLOY_KEY}" ]; then
+          echo "::error::Missing MINNA_DEPLOY_KEY. nihongoTests needs the private submodule 7kfpun/minna. The secret is a read-only deploy key for that repo."
+          exit 1
+        fi
+        install -d -m 700 "${HOME}/.ssh"
+        key_file="${HOME}/.ssh/minna_deploy"
+        trap 'rm -f "$key_file"' EXIT
+        printf '%s\n' "${MINNA_DEPLOY_KEY}" > "$key_file"
+        chmod 600 "$key_file"
+        ssh-keyscan -t ed25519 github.com >> "${HOME}/.ssh/known_hosts"
+        export GIT_SSH_COMMAND="ssh -i ${key_file} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
+        sh ci_scripts/ci_post_clone.sh
+
+    # Xcode CopyPlistFile requires these paths. They are gitignored; examples under
+    # config/ are enough to build and run unit tests in CI. AppBootstrap skips
+    # FirebaseApp.configure() for placeholder keys so the test host does not trap in
+    # Firebase Installations.
+    - name: Prepare gitignored plists
+      shell: bash
+      run: |
+        set -euo pipefail
+        cp config/Secrets.example.plist nihongo/Secrets.plist
+        cp config/GoogleService-Info.example.plist nihongo/GoogleService-Info.plist
+        ls -la nihongo/Secrets.plist nihongo/GoogleService-Info.plist
+
+    - name: Show Xcode
+      id: xcode
+      shell: bash
+      run: |
+        set -euo pipefail
+        xcodebuild -version
+        echo "build=$(xcodebuild -version | awk '/Build version/ {print $3}')" >> "$GITHUB_OUTPUT"
+
+    # Restore here, save explicitly at the end, and only on a miss. A pull request can
+    # read main's caches but not another PR's. When main's ci-cache.yml run has filled a
+    # key, every PR restores it and saves nothing, instead of each PR storing its own
+    # copy under the same key.
+    - name: Restore Swift packages
+      id: spm
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ runner.temp }}/DerivedData/SourcePackages
+        key: spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('nihongo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+        restore-keys: |
+          spm-${{ runner.os }}-${{ runner.arch }}-
+
+    # Build products of a run with the same dependencies and Xcode. Exact key only, no
+    # restore-keys: products built against other packages or another Xcode are never
+    # restored. Inside a hit, Xcode still rebuilds whatever changed: checkout gives every
+    # source a new mtime, so mostly the cached package products are reused.
+    - name: Restore DerivedData
+      id: deriveddata
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ${{ runner.temp }}/DerivedData/Build
+          ${{ runner.temp }}/DerivedData/ModuleCache.noindex
+        key: deriveddata-${{ runner.os }}-${{ runner.arch }}-${{ steps.xcode.outputs.build }}-${{ hashFiles('nihongo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+
+    - name: Check the cache hits
+      id: cached
+      shell: bash
+      env:
+        SPM_HIT: ${{ steps.spm.outputs.cache-hit }}
+        DERIVEDDATA_HIT: ${{ steps.deriveddata.outputs.cache-hit }}
+        SKIP_IF_CACHED: ${{ inputs.skip-build-if-cached }}
+      run: |
+        set -euo pipefail
+        # cache-hit is 'true' only for the exact key; a restore-keys match or a miss is
+        # saved under the exact key after the build.
+        echo "Exact-key hits: Swift packages=${SPM_HIT:-false} DerivedData=${DERIVEDDATA_HIT:-false}"
+        skip=false
+        if [ "${SPM_HIT:-}" = true ] && [ "${DERIVEDDATA_HIT:-}" = true ] && [ "$SKIP_IF_CACHED" = true ]; then
+          skip=true
+          echo "Both caches are current. Nothing to build or save."
+        fi
+        echo "skip=${skip}" >> "$GITHUB_OUTPUT"
+
+    - name: Build for testing
+      if: steps.cached.outputs.skip != 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        # Same simulator as the test step: iPhone 17 Pro / iOS 26.5 satisfies
+        # IPHONEOS_DEPLOYMENT_TARGET = 26.5 and is preinstalled on macos-latest. Building
+        # for a concrete destination does not boot it.
+        # CODE_SIGNING_ALLOWED=NO: the project sets DEVELOPMENT_TEAM and the runner has no
+        # Apple certificate. COMPILER_INDEX_STORE_ENABLE=NO: the index is only for Xcode's
+        # editor. A restored cache gives every file a new inode, so let Xcode compare
+        # mtime and size only and reuse unchanged cached products.
+        defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
+        xcodebuild build-for-testing \
+          -project nihongo.xcodeproj \
+          -scheme nihongo \
+          -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
+          -only-testing:nihongoTests \
+          -derivedDataPath "${RUNNER_TEMP}/DerivedData" \
+          -clonedSourcePackagesDirPath "${RUNNER_TEMP}/DerivedData/SourcePackages" \
+          -showBuildTimingSummary \
+          COMPILER_INDEX_STORE_ENABLE=NO \
+          CODE_SIGNING_ALLOWED=NO
+
+    # Saved after a successful build, before any simulator work, and only for a cache
+    # that missed its exact key. A key another run saved first is skipped with a warning
+    # by actions/cache/save, not a failure.
+    - name: Save Swift packages
+      if: steps.cached.outputs.skip != 'true' && steps.spm.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ runner.temp }}/DerivedData/SourcePackages
+        key: ${{ steps.spm.outputs.cache-primary-key }}
+
+    - name: Save DerivedData
+      if: steps.cached.outputs.skip != 'true' && steps.deriveddata.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ${{ runner.temp }}/DerivedData/Build
+          ${{ runner.temp }}/DerivedData/ModuleCache.noindex
+        key: ${{ steps.deriveddata.outputs.cache-primary-key }}
