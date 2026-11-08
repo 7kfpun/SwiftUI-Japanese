@@ -1,0 +1,59 @@
+name: CI cache
+
+# Fills the Tests job's two caches (Swift packages and DerivedData) from main (FOX-169).
+# CI itself runs only on pull_request, and a PR's caches are saved under
+# refs/pull/<n>/merge, which no other PR can read, so every PR's first run was cold and each
+# PR stored its own copy of the same keys. Caches saved here, on main, can be read by every
+# PR into main.
+#
+# The build is the Tests job's own (.github/actions/unit-tests-build), so the keys and flags
+# cannot drift apart. No simulator, no tests.
+
+on:
+  push:
+    branches: [main]
+    # What the cache keys or the build depend on.
+    paths:
+      - nihongo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+      - nihongo.xcodeproj/project.pbxproj
+      - ci_scripts/**
+      - .github/workflows/ci.yml
+      - .github/workflows/ci-cache.yml
+      - .github/actions/unit-tests-build/**
+  # A runner image with a new Xcode build changes the DerivedData key, and caches unused for
+  # 7 days are evicted. Daily, so PRs fall back to saving their own copy for a day at most
+  # after an image update. When both keys exist the run only restores them (a restore counts
+  # as a use), about a minute.
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+# A newer main commit supersedes an older fill.
+concurrency:
+  group: ci-cache
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  fill:
+    name: Fill Tests caches
+    # Only main's caches are readable by every PR. A dispatch from another branch would fill
+    # caches that only that branch can read.
+    if: github.ref == 'refs/heads/main'
+    runs-on: macos-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Restore caches and build for testing
+        uses: ./.github/actions/unit-tests-build
+        with:
+          minna-deploy-key: ${{ secrets.MINNA_DEPLOY_KEY }}
+          skip-build-if-cached: "true"

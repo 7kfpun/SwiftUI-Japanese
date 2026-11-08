@@ -2,8 +2,11 @@
 
 Xcode Cloud is the CI: it watches the GitHub repo, builds on Apple's Macs, posts
 results back to pull requests as GitHub checks, and hands archives to TestFlight.
-There is no GitHub Actions workflow — a macOS Actions runner would duplicate the
-same build at ten times the minute cost.
+GitHub Actions is the **pull-request gate**, separately: `.github/workflows/` runs the iOS
+unit tests (`ci.yml`, which also runs `ci_post_clone.sh` and builds `nihongo` for
+`nihongoTests`), the Android build (`android.yml`), the Claude review, the LGTM status, the PR
+policy and the public-text check. Xcode Cloud remains the archive and TestFlight path. See
+`docs/ci-cd-guardrails.md`.
 
 Only the `nihongo` app (Minna) is built in the cloud; JLPT is not set up.
 

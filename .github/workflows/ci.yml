@@ -1,16 +1,20 @@
 name: CI
 
-# Same gate as feature/claude-review-action's Claude review workflow:
-# non-draft PRs whose head is feature/* and whose base is main or the Android
-# integration branch (feature/fox-145-android).
+# Every non-draft pull request into main or an integration branch (feature/*), whatever its
+# head branch is called. The head used to have to start with feature/, so fix/ PRs skipped
+# the Tests and the review without a word (FOX-169). Branch naming is the PR policy's job.
 # synchronize is included, so every push to an open PR re-runs.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    branches: [main, feature/fox-145-android]
+    branches: [main, "feature/**"]
 
+# Draftness is part of the key. A push and "Ready for review" in the same second give a run
+# whose payload still says draft (it skips every job) and the real non-draft run. With one
+# key per PR, the stale draft run could cancel the real one and the PR showed CI as skipped.
+# Now a run only cancels runs of the same draftness (FOX-38 in SwiftUI-TWAQI).
 concurrency:
-  group: ci-${{ github.event.pull_request.number }}
+  group: ci-${{ github.event.pull_request.number }}-draft-${{ github.event.pull_request.draft }}
   cancel-in-progress: true
 
 permissions:
@@ -19,77 +23,80 @@ permissions:
 jobs:
   tests:
     name: Tests
-    if: >-
-      github.event.pull_request.draft == false &&
-      startsWith(github.head_ref, 'feature/') &&
-      (github.base_ref == 'main' || github.base_ref == 'feature/fox-145-android')
+    if: github.event.pull_request.draft == false
     runs-on: macos-latest
     timeout-minutes: 90
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           persist-credentials: false
 
-      # nihongoTests reads bundled JSON and clips that are gitignored and
-      # produced by ci_scripts/ci_post_clone.sh from the private minna
-      # submodule. GITHUB_TOKEN cannot read that other repo. MINNA_DEPLOY_KEY
-      # is a read-only deploy key on 7kfpun/minna; the submodule URL is SSH.
-      - name: Generate bundled course data
+      # The level decision's own tests and the skip rules against this checkout. Seconds,
+      # before anything is built.
+      - name: Check the test-level rules
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tools -p 'test_ci_test_level.py'
+          python3 tools/ci_test_level.py check
+
+      # skip: nothing more runs and the check is green. test: build and run nihongoTests.
+      # tools/ci_test_level.py has the rules; docs/ci-cd-guardrails.md has the table.
+      - name: Decide the test level
+        id: scope
         env:
-          MINNA_DEPLOY_KEY: ${{ secrets.MINNA_DEPLOY_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          if [ -z "${MINNA_DEPLOY_KEY}" ]; then
-            echo "::error::Missing MINNA_DEPLOY_KEY. nihongoTests needs the private submodule 7kfpun/minna. The secret is a read-only deploy key for that repo."
-            exit 1
+          # Shallow checkout does not contain the base commit, so use the pull request file
+          # list. Labels are read live, so re-running the job after adding ci-full-tests
+          # picks it up. An empty list or an API error gives the test level: never skip on
+          # doubt.
+          files="$RUNNER_TEMP/pr-files.txt"
+          labels="$RUNNER_TEMP/pr-labels.txt"
+          api_error=""
+          if ! gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" \
+              --jq '.[].filename' > "$files"; then
+            echo "::warning::Could not list the pull request's files. Running the unit tests."
+            api_error="--api-error"
           fi
-          install -d -m 700 "${HOME}/.ssh"
-          key_file="${HOME}/.ssh/minna_deploy"
-          trap 'rm -f "$key_file"' EXIT
-          printf '%s\n' "${MINNA_DEPLOY_KEY}" > "$key_file"
-          chmod 600 "$key_file"
-          ssh-keyscan -t ed25519 github.com >> "${HOME}/.ssh/known_hosts"
-          export GIT_SSH_COMMAND="ssh -i ${key_file} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
-          sh ci_scripts/ci_post_clone.sh
+          if ! gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" \
+              --jq '.labels[].name' > "$labels"; then
+            echo "::warning::Could not read the pull request's labels. Running the unit tests."
+            api_error="--api-error"
+          fi
+          # shellcheck disable=SC2086 # api_error is empty or one flag
+          python3 tools/ci_test_level.py decide --files "$files" --labels "$labels" $api_error
 
-      # Xcode CopyPlistFile requires these paths. They are gitignored; examples
-      # under config/ are enough to build and run unit tests in CI.
-      - name: Prepare gitignored plists
-        run: |
-          set -euo pipefail
-          # Xcode Copy Bundle Resources requires these paths. Examples are enough
-          # to build; AppBootstrap skips FirebaseApp.configure() for placeholder
-          # keys so the test host does not trap in Firebase Installations.
-          cp config/Secrets.example.plist nihongo/Secrets.plist
-          cp config/GoogleService-Info.example.plist nihongo/GoogleService-Info.plist
-          ls -la nihongo/Secrets.plist nihongo/GoogleService-Info.plist
+      # Course data, placeholder plists, caches and build-for-testing. Shared with
+      # ci-cache.yml, which fills the same keys from main so a PR's first run starts warm.
+      - name: Restore caches and build for testing
+        if: steps.scope.outputs.level != 'skip'
+        uses: ./.github/actions/unit-tests-build
+        with:
+          minna-deploy-key: ${{ secrets.MINNA_DEPLOY_KEY }}
 
-      # generic/platform=iOS Simulator only builds. xcodebuild will not run
-      # tests on that placeholder. iPhone 17 Pro / iOS 26.5 is the concrete
-      # simulator that satisfies IPHONEOS_DEPLOYMENT_TARGET = 26.5 and is
-      # preinstalled on macos-latest (older runtimes on the image are
-      # ineligible). -only-testing:nihongoTests skips nihongoUITests. The
-      # jlpt scheme, which hosts jlptUITests, is not invoked.
-      # CODE_SIGNING_ALLOWED=NO: the project sets DEVELOPMENT_TEAM and the
-      # runner has no Apple certificate.
+      # -only-testing:nihongoTests skips nihongoUITests. The jlpt scheme, which hosts
+      # jlptUITests, is not invoked.
       - name: Unit tests
+        if: steps.scope.outputs.level != 'skip'
         run: |
           set -euo pipefail
-          xcodebuild -version
-          xcodebuild test \
+          xcodebuild test-without-building \
             -project nihongo.xcodeproj \
             -scheme nihongo \
             -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
             -only-testing:nihongoTests \
+            -derivedDataPath "${RUNNER_TEMP}/DerivedData" \
             CODE_SIGNING_ALLOWED=NO
 
   vulnerabilities:
     name: Vulnerabilities
-    if: >-
-      github.event.pull_request.draft == false &&
-      startsWith(github.head_ref, 'feature/') &&
-      (github.base_ref == 'main' || github.base_ref == 'feature/fox-145-android')
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -113,9 +120,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
 
-      # Scan both lockfiles. Known vulnerabilities, parse issues, and
-      # unrecognized lockfile formats warn and are written to one PR
-      # comment; they do not fail the check. There is no severity gate.
+      # Scan both lockfiles. Known vulnerabilities warn and are written to one PR
+      # comment; they do not fail the check (there is no severity gate). A lockfile
+      # the scanner could not read, or that yielded no packages, does fail it, in the
+      # step after this one (FOX-169): a scan that sees nothing must not look clean.
+      #
+      # osv-scanner's JSON lists only packages that have vulnerabilities, so counting
+      # `packages` in it gave 0 for a clean lockfile and read as "format unrecognized".
+      # The package count is the scanner's own "found N packages" line on stderr.
       - name: Dependency scan
         continue-on-error: true
         env:
@@ -129,6 +141,7 @@ jobs:
           sudo install -m 0755 /tmp/osv-scanner /usr/local/bin/osv-scanner
           osv-scanner --version
           mkdir -p /tmp/osv
+          rm -f /tmp/osv/unreadable
           : > /tmp/osv/manifest.txt
           scan_lock() {
             file="$1"
@@ -138,20 +151,22 @@ jobs:
             fi
             out="/tmp/osv/$(printf '%s' "$file" | tr '/' '_').json"
             set +e
-            osv-scanner scan source --format json --lockfile "$file" >"$out"
+            osv-scanner scan source --format json --lockfile "$file" >"$out" 2>"${out}.err"
             code=$?
             set -e
+            cat "${out}.err"
             printf '%s %s %s\n' "$code" "$file" "$out" >> /tmp/osv/manifest.txt
           }
           scan_lock Gemfile.lock
           scan_lock nihongo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
           python3 - /tmp/osv/manifest.txt <<'PY'
-          import json, os, sys
+          import json, os, re, sys
           from pathlib import Path
 
           rows = []
           errors = []
           notes = []
+          unreadable = []
           for line in Path(sys.argv[1]).read_text().splitlines():
               code_s, label, out = line.split(" ", 2)
               code = int(code_s)
@@ -159,12 +174,14 @@ jobs:
                   data = json.loads(Path(out).read_text() or "{}")
               except Exception as exc:
                   errors.append(f"`{label}`: osv-scanner exit {code}, output was not JSON ({exc}).")
+                  unreadable.append(label)
                   continue
-              packages = 0
+              # The scanner's own count of what it parsed (see the step's comment).
+              counted = re.findall(r"found (\d+) packages?", Path(out + ".err").read_text(errors="replace"))
+              packages = int(counted[-1]) if counted else 0
               found = []
               for result in data.get("results") or []:
                   for pkg in result.get("packages") or []:
-                      packages += 1
                       info = pkg.get("package") or {}
                       name = info.get("name") or "?"
                       version = info.get("version") or "?"
@@ -176,10 +193,10 @@ jobs:
               notes.append(f"`{label}`: {packages} packages, scanner exit {code}")
               print(notes[-1])
               if packages == 0:
-                  # Xcode 16+ Package.resolved "pins" format may not parse yet.
-                  # Treat as a warning so the check stays advisory.
-                  notes.append(f"`{label}`: extracted no packages (exit {code}); lockfile format may be unrecognized.")
-                  print(f"::warning file={label}::extracted no packages (exit {code})")
+                  # No "found N packages" line, or N is 0: the lockfile was not read.
+                  # Fails the check in the next step, loudly.
+                  errors.append(f"`{label}`: the scanner read no packages (exit {code}); the lockfile was not scanned.")
+                  unreadable.append(label)
               elif code not in (0, 1):
                   errors.append(f"`{label}`: osv-scanner failed with exit {code}.")
               elif code == 1 and not found:
@@ -230,7 +247,9 @@ jobs:
           lines += ["", f"[View workflow run]({os.environ['RUN_URL']})", ""]
           body = "\n".join(lines) + "\n"
           Path("/tmp/osv/comment.md").write_text(body)
-          Path("/tmp/osv/exitcode").write_text("0\n")  # warning-only: never fail the check
+          Path("/tmp/osv/exitcode").write_text("0\n")  # findings only warn; the next step fails on unreadable
+          Path("/tmp/osv/unreadable").write_text("\n".join(unreadable) + "\n") if unreadable else None
+          Path("/tmp/osv/done").write_text("1\n")
           Path("/tmp/osv/comment_needed").write_text("1\n" if (has_findings or has_errors) else "0\n")
           summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
           if summary_path and (has_findings or has_errors):
@@ -253,4 +272,16 @@ jobs:
           # Warning only — findings already emitted as ::warning / PR comment.
           exit 0
 
-
+      - name: Fail when a lockfile was not scanned
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ ! -f /tmp/osv/done ]; then
+            echo "::error::The dependency scan produced no result. Nothing was checked for known vulnerabilities."
+            exit 1
+          fi
+          if [ -f /tmp/osv/unreadable ]; then
+            echo "::error::osv-scanner could not read: $(tr '\n' ' ' < /tmp/osv/unreadable). See the dependency scan comment."
+            exit 1
+          fi
+          echo "Every lockfile was read."
