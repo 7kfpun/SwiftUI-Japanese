@@ -22,14 +22,16 @@ class TrackCatalogTest {
         .map { it.get(null) as String }
         .toSet()
 
-    /** iOS-only: nothing on Android to log (FOX-146: no remote push in v1). */
+    /** iOS-only: nothing on Android to log (FOX-146: no remote push in v1; no Live Activities). */
     private val notOnAndroid = setOf(
         "push_registered",
         "push_register_failed",
         "fcm_token",
         // SKStoreReviewController was asked. Android never uses Play In-App Review (Google forbids an opinion
         // question before its card), so there is no such ask; see `store_page_opened`.
-        "review_requested"
+        "review_requested",
+        // A Read along Live Activity was tapped (`nihongo://read`). Android has no Live Activities.
+        "read_along_open"
     )
 
     /** Android-only: the Play listing was opened from the rating star row or Settings -> Rate the app. */
