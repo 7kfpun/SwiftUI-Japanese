@@ -51,3 +51,4 @@ one: a persistence key that no longer exists, a mode that was merged into
 another, a per-mode trial that became one whole-lesson rule. When rewriting,
 read the code first and the existing doc second — a rewrite that paraphrases a
 confidently wrong doc is worse than no rewrite.
+<!-- FOX-169 throwaway prefix check, not merged -->
